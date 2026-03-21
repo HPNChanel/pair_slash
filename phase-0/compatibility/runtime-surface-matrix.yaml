@@ -3,8 +3,10 @@
 # for each supported runtime.
 # Phase 0 -- last updated 2026-03-21
 
-matrix_version: "0.1.0"
+matrix_version: "0.1.1"
 last_verified: "2026-03-21"
+runtime_tested: codex-cli-v0.116.0
+runtime_not_available: copilot-cli
 
 runtimes:
 
@@ -178,43 +180,91 @@ compatibility_summary:
 verification_items:
   V1:
     question: "Does /skills produce a skill picker in Codex CLI interactive mode?"
-    status: unverified
+    status: not-testable-non-interactive
+    tested_date: "2026-03-21"
+    tested_by: codex-exec-automation
     method: "Launch Codex CLI, type /skills, observe behavior"
     fallback: "If absent, use $skill-name direct invocation"
+    notes: >-
+      /skills is an interactive TUI command. Cannot be tested via codex exec
+      non-interactive mode. Direct invocation via $name confirmed working (V4).
+      Interactive TUI testing required for definitive V1 result.
 
   V2:
     question: "Can SKILL.md instructions direct the LLM to read files from .pairslash/project-memory/?"
-    status: unverified
+    status: verified
+    tested_date: "2026-03-21"
+    tested_by: codex-exec-automation
+    tested_on: codex-cli-v0.116.0
     method: "Install pairslash-plan, invoke it, check if it reads .pairslash/ files"
     fallback: "If unreliable, instruct user to paste memory content"
+    notes: >-
+      Both pairslash-plan and pairslash-memory-write-global successfully read
+      project memory files via shell commands (Get-Content). Agent read
+      00-project-charter.yaml, 10-stack-profile.yaml, and 90-memory-index.yaml.
+      Output cited files with [from memory: filename] notation. Initial attempts
+      using complex PowerShell (variables, foreach) were blocked by sandbox
+      policy; simple single-file Get-Content commands succeeded.
 
   V3:
     question: "Can a skill reliably produce a YAML preview patch before writing?"
-    status: unverified
+    status: verified
+    tested_date: "2026-03-21"
+    tested_by: codex-exec-automation
+    tested_on: codex-cli-v0.116.0
     method: "Invoke pairslash-memory-write-global, check if preview patch appears before any file write"
     fallback: "Strengthen instructions; Phase 2 adds script-based enforcement"
+    notes: >-
+      Preview patch produced in correct format (--- preview patch --- /
+      --- end preview ---) in both test runs (rejection and acceptance).
+      All 11 fields present in preview. Agent asked for explicit acceptance
+      before proceeding. 2/2 runs produced correct preview. Preview content
+      included tags and source_refs which were later dropped during write.
 
   V4:
     question: "Does $pairslash-plan direct invocation work in Codex CLI?"
-    status: unverified
+    status: verified
+    tested_date: "2026-03-21"
+    tested_by: codex-exec-automation
+    tested_on: codex-cli-v0.116.0
     method: "Install skill, type $pairslash-plan in Codex CLI"
     fallback: "Use /skills browser instead"
+    notes: >-
+      $pairslash-plan activated successfully via codex exec. Agent identified
+      the skill, loaded SKILL.md, read companion files (contract, example-output,
+      validation-checklist), and followed the 9-section output structure.
 
   V5:
     question: "Does /pairslash-plan direct invocation work in Copilot CLI interactive mode?"
-    status: unverified
+    status: not-tested
+    tested_date: "2026-03-21"
+    tested_by: codex-exec-automation
     method: "Install skill, type /pairslash-plan in Copilot CLI interactive mode"
     fallback: "Use /skills list and select"
     note: "Known to fail in -p mode (github/copilot-cli#2040)"
+    notes: >-
+      Copilot CLI (gh copilot) not available on test machine. gh command
+      not found. Deferred until Copilot CLI is installed.
 
   V6:
     question: "Can both runtimes execute scripts in the skill scripts/ directory?"
-    status: unverified
+    status: not-applicable
+    tested_date: "2026-03-21"
+    tested_by: codex-exec-automation
     method: "Add a simple validation script, invoke the skill, check if script runs"
     fallback: "Phase 0 skills are instruction-only; scripts are optional"
+    notes: >-
+      No scripts exist in Phase 0 skills. pairslash-memory-write-global has
+      a scripts/ directory with only .gitkeep. Phase 0 is instruction-only.
+      Script execution testing deferred to Phase 1/2.
 
   V7:
     question: "Does Copilot CLI /skills reload detect newly installed PairSlash skills?"
-    status: unverified
+    status: not-tested
+    tested_date: "2026-03-21"
+    tested_by: codex-exec-automation
     method: "Install a skill during active session, run /skills reload, check listing"
     fallback: "Restart CLI session after installation"
+    notes: >-
+      Copilot CLI (gh copilot) not available on test machine. Deferred
+      until Copilot CLI is installed.

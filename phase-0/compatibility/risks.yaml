@@ -2,8 +2,10 @@
 # Structured risk documentation for the Compatibility Spike.
 # Each risk has severity, evidence, impact, and fallback path.
 
-register_version: "0.1.0"
+register_version: "0.1.1"
 last_updated: "2026-03-21"
+last_tested: "2026-03-21"
+tested_on: codex-cli-v0.116.0
 
 risks:
 
@@ -11,11 +13,17 @@ risks:
     title: "/skills may not work in Codex CLI as expected"
     severity: high
     category: runtime-compatibility
+    status: inconclusive
+    tested_date: "2026-03-21"
     description: >-
       /skills is mentioned on the Codex skills overview page ("run /skills or
       type $ to mention a skill") but is absent from the Codex CLI built-in
       slash commands table. The command may exist but be undocumented in the
       slash commands list, or it may not exist in the CLI surface at all.
+    test_result: >-
+      /skills could not be tested via codex exec (non-interactive mode only).
+      Direct invocation via $skill-name confirmed working on Codex CLI v0.116.0.
+      /skills remains unverified; interactive TUI session required.
     evidence:
       - source: https://developers.openai.com/codex/skills
         finding: "Page says 'In CLI/IDE, run /skills or type $ to mention a skill'"
@@ -32,18 +40,29 @@ risks:
       compatibility notes to reflect this and adjust the canonical invocation
       guidance to be runtime-conditional.
     verification_item: V1
-    status: open
+    status: open-inconclusive
 
   - id: R2
     title: "LLM instruction compliance for the 11-step write pipeline"
     severity: medium
     category: instruction-fidelity
+    status: confirmed-partial
+    tested_date: "2026-03-21"
     description: >-
       The pairslash-memory-write-global workflow relies on the LLM faithfully
       following 11 sequential steps encoded in SKILL.md instructions. LLMs can
       skip steps, combine steps, or hallucinate completion. The preview-then-accept
       pattern is particularly fragile because the LLM may write files before
       showing the preview.
+    test_result: >-
+      Pipeline steps 1-8 followed correctly in all test runs: input validation,
+      existing record search, duplicate detection, conflict detection, scope
+      validation, preview patch generation, and acceptance gate all worked.
+      Steps 9-11 (write, index update, audit log) executed after acceptance.
+      HOWEVER: the LLM write script dropped 2 of 11 fields (tags, source_refs)
+      despite them being present in the preview patch. This confirms R2 is a
+      real risk. G7 failed as a result (9/11 fields written). The preview
+      was correct but the write was not faithful to the preview.
     evidence:
       - source: "LLM behavioral observation"
         finding: >-
@@ -65,11 +84,20 @@ risks:
     title: "File system access from skill context may be unreliable"
     severity: medium
     category: runtime-capability
+    status: mitigated
+    tested_date: "2026-03-21"
     description: >-
       Both runtimes have file reading tools, but whether SKILL.md instructions
       can reliably direct the LLM to read specific files in .pairslash/
       is unverified. The LLM may not read files when instructed, may read
       wrong files, or may summarize rather than faithfully report file contents.
+    test_result: >-
+      File reading worked reliably on Codex CLI v0.116.0 via Get-Content
+      shell commands. Both pairslash-plan and pairslash-memory-write-global
+      successfully read all 3 project memory files. Initial complex PowerShell
+      commands (variables, foreach) were blocked by sandbox policy, but simple
+      per-file Get-Content commands succeeded consistently. Risk mitigated for
+      Codex CLI; Copilot CLI not tested.
     evidence:
       - source: "Codex CLI docs"
         finding: "File reading is a general agent capability, not skill-specific"
@@ -152,11 +180,20 @@ risks:
     title: "YAML formatting fidelity in LLM-generated records"
     severity: medium
     category: instruction-fidelity
+    status: mitigated
+    tested_date: "2026-03-21"
     description: >-
       The write-authority workflow asks the LLM to generate valid YAML records
       and write them to files. LLMs can produce subtly malformed YAML
       (incorrect indentation, unquoted strings with special characters,
       missing document separators).
+    test_result: >-
+      Written YAML (50-constraints.yaml, 90-memory-index.yaml update, and
+      audit log entry) all parsed cleanly. No malformed YAML detected.
+      However, the field completeness issue (G7 failure: missing tags,
+      source_refs) is a separate concern from formatting. YAML formatting
+      fidelity appears adequate for Phase 0. Risk mitigated for formatting;
+      field completeness tracked under R2.
     evidence:
       - source: "LLM behavioral observation"
         finding: "YAML generation by LLMs is generally good but not perfect"

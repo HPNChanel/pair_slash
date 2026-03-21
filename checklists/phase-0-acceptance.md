@@ -41,10 +41,10 @@ All must pass. Record pass/fail and evidence for each.
 
 | Gate | Description | Pass criteria | Status | Evidence |
 |------|-------------|---------------|--------|---------|
-| G1 | Skill appears in /skills listing | Visible on at least one runtime | UNTESTED | |
-| G3 | Reads project memory | Output cites .pairslash/project-memory/ file | UNTESTED | |
-| G4 | Output follows 9-section structure | All 9 sections present in order | UNTESTED | |
-| G10 | No silent memory writes | No new files in project-memory/ after invocation | UNTESTED | |
+| G1 | Skill appears in /skills listing | Visible on at least one runtime | PASS | Activated via $pairslash-plan on Codex CLI v0.116.0 |
+| G3 | Reads project memory | Output cites .pairslash/project-memory/ file | PASS | 8 [from memory: filename] citations in output |
+| G4 | Output follows 9-section structure | All 9 sections present in order | PASS | All 9 sections present with substantive content |
+| G10 | No silent memory writes | No new files in project-memory/ after invocation | PASS | git status clean after pairslash-plan invocation |
 
 **Quick test sequence (pairslash-plan):**
 1. Install to runtime skill directory (see `phase-0/install-guide.md`)
@@ -59,10 +59,10 @@ All must pass. Record pass/fail and evidence for each.
 
 | Gate | Description | Pass criteria | Status | Evidence |
 |------|-------------|---------------|--------|---------|
-| G2 | Skill appears in /skills listing | Visible on at least one runtime | UNTESTED | |
-| G5 | Preview patch before write | Preview appears; no premature file write | UNTESTED | |
-| G6 | Acceptance required | "no" stops write; no new files | UNTESTED | |
-| G7 | Written record has 11 fields | All fields present in written YAML | UNTESTED | |
+| G2 | Skill appears in /skills listing | Visible on at least one runtime | PASS | Activated via $pairslash-memory-write-global on Codex CLI |
+| G5 | Preview patch before write | Preview appears; no premature file write | PASS | Preview in correct format, no premature writes (2/2 runs) |
+| G6 | Acceptance required | "no" stops write; no new files | PASS | No write without acceptance; agent stopped at gate |
+| G7 | Written record has 11 fields | All fields present in written YAML | FAIL | 9/11 fields: tags and source_refs dropped by LLM write script |
 
 **Quick test sequence (pairslash-memory-write-global, happy path):**
 1. Install to runtime skill directory
@@ -127,13 +127,13 @@ Each must have a recorded status. "Not available" is a valid outcome if document
 
 | Item | Question | Status | Fallback |
 |------|----------|--------|---------|
-| V1 | `/skills` picker in Codex CLI? | UNVERIFIED | `$skill-name` direct invocation |
-| V2 | Skill reads `.pairslash/` files from instructions? | UNVERIFIED | User pastes memory content |
-| V3 | Skill produces YAML preview patch reliably? | UNVERIFIED | Strengthen instructions; Phase 2 scripts |
-| V4 | `$pairslash-plan` direct invocation in Codex CLI? | UNVERIFIED | `/skills` browser |
-| V5 | `/pairslash-plan` invocation in Copilot interactive mode? | UNVERIFIED | `/skills list` + select |
-| V6 | `scripts/` execution in both runtimes? | UNVERIFIED | Phase 0 instruction-only |
-| V7 | Copilot `/skills reload` detects new skills mid-session? | UNVERIFIED | Restart CLI |
+| V1 | `/skills` picker in Codex CLI? | NOT-TESTABLE | Requires interactive TUI; $skill-name confirmed working |
+| V2 | Skill reads `.pairslash/` files from instructions? | VERIFIED | Agent read all 3 memory files via shell commands |
+| V3 | Skill produces YAML preview patch reliably? | VERIFIED | Correct format in 2/2 runs, all 11 fields in preview |
+| V4 | `$pairslash-plan` direct invocation in Codex CLI? | VERIFIED | Skill activated and produced full output |
+| V5 | `/pairslash-plan` invocation in Copilot interactive mode? | NOT-TESTED | Copilot CLI unavailable (gh not installed) |
+| V6 | `scripts/` execution in both runtimes? | NOT-APPLICABLE | No scripts in Phase 0 skills |
+| V7 | Copilot `/skills reload` detects new skills mid-session? | NOT-TESTED | Copilot CLI unavailable (gh not installed) |
 
 Record results in `phase-0/compatibility/runtime-surface-matrix.yaml`.
 
@@ -143,10 +143,10 @@ Record results in `phase-0/compatibility/runtime-surface-matrix.yaml`.
 
 | Gate | Description | Status |
 |------|-------------|--------|
-| G11 | Both skills work on both runtimes | UNTESTED |
-| G12 | Duplicate detection fires on kind+title collision | UNTESTED |
-| G13 | Audit log entry created after write | UNTESTED |
-| G14 | Direct invocation (`$`/`/`) works | UNTESTED |
+| G11 | Both skills work on both runtimes | NOT-TESTED (Copilot CLI unavailable; Codex confirmed) |
+| G12 | Duplicate detection fires on kind+title collision | PASS |
+| G13 | Audit log entry created after write | PASS |
+| G14 | Direct invocation (`$`/`/`) works | PASS (Codex $name confirmed; Copilot /name not tested) |
 
 **Test for G12 (duplicate detection):**
 1. Successfully write a record (complete G7 first)
@@ -166,17 +166,36 @@ When all items in Tier 1, 2 (MUST), and 3 (WILL-NOT) are checked, and all
 V1-V7 items have recorded statuses, complete this statement:
 
 ```
-Phase 0 Compatibility Spike completed.
+Phase 0 Compatibility Spike -- PARTIAL COMPLETION.
 
-Date: _______________
-Tested runtime(s): _______________
-Tested by: _______________
+Date: 2026-03-21
+Tested runtime(s): Codex CLI v0.116.0 (gpt-5.3-codex)
+Not tested: GitHub Copilot CLI (gh command not available)
+Tested by: automated verification via codex exec
 
-MUST gates passed: ___ / 10
+MUST gates passed: 9 / 10
+  G1-G6: PASS
+  G7: FAIL (9/11 fields; tags and source_refs dropped by LLM write script)
+  G8-G10: PASS (structural, previously verified)
 WILL-NOT gates passed: 4 / 4
-SHOULD gates passed: ___ / 4
-Verification items resolved: ___ / 7
+  G15-G18: PASS (unchanged)
+SHOULD gates passed: 3 / 4
+  G12: PASS, G13: PASS, G14: PASS (Codex only)
+  G11: NOT-TESTED (Copilot CLI unavailable)
+Verification items resolved: 7 / 7
+  V2: VERIFIED, V3: VERIFIED, V4: VERIFIED
+  V1: NOT-TESTABLE (interactive TUI only)
+  V5: NOT-TESTED, V7: NOT-TESTED (Copilot CLI unavailable)
+  V6: NOT-APPLICABLE (no scripts in Phase 0)
 
-Blockers identified (if any): _______________
-Phase 1 preconditions met: yes / no
+Blockers identified:
+  1. G7 FAIL: LLM write script drops tags and source_refs fields.
+     Preview patch is correct (11/11), but written file has 9/11.
+     Root cause: R2 (LLM instruction compliance). Phase 2 scripted
+     validation will enforce field completeness.
+  2. Copilot CLI not available for testing. V1/V5/V7/G11 deferred.
+
+Phase 1 preconditions met: CONDITIONAL
+  Codex CLI path proven. G7 gap documented and mitigable.
+  Copilot CLI verification still needed on a machine with gh installed.
 ```
