@@ -1,0 +1,20 @@
+# PairSlash Memory Index
+# Enumerates all authoritative records in project-memory/.
+# Updated whenever a record is added, modified, or superseded.
+
+version: "0.1.0"
+last_updated: "2026-03-21T00:00:00Z"
+updated_by: phase-0-scaffold
+
+records:
+  - file: 00-project-charter.yaml
+    kind: charter
+    title: PairSlash Project Charter
+    scope: whole-project
+    status: active
+
+  - file: 10-stack-profile.yaml
+    kind: stack-profile
+    title: PairSlash Stack Profile
+    scope: whole-project
+    status: active

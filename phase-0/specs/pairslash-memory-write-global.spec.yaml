@@ -1,0 +1,288 @@
+# pairslash-memory-write-global Workflow Specification
+# Phase 0 demo -- write-authority workflow for Global Project Memory.
+# Source: CLAUDE.md sections 9.3, 10, 11
+
+workflow:
+  name: pairslash-memory-write-global
+  version: "0.1.0"
+  class: write-authority
+  phase: 0
+
+  purpose: >-
+    The official path for writing durable project truth to Global Project Memory.
+    May write new decisions, update facts with evidence, promote stable lessons,
+    record known-good commands or patterns, capture constraints, and update
+    glossary or ownership knowledge when justified.
+
+  canonical_invocation:
+    primary: /skills -> select pairslash-memory-write-global
+    codex_direct: $pairslash-memory-write-global
+    copilot_direct: /pairslash-memory-write-global
+
+  schema_ref: ../schemas/memory-record.schema.yaml
+
+contracts:
+
+  input:
+    required:
+      - name: kind
+        type: enum
+        values: [decision, command, glossary, constraint, ownership, incident-lesson, pattern]
+        description: Category of knowledge being recorded.
+
+      - name: title
+        type: string
+        constraints: "3-200 characters"
+        description: Human-readable title uniquely identifying this record within its kind.
+
+      - name: statement
+        type: string
+        constraints: "minimum 10 characters"
+        description: The durable fact, decision, or knowledge being recorded.
+
+      - name: evidence
+        type: string
+        constraints: "minimum 5 characters"
+        description: >-
+          What supports this statement. References to commits, PRs, incidents,
+          docs, test results, or observed behavior.
+
+      - name: scope
+        type: enum
+        values: [whole-project, subsystem, path-prefix]
+        description: What part of the project this record applies to.
+
+      - name: confidence
+        type: enum
+        values: [low, medium, high]
+        description: >-
+          How confident the author is. Global memory should generally only
+          accept medium or high with evidence.
+
+      - name: action
+        type: enum
+        values: [append, supersede, reject-candidate-if-conflict]
+        description: What this write does relative to existing records.
+
+    optional:
+      - name: scope_detail
+        type: string
+        description: >-
+          Specifies which subsystem or path prefix when scope is not whole-project.
+
+      - name: tags
+        type: array of strings
+        description: Freeform categorization tags.
+
+      - name: source_refs
+        type: array of strings
+        description: References to sources (file paths, URLs, commit SHAs).
+
+      - name: supersedes
+        type: string
+        description: >-
+          When action is "supersede", identifies the record being replaced.
+          Format: "kind/title" of the superseded record.
+
+    defaults:
+      tags: []
+      source_refs: []
+      updated_by: "session-user"
+      timestamp: "auto-generated ISO 8601"
+
+    scope_assumption: >-
+      If scope is "subsystem" or "path-prefix" but scope_detail is missing,
+      the workflow MUST ask for clarification before proceeding.
+
+  output:
+    format: structured-yaml
+    artifacts:
+      - name: preview_patch
+        description: >-
+          A YAML diff showing the exact content that will be written to
+          project-memory/. Presented to the user BEFORE any file is created
+          or modified.
+        format: |
+          --- preview patch ---
+          target_file: <path>
+          action: <append|supersede>
+          content:
+            <full YAML record>
+          --- end preview ---
+
+      - name: written_record
+        description: The YAML file written to .pairslash/project-memory/.
+        condition: Only produced after explicit user acceptance.
+
+      - name: index_update
+        description: Updated entry in 90-memory-index.yaml.
+        condition: Only produced after successful write.
+
+      - name: audit_entry
+        description: Append-only entry in .pairslash/audit-log/.
+        format: |
+          - timestamp: <ISO 8601>
+            action: <append|supersede>
+            kind: <kind>
+            title: <title>
+            target_file: <path>
+            updated_by: <who>
+            confidence: <level>
+            result: <success|rejected|conflict>
+
+  failure:
+    on_incomplete_input: >-
+      REJECT the write. List missing required fields. Do not attempt to
+      guess or fill in missing values. Return to the user with a clear
+      message about what is needed.
+
+    on_low_confidence: >-
+      WARN the user that low-confidence records should generally go to
+      staging/ or task-memory/, not project-memory/. Offer to redirect.
+      Do not block if user insists, but log the override in the audit entry.
+
+    on_duplicate_detected: >-
+      HALT the write. Show the existing record alongside the proposed record.
+      Ask the user to choose: supersede the existing record, amend the
+      proposed record, or cancel.
+
+    on_conflict_detected: >-
+      HALT the write. Show the conflicting records. Explain the conflict.
+      The user must resolve by choosing: supersede, amend, or reject.
+      Do not silently resolve conflicts.
+
+    on_scope_mismatch: >-
+      If the proposed record's scope is narrower than an existing record
+      it might shadow, warn the user. Do not block, but log the warning.
+
+    on_write_failure: >-
+      If the file write fails (permissions, path issues), report the error
+      honestly. Do not pretend the write succeeded. Do not retry silently.
+
+  memory:
+    reads:
+      - layer: global-project-memory
+        paths:
+          - .pairslash/project-memory/
+        purpose: >-
+          Load all existing records for duplicate detection, conflict
+          detection, and scope validation.
+      - layer: task-memory
+        paths:
+          - .pairslash/task-memory/
+        purpose: Check for related task-level records that might conflict.
+      - layer: staging
+        paths:
+          - .pairslash/staging/
+        purpose: Check for pending candidates that overlap.
+    writes:
+      - layer: global-project-memory
+        paths:
+          - ".pairslash/project-memory/{target_file}"
+        condition: Only after preview patch is accepted by user.
+      - layer: memory-index
+        paths:
+          - .pairslash/project-memory/90-memory-index.yaml
+        condition: Only after successful record write.
+      - layer: audit-log
+        paths:
+          - ".pairslash/audit-log/{timestamp}-{kind}-{action}.yaml"
+        condition: Always, even on rejection (logs the rejection).
+    invariant: >-
+      This workflow is the ONLY authorized path for writing to
+      global-project-memory. No other workflow may write to
+      .pairslash/project-memory/ as a side effect.
+
+  execution_pipeline:
+    description: >-
+      The 11-step pipeline from CLAUDE.md Section 11.5.
+      Every step is mandatory. No step may be skipped.
+    steps:
+      - step: 1
+        name: parse-and-validate
+        description: Parse structured input. Verify all required fields are present and well-formed.
+        on_failure: Return error listing missing/malformed fields.
+
+      - step: 2
+        name: reject-incomplete
+        description: If any required field is missing, STOP. Do not proceed to search or write.
+        on_failure: Return structured error with missing field names.
+
+      - step: 3
+        name: search-existing
+        description: >-
+          Read all YAML files in .pairslash/project-memory/ and .pairslash/task-memory/.
+          Build a list of existing records with their kind, title, scope.
+        on_failure: If directory unreadable, warn and proceed with empty existing set.
+
+      - step: 4
+        name: duplicate-detection
+        description: >-
+          Check if any existing record matches the proposed record on kind + title.
+          If match found, trigger failure.on_duplicate_detected.
+        on_failure: Halt and present conflict to user.
+
+      - step: 5
+        name: conflict-detection
+        description: >-
+          Check if any existing record contradicts the proposed statement
+          within the same scope. Also check if action=supersede but no
+          matching record exists to supersede.
+        on_failure: Halt and present conflict to user.
+
+      - step: 6
+        name: scope-validation
+        description: >-
+          Verify scope is valid. If scope is subsystem/path-prefix, verify
+          scope_detail is present. Check for scope shadowing.
+        on_failure: Ask for clarification or warn about shadowing.
+
+      - step: 7
+        name: generate-preview-patch
+        description: >-
+          Generate the full YAML record and present it as a preview patch.
+          Show the target file path, the action, and the complete record content.
+          The user MUST see this before any write occurs.
+        on_failure: If preview generation fails, report error and stop.
+
+      - step: 8
+        name: require-acceptance
+        description: >-
+          Ask the user explicitly: "Accept this write? (yes/no)"
+          Do NOT proceed without a clear affirmative response.
+          If the user says no, log the rejection and stop.
+        on_failure: Log rejection in audit log and stop.
+
+      - step: 9
+        name: write-record
+        description: >-
+          Write the YAML record to the target file in .pairslash/project-memory/.
+          For kind=decision, write to 60-architecture-decisions/{title-slug}.yaml.
+          For kind=pattern, write to 70-known-good-patterns/{title-slug}.yaml.
+          For kind=incident-lesson, write to 80-incidents-and-lessons/{title-slug}.yaml.
+          For other kinds, append to the appropriate numbered file
+          (e.g., 20-commands.yaml for kind=command).
+        on_failure: Report write error. Do not retry silently.
+
+      - step: 10
+        name: update-index
+        description: >-
+          Add or update the record entry in 90-memory-index.yaml.
+          If action=supersede, mark the old entry as status=superseded.
+        on_failure: Warn that index is out of sync. Record was written but index needs manual fix.
+
+      - step: 11
+        name: append-audit-log
+        description: >-
+          Write an audit entry to .pairslash/audit-log/{timestamp}-{kind}-{action}.yaml.
+          Include: timestamp, action, kind, title, target_file, updated_by,
+          confidence, result (success/rejected/conflict).
+        on_failure: Warn that audit log could not be written. Record was written but audit trail is incomplete.
+
+  safety_rules:
+    - No silent writes.
+    - No freeform authoritative memory blobs.
+    - No hidden mutation as a side effect of planning or review.
+    - No silent conflict resolution.
+    - No skipping preview.
+    - No pretending a write succeeded if validation failed.

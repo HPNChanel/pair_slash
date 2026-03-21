@@ -1,0 +1,220 @@
+# PairSlash Runtime Surface Matrix
+# Documents verified facts, assumptions, and open verification items
+# for each supported runtime.
+# Phase 0 -- last updated 2026-03-21
+
+matrix_version: "0.1.0"
+last_verified: "2026-03-21"
+
+runtimes:
+
+  codex_cli:
+    vendor: OpenAI
+    documentation_url: https://developers.openai.com/codex/skills
+
+    skill_system:
+      skill_format:
+        status: fact
+        evidence: "OpenAI docs: SKILL.md with YAML frontmatter (name, description) + Markdown body"
+        source: https://developers.openai.com/codex/skills
+      skill_storage_repo:
+        status: fact
+        value: ".agents/skills/"
+        evidence: "Codex scans .agents/skills in every directory from CWD up to repo root"
+        source: https://developers.openai.com/codex/skills
+      skill_storage_user:
+        status: fact
+        value: "~/.agents/skills/"
+        evidence: "HOME-level skills for cross-repo use"
+        source: https://developers.openai.com/codex/skills
+      optional_metadata:
+        status: fact
+        value: "agents/openai.yaml"
+        evidence: "UI metadata, invocation policy, tool dependencies"
+        source: https://developers.openai.com/codex/skills
+      progressive_disclosure:
+        status: fact
+        evidence: "Codex starts with metadata; loads full SKILL.md when skill is used"
+        source: https://developers.openai.com/codex/skills
+
+    invocation:
+      skills_command:
+        status: documented-unverified
+        evidence: >-
+          The skills overview page states "In CLI/IDE, run /skills or type $ to mention a skill."
+          However, /skills does NOT appear in the Codex CLI built-in slash commands table at
+          https://developers.openai.com/codex/guides/slash-commands/
+          This discrepancy needs real CLI testing.
+        verification_item: V1
+        source: https://developers.openai.com/codex/skills
+
+      direct_invocation:
+        status: fact
+        value: "$skill-name"
+        evidence: "Documented: type $ to mention a skill by name"
+        source: https://developers.openai.com/codex/skills
+
+      implicit_invocation:
+        status: fact
+        evidence: "Codex can choose a skill when task matches skill description"
+        source: https://developers.openai.com/codex/skills
+
+    file_access:
+      can_read_project_files:
+        status: documented-unverified
+        evidence: >-
+          Codex CLI has file reading capability as a general agent feature.
+          Whether SKILL.md instructions can reliably direct it to read
+          specific .pairslash/ files needs verification.
+        verification_item: V2
+
+    script_execution:
+      status: documented-unverified
+      evidence: "scripts/ subdirectory is documented but execution behavior in CLI needs verification"
+      verification_item: V6
+
+  copilot_cli:
+    vendor: GitHub
+    documentation_url: https://docs.github.com/copilot/how-tos/copilot-cli/customize-copilot/create-skills
+
+    skill_system:
+      skill_format:
+        status: fact
+        evidence: "GitHub docs: SKILL.md with YAML frontmatter (name, description, optional license) + Markdown body"
+        source: https://docs.github.com/copilot/how-tos/copilot-cli/customize-copilot/create-skills
+      skill_storage_repo:
+        status: fact
+        value: ".github/skills/"
+        evidence: "Primary repo-level skill storage"
+        source: https://docs.github.com/copilot/how-tos/copilot-cli/customize-copilot/create-skills
+      skill_storage_repo_alt:
+        status: fact
+        value: ".claude/skills/"
+        evidence: "Alternative repo-level location (Claude-compatible)"
+        source: https://docs.github.com/copilot/how-tos/copilot-cli/customize-copilot/create-skills
+      skill_storage_user:
+        status: fact
+        value: "~/.copilot/skills/"
+        evidence: "User-level skill storage"
+        source: https://docs.github.com/copilot/how-tos/copilot-cli/customize-copilot/create-skills
+      skill_storage_user_alt:
+        status: fact
+        value: "~/.claude/skills/"
+        evidence: "Alternative user-level location"
+        source: https://docs.github.com/copilot/how-tos/copilot-cli/customize-copilot/create-skills
+
+    invocation:
+      skills_command:
+        status: fact
+        evidence: >-
+          /skills is fully documented with subcommands: /skills list, /skills info,
+          /skills add, /skills reload, /skills remove.
+          Toggle skills on/off with /skills interactive picker.
+        source: https://docs.github.com/copilot/how-tos/copilot-cli/customize-copilot/create-skills
+
+      direct_invocation:
+        status: fact
+        value: "/skill-name in prompt"
+        evidence: 'Example: "Use the /frontend-design skill to create a responsive navigation bar"'
+        source: https://docs.github.com/copilot/how-tos/copilot-cli/customize-copilot/create-skills
+
+      prompt_mode_bug:
+        status: fact
+        evidence: >-
+          Known issue: skills referenced via /skill-name in prompt mode (-p flag) don't load.
+          Documented in github/copilot-cli#2040.
+        source: https://github.com/github/copilot-cli/issues/2040
+        severity: medium
+        impact: >-
+          Skills work in interactive mode but not in -p/--prompt mode.
+          PairSlash workflows require interactive mode for Phase 0.
+
+      implicit_invocation:
+        status: fact
+        evidence: "Copilot decides when to use skills based on prompt and description"
+        source: https://docs.github.com/copilot/how-tos/copilot-cli/customize-copilot/create-skills
+
+    file_access:
+      can_read_project_files:
+        status: documented-unverified
+        evidence: >-
+          Copilot CLI has file reading capability as a general agent feature.
+          Whether SKILL.md instructions can reliably direct it to read
+          specific .pairslash/ files needs verification.
+        verification_item: V2
+
+    script_execution:
+      status: documented-unverified
+      evidence: "Scripts in skill directory are documented but execution behavior needs verification"
+      verification_item: V6
+
+    skills_reload:
+      status: documented-unverified
+      evidence: "/skills reload is documented for picking up new skills mid-session"
+      verification_item: V7
+
+compatibility_summary:
+
+  shared_surface:
+    - SKILL.md format is compatible (both use YAML frontmatter + Markdown)
+    - Both support /skills as a browsing/selection mechanism
+    - Both support direct skill invocation (different syntax)
+    - Both support implicit invocation based on description matching
+
+  divergent_surface:
+    - Skill storage paths differ (.agents/skills/ vs .github/skills/)
+    - Direct invocation syntax differs ($name vs /name)
+    - Codex has optional agents/openai.yaml; Copilot does not
+    - Copilot has richer /skills subcommands (list, info, add, reload, remove)
+    - Copilot has a known bug with skills in -p mode
+
+  pairslash_strategy:
+    description: >-
+      Ship one canonical SKILL.md per skill. Install to runtime-specific paths.
+      Use /skills as the canonical browsing entrypoint on both runtimes.
+      Allow direct invocation when verified. Phase 1 compiler handles any
+      runtime-specific generation if semantic drift occurs.
+
+verification_items:
+  V1:
+    question: "Does /skills produce a skill picker in Codex CLI interactive mode?"
+    status: unverified
+    method: "Launch Codex CLI, type /skills, observe behavior"
+    fallback: "If absent, use $skill-name direct invocation"
+
+  V2:
+    question: "Can SKILL.md instructions direct the LLM to read files from .pairslash/project-memory/?"
+    status: unverified
+    method: "Install pairslash-plan, invoke it, check if it reads .pairslash/ files"
+    fallback: "If unreliable, instruct user to paste memory content"
+
+  V3:
+    question: "Can a skill reliably produce a YAML preview patch before writing?"
+    status: unverified
+    method: "Invoke pairslash-memory-write-global, check if preview patch appears before any file write"
+    fallback: "Strengthen instructions; Phase 2 adds script-based enforcement"
+
+  V4:
+    question: "Does $pairslash-plan direct invocation work in Codex CLI?"
+    status: unverified
+    method: "Install skill, type $pairslash-plan in Codex CLI"
+    fallback: "Use /skills browser instead"
+
+  V5:
+    question: "Does /pairslash-plan direct invocation work in Copilot CLI interactive mode?"
+    status: unverified
+    method: "Install skill, type /pairslash-plan in Copilot CLI interactive mode"
+    fallback: "Use /skills list and select"
+    note: "Known to fail in -p mode (github/copilot-cli#2040)"
+
+  V6:
+    question: "Can both runtimes execute scripts in the skill scripts/ directory?"
+    status: unverified
+    method: "Add a simple validation script, invoke the skill, check if script runs"
+    fallback: "Phase 0 skills are instruction-only; scripts are optional"
+
+  V7:
+    question: "Does Copilot CLI /skills reload detect newly installed PairSlash skills?"
+    status: unverified
+    method: "Install a skill during active session, run /skills reload, check listing"
+    fallback: "Restart CLI session after installation"

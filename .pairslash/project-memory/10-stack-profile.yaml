@@ -1,0 +1,37 @@
+# PairSlash Stack Profile
+# Declares the runtime targets, tooling, and language choices.
+# Scope: whole-project | Phase: 0
+
+kind: stack-profile
+title: PairSlash Stack Profile
+version: "0.1.0"
+
+runtimes:
+  codex_cli:
+    vendor: OpenAI
+    skill_storage_repo: .agents/skills/
+    skill_storage_user: ~/.agents/skills/
+    skill_format: SKILL.md (YAML frontmatter + Markdown)
+    invocation_direct: "$skill-name"
+    invocation_browse: /skills
+    optional_metadata: agents/openai.yaml
+    documentation: https://developers.openai.com/codex/skills
+
+  copilot_cli:
+    vendor: GitHub
+    skill_storage_repo: .github/skills/
+    skill_storage_user: ~/.copilot/skills/
+    skill_format: SKILL.md (YAML frontmatter + Markdown)
+    invocation_direct: "/skill-name"
+    invocation_browse: /skills
+    optional_metadata: null
+    documentation: https://docs.github.com/copilot/how-tos/copilot-cli/customize-copilot/create-skills
+
+project_language: YAML + Markdown (spec and skill definitions)
+memory_format: YAML (schema-first, file-based)
+build_tooling: none (Phase 0 is artifact-only)
+
+provenance:
+  created_by: phase-0-scaffold
+  timestamp: "2026-03-21T00:00:00Z"
+  source: OpenAI Codex docs, GitHub Copilot CLI docs

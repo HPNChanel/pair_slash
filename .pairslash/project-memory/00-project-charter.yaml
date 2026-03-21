@@ -1,0 +1,43 @@
+# PairSlash Project Charter
+# Authoritative project identity record.
+# Scope: whole-project | Phase: 0
+
+kind: charter
+title: PairSlash Project Charter
+version: "0.1.0"
+phase: 0
+
+identity:
+  name: PairSlash
+  tagline: >-
+    OSS slash-triggered workflow kit for Codex CLI and GitHub Copilot CLI,
+    with Global Project Memory as the durable source of truth for project context.
+  license: TBD
+
+runtimes:
+  supported:
+    - codex-cli
+    - github-copilot-cli
+  explicitly_excluded:
+    - claude-code
+    - cursor
+    - any-gui-product
+
+canonical_entrypoint: /skills
+
+core_principles:
+  - slash-first interaction
+  - explicit-write-only memory
+  - file-based reviewable truth
+  - two-runtime discipline
+  - no hidden learning or background daemons
+
+phase_0_goal: >-
+  Verify real trigger behavior for /skills and direct skill invocation,
+  prove the concept with minimal but serious workflows,
+  keep scope narrow.
+
+provenance:
+  created_by: phase-0-scaffold
+  timestamp: "2026-03-21T00:00:00Z"
+  source: CLAUDE.md sections 3, 4, 15

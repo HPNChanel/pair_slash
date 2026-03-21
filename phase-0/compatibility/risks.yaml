@@ -1,0 +1,170 @@
+# PairSlash Phase 0 Risk Register
+# Structured risk documentation for the Compatibility Spike.
+# Each risk has severity, evidence, impact, and fallback path.
+
+register_version: "0.1.0"
+last_updated: "2026-03-21"
+
+risks:
+
+  - id: R1
+    title: "/skills may not work in Codex CLI as expected"
+    severity: high
+    category: runtime-compatibility
+    description: >-
+      /skills is mentioned on the Codex skills overview page ("run /skills or
+      type $ to mention a skill") but is absent from the Codex CLI built-in
+      slash commands table. The command may exist but be undocumented in the
+      slash commands list, or it may not exist in the CLI surface at all.
+    evidence:
+      - source: https://developers.openai.com/codex/skills
+        finding: "Page says 'In CLI/IDE, run /skills or type $ to mention a skill'"
+      - source: https://developers.openai.com/codex/guides/slash-commands/
+        finding: "/skills is NOT in the built-in slash commands table"
+    impact: >-
+      If /skills does not exist in Codex CLI, the canonical entrypoint documented
+      in CLAUDE.md is unavailable on one of the two supported runtimes. This does
+      not break the product (direct invocation via $name is documented) but
+      weakens the "canonical compatibility path" story.
+    fallback: >-
+      Fall back to $skill-name direct invocation on Codex CLI. CLAUDE.md Section
+      4.2 explicitly allows direct invocation "when verified." Update the
+      compatibility notes to reflect this and adjust the canonical invocation
+      guidance to be runtime-conditional.
+    verification_item: V1
+    status: open
+
+  - id: R2
+    title: "LLM instruction compliance for the 11-step write pipeline"
+    severity: medium
+    category: instruction-fidelity
+    description: >-
+      The pairslash-memory-write-global workflow relies on the LLM faithfully
+      following 11 sequential steps encoded in SKILL.md instructions. LLMs can
+      skip steps, combine steps, or hallucinate completion. The preview-then-accept
+      pattern is particularly fragile because the LLM may write files before
+      showing the preview.
+    evidence:
+      - source: "LLM behavioral observation"
+        finding: >-
+          LLMs sometimes execute tool calls eagerly, especially file writes,
+          before completing all instruction steps. This is a known challenge
+          in agent-style workflows.
+    impact: >-
+      If the LLM skips the preview step or writes without acceptance, it violates
+      the core safety contract of pairslash-memory-write-global. This undermines
+      trust in the write-authority workflow.
+    fallback: >-
+      Phase 0 acceptance gate G5/G6 requires testing compliance rate.
+      "Does the LLM produce a preview patch and wait for confirmation at
+      least 8/10 times?" is the Phase 0 bar. Phase 2 hardens this with
+      script-based pre-write validation and hooks.
+    status: open
+
+  - id: R3
+    title: "File system access from skill context may be unreliable"
+    severity: medium
+    category: runtime-capability
+    description: >-
+      Both runtimes have file reading tools, but whether SKILL.md instructions
+      can reliably direct the LLM to read specific files in .pairslash/
+      is unverified. The LLM may not read files when instructed, may read
+      wrong files, or may summarize rather than faithfully report file contents.
+    evidence:
+      - source: "Codex CLI docs"
+        finding: "File reading is a general agent capability, not skill-specific"
+      - source: "Copilot CLI docs"
+        finding: "Skills can reference scripts and resources, but no explicit guarantee of arbitrary file reads from instructions"
+    impact: >-
+      If pairslash-plan cannot read project memory files, it produces plans
+      without project context. If pairslash-memory-write-global cannot read
+      existing records, it cannot perform duplicate/conflict detection.
+    fallback: >-
+      If file reading is unreliable from instructions alone:
+      1. Add explicit file read references in the skill directory
+      2. Instruct the user to paste relevant memory content
+      3. Phase 1 adds MCP tools for structured memory access
+    verification_item: V2
+    status: open
+
+  - id: R4
+    title: "Dual-path installation burden"
+    severity: low
+    category: developer-experience
+    description: >-
+      Skills must be manually copied to different directories for each runtime.
+      Codex uses .agents/skills/, Copilot uses .github/skills/. No automated
+      installer exists in Phase 0.
+    evidence:
+      - source: "Codex docs and Copilot docs"
+        finding: "Storage paths are different and non-negotiable per runtime"
+    impact: >-
+      Users must manually copy skill directories. Error-prone and tedious,
+      but not a blocker for Phase 0 demo purposes.
+    fallback: >-
+      Phase 0 uses a manual install guide (phase-0/install-guide.md).
+      Phase 1 builds the automated installer.
+    status: accepted
+
+  - id: R5
+    title: "Script execution differences between runtimes"
+    severity: low
+    category: runtime-compatibility
+    description: >-
+      Both runtimes document script support in skill directories, but
+      execution environment details may differ (shell, permissions,
+      available tools, sandboxing).
+    evidence:
+      - source: "Codex docs"
+        finding: "scripts/ subdirectory supported; Codex uses sandboxing"
+      - source: "Copilot docs"
+        finding: "Skills can include scripts; execution context unspecified"
+    impact: >-
+      For Phase 0 this is low-impact because skills are instruction-only.
+      Scripts are optional validation helpers.
+    fallback: >-
+      Phase 0 skills are instruction-only. Scripts marked as
+      "verify in Phase 0." Phase 1 adds cross-runtime script testing.
+    verification_item: V6
+    status: accepted
+
+  - id: R6
+    title: "Copilot CLI prompt mode (-p) does not load skills"
+    severity: low
+    category: runtime-compatibility
+    description: >-
+      Known bug: skills referenced via /skill-name in Copilot CLI prompt mode
+      (-p flag) don't load as they do in interactive mode.
+    evidence:
+      - source: https://github.com/github/copilot-cli/issues/2040
+        finding: "Skills not loaded in -p/--prompt mode"
+    impact: >-
+      PairSlash workflows will not work in non-interactive Copilot CLI usage.
+      This blocks CI/CD and automation use cases but does not affect
+      interactive use, which is Phase 0's scope.
+    fallback: >-
+      Phase 0 targets interactive mode only. CLAUDE.md Section 4.3 states
+      "MVP and early phases are interactive-first." This risk is documented
+      but non-blocking.
+    status: accepted
+
+  - id: R7
+    title: "YAML formatting fidelity in LLM-generated records"
+    severity: medium
+    category: instruction-fidelity
+    description: >-
+      The write-authority workflow asks the LLM to generate valid YAML records
+      and write them to files. LLMs can produce subtly malformed YAML
+      (incorrect indentation, unquoted strings with special characters,
+      missing document separators).
+    evidence:
+      - source: "LLM behavioral observation"
+        finding: "YAML generation by LLMs is generally good but not perfect"
+    impact: >-
+      Malformed YAML in project-memory/ files could break future reads
+      or cause silent data corruption.
+    fallback: >-
+      Phase 0 acceptance gate: manually validate that written YAML parses
+      correctly. Phase 2 adds script-based YAML validation as a post-write
+      check.
+    status: open
