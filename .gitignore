@@ -92,9 +92,15 @@ secrets/
 *.log
 logs/
 
-# ─── PairSlash session artifacts (non-authoritative, auto-generated) ──────────
+# ─── PairSlash non-authoritative artifacts (auto-generated, pre-write) ────────
 .pairslash/sessions/*
 !.pairslash/sessions/.gitkeep
+.pairslash/staging/*
+!.pairslash/staging/.gitkeep
+
+# ─── Runtime skill install paths (derived from phase-0/skills/) ──────────────
+.agents/skills/
+.github/skills/
 
 # ─── Local utility files ──────────────────────────────────────────────────────
 .git_commit_msg

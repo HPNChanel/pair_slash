@@ -63,16 +63,22 @@ runtimes:
 
     file_access:
       can_read_project_files:
-        status: documented-unverified
+        status: verified
+        tested_date: "2026-03-21"
+        tested_on: codex-cli-v0.116.0
         evidence: >-
-          Codex CLI has file reading capability as a general agent feature.
-          Whether SKILL.md instructions can reliably direct it to read
-          specific .pairslash/ files needs verification.
+          Verified via codex exec. Both pairslash-plan and
+          pairslash-memory-write-global read all 3 project memory files
+          using Get-Content shell commands. Complex PowerShell (variables,
+          foreach) blocked by sandbox; simple per-file commands succeeded.
         verification_item: V2
 
     script_execution:
-      status: documented-unverified
-      evidence: "scripts/ subdirectory is documented but execution behavior in CLI needs verification"
+      status: not-applicable
+      tested_date: "2026-03-21"
+      evidence: >-
+        No scripts exist in Phase 0 skills. pairslash-memory-write-global
+        has scripts/ with only .gitkeep. Script execution deferred to Phase 1/2.
       verification_item: V6
 
   copilot_cli:

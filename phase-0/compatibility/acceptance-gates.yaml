@@ -97,8 +97,8 @@ must_gates:
         Relevant project memory, Proposed steps (9 steps), Files likely affected,
         Tests and checks, Risks (4 risks with likelihood/impact/mitigation),
         Rollback (4-step procedure), Open questions (6 items with
-        [I don't know X] and [I assumed X] labels). Output saved to
-        stage2-plan-output.txt.
+        [I don't know X] and [I assumed X] labels). Output captured
+        in codex exec session 019d0f8f-667b-7621-ab55-ec19d94e7e99.
 
     - id: G5
       title: "Write workflow produces preview patch before writing"
@@ -199,8 +199,8 @@ must_gates:
       status: pass
       evidence: >-
         Verified via grep 2026-03-21. V1-V7 all present in
-        runtime-surface-matrix.yaml at lines 179-222. Each has status
-        (unverified), question, method, and fallback fields.
+        runtime-surface-matrix.yaml under the verification_items key.
+        Each has status, question, method, and fallback fields.
 
     - id: G10
       title: "No silent memory writes in any SKILL.md"

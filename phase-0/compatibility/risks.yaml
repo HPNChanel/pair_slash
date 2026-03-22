@@ -40,7 +40,6 @@ risks:
       compatibility notes to reflect this and adjust the canonical invocation
       guidance to be runtime-conditional.
     verification_item: V1
-    status: open-inconclusive
 
   - id: R2
     title: "LLM instruction compliance for the 11-step write pipeline"
@@ -78,7 +77,6 @@ risks:
       "Does the LLM produce a preview patch and wait for confirmation at
       least 8/10 times?" is the Phase 0 bar. Phase 2 hardens this with
       script-based pre-write validation and hooks.
-    status: open
 
   - id: R3
     title: "File system access from skill context may be unreliable"
@@ -113,7 +111,6 @@ risks:
       2. Instruct the user to paste relevant memory content
       3. Phase 1 adds MCP tools for structured memory access
     verification_item: V2
-    status: open
 
   - id: R4
     title: "Dual-path installation burden"
@@ -204,4 +201,3 @@ risks:
       Phase 0 acceptance gate: manually validate that written YAML parses
       correctly. Phase 2 adds script-based YAML validation as a post-write
       check.
-    status: open
