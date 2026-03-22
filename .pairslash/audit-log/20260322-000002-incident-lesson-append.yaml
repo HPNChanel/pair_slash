@@ -1,0 +1,9 @@
+timestamp: "2026-03-22T00:00:02Z"
+action: append
+kind: incident-lesson
+title: "LLM write script dropped tags and source_refs despite correct preview"
+target_file: ".pairslash/project-memory/80-incidents-and-lessons/llm-write-script-dropped-tags-and-source-refs.yaml"
+updated_by: pairslash-memory-write-global
+confidence: high
+result: success
+notes: "C3 candidate from pairslash-memory-candidate session. Shapes Phase 2 post-write validation."

@@ -1,0 +1,9 @@
+timestamp: "2026-03-22T00:00:05Z"
+action: append
+kind: pattern
+title: "codex exec as non-interactive skill testing surface"
+target_file: ".pairslash/project-memory/70-known-good-patterns/codex-exec-as-non-interactive-skill-testing-surface.yaml"
+updated_by: pairslash-memory-write-global
+confidence: high
+result: success
+notes: "C2 candidate from pairslash-memory-candidate session. Reusable testing pattern."

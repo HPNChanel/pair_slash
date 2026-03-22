@@ -1,0 +1,9 @@
+timestamp: "2026-03-22T00:00:03Z"
+action: append
+kind: decision
+title: "Runtime skill install paths are derived artifacts not source"
+target_file: ".pairslash/project-memory/60-architecture-decisions/install-paths-are-derived-artifacts.yaml"
+updated_by: pairslash-memory-write-global
+confidence: high
+result: success
+notes: "C6 candidate from pairslash-memory-candidate session. Prevents install copies in git."

@@ -1,0 +1,22 @@
+kind: decision
+title: "Runtime skill install paths are derived artifacts not source"
+statement: >-
+  .agents/skills/ and .github/skills/ are derived copies of the canonical
+  skill source at packs/core/. They must not be committed to the repo.
+  Both paths are gitignored. Users copy skills manually or use the
+  installer (Phase 1).
+evidence: >-
+  Review finding M1 (pairslash-review commit 1621b87). Fixed by adding
+  both paths to .gitignore and removing .agents/skills/ from git tracking.
+scope: whole-project
+confidence: high
+action: append
+tags:
+  - skill-install
+  - gitignore
+  - canonical-source
+source_refs:
+  - ".gitignore"
+  - "docs/workflows/install-guide.md"
+updated_by: pairslash-memory-write-global
+timestamp: "2026-03-22T00:00:03Z"

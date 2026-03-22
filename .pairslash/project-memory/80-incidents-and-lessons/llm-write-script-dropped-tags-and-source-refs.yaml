@@ -1,0 +1,24 @@
+kind: incident-lesson
+title: "LLM write script dropped tags and source_refs despite correct preview"
+statement: >-
+  pairslash-memory-write-global produced a preview patch containing all 11
+  required fields but the LLM write script dropped tags and source_refs when
+  writing the actual file (9/11 fields written). Phase 2 post-write
+  validation must compare written file against preview patch.
+evidence: >-
+  Gate G7 failed in Phase 0 verification 2026-03-21. Written file
+  50-constraints.yaml had 9 fields; preview had 11. Documented in
+  acceptance-gates.yaml G7 evidence.
+scope: whole-project
+confidence: high
+action: append
+tags:
+  - write-authority
+  - g7
+  - field-completeness
+  - phase-2
+source_refs:
+  - "docs/compatibility/acceptance-gates.yaml (G7)"
+  - "docs/compatibility/risks.yaml (R2.test_result)"
+updated_by: pairslash-memory-write-global
+timestamp: "2026-03-22T00:00:02Z"

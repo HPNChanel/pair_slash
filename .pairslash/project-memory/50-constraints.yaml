@@ -1,0 +1,24 @@
+kind: constraint
+title: "Codex CLI read-only sandbox blocks complex PowerShell patterns"
+statement: >-
+  In Codex CLI read-only sandbox mode, multi-statement PowerShell commands
+  using variables, foreach loops, or conditional blocks are rejected. Only
+  simple single-statement commands succeed. Skills must direct the LLM to
+  use simple per-file commands, not scripted loops.
+evidence: >-
+  Observed during Phase 0 verification 2026-03-21. codex exec session
+  019d0f8f. foreach loop rejected; individual Get-Content per file succeeded.
+scope: subsystem
+scope_detail: codex-cli
+confidence: high
+action: append
+tags:
+  - codex-cli
+  - sandbox
+  - powershell
+  - skill-instructions
+source_refs:
+  - "docs/compatibility/risks.yaml (R3.test_result)"
+  - "docs/compatibility/runtime-surface-matrix.yaml (V2)"
+updated_by: pairslash-memory-write-global
+timestamp: "2026-03-22T00:00:01Z"

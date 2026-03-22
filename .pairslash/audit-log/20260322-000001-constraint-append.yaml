@@ -1,0 +1,9 @@
+timestamp: "2026-03-22T00:00:01Z"
+action: append
+kind: constraint
+title: "Codex CLI read-only sandbox blocks complex PowerShell patterns"
+target_file: ".pairslash/project-memory/50-constraints.yaml"
+updated_by: pairslash-memory-write-global
+confidence: high
+result: success
+notes: "C1 candidate from pairslash-memory-candidate session. Affects skill instruction authoring."

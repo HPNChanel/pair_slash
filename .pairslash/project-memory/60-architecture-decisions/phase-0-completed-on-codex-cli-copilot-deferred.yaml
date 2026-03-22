@@ -1,0 +1,23 @@
+kind: decision
+title: "Phase 0 completed on Codex CLI with G7 gap and Copilot deferred"
+statement: >-
+  Phase 0 Compatibility Spike conditionally complete as of 2026-03-21.
+  9/10 MUST gates pass on Codex CLI v0.116.0. G7 fails (tags and
+  source_refs dropped by LLM write script). Copilot CLI testing deferred.
+  Phase 1 may proceed with G7 gap documented and mitigable.
+evidence: >-
+  Phase 0 acceptance checklist completed 2026-03-21. 9 MUST pass, 1 fail
+  (G7). 4 WILL-NOT pass. 3 SHOULD pass, 1 not-tested (G11).
+scope: whole-project
+confidence: high
+action: append
+tags:
+  - phase-0
+  - completion
+  - g7
+  - copilot-cli
+source_refs:
+  - "docs/compatibility/phase-0-acceptance.md"
+  - "docs/compatibility/acceptance-gates.yaml"
+updated_by: pairslash-memory-write-global
+timestamp: "2026-03-22T00:00:04Z"

@@ -1,0 +1,22 @@
+kind: decision
+title: "Phase 0 Codex CLI verification performed on v0.116.0"
+statement: >-
+  Phase 0 runtime verification was performed on Codex CLI v0.116.0 using
+  model gpt-5.3-codex. All gate results (G1-G7, G12-G14) and verification
+  items (V2-V4) are scoped to this version.
+evidence: >-
+  codex --version returned 0.116.0 on 2026-03-21. All test sessions
+  used gpt-5.3-codex. Recorded in acceptance-gates.yaml tested_on fields.
+scope: whole-project
+confidence: high
+action: append
+tags:
+  - codex-cli
+  - version
+  - phase-0
+  - verification
+source_refs:
+  - "docs/compatibility/acceptance-gates.yaml"
+  - "docs/compatibility/risks.yaml"
+updated_by: pairslash-memory-write-global
+timestamp: "2026-03-22T00:00:00Z"

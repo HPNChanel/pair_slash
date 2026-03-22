@@ -1,0 +1,9 @@
+timestamp: "2026-03-22T00:00:04Z"
+action: append
+kind: decision
+title: "Phase 0 completed on Codex CLI with G7 gap and Copilot deferred"
+target_file: ".pairslash/project-memory/60-architecture-decisions/phase-0-completed-on-codex-cli-copilot-deferred.yaml"
+updated_by: pairslash-memory-write-global
+confidence: high
+result: success
+notes: "C7 candidate from pairslash-memory-candidate session. Phase 0 exit decision."

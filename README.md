@@ -11,28 +11,20 @@ reviewable by Git, and separate from temporary session context.
 ## Current status
 
 - Version: `0.1.0`
-- Phase: `0` (Compatibility Spike)
-- State: artifact-complete, runtime verification in progress
+- Phase: Phase 0 complete (conditional), entering Phase 1
+- State: Codex CLI verified, Copilot CLI deferred, G7 gap documented
 
-Phase 0 proves architecture direction and workflow contracts. It does not claim
-production readiness.
+Phase 0 proved architecture direction and workflow contracts on Codex CLI v0.116.0.
+Phase 1 focuses on core product scaffolding.
 
 ## What this repository contains
 
-This repository currently focuses on Phase 0 artifacts:
-
 - Project constitution: `CLAUDE.md`
-- Global memory scaffold: `.pairslash/`
-- Skill definitions:
-  - `phase-0/skills/pairslash-plan/`
-  - `phase-0/skills/pairslash-memory-write-global/`
-- Specs, schema, and compatibility artifacts:
-  - `phase-0/specs/`
-  - `phase-0/schemas/`
-  - `phase-0/compatibility/`
-- Documentation and verification guides:
-  - `docs/phase-0/`
-  - `checklists/phase-0-acceptance.md`
+- Global Project Memory: `.pairslash/project-memory/`
+- Core skills pack: `packs/core/`
+- Workflow specs and schemas: `packages/spec-core/`
+- Compatibility and verification artifacts: `docs/compatibility/`
+- Architecture and workflow docs: `docs/architecture/`, `docs/workflows/`
 
 ## Core principles
 
@@ -114,43 +106,30 @@ Notes:
 
 ## Quick start (manual install)
 
-Phase 0 uses manual installation.
-
 ### Install skills for Codex CLI
 
 ```bash
 mkdir -p .agents/skills
-cp -r phase-0/skills/pairslash-plan .agents/skills/
-cp -r phase-0/skills/pairslash-memory-write-global .agents/skills/
+cp -r packs/core/pairslash-plan .agents/skills/
+cp -r packs/core/pairslash-memory-write-global .agents/skills/
 ```
 
 ### Install skills for GitHub Copilot CLI
 
 ```bash
 mkdir -p .github/skills
-cp -r phase-0/skills/pairslash-plan .github/skills/
-cp -r phase-0/skills/pairslash-memory-write-global .github/skills/
+cp -r packs/core/pairslash-plan .github/skills/
+cp -r packs/core/pairslash-memory-write-global .github/skills/
 ```
 
-Windows PowerShell equivalents are documented in:
+Windows PowerShell equivalents are documented in `docs/workflows/install-guide.md`.
 
-- `phase-0/install-guide.md`
-- `docs/phase-0/runtime-verification.md`
+## Verification and compatibility
 
-## Verification workflow
-
-Use these files to verify runtime behavior and gate completion:
-
-- Runtime test procedure: `docs/phase-0/runtime-verification.md`
-- Acceptance gates source: `phase-0/compatibility/acceptance-gates.yaml`
-- Runtime matrix source: `phase-0/compatibility/runtime-surface-matrix.yaml`
-- Master checklist: `checklists/phase-0-acceptance.md`
-
-Phase 0 completion target:
-
-- All MUST gates `G1-G10` pass
-- WILL-NOT gates `G15-G18` remain pass
-- Verification items `V1-V7` resolved with recorded status
+- Runtime test procedure: `docs/compatibility/runtime-verification.md`
+- Acceptance gates: `docs/compatibility/acceptance-gates.yaml`
+- Runtime surface matrix: `docs/compatibility/runtime-surface-matrix.yaml`
+- Phase 0 acceptance checklist: `docs/compatibility/phase-0-acceptance.md`
 
 ## Repository map
 
@@ -164,20 +143,44 @@ Phase 0 completion target:
 |  |- sessions/
 |  |- audit-log/
 |  `- staging/
-|- phase-0/
-|  |- skills/
-|  |- specs/
-|  |- schemas/
-|  |- compatibility/
-|  `- install-guide.md
+|- packages/
+|  |- spec-core/
+|  |  |- specs/
+|  |  `- schemas/
+|  |- cli/
+|  |- compiler-codex/
+|  |- compiler-copilot/
+|  |- memory-engine/
+|  |- installer/
+|  |- doctor/
+|  `- registry/
+|- packs/
+|  |- core/
+|  |  |- pairslash-plan/
+|  |  |- pairslash-memory-write-global/
+|  |  `- pairslash-review/
+|  |- backend/
+|  |- frontend/
+|  |- devops/
+|  `- release/
+|- templates/
+|  |- skill/
+|  |- memory/
+|  `- repo/
 |- docs/
-|  `- phase-0/
-`- checklists/
+|  |- architecture/
+|  |- compatibility/
+|  `- workflows/
+|- examples/
+|  |- monorepo/
+|  |- rails-service/
+|  `- node-api/
+`- scripts/
 ```
 
 ## Phase roadmap (high level)
 
-- Phase 0: compatibility spike (current)
+- Phase 0: compatibility spike (complete -- Codex CLI verified, Copilot deferred)
 - Phase 1: core product scaffolding (`spec-core`, compilers, installer, doctor)
 - Phase 2: memory hardening and write pipeline robustness
 - Phase 3: team packs and expanded packaging

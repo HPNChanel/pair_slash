@@ -3,8 +3,8 @@
 # Updated whenever a record is added, modified, or superseded.
 
 version: "0.1.0"
-last_updated: "2026-03-21T00:00:00Z"
-updated_by: phase-0-scaffold
+last_updated: "2026-03-22T00:00:05Z"
+updated_by: pairslash-memory-write-global
 
 records:
   - file: 00-project-charter.yaml
@@ -12,9 +12,48 @@ records:
     title: PairSlash Project Charter
     scope: whole-project
     status: active
+    schema_version: pre-0.1.0
 
   - file: 10-stack-profile.yaml
     kind: stack-profile
     title: PairSlash Stack Profile
+    scope: whole-project
+    status: active
+    schema_version: pre-0.1.0
+
+  - file: 50-constraints.yaml
+    kind: constraint
+    title: "Codex CLI read-only sandbox blocks complex PowerShell patterns"
+    scope: subsystem
+    scope_detail: codex-cli
+    status: active
+
+  - file: 60-architecture-decisions/phase-0-codex-cli-verification-on-v0-116-0.yaml
+    kind: decision
+    title: "Phase 0 Codex CLI verification performed on v0.116.0"
+    scope: whole-project
+    status: active
+
+  - file: 60-architecture-decisions/install-paths-are-derived-artifacts.yaml
+    kind: decision
+    title: "Runtime skill install paths are derived artifacts not source"
+    scope: whole-project
+    status: active
+
+  - file: 60-architecture-decisions/phase-0-completed-on-codex-cli-copilot-deferred.yaml
+    kind: decision
+    title: "Phase 0 completed on Codex CLI with G7 gap and Copilot deferred"
+    scope: whole-project
+    status: active
+
+  - file: 70-known-good-patterns/codex-exec-as-non-interactive-skill-testing-surface.yaml
+    kind: pattern
+    title: "codex exec as non-interactive skill testing surface"
+    scope: whole-project
+    status: active
+
+  - file: 80-incidents-and-lessons/llm-write-script-dropped-tags-and-source-refs.yaml
+    kind: incident-lesson
+    title: "LLM write script dropped tags and source_refs despite correct preview"
     scope: whole-project
     status: active

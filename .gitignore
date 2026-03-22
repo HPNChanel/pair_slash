@@ -98,7 +98,7 @@ logs/
 .pairslash/staging/*
 !.pairslash/staging/.gitkeep
 
-# ─── Runtime skill install paths (derived from phase-0/skills/) ──────────────
+# ─── Runtime skill install paths (derived from packs/core/) ──────────────────
 .agents/skills/
 .github/skills/
 

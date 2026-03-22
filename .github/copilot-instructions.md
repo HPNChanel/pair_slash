@@ -79,7 +79,7 @@ Any write to Global Memory must follow this sequence — no steps may be skipped
 
 ### Memory record schema
 
-All authoritative records must conform to `phase-0/schemas/memory-record.schema.yaml` with these required fields: `kind`, `title`, `statement`, `evidence`, `scope`, `confidence`, `action`, `tags`, `source_refs`, `updated_by`, `timestamp`.
+All authoritative records must conform to `packages/spec-core/schemas/memory-record.schema.yaml` with these required fields: `kind`, `title`, `statement`, `evidence`, `scope`, `confidence`, `action`, `tags`, `source_refs`, `updated_by`, `timestamp`.
 
 ## Key conventions
 
@@ -101,7 +101,7 @@ Every workflow must declare four contracts: **input** (required/optional fields)
 
 ### Skill file structure
 
-Each skill lives in its own directory under `phase-0/skills/` with:
+Each skill lives in its own directory under `packs/core/` with:
 - `SKILL.md` — Main definition (YAML frontmatter + Markdown instructions)
 - `contract.md` — Formal workflow contract
 - `example-invocation.md` — Usage examples
@@ -110,7 +110,7 @@ Each skill lives in its own directory under `phase-0/skills/` with:
 
 ### Phase discipline
 
-This repo is in **Phase 0** (compatibility spike). Do not introduce Phase 1+ concerns (compilers, installers, MCP integration, scripts-based validation) unless explicitly asked. Phase 0 proves architecture direction only.
+This repo has completed Phase 0 (compatibility spike) and is entering Phase 1. The repository structure follows CLAUDE.md section 14. Skills live in `packs/core/`, specs and schemas in `packages/spec-core/`, compatibility artifacts in `docs/compatibility/`.
 
 ## Hard anti-goals
 

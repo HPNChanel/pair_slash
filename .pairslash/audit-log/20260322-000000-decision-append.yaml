@@ -1,0 +1,9 @@
+timestamp: "2026-03-22T00:00:00Z"
+action: append
+kind: decision
+title: "Phase 0 Codex CLI verification performed on v0.116.0"
+target_file: ".pairslash/project-memory/60-architecture-decisions/phase-0-codex-cli-verification-on-v0-116-0.yaml"
+updated_by: pairslash-memory-write-global
+confidence: high
+result: success
+notes: "C4 candidate from pairslash-memory-candidate session. Provenance anchor for Phase 0 evidence."

@@ -1,0 +1,23 @@
+kind: pattern
+title: "codex exec as non-interactive skill testing surface"
+statement: >-
+  codex exec is a valid non-interactive mode for testing PairSlash skill
+  activation, memory reading, output structure, preview generation,
+  duplicate detection, and audit log creation. Cannot test interactive
+  TUI features (/skills picker, explicit no rejection).
+evidence: >-
+  Phase 0 verification 2026-03-21 used codex exec exclusively. G1-G6,
+  G12-G13 verified. V1 and true G6 rejection untestable in this mode.
+scope: whole-project
+confidence: high
+action: append
+tags:
+  - codex-cli
+  - testing
+  - codex-exec
+  - skill-verification
+source_refs:
+  - "docs/compatibility/acceptance-gates.yaml (G1-G6)"
+  - "docs/compatibility/phase-0-acceptance.md"
+updated_by: pairslash-memory-write-global
+timestamp: "2026-03-22T00:00:05Z"
