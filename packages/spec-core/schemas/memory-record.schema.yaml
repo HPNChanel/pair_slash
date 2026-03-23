@@ -8,7 +8,9 @@ $id: "https://pairslash.dev/schemas/memory-record/0.1.0"
 title: PairSlash Memory Record
 description: >-
   Schema for a single authoritative record in Global Project Memory.
-  Every record written by pairslash-memory-write-global must conform to this schema.
+  Every mutable record written by pairslash-memory-write-global must conform
+  to this schema. Legacy system records (`charter`, `stack-profile`) are
+  governed separately by system-record.schema.yaml.
 
 type: object
 required:
@@ -126,6 +128,24 @@ properties:
     format: date-time
 
 additionalProperties: false
+
+allOf:
+  - if:
+      properties:
+        scope:
+          enum:
+            - subsystem
+            - path-prefix
+    then:
+      required:
+        - scope_detail
+  - if:
+      properties:
+        action:
+          const: supersede
+    then:
+      required:
+        - supersedes
 
 # Validation rules not expressible in JSON Schema alone:
 #

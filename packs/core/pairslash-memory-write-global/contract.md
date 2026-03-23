@@ -1,9 +1,9 @@
 # pairslash-memory-write-global -- Workflow Contract
 
 **Version:** 0.1.0
-**Phase:** 0
+**Phase:** 2
 **Class:** write-authority
-**Status:** Phase 0 demo
+**Status:** active
 
 ---
 
@@ -22,6 +22,8 @@ explicit, schema-first, previewable, conflict-aware, and auditable.
 - Detects duplicates and conflicts before writing.
 - Shows a preview patch and requires explicit user acceptance.
 - Updates the memory index and appends an audit log entry.
+- Leaves legacy system records (`charter`, `stack-profile`) on their separate
+  system-record path.
 
 **What it is not:**
 - It is not a planner, reviewer, or code writer.
@@ -91,6 +93,9 @@ confirmation, and only proceeds after the user approves the extraction.
 
 **Schema reference:** `packages/spec-core/schemas/memory-record.schema.yaml`
 
+`charter` and `stack-profile` are intentionally excluded from `kind`. They are
+legacy singleton system records governed by `system-record.schema.yaml`.
+
 ---
 
 ## Output contract
@@ -144,6 +149,7 @@ reaches Step 7 produces a preview in this exact structure.
 | File write fails (permissions, path) | 9 | **REPORT** error honestly. Do not pretend write succeeded. Do not retry silently. |
 | Index update fails | 10 | **WARN** that index is out of sync. Record was written but index needs manual fix. |
 | Audit log write fails | 11 | **WARN** that audit trail is incomplete. Record was written. |
+| User attempts `charter` or `stack-profile` write | 1-2 | **REJECT.** System records are out of scope for this workflow; route to dedicated system-record maintenance. |
 
 **Anti-patterns this contract prohibits:**
 - Guessing values for missing fields.
@@ -165,13 +171,27 @@ reaches Step 7 produces a preview in this exact structure.
 | Audit Log | **write** | `.pairslash/audit-log/{timestamp}-{kind}-{action}.yaml` | Always, even on rejection |
 
 **Invariant:**
-This workflow is the ONLY authorized path for writing to `.pairslash/project-memory/`.
-No other workflow -- including `pairslash-plan`, `pairslash-review`, or any future
-read-oriented workflow -- may write to Global Project Memory as a side effect.
+This workflow is the ONLY authorized path for writing mutable records in
+`.pairslash/project-memory/`. No other workflow -- including `pairslash-plan`,
+`pairslash-review`, or any future read-oriented workflow -- may write to Global
+Project Memory as a side effect. Legacy system records remain outside this
+workflow's write surface.
 
 **Session memory cannot override Global Project Memory.** If session context
 contradicts a record in `project-memory/`, the workflow surfaces the conflict
 and requires an explicit decision.
+
+---
+
+## Side-effect contract
+
+- Filesystem writes (after acceptance only):
+  - `.pairslash/project-memory/*`
+  - `.pairslash/project-memory/90-memory-index.yaml`
+  - `.pairslash/audit-log/*.yaml`
+- Git mutation: uncommitted working tree changes only (no auto-commit)
+- Network calls: none
+- Safety invariant: no write before preview + explicit acceptance
 
 ---
 
@@ -183,7 +203,7 @@ This workflow requires **explicit user acceptance** at Step 8.
 - The user MUST say "yes" (or clear equivalent) to proceed.
 - Hedging, partial agreement, or conditional responses are treated as "no."
 - Rejection is logged in the audit log; no files are written to `project-memory/`.
-- There is **no auto-commit mode** in Phase 0.
+- There is **no auto-commit mode** in this repository.
 
 ---
 
@@ -195,8 +215,7 @@ This workflow requires **explicit user acceptance** at Step 8.
 - Activation: `/skills` picker, or `$pairslash-memory-write-global` in prompt
 - File read: Codex file reading tools read `.pairslash/` files for duplicate/conflict detection
 - File write: Codex file writing tools write the accepted record
-- `/skills` availability: **verify in Phase 0** (mentioned in skills docs but absent
-  from CLI slash commands table)
+- `/skills` is the canonical compatibility path
 
 ### GitHub Copilot CLI
 
@@ -210,8 +229,6 @@ This workflow requires **explicit user acceptance** at Step 8.
 
 ## Phase boundary notes
 
-Phase 0 is instruction-simulated. Every pipeline step is executed by the LLM
-following SKILL.md instructions rather than deterministic code.
-
-See `phase-boundary.md` in this directory for the full breakdown of what
-Phase 0 simulates vs what Phase 2 hardens with scripts and hooks.
+`phase-boundary.md` is retained as historical migration context.
+Current repository baseline is Phase 2 hardening with local doctor/lint/test
+gates in `scripts/phase2_checks.py` and `tests/`.

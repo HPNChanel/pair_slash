@@ -148,4 +148,4 @@ Update these files with evidence:
    - G2, G5, G6, G7: update `status` to `pass` or `fail` with `evidence`
    - G12, G13: update `status` (SHOULD gates, non-blocking)
 
-3. If a MUST gate fails, open a new issue or task before closing Phase 0.
+3. If a MUST gate fails, open a new issue or task before claiming Phase 2 done.

@@ -1,0 +1,165 @@
+# PairSlash Candidate Extractor Report Schema
+# JSON Schema expressed as YAML.
+# Defines strict output for pairslash-memory-candidate.
+
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://pairslash.dev/schemas/candidate-report/0.1.0"
+title: PairSlash Candidate Extractor Report
+description: >-
+  Schema for the structured report produced by pairslash-memory-candidate.
+  This report is non-authoritative and must not mutate Global Project Memory.
+
+type: object
+required:
+  - plan
+  - candidates
+  - reconciliation
+  - next_action
+
+properties:
+  plan:
+    type: object
+    required:
+      - task_scope
+      - evidence_sources
+      - candidate_count_estimate
+      - risk_notes
+    properties:
+      task_scope:
+        type: string
+        minLength: 1
+      evidence_sources:
+        type: array
+        minItems: 1
+        items:
+          type: string
+          minLength: 1
+      candidate_count_estimate:
+        type: integer
+        minimum: 0
+      risk_notes:
+        type: array
+        items:
+          type: string
+    additionalProperties: false
+
+  candidates:
+    type: array
+    items:
+      type: object
+      required:
+        - id
+        - kind
+        - title
+        - statement
+        - scope
+        - evidence
+        - confidence
+        - novelty
+        - classification
+        - reason_to_promote
+        - reason_not_to_promote_yet
+        - target_file_hint
+      properties:
+        id:
+          type: string
+          minLength: 1
+        kind:
+          type: string
+          enum:
+            - decision
+            - command
+            - glossary
+            - constraint
+            - ownership
+            - incident-lesson
+            - pattern
+        title:
+          type: string
+          minLength: 3
+          maxLength: 200
+        statement:
+          type: string
+          minLength: 10
+        scope:
+          type: string
+          enum:
+            - whole-project
+            - subsystem
+            - path-prefix
+        evidence:
+          type: array
+          minItems: 1
+          items:
+            type: string
+            minLength: 1
+        confidence:
+          type: string
+          enum:
+            - low
+            - medium
+            - high
+        novelty:
+          type: string
+          enum:
+            - new
+            - duplicate
+            - supersede-candidate
+        classification:
+          type: string
+          enum:
+            - keep-as-candidate
+            - duplicate-existing
+            - needs-supersede-review
+            - too-weak-do-not-promote
+        reason_to_promote:
+          type: string
+        reason_not_to_promote_yet:
+          type: string
+        target_file_hint:
+          type: string
+          minLength: 1
+      additionalProperties: false
+
+  reconciliation:
+    type: object
+    required:
+      - existing_records_checked
+      - duplicates_found
+      - supersede_review_needed
+      - missing_evidence
+    properties:
+      existing_records_checked:
+        type: array
+        items:
+          type: string
+      duplicates_found:
+        type: array
+        items:
+          type: string
+      supersede_review_needed:
+        type: array
+        items:
+          type: string
+      missing_evidence:
+        type: array
+        items:
+          type: string
+    additionalProperties: false
+
+  next_action:
+    type: string
+    enum:
+      - USE_PAIRSLASH_MEMORY_WRITE_GLOBAL
+      - KEEP_IN_TASK_MEMORY
+      - REJECT_CANDIDATES
+
+additionalProperties: false
+
+# Rules not fully expressible by schema:
+#
+# 1. Each evidence entry should include a source location (path and anchor).
+# 2. classification must match novelty and reconciliation outcome:
+#    - duplicate-existing -> novelty=duplicate
+#    - needs-supersede-review -> novelty=supersede-candidate
+# 3. keep-as-candidate requires reconciliation to have no unresolved conflict.

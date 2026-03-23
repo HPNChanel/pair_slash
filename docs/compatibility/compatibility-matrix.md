@@ -1,139 +1,125 @@
-# PairSlash Phase 0 -- Compatibility Matrix
+# PairSlash Compatibility Matrix
 
-Human-readable summary of the runtime surface comparison.
-Machine-readable version: `docs/compatibility/runtime-surface-matrix.yaml`
+Use this page to answer "what support can we truthfully claim?" It is not the
+install guide and it is not the live verification checklist.
 
-**Legend:**
-- FACT -- confirmed from official documentation
-- DOC-UNVERIFIED -- in documentation but not yet tested on a real CLI
-- UNVERIFIED -- needs live CLI testing; no documentation either confirms or denies
-- KNOWN-BUG -- documented known issue
+## How to use this page
 
----
+- Need install steps: use `docs/workflows/install-guide.md`
+- Need live CLI verification steps: use `docs/compatibility/runtime-verification.md`
+- Need current operational safety rules: use `docs/workflows/phase-2-operations.md`
+- Need historical context only: use the archived Phase 0 docs, not this page
+## Runtime boundary
 
-## Skill format
+PairSlash core supports exactly:
 
-| Property | Codex CLI | Copilot CLI | Compatible? |
-|----------|-----------|-------------|-------------|
-| SKILL.md required | Yes | Yes | YES |
-| Frontmatter: `name` | Yes (required) | Yes (required) | YES |
-| Frontmatter: `description` | Yes (required) | Yes (required) | YES |
-| Frontmatter: `license` | Not documented | Optional | COMPAT -- optional field |
-| Markdown body | Yes | Yes | YES |
-| `scripts/` subdirectory | Yes (FACT) | Yes (implied) | YES |
-| `references/` subdirectory | Yes (FACT) | Not documented | PARTIAL |
-| `agents/openai.yaml` metadata | Yes (FACT) | Not supported | CODEX-ONLY |
+- Codex CLI
+- GitHub Copilot CLI
 
-**Conclusion:** One canonical SKILL.md per skill works on both runtimes.
+Canonical entrypoint on both: `/skills`.
 
----
+## Skill format compatibility
 
-## Skill storage paths
+| Property | Codex CLI | Copilot CLI | Compatible |
+|---|---|---|---|
+| `SKILL.md` + YAML frontmatter | Yes | Yes | Yes |
+| Repo skill path | `.agents/skills/` | `.github/skills/` | Path differs only |
+| User skill path | `~/.agents/skills/` | `~/.copilot/skills/` | Path differs only |
+| Direct invocation | `$skill-name` | `/skill-name` | Syntax differs only |
+| Canonical invocation | `/skills` | `/skills` | Yes |
 
-### Codex CLI
+## Core workflow compatibility targets
 
-| Scope | Path | Notes |
-|-------|------|-------|
-| Repo (current dir) | `.agents/skills/` | Scanned from CWD up to repo root |
-| Repo (parent dir) | `../.agents/skills/` | Scanned when CWD is inside a git repo |
-| Repo (root) | `$REPO_ROOT/.agents/skills/` | Root-level skills available to all subdirs |
-| User (cross-repo) | `~/.agents/skills/` | Applies to all repos |
-| Admin (machine-wide) | `/etc/codex/skills` | macOS/Linux only |
+| Workflow | Codex CLI target | Copilot CLI target |
+|---|---|---|
+| pairslash-plan | `/skills` -> select | `/skills` -> select |
+| pairslash-review | `/skills` -> select | `/skills` -> select |
+| pairslash-onboard-repo | `/skills` -> select | `/skills` -> select |
+| pairslash-command-suggest | `/skills` -> select | `/skills` -> select |
+| pairslash-memory-candidate | `/skills` -> select | `/skills` -> select |
+| pairslash-memory-write-global | `/skills` -> select | `/skills` -> select |
+| pairslash-memory-audit | `/skills` -> select | `/skills` -> select |
 
-**Windows paths:**
+Direct invocation is secondary and runtime-dependent. Do not treat direct path
+as canonical compatibility proof.
 
-| Scope | Path |
-|-------|------|
-| Repo | `.agents\skills\` |
-| User | `%USERPROFILE%\.agents\skills\` or `$env:USERPROFILE\.agents\skills\` |
-| Admin | No documented Windows equivalent |
+## Formalized pack surfaces
 
-### GitHub Copilot CLI
+Formalized pack support is defined only by `packages/spec-core/registry/packs.yaml`.
+The current registry-backed set is:
 
-| Scope | Path | Notes |
-|-------|------|-------|
-| Repo (primary) | `.github/skills/` | Standard location |
-| Repo (alt) | `.claude/skills/` | Claude-compatible alternative |
-| User (cross-repo) | `~/.copilot/skills/` | Primary user-level location |
-| User (alt) | `~/.claude/skills/` | Alternative user-level location |
+- `pairslash-plan`
+- `pairslash-backend`
+- `pairslash-frontend`
+- `pairslash-devops`
+- `pairslash-release`
 
-**Windows paths:**
+The broader core workflow table above is a compatibility target list, not a
+formalized-pack inventory.
 
-| Scope | Path |
-|-------|------|
-| Repo | `.github\skills\` |
-| User | `%USERPROFILE%\.copilot\skills\` or `$env:USERPROFILE\.copilot\skills\` |
+## Phase 3 pack compatibility summary
 
----
+Pack-level support for Phase 3 team packs is derived from
+`docs/compatibility/runtime-surface-matrix.yaml`. Use these labels exactly:
 
-## Invocation paths
+- `supported`: live runtime evidence exists for the relevant surface set
+- `supported with caveat`: at least one relevant surface is supported, with a
+  documented runtime limitation on another relevant surface
+- `not yet validated`: no relevant runtime surface has live validation evidence
 
-| Method | Codex CLI | Status | Copilot CLI | Status |
-|--------|-----------|--------|-------------|--------|
-| Browse and select | `/skills` (then select) | DOC-UNVERIFIED (V1) | `/skills` then pick | FACT |
-| List available | Unknown | UNVERIFIED | `/skills list` | FACT |
-| Get skill info | Unknown | UNVERIFIED | `/skills info` | FACT |
-| Add location | Unknown | UNVERIFIED | `/skills add` | FACT |
-| Reload mid-session | Automatic (per docs) | DOC-UNVERIFIED | `/skills reload` | DOC-UNVERIFIED (V7) |
-| Direct by name | `$skill-name` | FACT (DOC) | `/skill-name` in prompt | FACT |
-| Implicit (auto-match) | Yes (by description) | FACT | Yes (by description) | FACT |
-| Non-interactive mode | Unknown | UNVERIFIED | Does not work (`-p` flag) | KNOWN-BUG |
+Relevant feature surfaces for the Phase 3 packs are:
 
----
+- Codex CLI: `/skills` -> select pack, `$pack-name`
+- Copilot CLI: `/skills` -> select pack, `/pack-name`
 
-## PairSlash-specific paths
+| Pack name | Version | Codex support | Copilot support | Required capabilities | Known limitations | Migration notes | Validation status | Open risks |
+|---|---|---|---|---|---|---|---|---|
+| pairslash-backend | `0.2.0` | not yet validated | not yet validated | `/skills`; installed skill files; read access to `.pairslash/project-memory/`; workspace file access for bounded backend edits | Direct invocation is unverified on both runtimes; pack is read-only for Global Project Memory | No install-path change; tooling should discover formalized packs through `packages/spec-core/registry/packs.yaml` | Metadata, registry, and docs validate locally; no live runtime verification recorded | Support claims can outrun evidence if docs are promoted before manual runtime verification |
+| pairslash-frontend | `0.2.0` | not yet validated | not yet validated | `/skills`; installed skill files; read access to `.pairslash/project-memory/`; workspace file access for UI/component edits | Direct invocation is unverified on both runtimes; depends on defined UI/backend contracts; pack is read-only for Global Project Memory | No install-path change; registry-backed discovery is the migration boundary for tooling | Metadata, registry, and docs validate locally; no live runtime verification recorded | Undefined product or backend contracts can be mistaken for runtime support if the matrix is not kept evidence-bound |
+| pairslash-devops | `0.2.0` | not yet validated | not yet validated | `/skills`; installed skill files; read access to `.pairslash/project-memory/`; repo workflow/script access; operator environment access when validation depends on external systems | Direct invocation is unverified on both runtimes; environment-dependent behavior cannot be claimed without operator verification; pack is read-only for Global Project Memory | No install-path change; formalized-pack discovery should start from the registry manifest | Metadata, registry, and docs validate locally; environment-sensitive runtime behavior remains manually unverified | Operational support could be overstated if environment-specific checks are inferred from local schema/test success |
+| pairslash-release | `0.2.0` | not yet validated | not yet validated | `/skills`; installed skill files; read access to registry, metadata, compatibility docs, and validated diffs | Direct invocation is unverified on both runtimes; release claims must remain evidence-bound; pack is read-only for Global Project Memory | No install-path change; tooling should use registry membership to identify formalized release packs | Metadata, registry, and docs validate locally; no live runtime verification recorded | Release messaging may imply broader runtime support than has actually been verified if this summary drifts from the surface matrix |
 
-### pairslash-plan
+| Pack | Runtime | Surface | Status | Evidence |
+|---|---|---|---|---|
+| pairslash-plan | Codex CLI | `/skills` -> select | supported | compatibility docs + runtime matrix |
+| pairslash-plan | Codex CLI | `$pairslash-plan` | supported | archived acceptance + runtime matrix |
+| pairslash-plan | Copilot CLI | `/skills` -> select | supported | compatibility docs + install guide |
+| pairslash-plan | Copilot CLI | `/pairslash-plan` interactive | unverified | contract note + archived acceptance |
+| pairslash-plan | Copilot CLI | `/pairslash-plan` with `-p/--prompt` | blocked | known runtime limitation in contract |
+| pairslash-backend | Codex CLI | `/skills` -> select | unverified | compatibility docs + runtime matrix |
+| pairslash-backend | Codex CLI | `$pairslash-backend` | unverified | compatibility docs + runtime matrix |
+| pairslash-backend | Copilot CLI | `/skills` -> select | unverified | compatibility docs + runtime matrix |
+| pairslash-backend | Copilot CLI | `/pairslash-backend` | unverified | compatibility docs + runtime matrix |
+| pairslash-frontend | Codex CLI | `/skills` -> select | unverified | compatibility docs + runtime matrix |
+| pairslash-frontend | Codex CLI | `$pairslash-frontend` | unverified | compatibility docs + runtime matrix |
+| pairslash-frontend | Copilot CLI | `/skills` -> select | unverified | compatibility docs + runtime matrix |
+| pairslash-frontend | Copilot CLI | `/pairslash-frontend` | unverified | compatibility docs + runtime matrix |
+| pairslash-devops | Codex CLI | `/skills` -> select | unverified | compatibility docs + runtime matrix |
+| pairslash-devops | Codex CLI | `$pairslash-devops` | unverified | compatibility docs + runtime matrix |
+| pairslash-devops | Copilot CLI | `/skills` -> select | unverified | compatibility docs + runtime matrix |
+| pairslash-devops | Copilot CLI | `/pairslash-devops` | unverified | compatibility docs + runtime matrix |
+| pairslash-release | Codex CLI | `/skills` -> select | unverified | compatibility docs + runtime matrix |
+| pairslash-release | Codex CLI | `$pairslash-release` | unverified | compatibility docs + runtime matrix |
+| pairslash-release | Copilot CLI | `/skills` -> select | unverified | compatibility docs + runtime matrix |
+| pairslash-release | Copilot CLI | `/pairslash-release` | unverified | compatibility docs + runtime matrix |
 
-| Property | Codex CLI | Copilot CLI |
-|----------|-----------|-------------|
-| Source | `packs/core/pairslash-plan/SKILL.md` | same |
-| Repo install target | `.agents/skills/pairslash-plan/` | `.github/skills/pairslash-plan/` |
-| User install target | `~/.agents/skills/pairslash-plan/` | `~/.copilot/skills/pairslash-plan/` |
-| Activation (canonical) | `/skills` | `/skills` |
-| Activation (direct) | `$pairslash-plan` | `/pairslash-plan` |
+For formalized packs, human-facing docs must not claim stronger support than the
+status recorded in `docs/compatibility/runtime-surface-matrix.yaml`.
 
-### pairslash-memory-write-global
+## Memory authority parity requirements
 
-| Property | Codex CLI | Copilot CLI |
-|----------|-----------|-------------|
-| Source | `packs/core/pairslash-memory-write-global/SKILL.md` | same |
-| Repo install target | `.agents/skills/pairslash-memory-write-global/` | `.github/skills/pairslash-memory-write-global/` |
-| User install target | `~/.agents/skills/pairslash-memory-write-global/` | `~/.copilot/skills/pairslash-memory-write-global/` |
-| Activation (canonical) | `/skills` | `/skills` |
-| Activation (direct) | `$pairslash-memory-write-global` | `/pairslash-memory-write-global` |
+Both runtimes must preserve identical semantics:
 
----
+- Global Project Memory is authoritative.
+- Read workflows cannot write Global Memory.
+- Write-authority path is only `pairslash-memory-write-global`.
+- Write path must enforce preview patch, explicit acceptance, conflict checks,
+  audit log append, and index update.
 
-## Known divergences
+## Validation references
 
-| Surface | Codex CLI | Copilot CLI | Impact |
-|---------|-----------|-------------|--------|
-| Repo skill storage path | `.agents/skills/` | `.github/skills/` | Manual install needed for each runtime; Phase 1 compiler resolves |
-| Direct invocation syntax | `$name` | `/name` in prompt | Must be documented per runtime; cannot be standardized |
-| `/skills` subcommands | Limited (DOC-UNVERIFIED) | Rich (list, info, add, reload, remove) | Better management UX on Copilot CLI |
-| Metadata file | `agents/openai.yaml` supported | Not documented | Codex-only enhancement; does not affect compatibility |
-| Non-interactive mode | Unknown | Skills do not load (known bug) | Phase 0 targets interactive mode only; not a blocker |
-
----
-
-## What we are intentionally NOT doing in Phase 0
-
-1. **No runtime-specific SKILL.md compilation.** One SKILL.md per skill, installed
-   to different paths. The Phase 1 compiler handles divergence if it materializes.
-
-2. **No custom slash registry.** `/skills` and `$name` / `/name` are sufficient.
-   No proprietary slash command table is needed.
-
-3. **No verification of implicit invocation.** Implicit invocation (auto-match by
-   description) exists on both runtimes but is non-deterministic. Phase 0 tests
-   explicit invocation only.
-
-4. **No cross-runtime test automation.** All testing in Phase 0 is manual.
-   Phase 1 adds automated compatibility checks.
-
-5. **No claim that `scripts/` works correctly.** Script execution in skill
-   directories is documented but unverified. Phase 0 skills are instruction-only.
-
-6. **No claim that non-interactive mode works.** The Copilot CLI `-p` bug means
-   Phase 0 is interactive-only.
+- Acceptance gates: `docs/compatibility/acceptance-gates.yaml`
+- Local gates: `scripts/phase2_checks.py --all`
+- Regression tests: `python -m unittest discover -s tests -p "test_*.py"`
+- Live verification steps: `docs/compatibility/runtime-verification.md`
+- Release checklist: `docs/releases/release-checklist-0.2.0.md`

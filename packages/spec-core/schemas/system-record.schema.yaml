@@ -1,0 +1,93 @@
+# PairSlash System Record Schema
+# JSON Schema expressed as YAML.
+# Defines immutable-ish singleton records kept in project-memory root.
+
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://pairslash.dev/schemas/system-record/0.1.0"
+title: PairSlash System Record
+description: >-
+  Schema for legacy/system singleton records in Global Project Memory.
+  This schema intentionally covers project charter and stack profile records
+  that are not written through the mutable write-authority contract.
+
+type: object
+oneOf:
+  - title: PairSlash Charter System Record
+    type: object
+    required:
+      - kind
+      - title
+      - version
+      - phase
+      - identity
+      - runtimes
+      - canonical_entrypoint
+      - core_principles
+      - phase_2_goal
+      - provenance
+    properties:
+      kind:
+        const: charter
+      title:
+        type: string
+        minLength: 3
+        maxLength: 200
+      version:
+        type: string
+        minLength: 1
+      phase:
+        type: integer
+      identity:
+        type: object
+      runtimes:
+        type: object
+      canonical_entrypoint:
+        type: string
+        minLength: 1
+      core_principles:
+        type: array
+        items:
+          type: string
+      phase_2_goal:
+        type: string
+        minLength: 1
+      provenance:
+        type: object
+    additionalProperties: true
+
+  - title: PairSlash Stack Profile System Record
+    type: object
+    required:
+      - kind
+      - title
+      - version
+      - runtimes
+      - project_language
+      - memory_format
+      - build_tooling
+      - provenance
+    properties:
+      kind:
+        const: stack-profile
+      title:
+        type: string
+        minLength: 3
+        maxLength: 200
+      version:
+        type: string
+        minLength: 1
+      runtimes:
+        type: object
+      project_language:
+        type: string
+        minLength: 1
+      memory_format:
+        type: string
+        minLength: 1
+      build_tooling:
+        type: array
+        items:
+          type: string
+      provenance:
+        type: object
+    additionalProperties: true

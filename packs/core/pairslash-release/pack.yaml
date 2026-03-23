@@ -1,0 +1,101 @@
+kind: pack-metadata
+id: pairslash-release
+version: "0.2.0"
+phase: 3
+status: active
+category: release
+workflow_class: dual-mode
+codex:
+  plan_on_model: gpt-5.4
+  plan_off_model: gpt-5.4
+memory_access:
+  authority: read-only
+  global_project_memory: read
+  task_memory: read
+  session_context: implicit-read
+  audit_log: none
+  invariant: This pack may read project memory for context but must never write Global Project Memory.
+required_inputs:
+  - name: release_scope
+    required: true
+    description: Release scope, changed packs, and intended upgrade boundary.
+  - name: validated_diffs
+    required: false
+    description: Diffs, docs, and test evidence already validated for the release.
+  - name: affected_runtimes
+    required: false
+    description: Runtimes or compatibility surfaces impacted by the release.
+output_contract:
+  plan_mode:
+    format: structured-markdown
+    sections:
+      - Objective
+      - Scope of Release
+      - Pack Version Decisions
+      - Compatibility Matrix Changes
+      - Migration / Upgrade Notes
+      - Step-by-Step Release Plan
+      - Validation Checklist
+      - Risks and Communication Notes
+      - MEMORY_CANDIDATE
+  default_mode:
+    format: structured-markdown
+    sections:
+      - Prepared Artifacts
+      - Pack Version Summary
+      - Compatibility Matrix Delta
+      - Upgrade / Migration Notes
+      - Validation Run / Validation Needed
+      - Remaining Release Risks
+      - MEMORY_CANDIDATE
+failure_contract:
+  plan_mode:
+    blockers:
+      - Do not hide breaking changes or fabricate semver certainty when evidence is incomplete.
+      - Make migration requirements explicit instead of implying they are optional.
+  default_mode:
+    blockers:
+      - If release input is incomplete, do not fabricate versions or compatibility support.
+      - If there is insufficient evidence for a semver bump, mark it unresolved explicitly.
+runtime_targets:
+  - runtime: codex_cli
+    canonical_entrypoint: /skills
+    direct_invocation: $pairslash-release
+    surfaces:
+      - id: canonical-picker
+        invocation: /skills -> select pairslash-release
+        status: unverified
+        evidence_refs:
+          - docs/compatibility/compatibility-matrix.md
+          - docs/compatibility/runtime-surface-matrix.yaml
+      - id: direct-invocation
+        invocation: $pairslash-release
+        status: unverified
+        evidence_refs:
+          - docs/compatibility/compatibility-matrix.md
+          - docs/compatibility/runtime-surface-matrix.yaml
+  - runtime: copilot_cli
+    canonical_entrypoint: /skills
+    direct_invocation: /pairslash-release
+    surfaces:
+      - id: canonical-picker
+        invocation: /skills -> select pairslash-release
+        status: unverified
+        evidence_refs:
+          - docs/compatibility/compatibility-matrix.md
+          - docs/compatibility/runtime-surface-matrix.yaml
+      - id: direct-invocation
+        invocation: /pairslash-release
+        status: unverified
+        evidence_refs:
+          - docs/compatibility/compatibility-matrix.md
+          - docs/compatibility/runtime-surface-matrix.yaml
+compatibility_notes:
+  - Canonical activation is /skills on both supported runtimes.
+  - Direct invocation remains unverified until live runtime checks are recorded.
+source_of_truth:
+  pack_dir: packs/core/pairslash-release
+  skill: packs/core/pairslash-release/SKILL.md
+  contract: packs/core/pairslash-release/contract.md
+  spec: packages/spec-core/specs/pairslash-release.spec.yaml
+  validation_checklist: packs/core/pairslash-release/validation-checklist.md

@@ -1,0 +1,9 @@
+timestamp: "2026-03-22T10:58:04.6107343+07:00"
+action: supersede
+kind: pattern
+title: "Candidate extraction phải reconcile với authoritative memory trước khi giữ candidate"
+target_file: ".pairslash/project-memory/70-known-good-patterns/candidate-extraction-phai-reconcile-voi-authoritative-memo.yaml"
+updated_by: "session-user"
+confidence: high
+result: success
+notes: "Superseded in place to narrow scope from whole-project to subsystem pairslash-memory-candidate after audit finding F2."

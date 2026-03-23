@@ -1,0 +1,85 @@
+# pairslash-release Workflow Specification
+# Phase 3 team-pack dual-mode release workflow.
+
+workflow:
+  name: pairslash-release
+  version: "0.2.0"
+  class: dual-mode
+  phase: 3
+
+  purpose: >-
+    Produce truthful release plans in Plan Mode and prepare concrete release
+    artifacts in Default mode without publishing anything or writing Global
+    Project Memory.
+
+  canonical_invocation:
+    primary: /skills -> select pairslash-release
+    codex_direct: $pairslash-release
+    copilot_direct: /pairslash-release
+
+contracts:
+  input:
+    required:
+      - name: release_scope
+        type: string
+        description: Release scope, changed packs, and intended upgrade boundary.
+    optional:
+      - name: validated_diffs
+        type: string
+        description: Diffs, docs, and test evidence already validated for the release.
+      - name: affected_runtimes
+        type: string
+        description: Runtimes or compatibility surfaces impacted by the release.
+
+  output:
+    modes:
+      plan_mode:
+        format: structured-markdown
+        deterministic_structure: true
+        sections:
+          - name: Objective
+          - name: Scope of Release
+          - name: Pack Version Decisions
+          - name: Compatibility Matrix Changes
+          - name: Migration / Upgrade Notes
+          - name: Step-by-Step Release Plan
+          - name: Validation Checklist
+          - name: Risks and Communication Notes
+          - name: MEMORY_CANDIDATE
+      default_mode:
+        format: structured-markdown
+        deterministic_structure: true
+        sections:
+          - name: Prepared Artifacts
+          - name: Pack Version Summary
+          - name: Compatibility Matrix Delta
+          - name: Upgrade / Migration Notes
+          - name: Validation Run / Validation Needed
+          - name: Remaining Release Risks
+          - name: MEMORY_CANDIDATE
+
+  failure:
+    plan_mode:
+      blockers:
+        - Do not hide breaking changes or fabricate semver certainty when evidence is incomplete.
+        - Make migration requirements explicit instead of implying they are optional.
+    default_mode:
+      blockers:
+        - If release input is incomplete, do not fabricate versions or compatibility support.
+        - If there is insufficient evidence for a semver bump, mark it unresolved explicitly.
+
+  memory:
+    reads:
+      - layer: global-project-memory
+        paths:
+          - .pairslash/project-memory/
+      - layer: task-memory
+        paths:
+          - .pairslash/task-memory/
+    writes: none
+    invariant: Release pack must not write Global Project Memory.
+
+  side_effect:
+    filesystem_writes: repo-local release artifacts allowed in default_mode only
+    git_mutation: possible-uncommitted-changes-only
+    network_calls: none

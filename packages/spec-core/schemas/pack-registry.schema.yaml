@@ -1,0 +1,83 @@
+# PairSlash Pack Registry Schema
+# JSON Schema expressed as YAML.
+
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://pairslash.dev/schemas/pack-registry/0.2.0"
+title: PairSlash Pack Registry
+description: >-
+  Schema for the versioned registry of formalized PairSlash packs.
+
+type: object
+required:
+  - version
+  - model
+  - last_updated
+  - packs
+
+properties:
+  version:
+    type: string
+    minLength: 1
+  model:
+    type: string
+    minLength: 1
+  last_updated:
+    type: string
+    format: date
+  packs:
+    type: array
+    minItems: 1
+    items:
+      type: object
+      required:
+        - id
+        - version
+        - phase
+        - status
+        - category
+        - metadata_file
+        - skill_file
+        - contract_file
+        - spec_file
+        - compatibility_matrix
+        - validation_checklist
+      properties:
+        id:
+          type: string
+          minLength: 1
+        version:
+          type: string
+          minLength: 1
+        phase:
+          type: integer
+          minimum: 0
+        status:
+          type: string
+          enum:
+            - active
+            - deprecated
+            - draft
+        category:
+          type: string
+          minLength: 1
+        metadata_file:
+          type: string
+          minLength: 1
+        skill_file:
+          type: string
+          minLength: 1
+        contract_file:
+          type: string
+          minLength: 1
+        spec_file:
+          type: string
+          minLength: 1
+        compatibility_matrix:
+          type: string
+          minLength: 1
+        validation_checklist:
+          type: string
+          minLength: 1
+      additionalProperties: false
+
+additionalProperties: false

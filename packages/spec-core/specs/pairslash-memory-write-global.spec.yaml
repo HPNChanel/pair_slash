@@ -1,18 +1,20 @@
 # pairslash-memory-write-global Workflow Specification
-# Phase 0 demo -- write-authority workflow for Global Project Memory.
+# Phase 2 hardening -- write-authority workflow for Global Project Memory.
 # Source: CLAUDE.md sections 9.3, 10, 11
 
 workflow:
   name: pairslash-memory-write-global
   version: "0.1.0"
   class: write-authority
-  phase: 0
+  phase: 2
 
   purpose: >-
     The official path for writing durable project truth to Global Project Memory.
     May write new decisions, update facts with evidence, promote stable lessons,
     record known-good commands or patterns, capture constraints, and update
-    glossary or ownership knowledge when justified.
+    glossary or ownership knowledge when justified. Legacy system records
+    (`charter`, `stack-profile`) are outside this workflow and remain governed
+    by the dedicated system-record contract.
 
   canonical_invocation:
     primary: /skills -> select pairslash-memory-write-global
@@ -28,7 +30,9 @@ contracts:
       - name: kind
         type: enum
         values: [decision, command, glossary, constraint, ownership, incident-lesson, pattern]
-        description: Category of knowledge being recorded.
+        description: >-
+          Category of mutable knowledge being recorded. System record kinds
+          (`charter`, `stack-profile`) are invalid for this workflow.
 
       - name: title
         type: string
@@ -159,6 +163,11 @@ contracts:
       If the file write fails (permissions, path issues), report the error
       honestly. Do not pretend the write succeeded. Do not retry silently.
 
+    on_system_record_request: >-
+      REJECT the write. `charter` and `stack-profile` are legacy system records
+      governed by system-record.schema.yaml and must not be mutated through the
+      mutable write-authority workflow.
+
   memory:
     reads:
       - layer: global-project-memory
@@ -190,8 +199,21 @@ contracts:
         condition: Always, even on rejection (logs the rejection).
     invariant: >-
       This workflow is the ONLY authorized path for writing to
-      global-project-memory. No other workflow may write to
-      .pairslash/project-memory/ as a side effect.
+      mutable global-project-memory records. No other workflow may write to
+      .pairslash/project-memory/ as a side effect, and this workflow does not
+      write legacy system records.
+
+  side_effect:
+    filesystem_writes:
+      - .pairslash/project-memory/
+      - .pairslash/project-memory/90-memory-index.yaml
+      - .pairslash/audit-log/
+    git_mutation: possible-uncommitted-changes-only
+    network_calls: none
+    guardrails:
+      - preview patch must be shown before write
+      - explicit acceptance required before write
+      - conflict and duplicate checks must run before write
 
   execution_pipeline:
     description: >-

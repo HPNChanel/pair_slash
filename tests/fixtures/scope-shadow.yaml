@@ -1,0 +1,12 @@
+scenario: scope-shadow
+proposed:
+  kind: constraint
+  scope: subsystem
+  scope_detail: memory
+existing:
+  - kind: constraint
+    scope: whole-project
+    title: "Global memory safety baseline"
+expected:
+  shadow_detected: true
+

@@ -1,95 +1,83 @@
 # pair_slash
 
-PairSlash is an open-source slash-triggered workflow kit for two runtimes:
+PairSlash is an OSS slash-triggered workflow kit for exactly two runtimes:
 
 - Codex CLI
 - GitHub Copilot CLI
 
-Its core idea is explicit, file-based **Global Project Memory** that is durable,
-reviewable by Git, and separate from temporary session context.
+Canonical entrypoint: `/skills`.
+
+## Start here
+
+If you are evaluating or operating PairSlash from this repo, use this order:
+
+1. Install skills for your runtime with the [manual install guide](docs/workflows/install-guide.md).
+2. Run the local validation commands in [Phase 2 operations](docs/workflows/phase-2-operations.md).
+3. Use the [compatibility matrix](docs/compatibility/compatibility-matrix.md) and
+   [runtime verification guide](docs/compatibility/runtime-verification.md) before
+   claiming runtime support.
+4. Use the [legacy system records ADR](docs/architecture/adr-0001-legacy-project-memory-system-records.md)
+   for architecture rationale, not the archived Phase 0 docs.
 
 ## Current status
 
-- Version: `0.1.0`
-- Phase: Phase 0 complete (conditional), entering Phase 1
-- State: Codex CLI verified, Copilot CLI deferred, G7 gap documented
+- Version: `0.2.0`
+- Phase: **Phase 2 hardening baseline with Phase 3 pack formalization**
+- Focus: authoritative memory model, explicit write path, doctor/lint/test gates, and the first registry-backed formalized pack release (`pairslash-plan`)
 
-Phase 0 proved architecture direction and workflow contracts on Codex CLI v0.116.0.
-Phase 1 focuses on core product scaffolding.
+## What ships in this repo
 
-## What this repository contains
+- Constitution: `CLAUDE.md`
+- Global memory and audit trail: `.pairslash/`
+- Source workflow packs: `packs/core/`
+- Source specs/schemas: `packages/spec-core/`
+- Validation tooling: `scripts/phase2_checks.py`
+- Fixtures and regression tests: `tests/`
 
-- Project constitution: `CLAUDE.md`
-- Global Project Memory: `.pairslash/project-memory/`
-- Core skills pack: `packs/core/`
-- Workflow specs and schemas: `packages/spec-core/`
-- Compatibility and verification artifacts: `docs/compatibility/`
-- Architecture and workflow docs: `docs/architecture/`, `docs/workflows/`
+## Choose your path
 
-## Core principles
+- Install or reinstall skills: [docs/workflows/install-guide.md](docs/workflows/install-guide.md)
+- Validate a local checkout and memory-write safety gates: [docs/workflows/phase-2-operations.md](docs/workflows/phase-2-operations.md)
+- Check what runtime behavior is actually supported: [docs/compatibility/compatibility-matrix.md](docs/compatibility/compatibility-matrix.md)
+- Run live CLI verification and record evidence: [docs/compatibility/runtime-verification.md](docs/compatibility/runtime-verification.md)
+- Understand dual-schema system-record handling: [docs/architecture/adr-0001-legacy-project-memory-system-records.md](docs/architecture/adr-0001-legacy-project-memory-system-records.md)
+- Read archived Phase 0 material only for historical trace: `docs/architecture/phase-0-overview.md`, `docs/compatibility/phase-0-acceptance.md`
 
-PairSlash in this repo is governed by these constraints:
+## Core rules
 
-- Slash-first interaction model
-- `/skills` as canonical cross-runtime entrypoint
-- Explicit-write-only memory mutation (no silent writes)
-- File-based, schema-first memory records
-- Two-runtime boundary only (Codex CLI and Copilot CLI)
+- Only two runtimes are in scope: Codex CLI + Copilot CLI.
+- `/skills` is canonical; direct invocation is secondary.
+- Global Project Memory is authoritative.
+- Read workflows must not mutate Global Memory.
+- `pairslash-memory-write-global` is the only write-authority workflow.
+- Global memory writes require preview patch + explicit acceptance + audit log + index update.
+- Legacy system records (`charter`, `stack-profile`) stay outside the mutable
+  write-authority path.
 
-## Supported runtimes
+## Included workflows (core)
 
-### Codex CLI
-
-- Repo skill path: `.agents/skills/`
-- User skill path: `~/.agents/skills/`
-- Direct invocation: `$skill-name`
-- Canonical invocation: `/skills`
-
-### GitHub Copilot CLI
-
-- Repo skill path: `.github/skills/`
-- User skill path: `~/.copilot/skills/`
-- Direct invocation: `/skill-name`
-- Canonical invocation: `/skills`
-
-## Included skills
-
-### `pairslash-plan` (read-oriented)
-
-Purpose:
-
-- Build a structured execution plan before implementation
-- Read project memory for constraints and conventions
-- Separate facts from assumptions
-
-Safety rule:
-
-- Must not write to Global Project Memory
-
-### `pairslash-memory-write-global` (write-authority)
-
-Purpose:
-
-- Write durable project truth into `.pairslash/project-memory/`
-- Validate structured input
-- Detect duplicates/conflicts
-- Require preview patch + explicit acceptance before writing
-
-Safety rules:
-
-- No write without preview
-- No write without user acceptance
-- No silent conflict resolution
+- `pairslash-plan` (read-oriented)
+- `pairslash-review` (read-oriented)
+- `pairslash-onboard-repo` (read-oriented)
+- `pairslash-command-suggest` (read-oriented, advisory)
+- `pairslash-memory-candidate` (candidate-producing, read-only)
+- `pairslash-memory-write-global` (write-authority)
+- `pairslash-memory-audit` (audit, read-oriented default)
 
 ## Global memory layout
-
-Current canonical memory shape in this repository:
 
 ```text
 .pairslash/
   project-memory/
     00-project-charter.yaml
     10-stack-profile.yaml
+    20-commands.yaml
+    30-glossary.yaml
+    40-ownership.yaml
+    50-constraints.yaml
+    60-architecture-decisions/
+    70-known-good-patterns/
+    80-incidents-and-lessons/
     90-memory-index.yaml
   task-memory/
   sessions/
@@ -100,91 +88,54 @@ Current canonical memory shape in this repository:
 Notes:
 
 - `project-memory/` is authoritative.
-- `task-memory/` and `sessions/` are non-authoritative layers.
-- `audit-log/` is for durable write history.
-- `staging/` is for pre-authoritative or validation workflows.
+- `task-memory/` and `sessions/` are non-authoritative.
+- `audit-log/` is append-only write history.
 
-## Quick start (manual install)
+## Install
 
-### Install skills for Codex CLI
+- Codex CLI install path: copy source packs from `packs/core/` into `.agents/skills/` using the [manual install guide](docs/workflows/install-guide.md).
+- GitHub Copilot CLI install path: copy source packs from `packs/core/` into `.github/skills/` using the [manual install guide](docs/workflows/install-guide.md).
+- Windows PowerShell examples and post-install verification live in [docs/workflows/install-guide.md](docs/workflows/install-guide.md).
 
-```bash
-mkdir -p .agents/skills
-cp -r packs/core/pairslash-plan .agents/skills/
-cp -r packs/core/pairslash-memory-write-global .agents/skills/
-```
+## Validation and done bar
 
-### Install skills for GitHub Copilot CLI
+Run from repo root:
 
 ```bash
-mkdir -p .github/skills
-cp -r packs/core/pairslash-plan .github/skills/
-cp -r packs/core/pairslash-memory-write-global .github/skills/
+python scripts/phase2_checks.py --all
+python -m unittest discover -s tests -p "test_*.py"
 ```
 
-Windows PowerShell equivalents are documented in `docs/workflows/install-guide.md`.
+Both commands must pass for local “Phase 2 done” checks.
 
-## Verification and compatibility
+After validation passes, continue to [Phase 2 operations](docs/workflows/phase-2-operations.md)
+for the operational done bar and memory-write safety gates.
 
-- Runtime test procedure: `docs/compatibility/runtime-verification.md`
+## Docs
+
+- Phase 2 operations: `docs/workflows/phase-2-operations.md`
+- Install guide: `docs/workflows/install-guide.md`
+- Compatibility matrix: `docs/compatibility/compatibility-matrix.md`
+- Runtime verification: `docs/compatibility/runtime-verification.md`
+- Phase 3 team-pack release notes: `docs/releases/phase-3-team-pack-update.md`
+- Changelog draft: `docs/releases/changelog-0.2.0.md`
+- Upgrade notes: `docs/releases/upgrade-notes-0.2.0.md`
+- Release checklist: `docs/releases/release-checklist-0.2.0.md`
 - Acceptance gates: `docs/compatibility/acceptance-gates.yaml`
-- Runtime surface matrix: `docs/compatibility/runtime-surface-matrix.yaml`
-- Phase 0 acceptance checklist: `docs/compatibility/phase-0-acceptance.md`
+- ADR (legacy system records): `docs/architecture/adr-0001-legacy-project-memory-system-records.md`
+- Archived Phase 0 overview: `docs/architecture/phase-0-overview.md`
 
-## Repository map
+## Migration notes
 
-```text
-.
-|- CLAUDE.md
-|- README.md
-|- .pairslash/
-|  |- project-memory/
-|  |- task-memory/
-|  |- sessions/
-|  |- audit-log/
-|  `- staging/
-|- packages/
-|  |- spec-core/
-|  |  |- specs/
-|  |  `- schemas/
-|  |- cli/
-|  |- compiler-codex/
-|  |- compiler-copilot/
-|  |- memory-engine/
-|  |- installer/
-|  |- doctor/
-|  `- registry/
-|- packs/
-|  |- core/
-|  |  |- pairslash-plan/
-|  |  |- pairslash-memory-write-global/
-|  |  `- pairslash-review/
-|  |- backend/
-|  |- frontend/
-|  |- devops/
-|  `- release/
-|- templates/
-|  |- skill/
-|  |- memory/
-|  `- repo/
-|- docs/
-|  |- architecture/
-|  |- compatibility/
-|  `- workflows/
-|- examples/
-|  |- monorepo/
-|  |- rails-service/
-|  `- node-api/
-`- scripts/
-```
+- Legacy system records (`charter`, `stack-profile`) are kept under dual-schema handling.
+- Mutable authoritative records remain under `memory-record.schema.yaml` and write-authority pipeline.
+- `pairslash-memory-write-global` does not write system records.
+- Runtime install folders (`.agents/skills/`, `.github/skills/`) are derived artifacts; source-of-truth is `packs/core/`.
 
-## Phase roadmap (high level)
+## Troubleshooting (common)
 
-- Phase 0: compatibility spike (complete -- Codex CLI verified, Copilot deferred)
-- Phase 1: core product scaffolding (`spec-core`, compilers, installer, doctor)
-- Phase 2: memory hardening and write pipeline robustness
-- Phase 3: team packs and expanded packaging
-
-## License
-
-License is currently marked `TBD` in the project charter.
+- Missing Python dependency errors: run with Python 3.11+ and install required libs listed by `phase2_checks.py`.
+- Schema drift findings for `charter`/`stack-profile`: verify `system-record.schema.yaml` and index `record_family`.
+- System-record write request: `pairslash-memory-write-global` only accepts mutable kinds; do not route `charter`/`stack-profile` through it.
+- Write-global rejects input: ensure required fields are complete (`kind`, `title`, `statement`, `evidence`, `scope`, `confidence`, `action`, `tags`, `source_refs`, `updated_by`, `timestamp`).
+- Unsure which doc to follow: start at this README, then go to `docs/workflows/install-guide.md`, then `docs/workflows/phase-2-operations.md`.

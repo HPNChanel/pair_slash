@@ -1,0 +1,7 @@
+scenario: weak-evidence-reject
+candidate:
+  evidence: "General best practice."
+  source_refs: []
+expected:
+  weak: true
+

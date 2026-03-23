@@ -23,13 +23,13 @@ These examples show how to activate the skill and what to provide as input.
 
 *Fallback to /skills if $pairslash-plan is not available on this runtime surface.*
 
-### Via direct invocation on Copilot CLI (interactive mode only)
+### Via direct invocation on Copilot CLI (interactive mode only, unverified)
 
 ```
 > Use the /pairslash-plan skill to plan: Add a rate-limiting layer to the public API endpoints.
 ```
 
-*Note: This does not work in `-p`/`--prompt` mode due to a known Copilot CLI bug.*
+*Note: Interactive prompt invocation is not yet proven in-repo, and it does not work in `-p`/`--prompt` mode due to a known Copilot CLI bug.*
 
 ---
 

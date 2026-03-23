@@ -1,9 +1,9 @@
 # pairslash-plan -- Workflow Contract
 
-**Version:** 0.1.0
-**Phase:** 0
+**Version:** 0.2.0
+**Phase:** 2
 **Class:** read-oriented
-**Status:** Phase 0 demo
+**Status:** active
 
 ---
 
@@ -38,13 +38,18 @@ Select `pairslash-plan` from the skill picker.
 
 | Runtime | Syntax | Status |
 |---------|--------|--------|
-| Codex CLI | `$pairslash-plan` | Supported if runtime surface allows; fallback is `/skills` |
-| GitHub Copilot CLI | `/pairslash-plan` in prompt | Supported in interactive mode; known to fail in `-p`/`--prompt` mode |
+| Codex CLI | `$pairslash-plan` | Supported; fallback is `/skills` |
+| GitHub Copilot CLI | `/pairslash-plan` in prompt | Unverified in interactive mode; blocked in `-p`/`--prompt` mode |
 
 **Implicit invocation:**
 Both runtimes may automatically activate this skill when the user's task matches
 the skill's description. Do not rely on this; use explicit invocation for
 production use.
+
+**Compatibility authority:**
+Pack identity/version lives in `packs/core/pairslash-plan/pack.yaml`.
+Registry membership lives in `packages/spec-core/registry/packs.yaml`.
+Runtime support status must match `docs/compatibility/runtime-surface-matrix.yaml`.
 
 ---
 
@@ -126,6 +131,19 @@ The user reviews the output plan and decides whether to proceed with implementat
 
 ---
 
+## Metadata and Registry
+
+`pairslash-plan` is a formalized core pack with explicit metadata and registry hooks.
+
+- Pack metadata: `packs/core/pairslash-plan/pack.yaml`
+- Pack registry: `packages/spec-core/registry/packs.yaml`
+- Compatibility evidence: `docs/compatibility/runtime-surface-matrix.yaml`
+
+These artifacts are authoritative for pack identity, version, and compatibility
+status. Human-readable docs in this contract must stay aligned with them.
+
+---
+
 ## Runtime mapping notes
 
 ### Codex CLI
@@ -134,9 +152,8 @@ The user reviews the output plan and decides whether to proceed with implementat
 - Activation: `/skills` picker, or `$pairslash-plan` in prompt
 - Memory read: Codex file reading tools are available; skill instructions direct
   the LLM to read `.pairslash/project-memory/` files
-- `/skills` availability: **verify in Phase 0** (mentioned in skills docs but absent
-  from CLI slash commands table)
-- `$pairslash-plan` availability: documented and expected to work
+- `/skills` is the canonical compatibility path
+- `$pairslash-plan` direct invocation: supported
 
 ### GitHub Copilot CLI
 
@@ -144,5 +161,5 @@ The user reviews the output plan and decides whether to proceed with implementat
 - Activation: `/skills list` to confirm presence, then `/pairslash-plan` in prompt
 - Memory read: Copilot file reading tools are available
 - Known issue: `/pairslash-plan` does not work in `-p`/`--prompt` mode
-  (github/copilot-cli#2040). Use interactive mode only.
+  (github/copilot-cli#2040). Interactive prompt invocation remains unverified.
 - `/skills reload` can pick up newly installed skills without restarting

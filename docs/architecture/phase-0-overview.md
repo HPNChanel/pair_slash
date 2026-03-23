@@ -1,8 +1,19 @@
-# PairSlash Phase 0 -- Compatibility Spike Overview
+# PairSlash Phase 0 -- Compatibility Spike Overview (Archived)
+
+Archived historical context only. Do not use this page as current install or
+operations guidance.
+
+Current active docs:
+
+- `README.md`
+- `docs/workflows/install-guide.md`
+- `docs/workflows/phase-2-operations.md`
+- `docs/compatibility/compatibility-matrix.md`
+- `docs/compatibility/runtime-verification.md`
 
 **Version:** 0.1.0
 **Phase:** 0
-**Status:** In progress -- requires live CLI testing
+**Status:** Archived historical record (superseded by Phase 2 hardening baseline)
 
 ---
 

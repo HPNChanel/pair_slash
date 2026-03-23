@@ -1,0 +1,84 @@
+# PairSlash Memory Index Schema
+# JSON Schema expressed as YAML.
+
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://pairslash.dev/schemas/memory-index/0.1.0"
+title: PairSlash Memory Index
+description: >-
+  Schema for .pairslash/project-memory/90-memory-index.yaml.
+
+type: object
+required:
+  - version
+  - last_updated
+  - updated_by
+  - records
+
+properties:
+  version:
+    type: string
+    minLength: 1
+  last_updated:
+    type: string
+    format: date-time
+  updated_by:
+    type: string
+    minLength: 1
+  records:
+    type: array
+    items:
+      type: object
+      required:
+        - file
+        - kind
+        - title
+        - scope
+        - status
+      properties:
+        file:
+          type: string
+          minLength: 1
+        kind:
+          type: string
+          minLength: 1
+        title:
+          type: string
+          minLength: 3
+        scope:
+          type: string
+          enum:
+            - whole-project
+            - subsystem
+            - path-prefix
+        scope_detail:
+          type: string
+        status:
+          type: string
+          enum:
+            - active
+            - superseded
+            - deprecated
+        schema_version:
+          type: string
+        record_family:
+          type: string
+          enum:
+            - mutable
+            - system
+      additionalProperties: false
+
+additionalProperties: false
+
+allOf:
+  - properties:
+      records:
+        type: array
+        items:
+          allOf:
+            - if:
+                properties:
+                  record_family:
+                    const: system
+              then:
+                required:
+                  - schema_version

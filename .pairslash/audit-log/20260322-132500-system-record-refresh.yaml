@@ -1,0 +1,10 @@
+timestamp: "2026-03-22T13:25:00+07:00"
+action: append
+kind: decision
+title: "Refresh charter and stack-profile metadata for Phase 2 hardening"
+target_file: ".pairslash/project-memory/00-project-charter.yaml, .pairslash/project-memory/10-stack-profile.yaml"
+updated_by: "phase2-hardening"
+confidence: high
+result: success
+notes: "Updated system record phase metadata and build tooling references after Phase 2 implementation."
+

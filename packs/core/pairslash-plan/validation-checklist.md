@@ -17,10 +17,14 @@ These can be verified from Cursor or any text editor.
 - [ ] `SKILL.md` Step 1 instructs loading `.pairslash/project-memory/` files
 - [ ] `SKILL.md` Step 3 defines all 9 output sections in order
 - [ ] `SKILL.md` Rules section prohibits memory writes explicitly
+- [ ] `packs/core/pairslash-plan/pack.yaml` exists and parses as valid YAML
+- [ ] `packages/spec-core/registry/packs.yaml` exists and contains `pairslash-plan`
 - [ ] `packages/spec-core/specs/pairslash-plan.spec.yaml` exists and parses as valid YAML
-- [ ] `packs/core/pairslash-plan/contract.md` exists with all 7 contract sections
+- [ ] `packs/core/pairslash-plan/contract.md` exists with metadata/registry notes aligned to pack metadata
 - [ ] `packs/core/pairslash-plan/example-invocation.md` exists
 - [ ] `packs/core/pairslash-plan/example-output.md` exists with all 9 plan sections
+- [ ] Version is identical across `pack.yaml`, `contract.md`, and `pairslash-plan.spec.yaml`
+- [ ] Compatibility statuses in `pack.yaml` match `docs/compatibility/runtime-surface-matrix.yaml`
 
 ---
 
@@ -44,6 +48,7 @@ Each check maps to an acceptance gate. Record pass/fail and evidence.
 - [ ] Use `/skills` (or equivalent) to list available skills
 - [ ] `pairslash-plan` appears in the list
 - Evidence: _______________
+- Status to record in matrix: `supported` for `codex_cli/canonical-picker` or `copilot_cli/canonical-picker`
 
 ### G3 -- Skill reads project memory
 
@@ -51,6 +56,7 @@ Each check maps to an acceptance gate. Record pass/fail and evidence.
 - [ ] Output cites at least one file from `.pairslash/project-memory/`
 - [ ] Citation format is `[from memory: filename]` or equivalent
 - Evidence: _______________
+- Status to record in matrix: keep runtime surface status unchanged; update evidence refs only
 
 ### G4 -- Output follows the 9-section structure
 
@@ -79,7 +85,7 @@ Each check maps to an acceptance gate. Record pass/fail and evidence.
 
 ## Behavioral quality checks (subjective, reviewer judgment)
 
-These are not binary pass/fail but are important for Phase 0 quality.
+These are not binary pass/fail but are important for workflow quality.
 
 - [ ] Facts are labeled `[from memory]`; assumptions are labeled `[assumption]`
 - [ ] When goal is vague, the skill asks a clarifying question rather than
@@ -107,12 +113,13 @@ These are not binary pass/fail but are important for Phase 0 quality.
 Update these files with evidence:
 
 1. `docs/compatibility/runtime-surface-matrix.yaml`
-   - V1: did `/skills` picker work in Codex CLI?
-   - V2: did the skill read `.pairslash/` files from instructions?
-   - V4: did `$pairslash-plan` direct invocation work?
-   - V5: did `/pairslash-plan` work in Copilot CLI interactive mode?
+   - `pack_surfaces`: update `pairslash-plan` runtime/surface status or evidence refs
+   - `verification_items`: keep generic V1-V7 statuses aligned with latest proof
 
-2. `docs/compatibility/acceptance-gates.yaml`
+2. `packages/spec-core/registry/packs.yaml`
+   - confirm `pairslash-plan` version/path references stay correct after any move or rename
+
+3. `docs/compatibility/acceptance-gates.yaml`
    - G1, G3, G4, G10: update `status` to `pass` or `fail` with `evidence`
 
-3. If a MUST gate fails, open a new issue or task before closing Phase 0.
+4. If a MUST gate fails, open a new issue or task before claiming Phase 2 done.

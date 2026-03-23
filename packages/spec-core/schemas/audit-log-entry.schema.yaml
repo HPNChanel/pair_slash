@@ -1,0 +1,60 @@
+# PairSlash Audit Log Entry Schema
+# JSON Schema expressed as YAML.
+
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://pairslash.dev/schemas/audit-log-entry/0.1.0"
+title: PairSlash Audit Log Entry
+description: >-
+  Schema for write-authority audit log entries in .pairslash/audit-log/.
+
+type: object
+required:
+  - timestamp
+  - action
+  - kind
+  - title
+  - target_file
+  - updated_by
+  - confidence
+  - result
+
+properties:
+  timestamp:
+    type: string
+    format: date-time
+  action:
+    type: string
+    enum:
+      - append
+      - supersede
+      - reject-candidate-if-conflict
+  kind:
+    type: string
+    minLength: 1
+  title:
+    type: string
+    minLength: 3
+  target_file:
+    type: string
+    minLength: 1
+  updated_by:
+    type: string
+    minLength: 1
+  confidence:
+    type: string
+    enum:
+      - low
+      - medium
+      - high
+  result:
+    type: string
+    enum:
+      - success
+      - rejected
+      - conflict
+      - failed
+  notes:
+    type: string
+
+additionalProperties: false
+

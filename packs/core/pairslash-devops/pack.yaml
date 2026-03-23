@@ -1,0 +1,102 @@
+kind: pack-metadata
+id: pairslash-devops
+version: "0.2.0"
+phase: 3
+status: active
+category: devops
+workflow_class: dual-mode
+codex:
+  plan_on_model: gpt-5.4
+  plan_off_model: gpt-5.3-codex
+memory_access:
+  authority: read-only
+  global_project_memory: read
+  task_memory: read
+  session_context: implicit-read
+  audit_log: none
+  invariant: This pack may read project memory for context but must never write Global Project Memory.
+required_inputs:
+  - name: task
+    required: true
+    description: CI, deployment, infrastructure, or operational change to plan or implement.
+  - name: affected_environments
+    required: false
+    description: Environments or systems likely to be touched.
+  - name: affected_paths
+    required: false
+    description: Workflows, scripts, infra definitions, or runtime config paths in scope.
+output_contract:
+  plan_mode:
+    format: structured-markdown
+    sections:
+      - Objective
+      - Relevant Memory Constraints
+      - Systems Affected
+      - Preconditions
+      - Step-by-Step Plan
+      - Validation and Monitoring Plan
+      - Rollback Plan
+      - Risks / Blast Radius
+      - Proposed File Touch List
+      - MEMORY_CANDIDATE
+  default_mode:
+    format: structured-markdown
+    sections:
+      - Done
+      - Files Changed
+      - Operational Impact
+      - Validation Run / Validation Needed
+      - Rollback Notes
+      - Remaining Risks
+      - MEMORY_CANDIDATE
+failure_contract:
+  plan_mode:
+    blockers:
+      - Elevate destructive or irreversible operations explicitly instead of normalizing them.
+      - Keep secrets out of prompts, plans, and logs.
+  default_mode:
+    blockers:
+      - Emit BLOCKER when the change is production-sensitive and the rollback path is unclear.
+      - State exactly what remains unverified when validation requires environment access that is unavailable.
+runtime_targets:
+  - runtime: codex_cli
+    canonical_entrypoint: /skills
+    direct_invocation: $pairslash-devops
+    surfaces:
+      - id: canonical-picker
+        invocation: /skills -> select pairslash-devops
+        status: unverified
+        evidence_refs:
+          - docs/compatibility/compatibility-matrix.md
+          - docs/compatibility/runtime-surface-matrix.yaml
+      - id: direct-invocation
+        invocation: $pairslash-devops
+        status: unverified
+        evidence_refs:
+          - docs/compatibility/compatibility-matrix.md
+          - docs/compatibility/runtime-surface-matrix.yaml
+  - runtime: copilot_cli
+    canonical_entrypoint: /skills
+    direct_invocation: /pairslash-devops
+    surfaces:
+      - id: canonical-picker
+        invocation: /skills -> select pairslash-devops
+        status: unverified
+        evidence_refs:
+          - docs/compatibility/compatibility-matrix.md
+          - docs/compatibility/runtime-surface-matrix.yaml
+      - id: direct-invocation
+        invocation: /pairslash-devops
+        status: unverified
+        evidence_refs:
+          - docs/compatibility/compatibility-matrix.md
+          - docs/compatibility/runtime-surface-matrix.yaml
+compatibility_notes:
+  - Canonical activation is /skills on both supported runtimes.
+  - Direct invocation remains unverified until live runtime checks are recorded.
+source_of_truth:
+  pack_dir: packs/core/pairslash-devops
+  skill: packs/core/pairslash-devops/SKILL.md
+  contract: packs/core/pairslash-devops/contract.md
+  spec: packages/spec-core/specs/pairslash-devops.spec.yaml
+  validation_checklist: packs/core/pairslash-devops/validation-checklist.md

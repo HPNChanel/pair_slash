@@ -1,0 +1,84 @@
+# pairslash-backend Workflow Specification
+# Phase 3 team-pack dual-mode backend workflow.
+
+workflow:
+  name: pairslash-backend
+  version: "0.2.0"
+  class: dual-mode
+  phase: 3
+
+  purpose: >-
+    Produce backend-safe plans in Plan Mode and implement the smallest safe
+    backend diff in Default mode while preserving data integrity, API
+    stability, and explicit memory boundaries.
+
+  canonical_invocation:
+    primary: /skills -> select pairslash-backend
+    codex_direct: $pairslash-backend
+    copilot_direct: /pairslash-backend
+
+contracts:
+  input:
+    required:
+      - name: task
+        type: string
+        description: Bounded backend engineering task or defect to plan or implement.
+    optional:
+      - name: acceptance_criteria
+        type: string
+        description: Explicit acceptance criteria or constraints supplied by the user.
+      - name: affected_paths
+        type: string
+        description: Services, modules, or file paths likely to be touched.
+
+  output:
+    modes:
+      plan_mode:
+        format: structured-markdown
+        deterministic_structure: true
+        sections:
+          - name: Objective
+          - name: Relevant Memory Constraints
+          - name: Affected Areas
+          - name: Assumptions and Unknowns
+          - name: Step-by-Step Plan
+          - name: Validation Plan
+          - name: Risks and Rollback
+          - name: Proposed File Touch List
+          - name: MEMORY_CANDIDATE
+      default_mode:
+        format: structured-markdown
+        deterministic_structure: true
+        sections:
+          - name: Done
+          - name: Files Changed
+          - name: Why These Changes
+          - name: Validation Run / Validation Needed
+          - name: Remaining Risks
+          - name: MEMORY_CANDIDATE
+
+  failure:
+    plan_mode:
+      blockers:
+        - State missing contract details explicitly when scope ambiguity could affect data, auth, or public API behavior.
+        - Call out migrations or destructive data operations before implementation is planned.
+    default_mode:
+      blockers:
+        - Emit BLOCKER instead of risky edits when ambiguity could break data, auth, or public API behavior.
+        - State exactly what could not be validated when required commands are unavailable.
+
+  memory:
+    reads:
+      - layer: global-project-memory
+        paths:
+          - .pairslash/project-memory/
+      - layer: task-memory
+        paths:
+          - .pairslash/task-memory/
+    writes: none
+    invariant: Backend pack must not write Global Project Memory.
+
+  side_effect:
+    filesystem_writes: repo-local changes allowed in default_mode only
+    git_mutation: possible-uncommitted-changes-only
+    network_calls: none

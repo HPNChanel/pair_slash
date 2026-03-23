@@ -1,0 +1,6 @@
+scenario: invalid-scope
+record:
+  scope: subsystem
+expected:
+  scope_valid: false
+

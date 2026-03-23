@@ -1,0 +1,191 @@
+# pairslash-memory-candidate Workflow Specification
+# Phase 2 hardening -- candidate extractor with strict reconciliation gates.
+# Source: CLAUDE.md sections 6, 7, 9.2 and 10.
+
+workflow:
+  name: pairslash-memory-candidate
+  version: "0.1.0"
+  class: candidate-producing
+  phase: 2
+
+  purpose: >-
+    Extract durable memory candidates from task/session/repo context without
+    mutating Global Project Memory. Enforce evidence-first extraction, explicit
+    reconciliation against authoritative memory, deterministic classification,
+    and strict fail-fast behavior when confidence or evidence is insufficient.
+
+  canonical_invocation:
+    primary: /skills -> select pairslash-memory-candidate
+    codex_direct: $pairslash-memory-candidate
+    copilot_direct: /pairslash-memory-candidate
+
+  schema_ref: ../schemas/candidate-report.schema.yaml
+
+contracts:
+
+  input:
+    required:
+      - name: task_scope
+        type: string
+        description: >-
+          What task/session scope to inspect for durable candidate facts.
+          Example: "Phase 2 hardening findings", "current PR review notes".
+    optional:
+      - name: evidence_sources
+        type: array of strings
+        description: >-
+          Source hints to prioritize while gathering evidence.
+          Example: task-memory, sessions, docs, logs, diff.
+      - name: strictness
+        type: enum
+        values: [strict-gate-fail-fast, balanced, lenient]
+        description: >-
+          Extraction posture. Default is strict-gate-fail-fast.
+      - name: max_candidates
+        type: integer
+        description: Optional cap on returned candidates.
+    defaults:
+      strictness: strict-gate-fail-fast
+      max_candidates: 20
+    scope_assumption: >-
+      If evidence_sources is omitted, inspect project-memory, task-memory,
+      session artifacts, docs, and audit logs in that order.
+
+  output:
+    format: structured-markdown
+    deterministic_structure: true
+    required_sections:
+      - PLAN
+      - CANDIDATES
+      - RECONCILIATION
+      - NEXT_ACTION
+    candidate_fields_required:
+      - id
+      - kind
+      - title
+      - statement
+      - scope
+      - evidence
+      - confidence
+      - novelty
+      - classification
+      - reason_to_promote
+      - reason_not_to_promote_yet
+      - target_file_hint
+    classification_values:
+      - keep-as-candidate
+      - duplicate-existing
+      - needs-supersede-review
+      - too-weak-do-not-promote
+    next_action_values:
+      - USE_PAIRSLASH_MEMORY_WRITE_GLOBAL
+      - KEEP_IN_TASK_MEMORY
+      - REJECT_CANDIDATES
+
+  failure:
+    on_missing_scope: >-
+      Stop and ask for task_scope. Do not proceed with an unbounded extraction.
+
+    on_unreadable_sources: >-
+      Report unreadable paths in RECONCILIATION.missing_evidence. Continue only
+      if enough evidence remains to support classification. Otherwise fail fast.
+
+    on_missing_reconciliation: >-
+      If project-memory cannot be checked, do not emit keep-as-candidate.
+      Downgrade to too-weak-do-not-promote or return REJECT_CANDIDATES.
+
+    on_weak_evidence: >-
+      If evidence is absent, non-specific, or single-source weak context,
+      classify as too-weak-do-not-promote. Never infer durable truth.
+
+    on_schema_violation: >-
+      If output is missing required sections/fields, treat invocation as failed.
+      Return explicit validation errors instead of partial success.
+
+  memory:
+    reads:
+      - layer: global-project-memory
+        paths:
+          - .pairslash/project-memory/90-memory-index.yaml
+          - .pairslash/project-memory/
+        purpose: >-
+          Authoritative duplicate/supersede reconciliation and scope checks.
+      - layer: task-memory
+        paths:
+          - .pairslash/task-memory/
+        purpose: Gather stable but non-authoritative task facts.
+      - layer: sessions
+        paths:
+          - .pairslash/sessions/
+        purpose: Gather session-level candidate evidence.
+      - layer: staging
+        paths:
+          - .pairslash/staging/
+        purpose: Check pre-authoritative candidate overlap.
+      - layer: audit-log
+        paths:
+          - .pairslash/audit-log/
+        purpose: Use durable write history as evidence source.
+    writes: none
+    audit: none
+    invariant: >-
+      This workflow MUST NOT write to .pairslash/project-memory/.
+      It MUST NOT promote candidates implicitly.
+
+  side_effect:
+    filesystem_writes: none
+    git_mutation: none
+    network_calls: none
+
+  execution_pipeline:
+    description: >-
+      Deterministic extraction with strict reconciliation gates.
+    steps:
+      - step: 1
+        name: define-task-scope
+        description: Resolve concrete extraction scope from input.
+      - step: 2
+        name: collect-evidence
+        description: Read declared/default sources and index evidence by location.
+      - step: 3
+        name: derive-fact-claims
+        description: Extract only concrete fact claims supported by evidence.
+      - step: 4
+        name: reconcile-authoritative-memory
+        description: Compare each claim with active project-memory records.
+      - step: 5
+        name: classify
+        description: >-
+          Assign one class per claim:
+          keep-as-candidate, duplicate-existing,
+          needs-supersede-review, too-weak-do-not-promote.
+      - step: 6
+        name: assign-novelty-and-confidence
+        description: Assign novelty and confidence based on evidence strength and reconciliation.
+      - step: 7
+        name: enforce-strict-gates
+        description: >-
+          Block keep-as-candidate if evidence is weak or reconciliation incomplete.
+      - step: 8
+        name: build-report
+        description: Emit PLAN, CANDIDATES, RECONCILIATION, NEXT_ACTION in fixed order.
+      - step: 9
+        name: validate-report-shape
+        description: Validate output against candidate-report schema before returning.
+
+  classification_policy:
+    keep-as-candidate: >-
+      Reusable and stable claim with concrete evidence and no authoritative conflict.
+    duplicate-existing: >-
+      Claim materially matches an existing active project-memory record.
+    needs-supersede-review: >-
+      Claim conflicts with or updates an existing active record and requires explicit supersede.
+    too-weak-do-not-promote: >-
+      Evidence is weak, ambiguous, task-local, or insufficient for durable promotion.
+
+  safety_rules:
+    - Global Project Memory is authoritative.
+    - No speculation. No hidden promotion.
+    - Every candidate must carry evidence.
+    - Reconciliation against project-memory is mandatory.
+    - NEXT_ACTION must reflect actual classification outcomes.

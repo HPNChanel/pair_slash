@@ -1,0 +1,86 @@
+# pairslash-devops Workflow Specification
+# Phase 3 team-pack dual-mode devops workflow.
+
+workflow:
+  name: pairslash-devops
+  version: "0.2.0"
+  class: dual-mode
+  phase: 3
+
+  purpose: >-
+    Produce operationally safe CI/CD and infrastructure plans in Plan Mode,
+    then implement the smallest reversible operational diff in Default mode
+    without writing Global Project Memory.
+
+  canonical_invocation:
+    primary: /skills -> select pairslash-devops
+    codex_direct: $pairslash-devops
+    copilot_direct: /pairslash-devops
+
+contracts:
+  input:
+    required:
+      - name: task
+        type: string
+        description: CI, deployment, infrastructure, or operational change to plan or implement.
+    optional:
+      - name: affected_environments
+        type: string
+        description: Environments or systems likely to be touched.
+      - name: affected_paths
+        type: string
+        description: Workflows, scripts, infra definitions, or runtime config paths in scope.
+
+  output:
+    modes:
+      plan_mode:
+        format: structured-markdown
+        deterministic_structure: true
+        sections:
+          - name: Objective
+          - name: Relevant Memory Constraints
+          - name: Systems Affected
+          - name: Preconditions
+          - name: Step-by-Step Plan
+          - name: Validation and Monitoring Plan
+          - name: Rollback Plan
+          - name: Risks / Blast Radius
+          - name: Proposed File Touch List
+          - name: MEMORY_CANDIDATE
+      default_mode:
+        format: structured-markdown
+        deterministic_structure: true
+        sections:
+          - name: Done
+          - name: Files Changed
+          - name: Operational Impact
+          - name: Validation Run / Validation Needed
+          - name: Rollback Notes
+          - name: Remaining Risks
+          - name: MEMORY_CANDIDATE
+
+  failure:
+    plan_mode:
+      blockers:
+        - Elevate destructive or irreversible operations explicitly instead of normalizing them.
+        - Keep secrets out of prompts, plans, and logs.
+    default_mode:
+      blockers:
+        - Emit BLOCKER when the change is production-sensitive and the rollback path is unclear.
+        - State exactly what remains unverified when validation requires environment access that is unavailable.
+
+  memory:
+    reads:
+      - layer: global-project-memory
+        paths:
+          - .pairslash/project-memory/
+      - layer: task-memory
+        paths:
+          - .pairslash/task-memory/
+    writes: none
+    invariant: DevOps pack must not write Global Project Memory.
+
+  side_effect:
+    filesystem_writes: repo-local changes allowed in default_mode only
+    git_mutation: possible-uncommitted-changes-only
+    network_calls: none

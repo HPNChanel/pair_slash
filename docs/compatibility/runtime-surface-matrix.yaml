@@ -1,276 +1,230 @@
-# PairSlash Runtime Surface Matrix
-# Documents verified facts, assumptions, and open verification items
-# for each supported runtime.
-# Phase 0 -- last updated 2026-03-21
-
-matrix_version: "0.1.1"
-last_verified: "2026-03-21"
-runtime_tested: codex-cli-v0.116.0
-runtime_not_available: copilot-cli
+version: "0.2.0"
+phase: 3
+last_updated: "2026-03-23"
 
 runtimes:
-
   codex_cli:
-    vendor: OpenAI
-    documentation_url: https://developers.openai.com/codex/skills
-
-    skill_system:
-      skill_format:
-        status: fact
-        evidence: "OpenAI docs: SKILL.md with YAML frontmatter (name, description) + Markdown body"
-        source: https://developers.openai.com/codex/skills
-      skill_storage_repo:
-        status: fact
-        value: ".agents/skills/"
-        evidence: "Codex scans .agents/skills in every directory from CWD up to repo root"
-        source: https://developers.openai.com/codex/skills
-      skill_storage_user:
-        status: fact
-        value: "~/.agents/skills/"
-        evidence: "HOME-level skills for cross-repo use"
-        source: https://developers.openai.com/codex/skills
-      optional_metadata:
-        status: fact
-        value: "agents/openai.yaml"
-        evidence: "UI metadata, invocation policy, tool dependencies"
-        source: https://developers.openai.com/codex/skills
-      progressive_disclosure:
-        status: fact
-        evidence: "Codex starts with metadata; loads full SKILL.md when skill is used"
-        source: https://developers.openai.com/codex/skills
-
-    invocation:
-      skills_command:
-        status: documented-unverified
-        evidence: >-
-          The skills overview page states "In CLI/IDE, run /skills or type $ to mention a skill."
-          However, /skills does NOT appear in the Codex CLI built-in slash commands table at
-          https://developers.openai.com/codex/guides/slash-commands/
-          This discrepancy needs real CLI testing.
-        verification_item: V1
-        source: https://developers.openai.com/codex/skills
-
-      direct_invocation:
-        status: fact
-        value: "$skill-name"
-        evidence: "Documented: type $ to mention a skill by name"
-        source: https://developers.openai.com/codex/skills
-
-      implicit_invocation:
-        status: fact
-        evidence: "Codex can choose a skill when task matches skill description"
-        source: https://developers.openai.com/codex/skills
-
-    file_access:
-      can_read_project_files:
-        status: verified
-        tested_date: "2026-03-21"
-        tested_on: codex-cli-v0.116.0
-        evidence: >-
-          Verified via codex exec. Both pairslash-plan and
-          pairslash-memory-write-global read all 3 project memory files
-          using Get-Content shell commands. Complex PowerShell (variables,
-          foreach) blocked by sandbox; simple per-file commands succeeded.
-        verification_item: V2
-
-    script_execution:
-      status: not-applicable
-      tested_date: "2026-03-21"
-      evidence: >-
-        No scripts exist in Phase 0 skills. pairslash-memory-write-global
-        has scripts/ with only .gitkeep. Script execution deferred to Phase 1/2.
-      verification_item: V6
-
+    repo_skill_path: ".agents/skills/"
+    user_skill_path: "~/.agents/skills/"
+    canonical_entrypoint: "/skills"
+    direct_invocation: "$skill-name"
+    status: supported
   copilot_cli:
-    vendor: GitHub
-    documentation_url: https://docs.github.com/copilot/how-tos/copilot-cli/customize-copilot/create-skills
-
-    skill_system:
-      skill_format:
-        status: fact
-        evidence: "GitHub docs: SKILL.md with YAML frontmatter (name, description, optional license) + Markdown body"
-        source: https://docs.github.com/copilot/how-tos/copilot-cli/customize-copilot/create-skills
-      skill_storage_repo:
-        status: fact
-        value: ".github/skills/"
-        evidence: "Primary repo-level skill storage"
-        source: https://docs.github.com/copilot/how-tos/copilot-cli/customize-copilot/create-skills
-      skill_storage_repo_alt:
-        status: fact
-        value: ".claude/skills/"
-        evidence: "Alternative repo-level location (Claude-compatible)"
-        source: https://docs.github.com/copilot/how-tos/copilot-cli/customize-copilot/create-skills
-      skill_storage_user:
-        status: fact
-        value: "~/.copilot/skills/"
-        evidence: "User-level skill storage"
-        source: https://docs.github.com/copilot/how-tos/copilot-cli/customize-copilot/create-skills
-      skill_storage_user_alt:
-        status: fact
-        value: "~/.claude/skills/"
-        evidence: "Alternative user-level location"
-        source: https://docs.github.com/copilot/how-tos/copilot-cli/customize-copilot/create-skills
-
-    invocation:
-      skills_command:
-        status: fact
-        evidence: >-
-          /skills is fully documented with subcommands: /skills list, /skills info,
-          /skills add, /skills reload, /skills remove.
-          Toggle skills on/off with /skills interactive picker.
-        source: https://docs.github.com/copilot/how-tos/copilot-cli/customize-copilot/create-skills
-
-      direct_invocation:
-        status: fact
-        value: "/skill-name in prompt"
-        evidence: 'Example: "Use the /frontend-design skill to create a responsive navigation bar"'
-        source: https://docs.github.com/copilot/how-tos/copilot-cli/customize-copilot/create-skills
-
-      prompt_mode_bug:
-        status: fact
-        evidence: >-
-          Known issue: skills referenced via /skill-name in prompt mode (-p flag) don't load.
-          Documented in github/copilot-cli#2040.
-        source: https://github.com/github/copilot-cli/issues/2040
-        severity: medium
-        impact: >-
-          Skills work in interactive mode but not in -p/--prompt mode.
-          PairSlash workflows require interactive mode for Phase 0.
-
-      implicit_invocation:
-        status: fact
-        evidence: "Copilot decides when to use skills based on prompt and description"
-        source: https://docs.github.com/copilot/how-tos/copilot-cli/customize-copilot/create-skills
-
-    file_access:
-      can_read_project_files:
-        status: documented-unverified
-        evidence: >-
-          Copilot CLI has file reading capability as a general agent feature.
-          Whether SKILL.md instructions can reliably direct it to read
-          specific .pairslash/ files needs verification.
-        verification_item: V2
-
-    script_execution:
-      status: documented-unverified
-      evidence: "Scripts in skill directory are documented but execution behavior needs verification"
-      verification_item: V6
-
-    skills_reload:
-      status: documented-unverified
-      evidence: "/skills reload is documented for picking up new skills mid-session"
-      verification_item: V7
-
-compatibility_summary:
-
-  shared_surface:
-    - SKILL.md format is compatible (both use YAML frontmatter + Markdown)
-    - Both support /skills as a browsing/selection mechanism
-    - Both support direct skill invocation (different syntax)
-    - Both support implicit invocation based on description matching
-
-  divergent_surface:
-    - Skill storage paths differ (.agents/skills/ vs .github/skills/)
-    - Direct invocation syntax differs ($name vs /name)
-    - Codex has optional agents/openai.yaml; Copilot does not
-    - Copilot has richer /skills subcommands (list, info, add, reload, remove)
-    - Copilot has a known bug with skills in -p mode
-
-  pairslash_strategy:
-    description: >-
-      Ship one canonical SKILL.md per skill. Install to runtime-specific paths.
-      Use /skills as the canonical browsing entrypoint on both runtimes.
-      Allow direct invocation when verified. Phase 1 compiler handles any
-      runtime-specific generation if semantic drift occurs.
+    repo_skill_path: ".github/skills/"
+    user_skill_path: "~/.copilot/skills/"
+    canonical_entrypoint: "/skills"
+    direct_invocation: "/skill-name"
+    status: supported
 
 verification_items:
-  V1:
-    question: "Does /skills produce a skill picker in Codex CLI interactive mode?"
-    status: not-testable-non-interactive
-    tested_date: "2026-03-21"
-    tested_by: codex-exec-automation
-    method: "Launch Codex CLI, type /skills, observe behavior"
-    fallback: "If absent, use $skill-name direct invocation"
-    notes: >-
-      /skills is an interactive TUI command. Cannot be tested via codex exec
-      non-interactive mode. Direct invocation via $name confirmed working (V4).
-      Interactive TUI testing required for definitive V1 result.
+  - id: V1
+    question: "Canonical /skills path available"
+    status: pending-runtime-check
+  - id: V2
+    question: "Read workflows can load .pairslash/project-memory/"
+    status: pending-runtime-check
+  - id: V3
+    question: "Write-global shows preview patch before file mutation"
+    status: pending-runtime-check
+  - id: V4
+    question: "Explicit acceptance is required for write-global"
+    status: pending-runtime-check
+  - id: V5
+    question: "Read workflows do not mutate authoritative memory"
+    status: pending-runtime-check
+  - id: V6
+    question: "All 7 core skills discoverable in /skills"
+    status: pending-runtime-check
+  - id: V7
+    question: "Semantic parity across codex/copilot for memory authority rules"
+    status: pending-runtime-check
 
-  V2:
-    question: "Can SKILL.md instructions direct the LLM to read files from .pairslash/project-memory/?"
-    status: verified
-    tested_date: "2026-03-21"
-    tested_by: codex-exec-automation
-    tested_on: codex-cli-v0.116.0
-    method: "Install pairslash-plan, invoke it, check if it reads .pairslash/ files"
-    fallback: "If unreliable, instruct user to paste memory content"
-    notes: >-
-      Both pairslash-plan and pairslash-memory-write-global successfully read
-      project memory files via shell commands (Get-Content). Agent read
-      00-project-charter.yaml, 10-stack-profile.yaml, and 90-memory-index.yaml.
-      Output cited files with [from memory: filename] notation. Initial attempts
-      using complex PowerShell (variables, foreach) were blocked by sandbox
-      policy; simple single-file Get-Content commands succeeded.
-
-  V3:
-    question: "Can a skill reliably produce a YAML preview patch before writing?"
-    status: verified
-    tested_date: "2026-03-21"
-    tested_by: codex-exec-automation
-    tested_on: codex-cli-v0.116.0
-    method: "Invoke pairslash-memory-write-global, check if preview patch appears before any file write"
-    fallback: "Strengthen instructions; Phase 2 adds script-based enforcement"
-    notes: >-
-      Preview patch produced in correct format (--- preview patch --- /
-      --- end preview ---) in both test runs (rejection and acceptance).
-      All 11 fields present in preview. Agent asked for explicit acceptance
-      before proceeding. 2/2 runs produced correct preview. Preview content
-      included tags and source_refs which were later dropped during write.
-
-  V4:
-    question: "Does $pairslash-plan direct invocation work in Codex CLI?"
-    status: verified
-    tested_date: "2026-03-21"
-    tested_by: codex-exec-automation
-    tested_on: codex-cli-v0.116.0
-    method: "Install skill, type $pairslash-plan in Codex CLI"
-    fallback: "Use /skills browser instead"
-    notes: >-
-      $pairslash-plan activated successfully via codex exec. Agent identified
-      the skill, loaded SKILL.md, read companion files (contract, example-output,
-      validation-checklist), and followed the 9-section output structure.
-
-  V5:
-    question: "Does /pairslash-plan direct invocation work in Copilot CLI interactive mode?"
-    status: not-tested
-    tested_date: "2026-03-21"
-    tested_by: codex-exec-automation
-    method: "Install skill, type /pairslash-plan in Copilot CLI interactive mode"
-    fallback: "Use /skills list and select"
-    note: "Known to fail in -p mode (github/copilot-cli#2040)"
-    notes: >-
-      Copilot CLI (gh copilot) not available on test machine. gh command
-      not found. Deferred until Copilot CLI is installed.
-
-  V6:
-    question: "Can both runtimes execute scripts in the skill scripts/ directory?"
-    status: not-applicable
-    tested_date: "2026-03-21"
-    tested_by: codex-exec-automation
-    method: "Add a simple validation script, invoke the skill, check if script runs"
-    fallback: "Phase 0 skills are instruction-only; scripts are optional"
-    notes: >-
-      No scripts exist in Phase 0 skills. pairslash-memory-write-global has
-      a scripts/ directory with only .gitkeep. Phase 0 is instruction-only.
-      Script execution testing deferred to Phase 1/2.
-
-  V7:
-    question: "Does Copilot CLI /skills reload detect newly installed PairSlash skills?"
-    status: not-tested
-    tested_date: "2026-03-21"
-    tested_by: codex-exec-automation
-    method: "Install a skill during active session, run /skills reload, check listing"
-    fallback: "Restart CLI session after installation"
-    notes: >-
-      Copilot CLI (gh copilot) not available on test machine. Deferred
-      until Copilot CLI is installed.
+pack_surfaces:
+  - pack: pairslash-plan
+    version: "0.2.0"
+    runtime: codex_cli
+    surface_id: canonical-picker
+    invocation: /skills -> select pairslash-plan
+    status: supported
+    evidence_refs:
+      - docs/compatibility/compatibility-matrix.md
+      - docs/compatibility/runtime-verification.md
+  - pack: pairslash-plan
+    version: "0.2.0"
+    runtime: codex_cli
+    surface_id: direct-invocation
+    invocation: $pairslash-plan
+    status: supported
+    evidence_refs:
+      - docs/compatibility/phase-0-acceptance.md
+      - docs/compatibility/runtime-verification.md
+  - pack: pairslash-plan
+    version: "0.2.0"
+    runtime: copilot_cli
+    surface_id: canonical-picker
+    invocation: /skills -> select pairslash-plan
+    status: supported
+    evidence_refs:
+      - docs/compatibility/compatibility-matrix.md
+      - docs/workflows/install-guide.md
+  - pack: pairslash-plan
+    version: "0.2.0"
+    runtime: copilot_cli
+    surface_id: direct-invocation-interactive
+    invocation: /pairslash-plan
+    status: unverified
+    evidence_refs:
+      - docs/compatibility/phase-0-acceptance.md
+      - packs/core/pairslash-plan/contract.md
+  - pack: pairslash-plan
+    version: "0.2.0"
+    runtime: copilot_cli
+    surface_id: direct-invocation-prompt-mode
+    invocation: /pairslash-plan with -p/--prompt
+    status: blocked
+    evidence_refs:
+      - packs/core/pairslash-plan/contract.md
+  - pack: pairslash-backend
+    version: "0.2.0"
+    runtime: codex_cli
+    surface_id: canonical-picker
+    invocation: /skills -> select pairslash-backend
+    status: unverified
+    evidence_refs:
+      - docs/compatibility/compatibility-matrix.md
+      - docs/compatibility/runtime-surface-matrix.yaml
+  - pack: pairslash-backend
+    version: "0.2.0"
+    runtime: codex_cli
+    surface_id: direct-invocation
+    invocation: $pairslash-backend
+    status: unverified
+    evidence_refs:
+      - docs/compatibility/compatibility-matrix.md
+      - docs/compatibility/runtime-surface-matrix.yaml
+  - pack: pairslash-backend
+    version: "0.2.0"
+    runtime: copilot_cli
+    surface_id: canonical-picker
+    invocation: /skills -> select pairslash-backend
+    status: unverified
+    evidence_refs:
+      - docs/compatibility/compatibility-matrix.md
+      - docs/compatibility/runtime-surface-matrix.yaml
+  - pack: pairslash-backend
+    version: "0.2.0"
+    runtime: copilot_cli
+    surface_id: direct-invocation
+    invocation: /pairslash-backend
+    status: unverified
+    evidence_refs:
+      - docs/compatibility/compatibility-matrix.md
+      - docs/compatibility/runtime-surface-matrix.yaml
+  - pack: pairslash-frontend
+    version: "0.2.0"
+    runtime: codex_cli
+    surface_id: canonical-picker
+    invocation: /skills -> select pairslash-frontend
+    status: unverified
+    evidence_refs:
+      - docs/compatibility/compatibility-matrix.md
+      - docs/compatibility/runtime-surface-matrix.yaml
+  - pack: pairslash-frontend
+    version: "0.2.0"
+    runtime: codex_cli
+    surface_id: direct-invocation
+    invocation: $pairslash-frontend
+    status: unverified
+    evidence_refs:
+      - docs/compatibility/compatibility-matrix.md
+      - docs/compatibility/runtime-surface-matrix.yaml
+  - pack: pairslash-frontend
+    version: "0.2.0"
+    runtime: copilot_cli
+    surface_id: canonical-picker
+    invocation: /skills -> select pairslash-frontend
+    status: unverified
+    evidence_refs:
+      - docs/compatibility/compatibility-matrix.md
+      - docs/compatibility/runtime-surface-matrix.yaml
+  - pack: pairslash-frontend
+    version: "0.2.0"
+    runtime: copilot_cli
+    surface_id: direct-invocation
+    invocation: /pairslash-frontend
+    status: unverified
+    evidence_refs:
+      - docs/compatibility/compatibility-matrix.md
+      - docs/compatibility/runtime-surface-matrix.yaml
+  - pack: pairslash-devops
+    version: "0.2.0"
+    runtime: codex_cli
+    surface_id: canonical-picker
+    invocation: /skills -> select pairslash-devops
+    status: unverified
+    evidence_refs:
+      - docs/compatibility/compatibility-matrix.md
+      - docs/compatibility/runtime-surface-matrix.yaml
+  - pack: pairslash-devops
+    version: "0.2.0"
+    runtime: codex_cli
+    surface_id: direct-invocation
+    invocation: $pairslash-devops
+    status: unverified
+    evidence_refs:
+      - docs/compatibility/compatibility-matrix.md
+      - docs/compatibility/runtime-surface-matrix.yaml
+  - pack: pairslash-devops
+    version: "0.2.0"
+    runtime: copilot_cli
+    surface_id: canonical-picker
+    invocation: /skills -> select pairslash-devops
+    status: unverified
+    evidence_refs:
+      - docs/compatibility/compatibility-matrix.md
+      - docs/compatibility/runtime-surface-matrix.yaml
+  - pack: pairslash-devops
+    version: "0.2.0"
+    runtime: copilot_cli
+    surface_id: direct-invocation
+    invocation: /pairslash-devops
+    status: unverified
+    evidence_refs:
+      - docs/compatibility/compatibility-matrix.md
+      - docs/compatibility/runtime-surface-matrix.yaml
+  - pack: pairslash-release
+    version: "0.2.0"
+    runtime: codex_cli
+    surface_id: canonical-picker
+    invocation: /skills -> select pairslash-release
+    status: unverified
+    evidence_refs:
+      - docs/compatibility/compatibility-matrix.md
+      - docs/compatibility/runtime-surface-matrix.yaml
+  - pack: pairslash-release
+    version: "0.2.0"
+    runtime: codex_cli
+    surface_id: direct-invocation
+    invocation: $pairslash-release
+    status: unverified
+    evidence_refs:
+      - docs/compatibility/compatibility-matrix.md
+      - docs/compatibility/runtime-surface-matrix.yaml
+  - pack: pairslash-release
+    version: "0.2.0"
+    runtime: copilot_cli
+    surface_id: canonical-picker
+    invocation: /skills -> select pairslash-release
+    status: unverified
+    evidence_refs:
+      - docs/compatibility/compatibility-matrix.md
+      - docs/compatibility/runtime-surface-matrix.yaml
+  - pack: pairslash-release
+    version: "0.2.0"
+    runtime: copilot_cli
+    surface_id: direct-invocation
+    invocation: /pairslash-release
+    status: unverified
+    evidence_refs:
+      - docs/compatibility/compatibility-matrix.md
+      - docs/compatibility/runtime-surface-matrix.yaml

@@ -1,4 +1,12 @@
-# PairSlash Phase 0 -- Master Acceptance Checklist
+# PairSlash Phase 0 -- Master Acceptance Checklist (Archived)
+
+This document is kept for historical trace only.
+Do not use it as the current operating checklist.
+Active acceptance for current development is tracked in:
+
+- `docs/compatibility/acceptance-gates.yaml`
+- `docs/workflows/phase-2-operations.md`
+- `docs/compatibility/runtime-verification.md`
 
 This is the single authoritative checklist for declaring Phase 0 complete.
 

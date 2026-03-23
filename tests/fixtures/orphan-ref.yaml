@@ -1,0 +1,9 @@
+scenario: orphan-ref
+records:
+  - kind: pattern
+    title: "Patch preview first"
+    action: supersede
+    supersedes: "pattern/Non-existent pattern"
+expected:
+  orphan_detected: true
+

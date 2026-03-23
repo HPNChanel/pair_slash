@@ -1,0 +1,64 @@
+# pairslash-onboard-repo Workflow Specification
+# Phase 2 baseline -- read-oriented repository onboarding.
+
+workflow:
+  name: pairslash-onboard-repo
+  version: "0.1.0"
+  class: read-oriented
+  phase: 2
+
+  purpose: >-
+    Create a deterministic onboarding report for a repository by combining
+    filesystem facts, core docs, and existing Global Project Memory.
+
+  canonical_invocation:
+    primary: /skills -> select pairslash-onboard-repo
+    codex_direct: $pairslash-onboard-repo
+    copilot_direct: /pairslash-onboard-repo
+
+contracts:
+  input:
+    required:
+      - name: repo_root
+        type: string
+        description: Path to repository root to audit.
+    optional:
+      - name: focus
+        type: string
+        description: Optional subsystem focus.
+      - name: include_memory_candidates
+        type: boolean
+        description: Include non-authoritative candidate list.
+    defaults:
+      include_memory_candidates: true
+
+  output:
+    format: structured-markdown
+    deterministic_structure: true
+    sections:
+      - Repository snapshot
+      - Runtime compatibility
+      - Memory model status
+      - Risks and gaps
+      - Recommended next workflows
+
+  failure:
+    on_missing_repo: Report path issue and stop.
+    on_unreadable_docs: Continue with available files and list missing sources.
+
+  memory:
+    reads:
+      - layer: global-project-memory
+        paths:
+          - .pairslash/project-memory/
+      - layer: task-memory
+        paths:
+          - .pairslash/task-memory/
+    writes: none
+    invariant: Must not mutate Global Project Memory.
+
+  side_effect:
+    filesystem_writes: none
+    git_mutation: none
+    network_calls: none
+

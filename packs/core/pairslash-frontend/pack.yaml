@@ -1,0 +1,100 @@
+kind: pack-metadata
+id: pairslash-frontend
+version: "0.2.0"
+phase: 3
+status: active
+category: frontend
+workflow_class: dual-mode
+codex:
+  plan_on_model: gpt-5.4
+  plan_off_model: gpt-5.3-codex
+memory_access:
+  authority: read-only
+  global_project_memory: read
+  task_memory: read
+  session_context: implicit-read
+  audit_log: none
+  invariant: This pack may read project memory for context but must never write Global Project Memory.
+required_inputs:
+  - name: task
+    required: true
+    description: Frontend UI, route, or component task to plan or implement.
+  - name: acceptance_criteria
+    required: false
+    description: Product, accessibility, or responsiveness constraints supplied by the user.
+  - name: affected_paths
+    required: false
+    description: Routes, components, or styling areas expected to change.
+output_contract:
+  plan_mode:
+    format: structured-markdown
+    sections:
+      - Objective
+      - Relevant Memory Constraints
+      - UX / Product Interpretation
+      - Affected Components and Routes
+      - Step-by-Step Plan
+      - Validation Plan
+      - Risks and Fallbacks
+      - Proposed File Touch List
+      - MEMORY_CANDIDATE
+  default_mode:
+    format: structured-markdown
+    sections:
+      - Done
+      - Files Changed
+      - UX / Behavior Notes
+      - Validation Run / Validation Needed
+      - Remaining Risks
+      - MEMORY_CANDIDATE
+failure_contract:
+  plan_mode:
+    blockers:
+      - Surface conflicts with existing UI conventions instead of inventing a new design language.
+      - Make backend contract assumptions explicit when the frontend change depends on undefined responses.
+  default_mode:
+    blockers:
+      - Stop and state missing product rules, design tokens, or backend response contracts instead of faking them.
+      - Do not claim screenshots, measurements, or visual proof that were not observed.
+runtime_targets:
+  - runtime: codex_cli
+    canonical_entrypoint: /skills
+    direct_invocation: $pairslash-frontend
+    surfaces:
+      - id: canonical-picker
+        invocation: /skills -> select pairslash-frontend
+        status: unverified
+        evidence_refs:
+          - docs/compatibility/compatibility-matrix.md
+          - docs/compatibility/runtime-surface-matrix.yaml
+      - id: direct-invocation
+        invocation: $pairslash-frontend
+        status: unverified
+        evidence_refs:
+          - docs/compatibility/compatibility-matrix.md
+          - docs/compatibility/runtime-surface-matrix.yaml
+  - runtime: copilot_cli
+    canonical_entrypoint: /skills
+    direct_invocation: /pairslash-frontend
+    surfaces:
+      - id: canonical-picker
+        invocation: /skills -> select pairslash-frontend
+        status: unverified
+        evidence_refs:
+          - docs/compatibility/compatibility-matrix.md
+          - docs/compatibility/runtime-surface-matrix.yaml
+      - id: direct-invocation
+        invocation: /pairslash-frontend
+        status: unverified
+        evidence_refs:
+          - docs/compatibility/compatibility-matrix.md
+          - docs/compatibility/runtime-surface-matrix.yaml
+compatibility_notes:
+  - Canonical activation is /skills on both supported runtimes.
+  - Direct invocation remains unverified until live runtime checks are recorded.
+source_of_truth:
+  pack_dir: packs/core/pairslash-frontend
+  skill: packs/core/pairslash-frontend/SKILL.md
+  contract: packs/core/pairslash-frontend/contract.md
+  spec: packages/spec-core/specs/pairslash-frontend.spec.yaml
+  validation_checklist: packs/core/pairslash-frontend/validation-checklist.md

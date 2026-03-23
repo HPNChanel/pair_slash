@@ -1,0 +1,11 @@
+scenario: duplicate
+proposed:
+  kind: constraint
+  title: "No external deps without review"
+existing:
+  - kind: constraint
+    title: "No external deps without review"
+    statement: "All external dependencies require two maintainers."
+expected:
+  duplicate: true
+

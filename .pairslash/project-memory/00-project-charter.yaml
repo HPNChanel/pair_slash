@@ -1,11 +1,11 @@
 # PairSlash Project Charter
 # Authoritative project identity record.
-# Scope: whole-project | Phase: 0
+# Scope: whole-project | Phase: 2
 
 kind: charter
 title: PairSlash Project Charter
 version: "0.1.0"
-phase: 0
+phase: 2
 
 identity:
   name: PairSlash
@@ -32,12 +32,13 @@ core_principles:
   - two-runtime discipline
   - no hidden learning or background daemons
 
-phase_0_goal: >-
-  Verify real trigger behavior for /skills and direct skill invocation,
-  prove the concept with minimal but serious workflows,
-  keep scope narrow.
+phase_2_goal: >-
+  Harden Global Project Memory operations with explicit write authority,
+  schema-validated records, deterministic preview/audit/index behavior,
+  and local doctor/lint/test/golden gates.
 
 provenance:
   created_by: phase-0-scaffold
-  timestamp: "2026-03-21T00:00:00Z"
-  source: CLAUDE.md sections 3, 4, 15
+  updated_by: phase2-hardening
+  timestamp: "2026-03-22T13:20:00+07:00"
+  source: CLAUDE.md sections 3, 4, 7, 8, 11, 15, 19

@@ -1,0 +1,111 @@
+kind: pack-metadata
+id: pairslash-plan
+version: "0.2.0"
+phase: 2
+status: active
+category: planning
+workflow_class: read-oriented
+codex:
+  plan_on_model: gpt-5.4
+  plan_off_model: gpt-5.4
+memory_access:
+  authority: read-only
+  global_project_memory: read
+  task_memory: read
+  session_context: implicit-read
+  audit_log: none
+  invariant: This workflow must never write to any memory layer.
+required_inputs:
+  - name: goal
+    required: true
+    description: What the user wants to accomplish.
+  - name: scope_hint
+    required: false
+    description: Optional subsystem or path-prefix scope hint.
+  - name: constraints
+    required: false
+    description: Additional constraints beyond project memory.
+output_contract:
+  plan_mode:
+    format: structured-markdown
+    sections:
+      - Goal
+      - Constraints
+      - Relevant project memory
+      - Proposed steps
+      - Files likely affected
+      - Tests and checks
+      - Risks
+      - Rollback
+      - Open questions
+  default_mode:
+    format: structured-markdown
+    sections:
+      - Goal
+      - Constraints
+      - Relevant project memory
+      - Proposed steps
+      - Files likely affected
+      - Tests and checks
+      - Risks
+      - Rollback
+      - Open questions
+failure_contract:
+  plan_mode:
+    blockers:
+      - Warn and continue if project memory is missing, clearly marking the gap.
+      - Ask a clarifying question instead of producing a speculative plan when the goal is too vague.
+      - Note unreadable files explicitly and continue with available information.
+  default_mode:
+    blockers:
+      - Warn and continue if project memory is missing, clearly marking the gap.
+      - Ask a clarifying question instead of producing a speculative plan when the goal is too vague.
+      - Note unreadable files explicitly and continue with available information.
+runtime_targets:
+  - runtime: codex_cli
+    canonical_entrypoint: /skills
+    direct_invocation: $pairslash-plan
+    surfaces:
+      - id: canonical-picker
+        invocation: /skills -> select pairslash-plan
+        status: supported
+        evidence_refs:
+          - docs/compatibility/compatibility-matrix.md
+          - docs/compatibility/runtime-surface-matrix.yaml
+      - id: direct-invocation
+        invocation: $pairslash-plan
+        status: supported
+        evidence_refs:
+          - docs/compatibility/phase-0-acceptance.md
+          - docs/compatibility/runtime-surface-matrix.yaml
+  - runtime: copilot_cli
+    canonical_entrypoint: /skills
+    direct_invocation: /pairslash-plan
+    surfaces:
+      - id: canonical-picker
+        invocation: /skills -> select pairslash-plan
+        status: supported
+        evidence_refs:
+          - docs/compatibility/compatibility-matrix.md
+          - docs/compatibility/runtime-surface-matrix.yaml
+      - id: direct-invocation-interactive
+        invocation: /pairslash-plan
+        status: unverified
+        evidence_refs:
+          - docs/compatibility/phase-0-acceptance.md
+          - docs/compatibility/runtime-surface-matrix.yaml
+      - id: direct-invocation-prompt-mode
+        invocation: /pairslash-plan with -p/--prompt
+        status: blocked
+        evidence_refs:
+          - packs/core/pairslash-plan/contract.md
+          - docs/compatibility/runtime-surface-matrix.yaml
+compatibility_notes:
+  - Canonical /skills remains the primary compatibility path across supported runtimes.
+  - Direct invocation claims must not exceed runtime evidence captured in the compatibility matrix.
+source_of_truth:
+  pack_dir: packs/core/pairslash-plan
+  skill: packs/core/pairslash-plan/SKILL.md
+  contract: packs/core/pairslash-plan/contract.md
+  spec: packages/spec-core/specs/pairslash-plan.spec.yaml
+  validation_checklist: packs/core/pairslash-plan/validation-checklist.md

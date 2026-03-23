@@ -17,7 +17,7 @@ These examples show how to activate the skill and provide input.
   kind: decision
   title: Use YAML for all memory records
   statement: All Global Project Memory records must use YAML format with schema validation.
-  evidence: CLAUDE.md Section 8 defines YAML as the canonical memory format. Phase 0 schema is memory-record.schema.yaml.
+  evidence: CLAUDE.md Section 8 defines YAML as the canonical memory format. Current schema is memory-record.schema.yaml.
   scope: whole-project
   confidence: high
   action: append
@@ -106,7 +106,7 @@ The user wants to replace a previously recorded decision.
   kind: decision
   title: Use YAML for all memory records
   statement: All Global Project Memory records must use YAML format. JSON is no longer accepted.
-  evidence: Team discussion 2026-03-20. JSON caused parsing issues in Phase 0 testing.
+  evidence: Team discussion 2026-03-20. JSON caused parsing issues during early compatibility testing.
   scope: whole-project
   confidence: high
   action: supersede

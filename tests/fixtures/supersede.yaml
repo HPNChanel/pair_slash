@@ -1,0 +1,12 @@
+scenario: supersede
+proposed:
+  kind: pattern
+  title: "Candidate extraction must reconcile authoritative memory"
+  supersedes: "pattern/Candidate extraction must reconcile authoritative memory"
+existing:
+  - kind: pattern
+    title: "Candidate extraction must reconcile authoritative memory"
+    statement: "Old statement"
+expected:
+  supersede_target_exists: true
+

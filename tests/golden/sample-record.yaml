@@ -1,0 +1,16 @@
+kind: pattern
+title: "Preview patch is mandatory before write"
+statement: "Write-authority workflow must present a preview patch before any authoritative mutation."
+evidence: "CLAUDE.md section 11.5 and memory-write-global contract."
+scope: whole-project
+confidence: high
+action: append
+tags:
+  - write-authority
+  - preview-patch
+source_refs:
+  - CLAUDE.md
+  - packs/core/pairslash-memory-write-global/contract.md
+updated_by: phase2-check
+timestamp: "2026-03-22T00:00:00Z"
+

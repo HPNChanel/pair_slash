@@ -1,0 +1,83 @@
+# pairslash-memory-audit Workflow Specification
+# Phase 2 hardening -- audit-oriented workflow.
+
+workflow:
+  name: pairslash-memory-audit
+  version: "0.1.0"
+  class: audit
+  phase: 2
+
+  purpose: >-
+    Audit Global Project Memory for duplicates, stale/conflicting facts,
+    orphan references, schema drift, and index gaps. Default mode is read-only.
+
+  canonical_invocation:
+    primary: /skills -> select pairslash-memory-audit
+    codex_direct: $pairslash-memory-audit
+    copilot_direct: /pairslash-memory-audit
+
+contracts:
+  input:
+    required:
+      - name: audit_scope
+        type: enum
+        values: [full, project-memory-only, index-only]
+    optional:
+      - name: mode
+        type: enum
+        values: [report-only, fix-proposal]
+      - name: focus
+        type: array of strings
+        description: Optional explicit checks to prioritize.
+    defaults:
+      mode: report-only
+
+  output:
+    format: structured-markdown
+    deterministic_structure: true
+    required_sections:
+      - PLAN
+      - FINDINGS
+      - SUMMARY
+      - REMEDIATION_ORDER
+      - NEXT_ACTION
+    finding_fields_required:
+      - id
+      - severity
+      - type
+      - file_or_record
+      - explanation
+      - evidence
+      - recommended_fix
+      - write_workflow_needed
+
+  failure:
+    on_unreadable_memory: >-
+      Return partial audit with explicit missing sources and no pass/fail claim.
+    on_schema_unknown: >-
+      Report schema drift and recommend ADR or schema extension path.
+    on_mode_violation: >-
+      If mode=report-only, do not emit mutating instructions.
+
+  memory:
+    reads:
+      - layer: global-project-memory
+        paths:
+          - .pairslash/project-memory/
+      - layer: task-memory
+        paths:
+          - .pairslash/task-memory/
+      - layer: audit-log
+        paths:
+          - .pairslash/audit-log/
+    writes: none
+    invariant: >-
+      This workflow is read-oriented by default and must not mutate Global
+      Project Memory. Any proposed fix requiring writes must route through
+      pairslash-memory-write-global.
+
+  side_effect:
+    filesystem_writes: none
+    git_mutation: none
+    network_calls: none
+

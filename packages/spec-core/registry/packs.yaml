@@ -1,0 +1,59 @@
+version: "0.2.0"
+model: phase-3-team-pack
+last_updated: "2026-03-23"
+packs:
+  - id: pairslash-plan
+    version: "0.2.0"
+    phase: 2
+    status: active
+    category: planning
+    metadata_file: packs/core/pairslash-plan/pack.yaml
+    skill_file: packs/core/pairslash-plan/SKILL.md
+    contract_file: packs/core/pairslash-plan/contract.md
+    spec_file: packages/spec-core/specs/pairslash-plan.spec.yaml
+    compatibility_matrix: docs/compatibility/runtime-surface-matrix.yaml
+    validation_checklist: packs/core/pairslash-plan/validation-checklist.md
+  - id: pairslash-backend
+    version: "0.2.0"
+    phase: 3
+    status: active
+    category: backend
+    metadata_file: packs/core/pairslash-backend/pack.yaml
+    skill_file: packs/core/pairslash-backend/SKILL.md
+    contract_file: packs/core/pairslash-backend/contract.md
+    spec_file: packages/spec-core/specs/pairslash-backend.spec.yaml
+    compatibility_matrix: docs/compatibility/runtime-surface-matrix.yaml
+    validation_checklist: packs/core/pairslash-backend/validation-checklist.md
+  - id: pairslash-frontend
+    version: "0.2.0"
+    phase: 3
+    status: active
+    category: frontend
+    metadata_file: packs/core/pairslash-frontend/pack.yaml
+    skill_file: packs/core/pairslash-frontend/SKILL.md
+    contract_file: packs/core/pairslash-frontend/contract.md
+    spec_file: packages/spec-core/specs/pairslash-frontend.spec.yaml
+    compatibility_matrix: docs/compatibility/runtime-surface-matrix.yaml
+    validation_checklist: packs/core/pairslash-frontend/validation-checklist.md
+  - id: pairslash-devops
+    version: "0.2.0"
+    phase: 3
+    status: active
+    category: devops
+    metadata_file: packs/core/pairslash-devops/pack.yaml
+    skill_file: packs/core/pairslash-devops/SKILL.md
+    contract_file: packs/core/pairslash-devops/contract.md
+    spec_file: packages/spec-core/specs/pairslash-devops.spec.yaml
+    compatibility_matrix: docs/compatibility/runtime-surface-matrix.yaml
+    validation_checklist: packs/core/pairslash-devops/validation-checklist.md
+  - id: pairslash-release
+    version: "0.2.0"
+    phase: 3
+    status: active
+    category: release
+    metadata_file: packs/core/pairslash-release/pack.yaml
+    skill_file: packs/core/pairslash-release/SKILL.md
+    contract_file: packs/core/pairslash-release/contract.md
+    spec_file: packages/spec-core/specs/pairslash-release.spec.yaml
+    compatibility_matrix: docs/compatibility/runtime-surface-matrix.yaml
+    validation_checklist: packs/core/pairslash-release/validation-checklist.md

@@ -1,0 +1,4 @@
+# PairSlash Global Commands Memory
+# Authoritative command records are stored as YAML documents in this file.
+# Records are appended by pairslash-memory-write-global.
+

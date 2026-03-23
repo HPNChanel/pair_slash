@@ -1,0 +1,9 @@
+scenario: stale-record
+records:
+  - kind: decision
+    title: "Legacy phase marker"
+    action: append
+    supersedes: "decision/Older marker"
+expected:
+  stale_detected: true
+

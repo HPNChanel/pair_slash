@@ -1,0 +1,76 @@
+# pairslash-review Workflow Specification
+# Phase 2 baseline -- read-oriented review workflow.
+
+workflow:
+  name: pairslash-review
+  version: "0.1.0"
+  class: read-oriented
+  phase: 2
+
+  purpose: >-
+    Review staged/unstaged diff or supplied patch against PairSlash constraints,
+    identify behavioral risk and missing tests, and produce a deterministic
+    review report without mutating Global Project Memory.
+
+  canonical_invocation:
+    primary: /skills -> select pairslash-review
+    codex_direct: $pairslash-review
+    copilot_direct: /pairslash-review
+
+contracts:
+  input:
+    required:
+      - name: review_subject
+        type: string
+        description: Human-readable subject of the review.
+      - name: diff_source
+        type: string
+        description: git diff text, working tree scope, or PR patch reference.
+    optional:
+      - name: scope_hint
+        type: string
+        description: Optional subsystem or path-prefix scope.
+      - name: strictness
+        type: enum
+        values: [strict, balanced]
+    defaults:
+      strictness: strict
+
+  output:
+    format: structured-markdown
+    deterministic_structure: true
+    sections:
+      - Summary
+      - Findings
+      - Missing tests
+      - Open questions
+      - Recommendation
+    finding_fields_required:
+      - severity
+      - file
+      - issue
+      - rationale
+      - suggested_fix
+
+  failure:
+    on_missing_diff: Ask for diff_source and stop.
+    on_unreadable_memory: >-
+      Continue with repo-only findings and mark memory-coupled checks as unverified.
+    on_empty_findings: Return explicit "No findings" with residual risks.
+
+  memory:
+    reads:
+      - layer: global-project-memory
+        paths:
+          - .pairslash/project-memory/
+      - layer: task-memory
+        paths:
+          - .pairslash/task-memory/
+    writes: none
+    invariant: Must not mutate any memory layer.
+
+  side_effect:
+    filesystem_writes: none
+    git_mutation: none
+    network_calls: none
+

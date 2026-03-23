@@ -1,0 +1,9 @@
+timestamp: "2026-03-22T10:41:11.4423883+07:00"
+action: append
+kind: pattern
+title: "Candidate extraction phải reconcile với authoritative memory trước khi giữ candidate"
+target_file: ".pairslash/project-memory/70-known-good-patterns/candidate-extraction-phai-reconcile-voi-authoritative-memo.yaml"
+updated_by: "session-user"
+confidence: high
+result: success
+notes: "Accepted by user after preview patch; evidence is spec-level and docs-level, with runtime checklist still manual."

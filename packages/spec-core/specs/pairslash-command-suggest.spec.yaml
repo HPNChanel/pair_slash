@@ -1,0 +1,67 @@
+# pairslash-command-suggest Workflow Specification
+# Phase 2 baseline -- read-oriented command suggestion.
+
+workflow:
+  name: pairslash-command-suggest
+  version: "0.1.0"
+  class: read-oriented
+  phase: 2
+
+  purpose: >-
+    Suggest project-safe commands using stack profile and known-good command
+    memory records, including safety notes and confidence labels.
+
+  canonical_invocation:
+    primary: /skills -> select pairslash-command-suggest
+    codex_direct: $pairslash-command-suggest
+    copilot_direct: /pairslash-command-suggest
+
+contracts:
+  input:
+    required:
+      - name: intent
+        type: string
+        description: What the user wants to do (build, test, lint, debug, release).
+    optional:
+      - name: scope_hint
+        type: string
+      - name: platform
+        type: enum
+        values: [windows, macos, linux, any]
+    defaults:
+      platform: any
+
+  output:
+    format: structured-markdown
+    deterministic_structure: true
+    sections:
+      - Intent summary
+      - Suggested commands
+      - Safety notes
+      - Follow-up workflow
+    command_fields_required:
+      - command
+      - rationale
+      - source_memory
+      - confidence
+
+  failure:
+    on_missing_intent: Ask for intent and stop.
+    on_no_command_memory: >-
+      Fallback to conservative stack-profile-guided commands and mark as low confidence.
+
+  memory:
+    reads:
+      - layer: global-project-memory
+        paths:
+          - .pairslash/project-memory/10-stack-profile.yaml
+          - .pairslash/project-memory/20-commands.yaml
+          - .pairslash/project-memory/50-constraints.yaml
+    writes: none
+    invariant: Suggestion workflow is advisory only and must not write memory.
+
+  side_effect:
+    filesystem_writes: none
+    git_mutation: none
+    network_calls: none
+

@@ -1,0 +1,100 @@
+kind: pack-metadata
+id: pairslash-backend
+version: "0.2.0"
+phase: 3
+status: active
+category: backend
+workflow_class: dual-mode
+codex:
+  plan_on_model: gpt-5.4
+  plan_off_model: gpt-5.3-codex
+memory_access:
+  authority: read-only
+  global_project_memory: read
+  task_memory: read
+  session_context: implicit-read
+  audit_log: none
+  invariant: This pack may read project memory for context but must never write Global Project Memory.
+required_inputs:
+  - name: task
+    required: true
+    description: Bounded backend engineering task or defect to plan or implement.
+  - name: acceptance_criteria
+    required: false
+    description: Explicit acceptance criteria or constraints supplied by the user.
+  - name: affected_paths
+    required: false
+    description: Services, modules, or file paths likely to be touched.
+output_contract:
+  plan_mode:
+    format: structured-markdown
+    sections:
+      - Objective
+      - Relevant Memory Constraints
+      - Affected Areas
+      - Assumptions and Unknowns
+      - Step-by-Step Plan
+      - Validation Plan
+      - Risks and Rollback
+      - Proposed File Touch List
+      - MEMORY_CANDIDATE
+  default_mode:
+    format: structured-markdown
+    sections:
+      - Done
+      - Files Changed
+      - Why These Changes
+      - Validation Run / Validation Needed
+      - Remaining Risks
+      - MEMORY_CANDIDATE
+failure_contract:
+  plan_mode:
+    blockers:
+      - If the task is under-specified in a way that could affect data, auth, or public API behavior, state the missing contract explicitly instead of guessing.
+      - Call out any migration or destructive data operation prominently before planning implementation.
+  default_mode:
+    blockers:
+      - Emit BLOCKER instead of making risky edits when ambiguity could break data, auth, or public API behavior.
+      - If required validation commands are unavailable, state exactly what could not be validated.
+runtime_targets:
+  - runtime: codex_cli
+    canonical_entrypoint: /skills
+    direct_invocation: $pairslash-backend
+    surfaces:
+      - id: canonical-picker
+        invocation: /skills -> select pairslash-backend
+        status: unverified
+        evidence_refs:
+          - docs/compatibility/compatibility-matrix.md
+          - docs/compatibility/runtime-surface-matrix.yaml
+      - id: direct-invocation
+        invocation: $pairslash-backend
+        status: unverified
+        evidence_refs:
+          - docs/compatibility/compatibility-matrix.md
+          - docs/compatibility/runtime-surface-matrix.yaml
+  - runtime: copilot_cli
+    canonical_entrypoint: /skills
+    direct_invocation: /pairslash-backend
+    surfaces:
+      - id: canonical-picker
+        invocation: /skills -> select pairslash-backend
+        status: unverified
+        evidence_refs:
+          - docs/compatibility/compatibility-matrix.md
+          - docs/compatibility/runtime-surface-matrix.yaml
+      - id: direct-invocation
+        invocation: /pairslash-backend
+        status: unverified
+        evidence_refs:
+          - docs/compatibility/compatibility-matrix.md
+          - docs/compatibility/runtime-surface-matrix.yaml
+compatibility_notes:
+  - Canonical activation is /skills on both supported runtimes.
+  - Direct invocation remains unverified until live runtime checks are recorded.
+source_of_truth:
+  pack_dir: packs/core/pairslash-backend
+  skill: packs/core/pairslash-backend/SKILL.md
+  contract: packs/core/pairslash-backend/contract.md
+  spec: packages/spec-core/specs/pairslash-backend.spec.yaml
+  validation_checklist: packs/core/pairslash-backend/validation-checklist.md

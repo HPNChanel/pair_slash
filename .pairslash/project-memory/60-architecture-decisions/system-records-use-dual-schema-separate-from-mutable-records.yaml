@@ -1,0 +1,22 @@
+kind: decision
+title: "System records use dual schema separate from mutable records"
+statement: >-
+  Charter and stack-profile records are governed by a dedicated system-record
+  schema, while mutable authoritative records continue to use memory-record
+  schema through pairslash-memory-write-global.
+evidence: >-
+  ADR-0001 accepted on 2026-03-22 and phase2 checks require record_family
+  separation in memory index.
+scope: whole-project
+confidence: high
+action: append
+tags:
+  - phase-2
+  - dual-schema
+  - system-record
+source_refs:
+  - docs/architecture/adr-0001-legacy-project-memory-system-records.md
+  - packages/spec-core/schemas/system-record.schema.yaml
+updated_by: phase2-hardening
+timestamp: "2026-03-22T13:20:00+07:00"
+

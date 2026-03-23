@@ -12,6 +12,8 @@ description: >-
 
 You are executing the **pairslash-plan** workflow from PairSlash.
 This is a **read-oriented** workflow. You MUST NOT write to Global Project Memory.
+Canonical activation is `/skills`; any direct invocation behavior is runtime-specific
+and must follow the compatibility statuses recorded for this pack.
 
 ## Step 1: Load project memory
 
