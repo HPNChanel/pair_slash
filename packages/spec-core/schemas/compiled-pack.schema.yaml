@@ -1,0 +1,73 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://pairslash.dev/schemas/compiled-pack/1.0.0"
+title: PairSlash Compiled Pack
+type: object
+required:
+  - kind
+  - schema_version
+  - compiler_version
+  - bundle_kind
+  - runtime
+  - pack_id
+  - digest
+  - normalized_ir_digest
+  - output_dir
+  - files
+properties:
+  kind:
+    const: compiled-pack
+  schema_version:
+    const: "1.0.0"
+  compiler_version:
+    type: string
+  bundle_kind:
+    type: string
+    enum:
+      - codex-skill-bundle
+      - copilot-package-bundle
+  runtime:
+    type: string
+    enum:
+      - codex_cli
+      - copilot_cli
+  pack_id:
+    type: string
+  digest:
+    type: string
+  normalized_ir_digest:
+    type: string
+  output_dir:
+    type: string
+  files:
+    type: array
+    minItems: 1
+    items:
+      type: object
+      required:
+        - relative_path
+        - sha256
+        - asset_kind
+        - install_surface
+        - runtime_selector
+        - generated
+        - override_eligible
+        - write_authority_guarded
+      properties:
+        relative_path:
+          type: string
+        sha256:
+          type: string
+        asset_kind:
+          type: string
+        install_surface:
+          type: string
+        runtime_selector:
+          type: string
+        generated:
+          type: boolean
+        override_eligible:
+          type: boolean
+        write_authority_guarded:
+          type: boolean
+        size:
+          type: integer

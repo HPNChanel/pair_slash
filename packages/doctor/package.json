@@ -1,0 +1,13 @@
+{
+  "name": "@pairslash/doctor",
+  "version": "0.4.0",
+  "private": true,
+  "type": "module",
+  "exports": "./src/index.js",
+  "dependencies": {
+    "@pairslash/installer": "file:../installer",
+    "@pairslash/spec-core": "file:../spec-core",
+    "@pairslash/runtime-codex-adapter": "file:../runtime-codex-adapter",
+    "@pairslash/runtime-copilot-adapter": "file:../runtime-copilot-adapter"
+  }
+}

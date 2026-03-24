@@ -1,0 +1,209 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://pairslash.dev/schemas/lint-report/1.0.0"
+title: PairSlash Lint Bridge Report
+type: object
+additionalProperties: false
+required:
+  - kind
+  - schema_version
+  - phase
+  - generated_at
+  - ok
+  - target
+  - runtime_scope
+  - summary
+  - checks
+  - issues
+  - blocking_errors
+  - next_actions
+properties:
+  kind:
+    const: lint-report
+  schema_version:
+    const: "1.0.0"
+  phase:
+    const: phase4-bridge
+  generated_at:
+    type: string
+    minLength: 1
+  ok:
+    type: boolean
+  target:
+    type: string
+    enum:
+      - repo
+      - user
+  runtime_scope:
+    type: string
+    enum:
+      - all
+      - codex_cli
+      - copilot_cli
+  summary:
+    type: object
+    additionalProperties: false
+    required:
+      - pack_count
+      - runtime_count
+      - check_count
+      - error_count
+      - warning_count
+      - note_count
+    properties:
+      pack_count:
+        type: integer
+        minimum: 0
+      runtime_count:
+        type: integer
+        minimum: 0
+      check_count:
+        type: integer
+        minimum: 0
+      error_count:
+        type: integer
+        minimum: 0
+      warning_count:
+        type: integer
+        minimum: 0
+      note_count:
+        type: integer
+        minimum: 0
+  checks:
+    type: array
+    items:
+      $ref: "#/$defs/checkEntry"
+  issues:
+    type: array
+    items:
+      $ref: "#/$defs/issueEntry"
+  blocking_errors:
+    type: array
+    items:
+      type: object
+      additionalProperties: false
+      required:
+        - code
+        - pack_id
+        - runtime
+        - message
+      properties:
+        code:
+          type: string
+          minLength: 1
+        pack_id:
+          type:
+            - string
+            - "null"
+        runtime:
+          type: string
+          enum:
+            - shared
+            - codex_cli
+            - copilot_cli
+        message:
+          type: string
+          minLength: 1
+  next_actions:
+    type: array
+    items:
+      type: string
+      minLength: 1
+
+$defs:
+  checkEntry:
+    type: object
+    additionalProperties: false
+    required:
+      - code
+      - result
+      - pack_id
+      - runtime
+      - target
+      - path
+      - message
+      - remediation
+    properties:
+      code:
+        type: string
+        minLength: 1
+      result:
+        type: string
+        enum:
+          - pass
+          - error
+          - warning
+          - note
+      pack_id:
+        type:
+          - string
+          - "null"
+      runtime:
+        type: string
+        enum:
+          - shared
+          - codex_cli
+          - copilot_cli
+      target:
+        type: string
+        enum:
+          - repo
+          - user
+      path:
+        type:
+          - string
+          - "null"
+      message:
+        type: string
+        minLength: 1
+      remediation:
+        type:
+          - string
+          - "null"
+  issueEntry:
+    type: object
+    additionalProperties: false
+    required:
+      - code
+      - result
+      - pack_id
+      - runtime
+      - target
+      - path
+      - message
+      - remediation
+    properties:
+      code:
+        type: string
+        minLength: 1
+      result:
+        type: string
+        enum:
+          - error
+          - warning
+          - note
+      pack_id:
+        type:
+          - string
+          - "null"
+      runtime:
+        type: string
+        enum:
+          - shared
+          - codex_cli
+          - copilot_cli
+      target:
+        type: string
+        enum:
+          - repo
+          - user
+      path:
+        type:
+          - string
+          - "null"
+      message:
+        type: string
+        minLength: 1
+      remediation:
+        type:
+          - string
+          - "null"

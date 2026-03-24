@@ -12,18 +12,19 @@ Canonical entrypoint: `/skills`.
 If you are evaluating or operating PairSlash from this repo, use this order:
 
 1. Install skills for your runtime with the [manual install guide](docs/workflows/install-guide.md).
-2. Run the local validation commands in [Phase 2 operations](docs/workflows/phase-2-operations.md).
-3. Use the [compatibility matrix](docs/compatibility/compatibility-matrix.md) and
+2. For managed installs, use the [Phase 4 install commands](docs/workflows/phase-4-install-commands.md).
+3. Run the local validation commands in [Phase 2 operations](docs/workflows/phase-2-operations.md).
+4. Use the [compatibility matrix](docs/compatibility/compatibility-matrix.md) and
    [runtime verification guide](docs/compatibility/runtime-verification.md) before
    claiming runtime support.
-4. Use the [legacy system records ADR](docs/architecture/adr-0001-legacy-project-memory-system-records.md)
+5. Use the [legacy system records ADR](docs/architecture/adr-0001-legacy-project-memory-system-records.md)
    for architecture rationale, not the archived Phase 0 docs.
 
 ## Current status
 
-- Version: `0.2.0`
-- Phase: **Phase 2 hardening baseline with Phase 3 pack formalization**
-- Focus: authoritative memory model, explicit write path, doctor/lint/test gates, and the first registry-backed formalized pack release (`pairslash-plan`)
+- Version: `0.4.0`
+- Phase: **Phase 4 runtime-native distribution and installability**
+- Focus: one-spec-two-runtimes pack manifests, deterministic compiler v2, managed install/update/uninstall lifecycle, doctor verdicts, and bridge lint/compat-lab coverage
 
 ## What ships in this repo
 
@@ -31,12 +32,14 @@ If you are evaluating or operating PairSlash from this repo, use this order:
 - Global memory and audit trail: `.pairslash/`
 - Source workflow packs: `packs/core/`
 - Source specs/schemas: `packages/spec-core/`
+- Phase 4 packages: `packages/cli/`, `packages/compiler-codex/`, `packages/compiler-copilot/`, `packages/installer/`, `packages/doctor/`, `packages/compat-lab/`
 - Validation tooling: `scripts/phase2_checks.py`
 - Fixtures and regression tests: `tests/`
 
 ## Choose your path
 
 - Install or reinstall skills: [docs/workflows/install-guide.md](docs/workflows/install-guide.md)
+- Managed Phase 4 install commands: [docs/workflows/phase-4-install-commands.md](docs/workflows/phase-4-install-commands.md)
 - Validate a local checkout and memory-write safety gates: [docs/workflows/phase-2-operations.md](docs/workflows/phase-2-operations.md)
 - Check what runtime behavior is actually supported: [docs/compatibility/compatibility-matrix.md](docs/compatibility/compatibility-matrix.md)
 - Run live CLI verification and record evidence: [docs/compatibility/runtime-verification.md](docs/compatibility/runtime-verification.md)
@@ -93,6 +96,8 @@ Notes:
 
 ## Install
 
+- Managed install path (Phase 4): use [docs/workflows/phase-4-install-commands.md](docs/workflows/phase-4-install-commands.md)
+- Manual copy fallback: use [docs/workflows/install-guide.md](docs/workflows/install-guide.md)
 - Codex CLI install path: copy source packs from `packs/core/` into `.agents/skills/` using the [manual install guide](docs/workflows/install-guide.md).
 - GitHub Copilot CLI install path: copy source packs from `packs/core/` into `.github/skills/` using the [manual install guide](docs/workflows/install-guide.md).
 - Windows PowerShell examples and post-install verification live in [docs/workflows/install-guide.md](docs/workflows/install-guide.md).
@@ -104,6 +109,9 @@ Run from repo root:
 ```bash
 python scripts/phase2_checks.py --all
 python -m unittest discover -s tests -p "test_*.py"
+npm run lint:phase4
+npm run test:phase4
+npm run test:phase4:release
 ```
 
 Both commands must pass for local “Phase 2 done” checks.
@@ -115,14 +123,18 @@ for the operational done bar and memory-write safety gates.
 
 - Phase 2 operations: `docs/workflows/phase-2-operations.md`
 - Install guide: `docs/workflows/install-guide.md`
+- Phase 4 install commands: `docs/workflows/phase-4-install-commands.md`
+- Phase 4 doctor troubleshooting: `docs/workflows/phase-4-doctor-troubleshooting.md`
 - Compatibility matrix: `docs/compatibility/compatibility-matrix.md`
 - Runtime verification: `docs/compatibility/runtime-verification.md`
 - Phase 3 team-pack release notes: `docs/releases/phase-3-team-pack-update.md`
 - Changelog draft: `docs/releases/changelog-0.2.0.md`
 - Upgrade notes: `docs/releases/upgrade-notes-0.2.0.md`
 - Release checklist: `docs/releases/release-checklist-0.2.0.md`
+- Phase 4 release checklist: `docs/releases/release-checklist-0.4.0.md`
 - Acceptance gates: `docs/compatibility/acceptance-gates.yaml`
 - ADR (legacy system records): `docs/architecture/adr-0001-legacy-project-memory-system-records.md`
+- Phase 4 architecture note: `docs/architecture/phase-4-runtime-native-distribution.md`
 - Archived Phase 0 overview: `docs/architecture/phase-0-overview.md`
 
 ## Migration notes

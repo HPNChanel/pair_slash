@@ -1,0 +1,81 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://pairslash.dev/schemas/install-journal/1.0.0"
+title: PairSlash Install Journal
+type: object
+required:
+  - kind
+  - schema_version
+  - action
+  - runtime
+  - target
+  - transaction_id
+  - journal_path
+  - state_path
+  - install_root
+  - status
+  - steps
+properties:
+  kind:
+    const: install-journal
+  schema_version:
+    const: "1.0.0"
+  action:
+    type: string
+    enum:
+      - install
+      - update
+      - uninstall
+  runtime:
+    type: string
+    enum:
+      - codex_cli
+      - copilot_cli
+  target:
+    type: string
+    enum:
+      - repo
+      - user
+  transaction_id:
+    type: string
+  journal_path:
+    type: string
+  state_path:
+    type: string
+  install_root:
+    type: string
+  status:
+    type: string
+    enum:
+      - pending
+      - committed
+      - rolled_back
+      - rollback_failed
+  started_at:
+    type: string
+  committed_at:
+    type: string
+  rolled_back_at:
+    type: string
+  error_message:
+    type: string
+  steps:
+    type: array
+    items:
+      type: object
+      required:
+        - kind
+        - path
+      properties:
+        kind:
+          type: string
+          enum:
+            - create
+            - replace
+            - remove
+            - write_state
+        path:
+          type: string
+        created_by_transaction:
+          type: boolean
+        backup_content:
+          type: string

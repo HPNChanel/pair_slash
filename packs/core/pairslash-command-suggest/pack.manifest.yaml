@@ -1,0 +1,80 @@
+kind: pack-manifest-v2
+schema_version: "2.0.0"
+version: "0.2.0"
+pack:
+  id: pairslash-command-suggest
+  display_name: PairSlash Command Suggest
+  summary: Suggest safe canonical commands from project constraints and command memory.
+  category: command
+  workflow_class: read-oriented
+  phase: 2
+  status: active
+  canonical_entrypoint: /skills
+supported_runtime_ranges:
+  codex_cli: ">=0.116.0"
+  copilot_cli: ">=0.0.0"
+install_targets:
+  - repo
+  - user
+capabilities:
+  - memory_read
+  - repo_read
+  - review_analysis
+risk_level: medium
+required_tools: []
+required_mcp_servers: []
+memory_permissions:
+  authority_mode: read-only
+  explicit_write_only: true
+  global_project_memory: read
+  task_memory: read
+  session_artifacts: implicit-read
+  audit_log: none
+assets:
+  pack_dir: packs/core/pairslash-command-suggest
+  primary_skill_file: SKILL.md
+  include:
+    - contract.md
+    - example-invocation.md
+    - example-output.md
+    - SKILL.md
+    - validation-checklist.md
+  docs:
+    contract_file: contract.md
+    example_invocation_file: example-invocation.md
+    example_output_file: example-output.md
+    validation_checklist_file: validation-checklist.md
+ownership:
+  ownership_file: pairslash.install.json
+  ownership_scope: pack_root
+  safe_delete_policy: pairslash-owned-only
+  record_generated_files: true
+  generated_files:
+    - pairslash.install.json
+local_override_policy:
+  strategy: preserve_valid_local_overrides
+  eligible_paths:
+    - contract.md
+    - example-invocation.md
+    - example-output.md
+    - SKILL.md
+    - validation-checklist.md
+  marker_file: .pairslash.local-overrides.yaml
+  marker_mode: state_or_explicit_marker
+  rollback_strategy: restore_last_managed_state
+release_channel: stable
+runtime_targets:
+  codex_cli:
+    direct_invocation: $pairslash-command-suggest
+    metadata_mode: openai_yaml_optional
+    skill_directory_name: pairslash-command-suggest
+    compatibility:
+      canonical_picker: supported
+      direct_invocation: unverified
+  copilot_cli:
+    direct_invocation: /pairslash-command-suggest
+    metadata_mode: none
+    skill_directory_name: pairslash-command-suggest
+    compatibility:
+      canonical_picker: supported
+      direct_invocation: unverified

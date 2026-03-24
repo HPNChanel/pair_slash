@@ -1,0 +1,211 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://pairslash.dev/schemas/doctor-report/2.0.0"
+title: PairSlash Doctor Report
+type: object
+required:
+  - kind
+  - schema_version
+  - generated_at
+  - runtime
+  - target
+  - support_verdict
+  - environment_summary
+  - runtime_compatibility
+  - checks
+  - issues
+  - next_actions
+  - installed_packs
+properties:
+  kind:
+    const: doctor-report
+  schema_version:
+    const: "2.0.0"
+  generated_at:
+    type: string
+  runtime:
+    type: string
+    enum:
+      - codex_cli
+      - copilot_cli
+  target:
+    type: string
+    enum:
+      - repo
+      - user
+  support_verdict:
+    type: string
+    enum:
+      - pass
+      - warn
+      - degraded
+      - fail
+  environment_summary:
+    type: object
+    required:
+      - os
+      - shell
+      - cwd
+      - repo_root
+      - config_home
+      - install_root
+      - state_path
+      - runtime_executable
+      - runtime_version
+      - runtime_available
+    properties:
+      os:
+        type: string
+      shell:
+        type: string
+      cwd:
+        type: string
+      repo_root:
+        type: string
+      config_home:
+        type: string
+      install_root:
+        type: string
+      state_path:
+        type: string
+      runtime_executable:
+        type:
+          - string
+          - "null"
+      runtime_version:
+        type:
+          - string
+          - "null"
+      runtime_available:
+        type: boolean
+  runtime_compatibility:
+    type: object
+    required:
+      - requested_runtime_range_max_status
+      - selected_pack_count
+      - compatible_pack_count
+      - incompatible_pack_ids
+    properties:
+      requested_runtime_range_max_status:
+        type: string
+        enum:
+          - supported
+          - mismatch
+          - unknown
+      selected_pack_count:
+        type: integer
+      compatible_pack_count:
+        type: integer
+      incompatible_pack_ids:
+        type: array
+        items:
+          type: string
+  checks:
+    type: array
+    items:
+      type: object
+      required:
+        - id
+        - group
+        - severity
+        - status
+        - runtime
+        - target
+        - inputs
+        - summary
+        - remediation
+        - evidence
+      properties:
+        id:
+          type: string
+        group:
+          type: string
+          enum:
+            - runtime
+            - scope
+            - filesystem
+            - manifest
+            - dependencies
+            - install_state
+            - conflict
+            - platform
+        severity:
+          type: string
+          enum:
+            - info
+            - warn
+            - fail
+        status:
+          type: string
+          enum:
+            - pass
+            - warn
+            - fail
+            - skip
+        runtime:
+          type: string
+          enum:
+            - codex_cli
+            - copilot_cli
+        target:
+          type: string
+          enum:
+            - repo
+            - user
+        inputs:
+          type: object
+        summary:
+          type: string
+        remediation:
+          type:
+            - string
+            - "null"
+        evidence:
+          type: object
+  issues:
+    type: array
+    items:
+      type: object
+      required:
+        - code
+        - severity
+        - check_id
+        - message
+        - remediation
+      properties:
+        code:
+          type: string
+        severity:
+          type: string
+          enum:
+            - warn
+            - fail
+        check_id:
+          type: string
+        message:
+          type: string
+        remediation:
+          type:
+            - string
+            - "null"
+  next_actions:
+    type: array
+    items:
+      type: string
+  installed_packs:
+    type: array
+    items:
+      type: object
+      required:
+        - id
+        - version
+        - install_dir
+        - local_overrides
+      properties:
+        id:
+          type: string
+        version:
+          type: string
+        install_dir:
+          type: string
+        local_overrides:
+          type: integer

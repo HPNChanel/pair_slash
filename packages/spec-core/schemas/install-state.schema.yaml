@@ -1,0 +1,110 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://pairslash.dev/schemas/install-state/1.0.0"
+title: PairSlash Install State
+type: object
+required:
+  - kind
+  - schema_version
+  - runtime
+  - target
+  - config_home
+  - install_root
+  - packs
+properties:
+  kind:
+    const: install-state
+  schema_version:
+    const: "1.0.0"
+  runtime:
+    type: string
+    enum:
+      - codex_cli
+      - copilot_cli
+  target:
+    type: string
+    enum:
+      - repo
+      - user
+  config_home:
+    type: string
+  install_root:
+    type: string
+  updated_at:
+    type:
+      - string
+      - "null"
+  last_transaction_id:
+    type:
+      - string
+      - "null"
+  packs:
+    type: array
+    items:
+      type: object
+      required:
+        - id
+        - version
+        - install_dir
+        - manifest_digest
+        - compiler_version
+        - files
+      properties:
+        id:
+          type: string
+        version:
+          type: string
+        install_dir:
+          type: string
+        manifest_digest:
+          type: string
+        compiler_version:
+          type: string
+        previous_version:
+          type:
+            - string
+            - "null"
+        updated_at:
+          type:
+            - string
+            - "null"
+        files:
+          type: array
+          items:
+            type: object
+            required:
+              - relative_path
+              - absolute_path
+              - source_digest
+              - current_digest
+              - owned_by_pairslash
+              - override_eligible
+              - local_override
+            properties:
+              relative_path:
+                type: string
+              absolute_path:
+                type: string
+              source_digest:
+                type: string
+              current_digest:
+                type: string
+              asset_kind:
+                type: string
+              install_surface:
+                type: string
+              runtime_selector:
+                type: string
+              generated:
+                type: boolean
+              owned_by_pairslash:
+                type: boolean
+              override_eligible:
+                type: boolean
+              local_override:
+                type: boolean
+              last_operation:
+                type:
+                  - string
+                  - "null"
+              write_authority_guarded:
+                type: boolean

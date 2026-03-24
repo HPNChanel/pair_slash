@@ -1,0 +1,49 @@
+# PairSlash 0.4.0 Phase 4 Release Checklist
+
+Status legend:
+
+- `[x]` automated gate exists and passes on the current branch
+- `[ ]` manual gate must be re-confirmed before declaring Phase 4 complete
+
+## Pass / fail gate
+
+- [x] `pack.manifest.yaml v2` validator, schemas, and registry discovery pass in `packages/spec-core/tests/spec-core.test.js`
+- [x] compiler v2 stays one-spec-two-runtimes through shared IR coverage in `packages/compiler-codex/tests/compiler-codex.test.js` and `packages/compiler-copilot/tests/compiler-copilot.test.js`
+- [x] `install`, `update`, and `uninstall` exercise preview, rollback, override preservation, repo scope, and user scope in `packages/installer/tests/installer.test.js`
+- [x] `doctor` covers runtime/version/path/permission/conflict/tool/MCP checks in `packages/doctor/tests/doctor.test.js`
+- [x] `lint --phase4` blocks installability regressions in `packages/lint-bridge/tests/lint-bridge.test.js`
+- [x] CLI wiring for `preview`, `install`, `update`, `uninstall`, `doctor`, and `lint` is covered in `packages/cli/tests/cli.test.js`
+- [x] compat-lab bootstrap keeps 5 fixtures and deterministic Codex/Copilot goldens in `packages/compat-lab/tests/compat-lab.test.js`
+- [ ] Do not declare Phase 4 complete if any managed command mutates without preview or dry-run support
+- [ ] Do not declare Phase 4 complete if uninstall removes unmanaged or user-edited content
+
+## Blockers
+
+- [ ] Block release if `npm run test:phase4:release` fails
+- [ ] Block release if docs claim live runtime compatibility beyond `docs/compatibility/runtime-verification.md` evidence
+- [ ] Block release if a new runtime is mentioned outside Codex CLI and GitHub Copilot CLI
+
+## Deferred to Phase 5 / 6
+
+- [ ] Phase 5: replace bridge lint with full contract/policy enforcement
+- [ ] Phase 5: extend override policy only after a safe merged-file contract exists
+- [ ] Phase 6: add live runtime matrix, auth/session checks, and real MCP interaction coverage
+- [ ] Phase 6: expand compat-lab beyond bootstrap fixtures and fake runtime lanes
+
+## Final smoke tests
+
+- [x] `npm run test:phase4`
+- [x] `npm run test:phase4:release`
+- [ ] `node packages/cli/src/bin/pairslash.js doctor --runtime codex --target repo`
+- [ ] `node packages/cli/src/bin/pairslash.js doctor --runtime copilot --target user`
+- [ ] `node packages/cli/src/bin/pairslash.js preview install pairslash-plan --runtime codex --target repo`
+- [ ] `node packages/cli/src/bin/pairslash.js preview install pairslash-plan --runtime copilot --target user`
+
+## Minimum docs that must ship
+
+- [x] `docs/architecture/pack-manifest-v2-practical-spec.md`
+- [x] `docs/architecture/compiler-v2-implement-oriented.md`
+- [x] `docs/workflows/phase-4-install-commands.md`
+- [x] `docs/workflows/phase-4-doctor-troubleshooting.md`
+- [x] `docs/releases/release-checklist-0.4.0.md`
+- [x] `packages/compat-lab/fixtures/README.md`

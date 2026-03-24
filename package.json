@@ -1,0 +1,22 @@
+{
+  "name": "pairslash",
+  "version": "0.4.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "npm@11.7.0",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "pairslash": "node packages/cli/src/bin/pairslash.js",
+    "lint:phase4": "node packages/cli/src/bin/pairslash.js lint --phase4",
+    "test:phase4": "node scripts/run-phase4-tests.mjs",
+    "test:phase4:release": "node scripts/run-phase4-release-readiness.mjs"
+  },
+  "dependencies": {
+    "yaml": "^2.8.1"
+  }
+}

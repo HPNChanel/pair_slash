@@ -1,0 +1,2397 @@
+{
+  "fixture_id": "repo-monorepo-workspaces",
+  "kind": "compat-fixture-snapshot",
+  "purpose": "Nested workspace repo for repo-root resolution and stable install path mapping.",
+  "runtimes": {
+    "codex_cli": {
+      "apply_result": {
+        "state": {
+          "config_home": "<repo>\\.agents",
+          "install_root": "<repo>\\.agents\\skills",
+          "packs": [
+            {
+              "compiler_version": "2.0.0",
+              "files": [
+                {
+                  "absolute_path": "<repo>\\.agents\\skills\\pairslash-frontend\\agents\\openai.yaml",
+                  "asset_kind": "runtime_manifest",
+                  "generated": true,
+                  "install_surface": "metadata",
+                  "last_operation": "create",
+                  "local_override": false,
+                  "override_eligible": false,
+                  "owned_by_pairslash": true,
+                  "relative_path": "agents/openai.yaml",
+                  "runtime_selector": "codex_cli",
+                  "write_authority_guarded": false
+                },
+                {
+                  "absolute_path": "<repo>\\.agents\\skills\\pairslash-frontend\\contract.md",
+                  "asset_kind": "support_doc",
+                  "generated": false,
+                  "install_surface": "support_doc",
+                  "last_operation": "create",
+                  "local_override": false,
+                  "override_eligible": true,
+                  "owned_by_pairslash": true,
+                  "relative_path": "contract.md",
+                  "runtime_selector": "shared",
+                  "write_authority_guarded": false
+                },
+                {
+                  "absolute_path": "<repo>\\.agents\\skills\\pairslash-frontend\\example-invocation.md",
+                  "asset_kind": "support_doc",
+                  "generated": false,
+                  "install_surface": "support_doc",
+                  "last_operation": "create",
+                  "local_override": false,
+                  "override_eligible": true,
+                  "owned_by_pairslash": true,
+                  "relative_path": "example-invocation.md",
+                  "runtime_selector": "shared",
+                  "write_authority_guarded": false
+                },
+                {
+                  "absolute_path": "<repo>\\.agents\\skills\\pairslash-frontend\\example-output.md",
+                  "asset_kind": "support_doc",
+                  "generated": false,
+                  "install_surface": "support_doc",
+                  "last_operation": "create",
+                  "local_override": false,
+                  "override_eligible": true,
+                  "owned_by_pairslash": true,
+                  "relative_path": "example-output.md",
+                  "runtime_selector": "shared",
+                  "write_authority_guarded": false
+                },
+                {
+                  "absolute_path": "<repo>\\.agents\\skills\\pairslash-frontend\\fragments\\config\\pack-config.yaml",
+                  "asset_kind": "config_fragment",
+                  "generated": true,
+                  "install_surface": "config",
+                  "last_operation": "create",
+                  "local_override": false,
+                  "override_eligible": false,
+                  "owned_by_pairslash": true,
+                  "relative_path": "fragments/config/pack-config.yaml",
+                  "runtime_selector": "codex_cli",
+                  "write_authority_guarded": false
+                },
+                {
+                  "absolute_path": "<repo>\\.agents\\skills\\pairslash-frontend\\fragments\\context\\runtime-context.md",
+                  "asset_kind": "context_fragment",
+                  "generated": true,
+                  "install_surface": "context",
+                  "last_operation": "create",
+                  "local_override": false,
+                  "override_eligible": false,
+                  "owned_by_pairslash": true,
+                  "relative_path": "fragments/context/runtime-context.md",
+                  "runtime_selector": "codex_cli",
+                  "write_authority_guarded": false
+                },
+                {
+                  "absolute_path": "<repo>\\.agents\\skills\\pairslash-frontend\\pack.yaml",
+                  "asset_kind": "support_doc",
+                  "generated": false,
+                  "install_surface": "support_doc",
+                  "last_operation": "create",
+                  "local_override": false,
+                  "override_eligible": true,
+                  "owned_by_pairslash": true,
+                  "relative_path": "pack.yaml",
+                  "runtime_selector": "shared",
+                  "write_authority_guarded": false
+                },
+                {
+                  "absolute_path": "<repo>\\.agents\\skills\\pairslash-frontend\\pairslash.install.json",
+                  "asset_kind": "ownership_manifest",
+                  "generated": true,
+                  "install_surface": "metadata",
+                  "last_operation": "create",
+                  "local_override": false,
+                  "override_eligible": false,
+                  "owned_by_pairslash": true,
+                  "relative_path": "pairslash.install.json",
+                  "runtime_selector": "shared",
+                  "write_authority_guarded": false
+                },
+                {
+                  "absolute_path": "<repo>\\.agents\\skills\\pairslash-frontend\\SKILL.md",
+                  "asset_kind": "skill_markdown",
+                  "generated": false,
+                  "install_surface": "canonical_skill",
+                  "last_operation": "create",
+                  "local_override": false,
+                  "override_eligible": true,
+                  "owned_by_pairslash": true,
+                  "relative_path": "SKILL.md",
+                  "runtime_selector": "shared",
+                  "write_authority_guarded": false
+                },
+                {
+                  "absolute_path": "<repo>\\.agents\\skills\\pairslash-frontend\\validation-checklist.md",
+                  "asset_kind": "support_doc",
+                  "generated": false,
+                  "install_surface": "support_doc",
+                  "last_operation": "create",
+                  "local_override": false,
+                  "override_eligible": true,
+                  "owned_by_pairslash": true,
+                  "relative_path": "validation-checklist.md",
+                  "runtime_selector": "shared",
+                  "write_authority_guarded": false
+                }
+              ],
+              "id": "pairslash-frontend",
+              "install_dir": "<repo>\\.agents\\skills\\pairslash-frontend",
+              "manifest_digest": "50aae21d16b47def24032a6ea65d32cbc607de9faf8b5f65a580c3b364c94d98",
+              "previous_version": null,
+              "version": "0.2.0"
+            },
+            {
+              "compiler_version": "2.0.0",
+              "files": [
+                {
+                  "absolute_path": "<repo>\\.agents\\skills\\pairslash-plan\\agents\\openai.yaml",
+                  "asset_kind": "runtime_manifest",
+                  "generated": true,
+                  "install_surface": "metadata",
+                  "last_operation": "create",
+                  "local_override": false,
+                  "override_eligible": false,
+                  "owned_by_pairslash": true,
+                  "relative_path": "agents/openai.yaml",
+                  "runtime_selector": "codex_cli",
+                  "write_authority_guarded": false
+                },
+                {
+                  "absolute_path": "<repo>\\.agents\\skills\\pairslash-plan\\contract.md",
+                  "asset_kind": "support_doc",
+                  "generated": false,
+                  "install_surface": "support_doc",
+                  "last_operation": "create",
+                  "local_override": false,
+                  "override_eligible": true,
+                  "owned_by_pairslash": true,
+                  "relative_path": "contract.md",
+                  "runtime_selector": "shared",
+                  "write_authority_guarded": false
+                },
+                {
+                  "absolute_path": "<repo>\\.agents\\skills\\pairslash-plan\\example-invocation.md",
+                  "asset_kind": "support_doc",
+                  "generated": false,
+                  "install_surface": "support_doc",
+                  "last_operation": "create",
+                  "local_override": false,
+                  "override_eligible": true,
+                  "owned_by_pairslash": true,
+                  "relative_path": "example-invocation.md",
+                  "runtime_selector": "shared",
+                  "write_authority_guarded": false
+                },
+                {
+                  "absolute_path": "<repo>\\.agents\\skills\\pairslash-plan\\example-output.md",
+                  "asset_kind": "support_doc",
+                  "generated": false,
+                  "install_surface": "support_doc",
+                  "last_operation": "create",
+                  "local_override": false,
+                  "override_eligible": true,
+                  "owned_by_pairslash": true,
+                  "relative_path": "example-output.md",
+                  "runtime_selector": "shared",
+                  "write_authority_guarded": false
+                },
+                {
+                  "absolute_path": "<repo>\\.agents\\skills\\pairslash-plan\\fragments\\config\\pack-config.yaml",
+                  "asset_kind": "config_fragment",
+                  "generated": true,
+                  "install_surface": "config",
+                  "last_operation": "create",
+                  "local_override": false,
+                  "override_eligible": false,
+                  "owned_by_pairslash": true,
+                  "relative_path": "fragments/config/pack-config.yaml",
+                  "runtime_selector": "codex_cli",
+                  "write_authority_guarded": false
+                },
+                {
+                  "absolute_path": "<repo>\\.agents\\skills\\pairslash-plan\\fragments\\context\\runtime-context.md",
+                  "asset_kind": "context_fragment",
+                  "generated": true,
+                  "install_surface": "context",
+                  "last_operation": "create",
+                  "local_override": false,
+                  "override_eligible": false,
+                  "owned_by_pairslash": true,
+                  "relative_path": "fragments/context/runtime-context.md",
+                  "runtime_selector": "codex_cli",
+                  "write_authority_guarded": false
+                },
+                {
+                  "absolute_path": "<repo>\\.agents\\skills\\pairslash-plan\\pack.yaml",
+                  "asset_kind": "support_doc",
+                  "generated": false,
+                  "install_surface": "support_doc",
+                  "last_operation": "create",
+                  "local_override": false,
+                  "override_eligible": true,
+                  "owned_by_pairslash": true,
+                  "relative_path": "pack.yaml",
+                  "runtime_selector": "shared",
+                  "write_authority_guarded": false
+                },
+                {
+                  "absolute_path": "<repo>\\.agents\\skills\\pairslash-plan\\pairslash.install.json",
+                  "asset_kind": "ownership_manifest",
+                  "generated": true,
+                  "install_surface": "metadata",
+                  "last_operation": "create",
+                  "local_override": false,
+                  "override_eligible": false,
+                  "owned_by_pairslash": true,
+                  "relative_path": "pairslash.install.json",
+                  "runtime_selector": "shared",
+                  "write_authority_guarded": false
+                },
+                {
+                  "absolute_path": "<repo>\\.agents\\skills\\pairslash-plan\\SKILL.md",
+                  "asset_kind": "skill_markdown",
+                  "generated": false,
+                  "install_surface": "canonical_skill",
+                  "last_operation": "create",
+                  "local_override": false,
+                  "override_eligible": true,
+                  "owned_by_pairslash": true,
+                  "relative_path": "SKILL.md",
+                  "runtime_selector": "shared",
+                  "write_authority_guarded": false
+                },
+                {
+                  "absolute_path": "<repo>\\.agents\\skills\\pairslash-plan\\validation-checklist.md",
+                  "asset_kind": "support_doc",
+                  "generated": false,
+                  "install_surface": "support_doc",
+                  "last_operation": "create",
+                  "local_override": false,
+                  "override_eligible": true,
+                  "owned_by_pairslash": true,
+                  "relative_path": "validation-checklist.md",
+                  "runtime_selector": "shared",
+                  "write_authority_guarded": false
+                }
+              ],
+              "id": "pairslash-plan",
+              "install_dir": "<repo>\\.agents\\skills\\pairslash-plan",
+              "manifest_digest": "601159bd434179e0ea31c017bd793acbec385b80b122a5108c9ca5a829810a45",
+              "previous_version": null,
+              "version": "0.2.0"
+            }
+          ],
+          "runtime": "codex_cli",
+          "target": "repo"
+        },
+        "status": "applied",
+        "summary": {
+          "blocked_conflict": 0,
+          "create": 20,
+          "mkdir": 2,
+          "preserve_override": 0,
+          "remove": 0,
+          "replace": 0,
+          "skip_identical": 0,
+          "skip_unmanaged": 0,
+          "write_journal": 1,
+          "write_state": 1
+        }
+      },
+      "compile": [
+        {
+          "bundle_kind": "codex-skill-bundle",
+          "canonical_entrypoint": "/skills",
+          "digest": "b2c4310aed2c70b18d536840e85a235f111fcdf15eede222050b6928f3241ae0",
+          "direct_invocation": "$pairslash-frontend",
+          "files": [
+            {
+              "asset_kind": "runtime_manifest",
+              "generated": true,
+              "install_surface": "metadata",
+              "override_eligible": false,
+              "relative_path": "agents/openai.yaml",
+              "runtime_selector": "codex_cli",
+              "sha256": "71e7675ed492fb5b1208c8134b3165904b36b078c7413a365c1230026713996b",
+              "write_authority_guarded": false
+            },
+            {
+              "asset_kind": "support_doc",
+              "generated": false,
+              "install_surface": "support_doc",
+              "override_eligible": true,
+              "relative_path": "contract.md",
+              "runtime_selector": "shared",
+              "sha256": "a62d7a8f18508506d156275e8fcd3de1e1a51896a7ce438d57b2e2e3e7755014",
+              "write_authority_guarded": false
+            },
+            {
+              "asset_kind": "support_doc",
+              "generated": false,
+              "install_surface": "support_doc",
+              "override_eligible": true,
+              "relative_path": "example-invocation.md",
+              "runtime_selector": "shared",
+              "sha256": "9593447026ee9472091e71d57c77848ae517e57622d8940cfae30ba452484c74",
+              "write_authority_guarded": false
+            },
+            {
+              "asset_kind": "support_doc",
+              "generated": false,
+              "install_surface": "support_doc",
+              "override_eligible": true,
+              "relative_path": "example-output.md",
+              "runtime_selector": "shared",
+              "sha256": "8d9b946d8394ec9a4b19bcd180f4bc68110b57f86579ee7ee2b905da8d3f9af7",
+              "write_authority_guarded": false
+            },
+            {
+              "asset_kind": "config_fragment",
+              "generated": true,
+              "install_surface": "config",
+              "override_eligible": false,
+              "relative_path": "fragments/config/pack-config.yaml",
+              "runtime_selector": "codex_cli",
+              "sha256": "f0c62d4b9ec7ead1ec4cde58e1f6535048aea6b688df41b59e880d30ee462d31",
+              "write_authority_guarded": false
+            },
+            {
+              "asset_kind": "context_fragment",
+              "generated": true,
+              "install_surface": "context",
+              "override_eligible": false,
+              "relative_path": "fragments/context/runtime-context.md",
+              "runtime_selector": "codex_cli",
+              "sha256": "6f80522fe60f43fe3189f6f16dc5c05c650298fd387ad65176c546d97e3c949b",
+              "write_authority_guarded": false
+            },
+            {
+              "asset_kind": "support_doc",
+              "generated": false,
+              "install_surface": "support_doc",
+              "override_eligible": true,
+              "relative_path": "pack.yaml",
+              "runtime_selector": "shared",
+              "sha256": "0f34e233b16bf1dfd664384aa260ad81c850291dcc5daf0c51f83cdc8c95a742",
+              "write_authority_guarded": false
+            },
+            {
+              "asset_kind": "ownership_manifest",
+              "generated": true,
+              "install_surface": "metadata",
+              "override_eligible": false,
+              "relative_path": "pairslash.install.json",
+              "runtime_selector": "shared",
+              "sha256": "703d56fb1ae6efd8b3a10d83e0c415a2a6281dcf04826d9fa77baf0eaef977f3",
+              "write_authority_guarded": false
+            },
+            {
+              "asset_kind": "skill_markdown",
+              "generated": false,
+              "install_surface": "canonical_skill",
+              "override_eligible": true,
+              "relative_path": "SKILL.md",
+              "runtime_selector": "shared",
+              "sha256": "4c36dca0bb6c399de9ec5053255d8548163a4bab1a4878aa5d9f635daa17f4b0",
+              "write_authority_guarded": false
+            },
+            {
+              "asset_kind": "support_doc",
+              "generated": false,
+              "install_surface": "support_doc",
+              "override_eligible": true,
+              "relative_path": "validation-checklist.md",
+              "runtime_selector": "shared",
+              "sha256": "8062016116818c670e4007a10e9223e6d5bb15cbd4e7173cad0fbdbe9e320c50",
+              "write_authority_guarded": false
+            }
+          ],
+          "normalized_ir_digest": "03a435381131eda7896f810259635bc6d129793d6db0843059ca1e03dd1a8875",
+          "output_dir": "<repo>\\dist\\compiled\\codex\\pairslash-frontend",
+          "pack_id": "pairslash-frontend",
+          "runtime": "codex_cli",
+          "version": "0.2.0"
+        },
+        {
+          "bundle_kind": "codex-skill-bundle",
+          "canonical_entrypoint": "/skills",
+          "digest": "67fbf596c50e8909f39132a44ea2b5e1efa74c1c10f5adc6e4b0630b6818a936",
+          "direct_invocation": "$pairslash-plan",
+          "files": [
+            {
+              "asset_kind": "runtime_manifest",
+              "generated": true,
+              "install_surface": "metadata",
+              "override_eligible": false,
+              "relative_path": "agents/openai.yaml",
+              "runtime_selector": "codex_cli",
+              "sha256": "805bd276028ff21713cb37d1a45514f102cd531a1f592fbc240aa365d5a7e588",
+              "write_authority_guarded": false
+            },
+            {
+              "asset_kind": "support_doc",
+              "generated": false,
+              "install_surface": "support_doc",
+              "override_eligible": true,
+              "relative_path": "contract.md",
+              "runtime_selector": "shared",
+              "sha256": "f2cf6c0ca60768671e99bdfc88620f5c9d7f0dddb7fca7059a1830fb20829cf9",
+              "write_authority_guarded": false
+            },
+            {
+              "asset_kind": "support_doc",
+              "generated": false,
+              "install_surface": "support_doc",
+              "override_eligible": true,
+              "relative_path": "example-invocation.md",
+              "runtime_selector": "shared",
+              "sha256": "f0f521e5120f8e4abd0f187585878f3d7cb9778e3f26bfdc7619b2b9bb2345ee",
+              "write_authority_guarded": false
+            },
+            {
+              "asset_kind": "support_doc",
+              "generated": false,
+              "install_surface": "support_doc",
+              "override_eligible": true,
+              "relative_path": "example-output.md",
+              "runtime_selector": "shared",
+              "sha256": "6d618e51e6a92606bc0c53ee73fb357c4d37f3242e2b8caee6d07d6c41b9569a",
+              "write_authority_guarded": false
+            },
+            {
+              "asset_kind": "config_fragment",
+              "generated": true,
+              "install_surface": "config",
+              "override_eligible": false,
+              "relative_path": "fragments/config/pack-config.yaml",
+              "runtime_selector": "codex_cli",
+              "sha256": "f0c62d4b9ec7ead1ec4cde58e1f6535048aea6b688df41b59e880d30ee462d31",
+              "write_authority_guarded": false
+            },
+            {
+              "asset_kind": "context_fragment",
+              "generated": true,
+              "install_surface": "context",
+              "override_eligible": false,
+              "relative_path": "fragments/context/runtime-context.md",
+              "runtime_selector": "codex_cli",
+              "sha256": "c798b8fad7d408b1cfdce787a94fe32c22b08a6ea7048cd5cdb2408c9ce4a4af",
+              "write_authority_guarded": false
+            },
+            {
+              "asset_kind": "support_doc",
+              "generated": false,
+              "install_surface": "support_doc",
+              "override_eligible": true,
+              "relative_path": "pack.yaml",
+              "runtime_selector": "shared",
+              "sha256": "6e506ccf5caa20ae0a856e2b3857d6710b571fb1c5e87d65b74b146b43ff9e45",
+              "write_authority_guarded": false
+            },
+            {
+              "asset_kind": "ownership_manifest",
+              "generated": true,
+              "install_surface": "metadata",
+              "override_eligible": false,
+              "relative_path": "pairslash.install.json",
+              "runtime_selector": "shared",
+              "sha256": "4d33da3d2ab7910b4c985dc821c282021ca8baafb7d5df2fa71b56721244cd74",
+              "write_authority_guarded": false
+            },
+            {
+              "asset_kind": "skill_markdown",
+              "generated": false,
+              "install_surface": "canonical_skill",
+              "override_eligible": true,
+              "relative_path": "SKILL.md",
+              "runtime_selector": "shared",
+              "sha256": "98a944847094200dabeabf4cadd93a114f62590be0f7fb3618d1d4a64dcfcfff",
+              "write_authority_guarded": false
+            },
+            {
+              "asset_kind": "support_doc",
+              "generated": false,
+              "install_surface": "support_doc",
+              "override_eligible": true,
+              "relative_path": "validation-checklist.md",
+              "runtime_selector": "shared",
+              "sha256": "0bb163152970bdc95354c09fe17b5e018518a76ffc7eafdb3068b13adc9452cc",
+              "write_authority_guarded": false
+            }
+          ],
+          "normalized_ir_digest": "297faa8fe869e37503861fe1aacb2792c7b4cdfcc3aff2c5ed77faf44ccee184",
+          "output_dir": "<repo>\\dist\\compiled\\codex\\pairslash-plan",
+          "pack_id": "pairslash-plan",
+          "runtime": "codex_cli",
+          "version": "0.2.0"
+        }
+      ],
+      "doctor_after": {
+        "checks": [
+          {
+            "evidence": {
+              "version": "0.116.0"
+            },
+            "group": "runtime",
+            "id": "runtime.detect",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "runtime available via codex (0.116.0)"
+          },
+          {
+            "evidence": {
+              "version": "0.116.0"
+            },
+            "group": "runtime",
+            "id": "runtime.version_range",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "runtime version satisfies all selected pack ranges"
+          },
+          {
+            "evidence": {},
+            "group": "platform",
+            "id": "platform.os_shell_support",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "platform win32 with shell c:\\windows\\system32\\cmd.exe is supported"
+          },
+          {
+            "evidence": {
+              "manifest_count": 2
+            },
+            "group": "scope",
+            "id": "scope.repo_root",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "repo root markers are present"
+          },
+          {
+            "evidence": {},
+            "group": "filesystem",
+            "id": "filesystem.config_home",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "config home path is valid"
+          },
+          {
+            "evidence": {},
+            "group": "filesystem",
+            "id": "filesystem.install_root",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "install root path is valid"
+          },
+          {
+            "evidence": {},
+            "group": "filesystem",
+            "id": "filesystem.write_permission",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "required filesystem paths are writable"
+          },
+          {
+            "evidence": {
+              "pack_count": 2
+            },
+            "group": "install_state",
+            "id": "install_state.load",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "install state loaded successfully"
+          },
+          {
+            "evidence": {
+              "discovered": 2
+            },
+            "group": "manifest",
+            "id": "manifest.discover_and_validate",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "2 manifest(s) selected for doctor checks"
+          },
+          {
+            "evidence": {},
+            "group": "manifest",
+            "id": "manifest.runtime_target_presence",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "all selected manifests declare the requested runtime and install target"
+          },
+          {
+            "evidence": {},
+            "group": "conflict",
+            "id": "manifest.naming_conflicts",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "no manifest naming conflicts detected"
+          },
+          {
+            "evidence": {},
+            "group": "dependencies",
+            "id": "dependencies.required_tools",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "required tool checks passed"
+          },
+          {
+            "evidence": {},
+            "group": "dependencies",
+            "id": "dependencies.required_mcp_servers",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "required MCP server config assets are present"
+          },
+          {
+            "evidence": {},
+            "group": "install_state",
+            "id": "install_state.owned_files_integrity",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "tracked managed files match install state receipts"
+          },
+          {
+            "evidence": {},
+            "group": "conflict",
+            "id": "conflict.unmanaged_install_root",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "no unmanaged runtime assets detected under the install root"
+          },
+          {
+            "evidence": {},
+            "group": "runtime",
+            "id": "runtime.asset_surface_consistency",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "installed asset surfaces are valid for the selected runtime"
+          }
+        ],
+        "environment_summary": {
+          "config_home": "<repo>\\.agents",
+          "cwd": "<workspace>",
+          "install_root": "<repo>\\.agents\\skills",
+          "os": "win32",
+          "repo_root": "<repo>",
+          "runtime_available": true,
+          "runtime_executable": "codex",
+          "runtime_version": "0.116.0",
+          "shell": "c:\\windows\\system32\\cmd.exe",
+          "state_path": "<repo>\\.pairslash\\install-state\\repo-codex_cli.json"
+        },
+        "installed_packs": [
+          {
+            "id": "pairslash-frontend",
+            "install_dir": "<repo>\\.agents\\skills\\pairslash-frontend",
+            "local_overrides": 0,
+            "version": "0.2.0"
+          },
+          {
+            "id": "pairslash-plan",
+            "install_dir": "<repo>\\.agents\\skills\\pairslash-plan",
+            "local_overrides": 0,
+            "version": "0.2.0"
+          }
+        ],
+        "issues": [],
+        "next_actions": [
+          "No action required. Environment is ready for PairSlash Phase 4 diagnostics."
+        ],
+        "runtime": "codex_cli",
+        "runtime_compatibility": {
+          "compatible_pack_count": 2,
+          "incompatible_pack_ids": [],
+          "requested_runtime_range_max_status": "supported",
+          "selected_pack_count": 2
+        },
+        "support_verdict": "pass",
+        "target": "repo"
+      },
+      "doctor_before": {
+        "checks": [
+          {
+            "evidence": {
+              "version": "0.116.0"
+            },
+            "group": "runtime",
+            "id": "runtime.detect",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "runtime available via codex (0.116.0)"
+          },
+          {
+            "evidence": {
+              "version": "0.116.0"
+            },
+            "group": "runtime",
+            "id": "runtime.version_range",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "runtime version satisfies all selected pack ranges"
+          },
+          {
+            "evidence": {},
+            "group": "platform",
+            "id": "platform.os_shell_support",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "platform win32 with shell c:\\windows\\system32\\cmd.exe is supported"
+          },
+          {
+            "evidence": {
+              "manifest_count": 2
+            },
+            "group": "scope",
+            "id": "scope.repo_root",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "repo root markers are present"
+          },
+          {
+            "evidence": {
+              "parent": "<repo>"
+            },
+            "group": "filesystem",
+            "id": "filesystem.config_home",
+            "remediation": "Run install to create the runtime config home, or create the directory manually if policy requires it.",
+            "severity": "warn",
+            "status": "warn",
+            "summary": "config home does not exist yet but can be initialized during install"
+          },
+          {
+            "evidence": {
+              "parent": "<repo>"
+            },
+            "group": "filesystem",
+            "id": "filesystem.install_root",
+            "remediation": "Run install to create the runtime install root.",
+            "severity": "warn",
+            "status": "warn",
+            "summary": "install root does not exist yet"
+          },
+          {
+            "evidence": {},
+            "group": "filesystem",
+            "id": "filesystem.write_permission",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "required filesystem paths are writable"
+          },
+          {
+            "evidence": {},
+            "group": "install_state",
+            "id": "install_state.load",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "install state is absent, which is valid before first install"
+          },
+          {
+            "evidence": {
+              "discovered": 2
+            },
+            "group": "manifest",
+            "id": "manifest.discover_and_validate",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "2 manifest(s) selected for doctor checks"
+          },
+          {
+            "evidence": {},
+            "group": "manifest",
+            "id": "manifest.runtime_target_presence",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "all selected manifests declare the requested runtime and install target"
+          },
+          {
+            "evidence": {},
+            "group": "conflict",
+            "id": "manifest.naming_conflicts",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "no manifest naming conflicts detected"
+          },
+          {
+            "evidence": {},
+            "group": "dependencies",
+            "id": "dependencies.required_tools",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "required tool checks passed"
+          },
+          {
+            "evidence": {},
+            "group": "dependencies",
+            "id": "dependencies.required_mcp_servers",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "required MCP server config assets are present"
+          },
+          {
+            "evidence": {},
+            "group": "install_state",
+            "id": "install_state.owned_files_integrity",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "no installed pack files to verify"
+          },
+          {
+            "evidence": {},
+            "group": "conflict",
+            "id": "conflict.unmanaged_install_root",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "no unmanaged runtime assets detected under the install root"
+          },
+          {
+            "evidence": {},
+            "group": "runtime",
+            "id": "runtime.asset_surface_consistency",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "no installed runtime assets to validate"
+          }
+        ],
+        "environment_summary": {
+          "config_home": "<repo>\\.agents",
+          "cwd": "<workspace>",
+          "install_root": "<repo>\\.agents\\skills",
+          "os": "win32",
+          "repo_root": "<repo>",
+          "runtime_available": true,
+          "runtime_executable": "codex",
+          "runtime_version": "0.116.0",
+          "shell": "c:\\windows\\system32\\cmd.exe",
+          "state_path": "<repo>\\.pairslash\\install-state\\repo-codex_cli.json"
+        },
+        "installed_packs": [],
+        "issues": [
+          {
+            "check_id": "filesystem.config_home",
+            "code": "filesystem_config_home",
+            "message": "config home does not exist yet but can be initialized during install",
+            "remediation": "Run install to create the runtime config home, or create the directory manually if policy requires it.",
+            "severity": "warn"
+          },
+          {
+            "check_id": "filesystem.install_root",
+            "code": "filesystem_install_root",
+            "message": "install root does not exist yet",
+            "remediation": "Run install to create the runtime install root.",
+            "severity": "warn"
+          }
+        ],
+        "next_actions": [
+          "Run install to create the runtime config home, or create the directory manually if policy requires it.",
+          "Run install to create the runtime install root."
+        ],
+        "runtime": "codex_cli",
+        "runtime_compatibility": {
+          "compatible_pack_count": 2,
+          "incompatible_pack_ids": [],
+          "requested_runtime_range_max_status": "supported",
+          "selected_pack_count": 2
+        },
+        "support_verdict": "warn",
+        "target": "repo"
+      },
+      "install_preview": {
+        "action": "install",
+        "can_apply": true,
+        "errors": [],
+        "install_root": "<repo>\\.agents\\skills",
+        "operations": [
+          {
+            "absolute_path": "<repo>\\.pairslash\\install-journal",
+            "asset_kind": null,
+            "install_surface": null,
+            "kind": "write_journal",
+            "override_eligible": null,
+            "ownership": "system",
+            "pack_id": "_pairslash",
+            "reason": "transaction journal will be created during apply",
+            "relative_path": null
+          },
+          {
+            "absolute_path": "<repo>\\.pairslash\\install-state\\repo-codex_cli.json",
+            "asset_kind": null,
+            "install_surface": null,
+            "kind": "write_state",
+            "override_eligible": null,
+            "ownership": "system",
+            "pack_id": "_pairslash",
+            "reason": "install state will be written after successful apply",
+            "relative_path": null
+          },
+          {
+            "absolute_path": "<repo>\\.agents\\skills\\pairslash-frontend\\agents\\openai.yaml",
+            "asset_kind": "runtime_manifest",
+            "install_surface": "metadata",
+            "kind": "create",
+            "override_eligible": false,
+            "ownership": "pairslash",
+            "pack_id": "pairslash-frontend",
+            "reason": "missing target file",
+            "relative_path": "agents/openai.yaml"
+          },
+          {
+            "absolute_path": "<repo>\\.agents\\skills\\pairslash-frontend\\contract.md",
+            "asset_kind": "support_doc",
+            "install_surface": "support_doc",
+            "kind": "create",
+            "override_eligible": true,
+            "ownership": "pairslash",
+            "pack_id": "pairslash-frontend",
+            "reason": "missing target file",
+            "relative_path": "contract.md"
+          },
+          {
+            "absolute_path": "<repo>\\.agents\\skills\\pairslash-frontend\\example-invocation.md",
+            "asset_kind": "support_doc",
+            "install_surface": "support_doc",
+            "kind": "create",
+            "override_eligible": true,
+            "ownership": "pairslash",
+            "pack_id": "pairslash-frontend",
+            "reason": "missing target file",
+            "relative_path": "example-invocation.md"
+          },
+          {
+            "absolute_path": "<repo>\\.agents\\skills\\pairslash-frontend\\example-output.md",
+            "asset_kind": "support_doc",
+            "install_surface": "support_doc",
+            "kind": "create",
+            "override_eligible": true,
+            "ownership": "pairslash",
+            "pack_id": "pairslash-frontend",
+            "reason": "missing target file",
+            "relative_path": "example-output.md"
+          },
+          {
+            "absolute_path": "<repo>\\.agents\\skills\\pairslash-frontend\\fragments\\config\\pack-config.yaml",
+            "asset_kind": "config_fragment",
+            "install_surface": "config",
+            "kind": "create",
+            "override_eligible": false,
+            "ownership": "pairslash",
+            "pack_id": "pairslash-frontend",
+            "reason": "missing target file",
+            "relative_path": "fragments/config/pack-config.yaml"
+          },
+          {
+            "absolute_path": "<repo>\\.agents\\skills\\pairslash-frontend\\fragments\\context\\runtime-context.md",
+            "asset_kind": "context_fragment",
+            "install_surface": "context",
+            "kind": "create",
+            "override_eligible": false,
+            "ownership": "pairslash",
+            "pack_id": "pairslash-frontend",
+            "reason": "missing target file",
+            "relative_path": "fragments/context/runtime-context.md"
+          },
+          {
+            "absolute_path": "<repo>\\.agents\\skills\\pairslash-frontend\\pack.yaml",
+            "asset_kind": "support_doc",
+            "install_surface": "support_doc",
+            "kind": "create",
+            "override_eligible": true,
+            "ownership": "pairslash",
+            "pack_id": "pairslash-frontend",
+            "reason": "missing target file",
+            "relative_path": "pack.yaml"
+          },
+          {
+            "absolute_path": "<repo>\\.agents\\skills\\pairslash-frontend\\pairslash.install.json",
+            "asset_kind": "ownership_manifest",
+            "install_surface": "metadata",
+            "kind": "create",
+            "override_eligible": false,
+            "ownership": "pairslash",
+            "pack_id": "pairslash-frontend",
+            "reason": "missing target file",
+            "relative_path": "pairslash.install.json"
+          },
+          {
+            "absolute_path": "<repo>\\.agents\\skills\\pairslash-frontend\\SKILL.md",
+            "asset_kind": "skill_markdown",
+            "install_surface": "canonical_skill",
+            "kind": "create",
+            "override_eligible": true,
+            "ownership": "pairslash",
+            "pack_id": "pairslash-frontend",
+            "reason": "missing target file",
+            "relative_path": "SKILL.md"
+          },
+          {
+            "absolute_path": "<repo>\\.agents\\skills\\pairslash-frontend\\validation-checklist.md",
+            "asset_kind": "support_doc",
+            "install_surface": "support_doc",
+            "kind": "create",
+            "override_eligible": true,
+            "ownership": "pairslash",
+            "pack_id": "pairslash-frontend",
+            "reason": "missing target file",
+            "relative_path": "validation-checklist.md"
+          },
+          {
+            "absolute_path": "<repo>\\.agents\\skills\\pairslash-frontend",
+            "asset_kind": null,
+            "install_surface": null,
+            "kind": "mkdir",
+            "override_eligible": null,
+            "ownership": "system",
+            "pack_id": "pairslash-frontend",
+            "reason": "install directory will be created",
+            "relative_path": null
+          },
+          {
+            "absolute_path": "<repo>\\.agents\\skills\\pairslash-plan\\agents\\openai.yaml",
+            "asset_kind": "runtime_manifest",
+            "install_surface": "metadata",
+            "kind": "create",
+            "override_eligible": false,
+            "ownership": "pairslash",
+            "pack_id": "pairslash-plan",
+            "reason": "missing target file",
+            "relative_path": "agents/openai.yaml"
+          },
+          {
+            "absolute_path": "<repo>\\.agents\\skills\\pairslash-plan\\contract.md",
+            "asset_kind": "support_doc",
+            "install_surface": "support_doc",
+            "kind": "create",
+            "override_eligible": true,
+            "ownership": "pairslash",
+            "pack_id": "pairslash-plan",
+            "reason": "missing target file",
+            "relative_path": "contract.md"
+          },
+          {
+            "absolute_path": "<repo>\\.agents\\skills\\pairslash-plan\\example-invocation.md",
+            "asset_kind": "support_doc",
+            "install_surface": "support_doc",
+            "kind": "create",
+            "override_eligible": true,
+            "ownership": "pairslash",
+            "pack_id": "pairslash-plan",
+            "reason": "missing target file",
+            "relative_path": "example-invocation.md"
+          },
+          {
+            "absolute_path": "<repo>\\.agents\\skills\\pairslash-plan\\example-output.md",
+            "asset_kind": "support_doc",
+            "install_surface": "support_doc",
+            "kind": "create",
+            "override_eligible": true,
+            "ownership": "pairslash",
+            "pack_id": "pairslash-plan",
+            "reason": "missing target file",
+            "relative_path": "example-output.md"
+          },
+          {
+            "absolute_path": "<repo>\\.agents\\skills\\pairslash-plan\\fragments\\config\\pack-config.yaml",
+            "asset_kind": "config_fragment",
+            "install_surface": "config",
+            "kind": "create",
+            "override_eligible": false,
+            "ownership": "pairslash",
+            "pack_id": "pairslash-plan",
+            "reason": "missing target file",
+            "relative_path": "fragments/config/pack-config.yaml"
+          },
+          {
+            "absolute_path": "<repo>\\.agents\\skills\\pairslash-plan\\fragments\\context\\runtime-context.md",
+            "asset_kind": "context_fragment",
+            "install_surface": "context",
+            "kind": "create",
+            "override_eligible": false,
+            "ownership": "pairslash",
+            "pack_id": "pairslash-plan",
+            "reason": "missing target file",
+            "relative_path": "fragments/context/runtime-context.md"
+          },
+          {
+            "absolute_path": "<repo>\\.agents\\skills\\pairslash-plan\\pack.yaml",
+            "asset_kind": "support_doc",
+            "install_surface": "support_doc",
+            "kind": "create",
+            "override_eligible": true,
+            "ownership": "pairslash",
+            "pack_id": "pairslash-plan",
+            "reason": "missing target file",
+            "relative_path": "pack.yaml"
+          },
+          {
+            "absolute_path": "<repo>\\.agents\\skills\\pairslash-plan\\pairslash.install.json",
+            "asset_kind": "ownership_manifest",
+            "install_surface": "metadata",
+            "kind": "create",
+            "override_eligible": false,
+            "ownership": "pairslash",
+            "pack_id": "pairslash-plan",
+            "reason": "missing target file",
+            "relative_path": "pairslash.install.json"
+          },
+          {
+            "absolute_path": "<repo>\\.agents\\skills\\pairslash-plan\\SKILL.md",
+            "asset_kind": "skill_markdown",
+            "install_surface": "canonical_skill",
+            "kind": "create",
+            "override_eligible": true,
+            "ownership": "pairslash",
+            "pack_id": "pairslash-plan",
+            "reason": "missing target file",
+            "relative_path": "SKILL.md"
+          },
+          {
+            "absolute_path": "<repo>\\.agents\\skills\\pairslash-plan\\validation-checklist.md",
+            "asset_kind": "support_doc",
+            "install_surface": "support_doc",
+            "kind": "create",
+            "override_eligible": true,
+            "ownership": "pairslash",
+            "pack_id": "pairslash-plan",
+            "reason": "missing target file",
+            "relative_path": "validation-checklist.md"
+          },
+          {
+            "absolute_path": "<repo>\\.agents\\skills\\pairslash-plan",
+            "asset_kind": null,
+            "install_surface": null,
+            "kind": "mkdir",
+            "override_eligible": null,
+            "ownership": "system",
+            "pack_id": "pairslash-plan",
+            "reason": "install directory will be created",
+            "relative_path": null
+          }
+        ],
+        "requires_confirmation": true,
+        "runtime": "codex_cli",
+        "selected_packs": [
+          "pairslash-frontend",
+          "pairslash-plan"
+        ],
+        "state_path": "<repo>\\.pairslash\\install-state\\repo-codex_cli.json",
+        "summary": {
+          "blocked_conflict": 0,
+          "create": 20,
+          "mkdir": 2,
+          "preserve_override": 0,
+          "remove": 0,
+          "replace": 0,
+          "skip_identical": 0,
+          "skip_unmanaged": 0,
+          "write_journal": 1,
+          "write_state": 1
+        },
+        "target": "repo",
+        "warnings": [
+          "lint-warning:LINT-TOOLS-002:pairslash-frontend:shared: shell_exec/test_exec capability is declared without required_tools entries"
+        ]
+      }
+    },
+    "copilot_cli": {
+      "apply_result": {
+        "state": {
+          "config_home": "<repo>\\.github",
+          "install_root": "<repo>\\.github\\skills",
+          "packs": [
+            {
+              "compiler_version": "2.0.0",
+              "files": [
+                {
+                  "absolute_path": "<repo>\\.github\\skills\\pairslash-frontend\\agents\\runtime-context.md",
+                  "asset_kind": "agent_fragment",
+                  "generated": true,
+                  "install_surface": "agent",
+                  "last_operation": "create",
+                  "local_override": false,
+                  "override_eligible": false,
+                  "owned_by_pairslash": true,
+                  "relative_path": "agents/runtime-context.md",
+                  "runtime_selector": "copilot_cli",
+                  "write_authority_guarded": false
+                },
+                {
+                  "absolute_path": "<repo>\\.github\\skills\\pairslash-frontend\\contract.md",
+                  "asset_kind": "support_doc",
+                  "generated": false,
+                  "install_surface": "support_doc",
+                  "last_operation": "create",
+                  "local_override": false,
+                  "override_eligible": true,
+                  "owned_by_pairslash": true,
+                  "relative_path": "contract.md",
+                  "runtime_selector": "shared",
+                  "write_authority_guarded": false
+                },
+                {
+                  "absolute_path": "<repo>\\.github\\skills\\pairslash-frontend\\example-invocation.md",
+                  "asset_kind": "support_doc",
+                  "generated": false,
+                  "install_surface": "support_doc",
+                  "last_operation": "create",
+                  "local_override": false,
+                  "override_eligible": true,
+                  "owned_by_pairslash": true,
+                  "relative_path": "example-invocation.md",
+                  "runtime_selector": "shared",
+                  "write_authority_guarded": false
+                },
+                {
+                  "absolute_path": "<repo>\\.github\\skills\\pairslash-frontend\\example-output.md",
+                  "asset_kind": "support_doc",
+                  "generated": false,
+                  "install_surface": "support_doc",
+                  "last_operation": "create",
+                  "local_override": false,
+                  "override_eligible": true,
+                  "owned_by_pairslash": true,
+                  "relative_path": "example-output.md",
+                  "runtime_selector": "shared",
+                  "write_authority_guarded": false
+                },
+                {
+                  "absolute_path": "<repo>\\.github\\skills\\pairslash-frontend\\pack.yaml",
+                  "asset_kind": "support_doc",
+                  "generated": false,
+                  "install_surface": "support_doc",
+                  "last_operation": "create",
+                  "local_override": false,
+                  "override_eligible": true,
+                  "owned_by_pairslash": true,
+                  "relative_path": "pack.yaml",
+                  "runtime_selector": "shared",
+                  "write_authority_guarded": false
+                },
+                {
+                  "absolute_path": "<repo>\\.github\\skills\\pairslash-frontend\\package\\pairslash-bundle.json",
+                  "asset_kind": "runtime_manifest",
+                  "generated": true,
+                  "install_surface": "metadata",
+                  "last_operation": "create",
+                  "local_override": false,
+                  "override_eligible": false,
+                  "owned_by_pairslash": true,
+                  "relative_path": "package/pairslash-bundle.json",
+                  "runtime_selector": "copilot_cli",
+                  "write_authority_guarded": false
+                },
+                {
+                  "absolute_path": "<repo>\\.github\\skills\\pairslash-frontend\\pairslash.install.json",
+                  "asset_kind": "ownership_manifest",
+                  "generated": true,
+                  "install_surface": "metadata",
+                  "last_operation": "create",
+                  "local_override": false,
+                  "override_eligible": false,
+                  "owned_by_pairslash": true,
+                  "relative_path": "pairslash.install.json",
+                  "runtime_selector": "shared",
+                  "write_authority_guarded": false
+                },
+                {
+                  "absolute_path": "<repo>\\.github\\skills\\pairslash-frontend\\SKILL.md",
+                  "asset_kind": "skill_markdown",
+                  "generated": false,
+                  "install_surface": "canonical_skill",
+                  "last_operation": "create",
+                  "local_override": false,
+                  "override_eligible": true,
+                  "owned_by_pairslash": true,
+                  "relative_path": "SKILL.md",
+                  "runtime_selector": "shared",
+                  "write_authority_guarded": false
+                },
+                {
+                  "absolute_path": "<repo>\\.github\\skills\\pairslash-frontend\\validation-checklist.md",
+                  "asset_kind": "support_doc",
+                  "generated": false,
+                  "install_surface": "support_doc",
+                  "last_operation": "create",
+                  "local_override": false,
+                  "override_eligible": true,
+                  "owned_by_pairslash": true,
+                  "relative_path": "validation-checklist.md",
+                  "runtime_selector": "shared",
+                  "write_authority_guarded": false
+                }
+              ],
+              "id": "pairslash-frontend",
+              "install_dir": "<repo>\\.github\\skills\\pairslash-frontend",
+              "manifest_digest": "50aae21d16b47def24032a6ea65d32cbc607de9faf8b5f65a580c3b364c94d98",
+              "previous_version": null,
+              "version": "0.2.0"
+            },
+            {
+              "compiler_version": "2.0.0",
+              "files": [
+                {
+                  "absolute_path": "<repo>\\.github\\skills\\pairslash-plan\\agents\\runtime-context.md",
+                  "asset_kind": "agent_fragment",
+                  "generated": true,
+                  "install_surface": "agent",
+                  "last_operation": "create",
+                  "local_override": false,
+                  "override_eligible": false,
+                  "owned_by_pairslash": true,
+                  "relative_path": "agents/runtime-context.md",
+                  "runtime_selector": "copilot_cli",
+                  "write_authority_guarded": false
+                },
+                {
+                  "absolute_path": "<repo>\\.github\\skills\\pairslash-plan\\contract.md",
+                  "asset_kind": "support_doc",
+                  "generated": false,
+                  "install_surface": "support_doc",
+                  "last_operation": "create",
+                  "local_override": false,
+                  "override_eligible": true,
+                  "owned_by_pairslash": true,
+                  "relative_path": "contract.md",
+                  "runtime_selector": "shared",
+                  "write_authority_guarded": false
+                },
+                {
+                  "absolute_path": "<repo>\\.github\\skills\\pairslash-plan\\example-invocation.md",
+                  "asset_kind": "support_doc",
+                  "generated": false,
+                  "install_surface": "support_doc",
+                  "last_operation": "create",
+                  "local_override": false,
+                  "override_eligible": true,
+                  "owned_by_pairslash": true,
+                  "relative_path": "example-invocation.md",
+                  "runtime_selector": "shared",
+                  "write_authority_guarded": false
+                },
+                {
+                  "absolute_path": "<repo>\\.github\\skills\\pairslash-plan\\example-output.md",
+                  "asset_kind": "support_doc",
+                  "generated": false,
+                  "install_surface": "support_doc",
+                  "last_operation": "create",
+                  "local_override": false,
+                  "override_eligible": true,
+                  "owned_by_pairslash": true,
+                  "relative_path": "example-output.md",
+                  "runtime_selector": "shared",
+                  "write_authority_guarded": false
+                },
+                {
+                  "absolute_path": "<repo>\\.github\\skills\\pairslash-plan\\pack.yaml",
+                  "asset_kind": "support_doc",
+                  "generated": false,
+                  "install_surface": "support_doc",
+                  "last_operation": "create",
+                  "local_override": false,
+                  "override_eligible": true,
+                  "owned_by_pairslash": true,
+                  "relative_path": "pack.yaml",
+                  "runtime_selector": "shared",
+                  "write_authority_guarded": false
+                },
+                {
+                  "absolute_path": "<repo>\\.github\\skills\\pairslash-plan\\package\\pairslash-bundle.json",
+                  "asset_kind": "runtime_manifest",
+                  "generated": true,
+                  "install_surface": "metadata",
+                  "last_operation": "create",
+                  "local_override": false,
+                  "override_eligible": false,
+                  "owned_by_pairslash": true,
+                  "relative_path": "package/pairslash-bundle.json",
+                  "runtime_selector": "copilot_cli",
+                  "write_authority_guarded": false
+                },
+                {
+                  "absolute_path": "<repo>\\.github\\skills\\pairslash-plan\\pairslash.install.json",
+                  "asset_kind": "ownership_manifest",
+                  "generated": true,
+                  "install_surface": "metadata",
+                  "last_operation": "create",
+                  "local_override": false,
+                  "override_eligible": false,
+                  "owned_by_pairslash": true,
+                  "relative_path": "pairslash.install.json",
+                  "runtime_selector": "shared",
+                  "write_authority_guarded": false
+                },
+                {
+                  "absolute_path": "<repo>\\.github\\skills\\pairslash-plan\\SKILL.md",
+                  "asset_kind": "skill_markdown",
+                  "generated": false,
+                  "install_surface": "canonical_skill",
+                  "last_operation": "create",
+                  "local_override": false,
+                  "override_eligible": true,
+                  "owned_by_pairslash": true,
+                  "relative_path": "SKILL.md",
+                  "runtime_selector": "shared",
+                  "write_authority_guarded": false
+                },
+                {
+                  "absolute_path": "<repo>\\.github\\skills\\pairslash-plan\\validation-checklist.md",
+                  "asset_kind": "support_doc",
+                  "generated": false,
+                  "install_surface": "support_doc",
+                  "last_operation": "create",
+                  "local_override": false,
+                  "override_eligible": true,
+                  "owned_by_pairslash": true,
+                  "relative_path": "validation-checklist.md",
+                  "runtime_selector": "shared",
+                  "write_authority_guarded": false
+                }
+              ],
+              "id": "pairslash-plan",
+              "install_dir": "<repo>\\.github\\skills\\pairslash-plan",
+              "manifest_digest": "601159bd434179e0ea31c017bd793acbec385b80b122a5108c9ca5a829810a45",
+              "previous_version": null,
+              "version": "0.2.0"
+            }
+          ],
+          "runtime": "copilot_cli",
+          "target": "repo"
+        },
+        "status": "applied",
+        "summary": {
+          "blocked_conflict": 0,
+          "create": 18,
+          "mkdir": 2,
+          "preserve_override": 0,
+          "remove": 0,
+          "replace": 0,
+          "skip_identical": 0,
+          "skip_unmanaged": 0,
+          "write_journal": 1,
+          "write_state": 1
+        }
+      },
+      "compile": [
+        {
+          "bundle_kind": "copilot-package-bundle",
+          "canonical_entrypoint": "/skills",
+          "digest": "4900f16e773ebdffccbc4d7b73f39c96ce2f94f0debadb5e987a1f57b2fe69bf",
+          "direct_invocation": "/pairslash-frontend",
+          "files": [
+            {
+              "asset_kind": "agent_fragment",
+              "generated": true,
+              "install_surface": "agent",
+              "override_eligible": false,
+              "relative_path": "agents/runtime-context.md",
+              "runtime_selector": "copilot_cli",
+              "sha256": "911e82b989173e051eccfc312c153f3da217fd10b7686b6e7005d6ab563366b9",
+              "write_authority_guarded": false
+            },
+            {
+              "asset_kind": "support_doc",
+              "generated": false,
+              "install_surface": "support_doc",
+              "override_eligible": true,
+              "relative_path": "contract.md",
+              "runtime_selector": "shared",
+              "sha256": "a62d7a8f18508506d156275e8fcd3de1e1a51896a7ce438d57b2e2e3e7755014",
+              "write_authority_guarded": false
+            },
+            {
+              "asset_kind": "support_doc",
+              "generated": false,
+              "install_surface": "support_doc",
+              "override_eligible": true,
+              "relative_path": "example-invocation.md",
+              "runtime_selector": "shared",
+              "sha256": "9593447026ee9472091e71d57c77848ae517e57622d8940cfae30ba452484c74",
+              "write_authority_guarded": false
+            },
+            {
+              "asset_kind": "support_doc",
+              "generated": false,
+              "install_surface": "support_doc",
+              "override_eligible": true,
+              "relative_path": "example-output.md",
+              "runtime_selector": "shared",
+              "sha256": "8d9b946d8394ec9a4b19bcd180f4bc68110b57f86579ee7ee2b905da8d3f9af7",
+              "write_authority_guarded": false
+            },
+            {
+              "asset_kind": "support_doc",
+              "generated": false,
+              "install_surface": "support_doc",
+              "override_eligible": true,
+              "relative_path": "pack.yaml",
+              "runtime_selector": "shared",
+              "sha256": "0f34e233b16bf1dfd664384aa260ad81c850291dcc5daf0c51f83cdc8c95a742",
+              "write_authority_guarded": false
+            },
+            {
+              "asset_kind": "runtime_manifest",
+              "generated": true,
+              "install_surface": "metadata",
+              "override_eligible": false,
+              "relative_path": "package/pairslash-bundle.json",
+              "runtime_selector": "copilot_cli",
+              "sha256": "96c54ea417c6069dfe64860b49d0ecc01066093d8f529b49dd891317dd0f2820",
+              "write_authority_guarded": false
+            },
+            {
+              "asset_kind": "ownership_manifest",
+              "generated": true,
+              "install_surface": "metadata",
+              "override_eligible": false,
+              "relative_path": "pairslash.install.json",
+              "runtime_selector": "shared",
+              "sha256": "a8db71bafafc830030cfe5a93c607a4435dcb3c35bc64c3d88508b4ece87836e",
+              "write_authority_guarded": false
+            },
+            {
+              "asset_kind": "skill_markdown",
+              "generated": false,
+              "install_surface": "canonical_skill",
+              "override_eligible": true,
+              "relative_path": "SKILL.md",
+              "runtime_selector": "shared",
+              "sha256": "4c36dca0bb6c399de9ec5053255d8548163a4bab1a4878aa5d9f635daa17f4b0",
+              "write_authority_guarded": false
+            },
+            {
+              "asset_kind": "support_doc",
+              "generated": false,
+              "install_surface": "support_doc",
+              "override_eligible": true,
+              "relative_path": "validation-checklist.md",
+              "runtime_selector": "shared",
+              "sha256": "8062016116818c670e4007a10e9223e6d5bb15cbd4e7173cad0fbdbe9e320c50",
+              "write_authority_guarded": false
+            }
+          ],
+          "normalized_ir_digest": "03a435381131eda7896f810259635bc6d129793d6db0843059ca1e03dd1a8875",
+          "output_dir": "<repo>\\dist\\compiled\\copilot\\pairslash-frontend",
+          "pack_id": "pairslash-frontend",
+          "runtime": "copilot_cli",
+          "version": "0.2.0"
+        },
+        {
+          "bundle_kind": "copilot-package-bundle",
+          "canonical_entrypoint": "/skills",
+          "digest": "2f6f13bb59b06f907814eefb965a157c3fdea7aa05c6b3f6ec2c19f696d59421",
+          "direct_invocation": "/pairslash-plan",
+          "files": [
+            {
+              "asset_kind": "agent_fragment",
+              "generated": true,
+              "install_surface": "agent",
+              "override_eligible": false,
+              "relative_path": "agents/runtime-context.md",
+              "runtime_selector": "copilot_cli",
+              "sha256": "8107479938320ec5296cd0656b82af1a304d792e20f7ef439b02ff96f94f303f",
+              "write_authority_guarded": false
+            },
+            {
+              "asset_kind": "support_doc",
+              "generated": false,
+              "install_surface": "support_doc",
+              "override_eligible": true,
+              "relative_path": "contract.md",
+              "runtime_selector": "shared",
+              "sha256": "f2cf6c0ca60768671e99bdfc88620f5c9d7f0dddb7fca7059a1830fb20829cf9",
+              "write_authority_guarded": false
+            },
+            {
+              "asset_kind": "support_doc",
+              "generated": false,
+              "install_surface": "support_doc",
+              "override_eligible": true,
+              "relative_path": "example-invocation.md",
+              "runtime_selector": "shared",
+              "sha256": "f0f521e5120f8e4abd0f187585878f3d7cb9778e3f26bfdc7619b2b9bb2345ee",
+              "write_authority_guarded": false
+            },
+            {
+              "asset_kind": "support_doc",
+              "generated": false,
+              "install_surface": "support_doc",
+              "override_eligible": true,
+              "relative_path": "example-output.md",
+              "runtime_selector": "shared",
+              "sha256": "6d618e51e6a92606bc0c53ee73fb357c4d37f3242e2b8caee6d07d6c41b9569a",
+              "write_authority_guarded": false
+            },
+            {
+              "asset_kind": "support_doc",
+              "generated": false,
+              "install_surface": "support_doc",
+              "override_eligible": true,
+              "relative_path": "pack.yaml",
+              "runtime_selector": "shared",
+              "sha256": "6e506ccf5caa20ae0a856e2b3857d6710b571fb1c5e87d65b74b146b43ff9e45",
+              "write_authority_guarded": false
+            },
+            {
+              "asset_kind": "runtime_manifest",
+              "generated": true,
+              "install_surface": "metadata",
+              "override_eligible": false,
+              "relative_path": "package/pairslash-bundle.json",
+              "runtime_selector": "copilot_cli",
+              "sha256": "dba8344d6732c5344a0b184598665f0ce82627029f962ae2d005142e00e6f0d1",
+              "write_authority_guarded": false
+            },
+            {
+              "asset_kind": "ownership_manifest",
+              "generated": true,
+              "install_surface": "metadata",
+              "override_eligible": false,
+              "relative_path": "pairslash.install.json",
+              "runtime_selector": "shared",
+              "sha256": "d87c32874fec221133356a45d8fbf9e510b7f5161e05fbeea5a97f0aa8da63a6",
+              "write_authority_guarded": false
+            },
+            {
+              "asset_kind": "skill_markdown",
+              "generated": false,
+              "install_surface": "canonical_skill",
+              "override_eligible": true,
+              "relative_path": "SKILL.md",
+              "runtime_selector": "shared",
+              "sha256": "98a944847094200dabeabf4cadd93a114f62590be0f7fb3618d1d4a64dcfcfff",
+              "write_authority_guarded": false
+            },
+            {
+              "asset_kind": "support_doc",
+              "generated": false,
+              "install_surface": "support_doc",
+              "override_eligible": true,
+              "relative_path": "validation-checklist.md",
+              "runtime_selector": "shared",
+              "sha256": "0bb163152970bdc95354c09fe17b5e018518a76ffc7eafdb3068b13adc9452cc",
+              "write_authority_guarded": false
+            }
+          ],
+          "normalized_ir_digest": "297faa8fe869e37503861fe1aacb2792c7b4cdfcc3aff2c5ed77faf44ccee184",
+          "output_dir": "<repo>\\dist\\compiled\\copilot\\pairslash-plan",
+          "pack_id": "pairslash-plan",
+          "runtime": "copilot_cli",
+          "version": "0.2.0"
+        }
+      ],
+      "doctor_after": {
+        "checks": [
+          {
+            "evidence": {
+              "version": "1.0.0"
+            },
+            "group": "runtime",
+            "id": "runtime.detect",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "runtime available via gh (1.0.0)"
+          },
+          {
+            "evidence": {
+              "version": "1.0.0"
+            },
+            "group": "runtime",
+            "id": "runtime.version_range",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "runtime version satisfies all selected pack ranges"
+          },
+          {
+            "evidence": {},
+            "group": "platform",
+            "id": "platform.os_shell_support",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "platform win32 with shell c:\\windows\\system32\\cmd.exe is supported"
+          },
+          {
+            "evidence": {
+              "manifest_count": 2
+            },
+            "group": "scope",
+            "id": "scope.repo_root",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "repo root markers are present"
+          },
+          {
+            "evidence": {},
+            "group": "filesystem",
+            "id": "filesystem.config_home",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "config home path is valid"
+          },
+          {
+            "evidence": {},
+            "group": "filesystem",
+            "id": "filesystem.install_root",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "install root path is valid"
+          },
+          {
+            "evidence": {},
+            "group": "filesystem",
+            "id": "filesystem.write_permission",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "required filesystem paths are writable"
+          },
+          {
+            "evidence": {
+              "pack_count": 2
+            },
+            "group": "install_state",
+            "id": "install_state.load",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "install state loaded successfully"
+          },
+          {
+            "evidence": {
+              "discovered": 2
+            },
+            "group": "manifest",
+            "id": "manifest.discover_and_validate",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "2 manifest(s) selected for doctor checks"
+          },
+          {
+            "evidence": {},
+            "group": "manifest",
+            "id": "manifest.runtime_target_presence",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "all selected manifests declare the requested runtime and install target"
+          },
+          {
+            "evidence": {},
+            "group": "conflict",
+            "id": "manifest.naming_conflicts",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "no manifest naming conflicts detected"
+          },
+          {
+            "evidence": {},
+            "group": "dependencies",
+            "id": "dependencies.required_tools",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "required tool checks passed"
+          },
+          {
+            "evidence": {},
+            "group": "dependencies",
+            "id": "dependencies.required_mcp_servers",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "required MCP server config assets are present"
+          },
+          {
+            "evidence": {},
+            "group": "install_state",
+            "id": "install_state.owned_files_integrity",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "tracked managed files match install state receipts"
+          },
+          {
+            "evidence": {},
+            "group": "conflict",
+            "id": "conflict.unmanaged_install_root",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "no unmanaged runtime assets detected under the install root"
+          },
+          {
+            "evidence": {},
+            "group": "runtime",
+            "id": "runtime.asset_surface_consistency",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "installed asset surfaces are valid for the selected runtime"
+          }
+        ],
+        "environment_summary": {
+          "config_home": "<repo>\\.github",
+          "cwd": "<workspace>",
+          "install_root": "<repo>\\.github\\skills",
+          "os": "win32",
+          "repo_root": "<repo>",
+          "runtime_available": true,
+          "runtime_executable": "gh",
+          "runtime_version": "1.0.0",
+          "shell": "c:\\windows\\system32\\cmd.exe",
+          "state_path": "<repo>\\.pairslash\\install-state\\repo-copilot_cli.json"
+        },
+        "installed_packs": [
+          {
+            "id": "pairslash-frontend",
+            "install_dir": "<repo>\\.github\\skills\\pairslash-frontend",
+            "local_overrides": 0,
+            "version": "0.2.0"
+          },
+          {
+            "id": "pairslash-plan",
+            "install_dir": "<repo>\\.github\\skills\\pairslash-plan",
+            "local_overrides": 0,
+            "version": "0.2.0"
+          }
+        ],
+        "issues": [],
+        "next_actions": [
+          "No action required. Environment is ready for PairSlash Phase 4 diagnostics."
+        ],
+        "runtime": "copilot_cli",
+        "runtime_compatibility": {
+          "compatible_pack_count": 2,
+          "incompatible_pack_ids": [],
+          "requested_runtime_range_max_status": "supported",
+          "selected_pack_count": 2
+        },
+        "support_verdict": "pass",
+        "target": "repo"
+      },
+      "doctor_before": {
+        "checks": [
+          {
+            "evidence": {
+              "version": "1.0.0"
+            },
+            "group": "runtime",
+            "id": "runtime.detect",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "runtime available via gh (1.0.0)"
+          },
+          {
+            "evidence": {
+              "version": "1.0.0"
+            },
+            "group": "runtime",
+            "id": "runtime.version_range",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "runtime version satisfies all selected pack ranges"
+          },
+          {
+            "evidence": {},
+            "group": "platform",
+            "id": "platform.os_shell_support",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "platform win32 with shell c:\\windows\\system32\\cmd.exe is supported"
+          },
+          {
+            "evidence": {
+              "manifest_count": 2
+            },
+            "group": "scope",
+            "id": "scope.repo_root",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "repo root markers are present"
+          },
+          {
+            "evidence": {
+              "parent": "<repo>"
+            },
+            "group": "filesystem",
+            "id": "filesystem.config_home",
+            "remediation": "Run install to create the runtime config home, or create the directory manually if policy requires it.",
+            "severity": "warn",
+            "status": "warn",
+            "summary": "config home does not exist yet but can be initialized during install"
+          },
+          {
+            "evidence": {
+              "parent": "<repo>"
+            },
+            "group": "filesystem",
+            "id": "filesystem.install_root",
+            "remediation": "Run install to create the runtime install root.",
+            "severity": "warn",
+            "status": "warn",
+            "summary": "install root does not exist yet"
+          },
+          {
+            "evidence": {},
+            "group": "filesystem",
+            "id": "filesystem.write_permission",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "required filesystem paths are writable"
+          },
+          {
+            "evidence": {},
+            "group": "install_state",
+            "id": "install_state.load",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "install state is absent, which is valid before first install"
+          },
+          {
+            "evidence": {
+              "discovered": 2
+            },
+            "group": "manifest",
+            "id": "manifest.discover_and_validate",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "2 manifest(s) selected for doctor checks"
+          },
+          {
+            "evidence": {},
+            "group": "manifest",
+            "id": "manifest.runtime_target_presence",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "all selected manifests declare the requested runtime and install target"
+          },
+          {
+            "evidence": {},
+            "group": "conflict",
+            "id": "manifest.naming_conflicts",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "no manifest naming conflicts detected"
+          },
+          {
+            "evidence": {},
+            "group": "dependencies",
+            "id": "dependencies.required_tools",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "required tool checks passed"
+          },
+          {
+            "evidence": {},
+            "group": "dependencies",
+            "id": "dependencies.required_mcp_servers",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "required MCP server config assets are present"
+          },
+          {
+            "evidence": {},
+            "group": "install_state",
+            "id": "install_state.owned_files_integrity",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "no installed pack files to verify"
+          },
+          {
+            "evidence": {},
+            "group": "conflict",
+            "id": "conflict.unmanaged_install_root",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "no unmanaged runtime assets detected under the install root"
+          },
+          {
+            "evidence": {},
+            "group": "runtime",
+            "id": "runtime.asset_surface_consistency",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "no installed runtime assets to validate"
+          }
+        ],
+        "environment_summary": {
+          "config_home": "<repo>\\.github",
+          "cwd": "<workspace>",
+          "install_root": "<repo>\\.github\\skills",
+          "os": "win32",
+          "repo_root": "<repo>",
+          "runtime_available": true,
+          "runtime_executable": "gh",
+          "runtime_version": "1.0.0",
+          "shell": "c:\\windows\\system32\\cmd.exe",
+          "state_path": "<repo>\\.pairslash\\install-state\\repo-copilot_cli.json"
+        },
+        "installed_packs": [],
+        "issues": [
+          {
+            "check_id": "filesystem.config_home",
+            "code": "filesystem_config_home",
+            "message": "config home does not exist yet but can be initialized during install",
+            "remediation": "Run install to create the runtime config home, or create the directory manually if policy requires it.",
+            "severity": "warn"
+          },
+          {
+            "check_id": "filesystem.install_root",
+            "code": "filesystem_install_root",
+            "message": "install root does not exist yet",
+            "remediation": "Run install to create the runtime install root.",
+            "severity": "warn"
+          }
+        ],
+        "next_actions": [
+          "Run install to create the runtime config home, or create the directory manually if policy requires it.",
+          "Run install to create the runtime install root."
+        ],
+        "runtime": "copilot_cli",
+        "runtime_compatibility": {
+          "compatible_pack_count": 2,
+          "incompatible_pack_ids": [],
+          "requested_runtime_range_max_status": "supported",
+          "selected_pack_count": 2
+        },
+        "support_verdict": "warn",
+        "target": "repo"
+      },
+      "install_preview": {
+        "action": "install",
+        "can_apply": true,
+        "errors": [],
+        "install_root": "<repo>\\.github\\skills",
+        "operations": [
+          {
+            "absolute_path": "<repo>\\.pairslash\\install-journal",
+            "asset_kind": null,
+            "install_surface": null,
+            "kind": "write_journal",
+            "override_eligible": null,
+            "ownership": "system",
+            "pack_id": "_pairslash",
+            "reason": "transaction journal will be created during apply",
+            "relative_path": null
+          },
+          {
+            "absolute_path": "<repo>\\.pairslash\\install-state\\repo-copilot_cli.json",
+            "asset_kind": null,
+            "install_surface": null,
+            "kind": "write_state",
+            "override_eligible": null,
+            "ownership": "system",
+            "pack_id": "_pairslash",
+            "reason": "install state will be written after successful apply",
+            "relative_path": null
+          },
+          {
+            "absolute_path": "<repo>\\.github\\skills\\pairslash-frontend\\agents\\runtime-context.md",
+            "asset_kind": "agent_fragment",
+            "install_surface": "agent",
+            "kind": "create",
+            "override_eligible": false,
+            "ownership": "pairslash",
+            "pack_id": "pairslash-frontend",
+            "reason": "missing target file",
+            "relative_path": "agents/runtime-context.md"
+          },
+          {
+            "absolute_path": "<repo>\\.github\\skills\\pairslash-frontend\\contract.md",
+            "asset_kind": "support_doc",
+            "install_surface": "support_doc",
+            "kind": "create",
+            "override_eligible": true,
+            "ownership": "pairslash",
+            "pack_id": "pairslash-frontend",
+            "reason": "missing target file",
+            "relative_path": "contract.md"
+          },
+          {
+            "absolute_path": "<repo>\\.github\\skills\\pairslash-frontend\\example-invocation.md",
+            "asset_kind": "support_doc",
+            "install_surface": "support_doc",
+            "kind": "create",
+            "override_eligible": true,
+            "ownership": "pairslash",
+            "pack_id": "pairslash-frontend",
+            "reason": "missing target file",
+            "relative_path": "example-invocation.md"
+          },
+          {
+            "absolute_path": "<repo>\\.github\\skills\\pairslash-frontend\\example-output.md",
+            "asset_kind": "support_doc",
+            "install_surface": "support_doc",
+            "kind": "create",
+            "override_eligible": true,
+            "ownership": "pairslash",
+            "pack_id": "pairslash-frontend",
+            "reason": "missing target file",
+            "relative_path": "example-output.md"
+          },
+          {
+            "absolute_path": "<repo>\\.github\\skills\\pairslash-frontend\\pack.yaml",
+            "asset_kind": "support_doc",
+            "install_surface": "support_doc",
+            "kind": "create",
+            "override_eligible": true,
+            "ownership": "pairslash",
+            "pack_id": "pairslash-frontend",
+            "reason": "missing target file",
+            "relative_path": "pack.yaml"
+          },
+          {
+            "absolute_path": "<repo>\\.github\\skills\\pairslash-frontend\\package\\pairslash-bundle.json",
+            "asset_kind": "runtime_manifest",
+            "install_surface": "metadata",
+            "kind": "create",
+            "override_eligible": false,
+            "ownership": "pairslash",
+            "pack_id": "pairslash-frontend",
+            "reason": "missing target file",
+            "relative_path": "package/pairslash-bundle.json"
+          },
+          {
+            "absolute_path": "<repo>\\.github\\skills\\pairslash-frontend\\pairslash.install.json",
+            "asset_kind": "ownership_manifest",
+            "install_surface": "metadata",
+            "kind": "create",
+            "override_eligible": false,
+            "ownership": "pairslash",
+            "pack_id": "pairslash-frontend",
+            "reason": "missing target file",
+            "relative_path": "pairslash.install.json"
+          },
+          {
+            "absolute_path": "<repo>\\.github\\skills\\pairslash-frontend\\SKILL.md",
+            "asset_kind": "skill_markdown",
+            "install_surface": "canonical_skill",
+            "kind": "create",
+            "override_eligible": true,
+            "ownership": "pairslash",
+            "pack_id": "pairslash-frontend",
+            "reason": "missing target file",
+            "relative_path": "SKILL.md"
+          },
+          {
+            "absolute_path": "<repo>\\.github\\skills\\pairslash-frontend\\validation-checklist.md",
+            "asset_kind": "support_doc",
+            "install_surface": "support_doc",
+            "kind": "create",
+            "override_eligible": true,
+            "ownership": "pairslash",
+            "pack_id": "pairslash-frontend",
+            "reason": "missing target file",
+            "relative_path": "validation-checklist.md"
+          },
+          {
+            "absolute_path": "<repo>\\.github\\skills\\pairslash-frontend",
+            "asset_kind": null,
+            "install_surface": null,
+            "kind": "mkdir",
+            "override_eligible": null,
+            "ownership": "system",
+            "pack_id": "pairslash-frontend",
+            "reason": "install directory will be created",
+            "relative_path": null
+          },
+          {
+            "absolute_path": "<repo>\\.github\\skills\\pairslash-plan\\agents\\runtime-context.md",
+            "asset_kind": "agent_fragment",
+            "install_surface": "agent",
+            "kind": "create",
+            "override_eligible": false,
+            "ownership": "pairslash",
+            "pack_id": "pairslash-plan",
+            "reason": "missing target file",
+            "relative_path": "agents/runtime-context.md"
+          },
+          {
+            "absolute_path": "<repo>\\.github\\skills\\pairslash-plan\\contract.md",
+            "asset_kind": "support_doc",
+            "install_surface": "support_doc",
+            "kind": "create",
+            "override_eligible": true,
+            "ownership": "pairslash",
+            "pack_id": "pairslash-plan",
+            "reason": "missing target file",
+            "relative_path": "contract.md"
+          },
+          {
+            "absolute_path": "<repo>\\.github\\skills\\pairslash-plan\\example-invocation.md",
+            "asset_kind": "support_doc",
+            "install_surface": "support_doc",
+            "kind": "create",
+            "override_eligible": true,
+            "ownership": "pairslash",
+            "pack_id": "pairslash-plan",
+            "reason": "missing target file",
+            "relative_path": "example-invocation.md"
+          },
+          {
+            "absolute_path": "<repo>\\.github\\skills\\pairslash-plan\\example-output.md",
+            "asset_kind": "support_doc",
+            "install_surface": "support_doc",
+            "kind": "create",
+            "override_eligible": true,
+            "ownership": "pairslash",
+            "pack_id": "pairslash-plan",
+            "reason": "missing target file",
+            "relative_path": "example-output.md"
+          },
+          {
+            "absolute_path": "<repo>\\.github\\skills\\pairslash-plan\\pack.yaml",
+            "asset_kind": "support_doc",
+            "install_surface": "support_doc",
+            "kind": "create",
+            "override_eligible": true,
+            "ownership": "pairslash",
+            "pack_id": "pairslash-plan",
+            "reason": "missing target file",
+            "relative_path": "pack.yaml"
+          },
+          {
+            "absolute_path": "<repo>\\.github\\skills\\pairslash-plan\\package\\pairslash-bundle.json",
+            "asset_kind": "runtime_manifest",
+            "install_surface": "metadata",
+            "kind": "create",
+            "override_eligible": false,
+            "ownership": "pairslash",
+            "pack_id": "pairslash-plan",
+            "reason": "missing target file",
+            "relative_path": "package/pairslash-bundle.json"
+          },
+          {
+            "absolute_path": "<repo>\\.github\\skills\\pairslash-plan\\pairslash.install.json",
+            "asset_kind": "ownership_manifest",
+            "install_surface": "metadata",
+            "kind": "create",
+            "override_eligible": false,
+            "ownership": "pairslash",
+            "pack_id": "pairslash-plan",
+            "reason": "missing target file",
+            "relative_path": "pairslash.install.json"
+          },
+          {
+            "absolute_path": "<repo>\\.github\\skills\\pairslash-plan\\SKILL.md",
+            "asset_kind": "skill_markdown",
+            "install_surface": "canonical_skill",
+            "kind": "create",
+            "override_eligible": true,
+            "ownership": "pairslash",
+            "pack_id": "pairslash-plan",
+            "reason": "missing target file",
+            "relative_path": "SKILL.md"
+          },
+          {
+            "absolute_path": "<repo>\\.github\\skills\\pairslash-plan\\validation-checklist.md",
+            "asset_kind": "support_doc",
+            "install_surface": "support_doc",
+            "kind": "create",
+            "override_eligible": true,
+            "ownership": "pairslash",
+            "pack_id": "pairslash-plan",
+            "reason": "missing target file",
+            "relative_path": "validation-checklist.md"
+          },
+          {
+            "absolute_path": "<repo>\\.github\\skills\\pairslash-plan",
+            "asset_kind": null,
+            "install_surface": null,
+            "kind": "mkdir",
+            "override_eligible": null,
+            "ownership": "system",
+            "pack_id": "pairslash-plan",
+            "reason": "install directory will be created",
+            "relative_path": null
+          }
+        ],
+        "requires_confirmation": true,
+        "runtime": "copilot_cli",
+        "selected_packs": [
+          "pairslash-frontend",
+          "pairslash-plan"
+        ],
+        "state_path": "<repo>\\.pairslash\\install-state\\repo-copilot_cli.json",
+        "summary": {
+          "blocked_conflict": 0,
+          "create": 18,
+          "mkdir": 2,
+          "preserve_override": 0,
+          "remove": 0,
+          "replace": 0,
+          "skip_identical": 0,
+          "skip_unmanaged": 0,
+          "write_journal": 1,
+          "write_state": 1
+        },
+        "target": "repo",
+        "warnings": [
+          "lint-warning:LINT-TOOLS-002:pairslash-frontend:shared: shell_exec/test_exec capability is declared without required_tools entries"
+        ]
+      }
+    }
+  },
+  "source_packs": [
+    "pairslash-plan",
+    "pairslash-frontend"
+  ]
+}

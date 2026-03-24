@@ -7,6 +7,22 @@ Use `/skills` as the canonical entrypoint after install. If you need support
 status rather than install steps, use
 `docs/compatibility/compatibility-matrix.md`.
 
+## Phase 4 managed commands
+
+Phase 4 adds a managed install/update/uninstall path:
+
+```bash
+node packages/cli/src/bin/pairslash.js preview install pairslash-plan --runtime codex --target repo --plan-out .pairslash/tmp/install-plan.json
+node packages/cli/src/bin/pairslash.js install pairslash-plan --runtime codex --target repo --dry-run
+node packages/cli/src/bin/pairslash.js install pairslash-plan --runtime codex --target repo --apply --yes
+node packages/cli/src/bin/pairslash.js update --runtime codex --target repo --apply --yes
+node packages/cli/src/bin/pairslash.js uninstall --runtime codex --target repo --apply --yes
+node packages/cli/src/bin/pairslash.js doctor --runtime codex --target repo
+```
+
+Use `docs/workflows/phase-4-install-commands.md` for the managed lifecycle.
+The manual copy steps below remain the fallback path.
+
 ## Before you start
 
 - Repository root contains `.pairslash/`, `packs/core/`, `packages/spec-core/`.

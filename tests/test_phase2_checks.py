@@ -123,7 +123,7 @@ class Phase2ChecksTests(unittest.TestCase):
         )
         pack_ids = {entry["id"] for entry in registry["packs"]}
 
-        self.assertIn("- Version: `0.2.0`", readme)
+        self.assertIn("- Version: `0.4.0`", readme)
         self.assertEqual(registry["version"], "0.2.0")
         self.assertEqual(
             pack_ids,

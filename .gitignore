@@ -97,6 +97,7 @@ logs/
 !.pairslash/sessions/.gitkeep
 .pairslash/staging/*
 !.pairslash/staging/.gitkeep
+.pairslash/install-state/
 
 # ─── Runtime skill install paths (derived from packs/core/) ──────────────────
 .agents/skills/
