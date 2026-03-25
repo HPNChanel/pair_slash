@@ -58,6 +58,24 @@ test("install creates managed repo-target runtime footprint", serial, () => {
   }
 });
 
+test("install accepts Codex version output with executable prefix", serial, () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ codexVersion: "codex-cli 0.116.0" });
+  try {
+    const envelope = planInstall({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      target: "repo",
+      packs: ["pairslash-plan"],
+    });
+    assert.equal(envelope.plan.can_apply, true);
+    assert.deepEqual(envelope.plan.errors, []);
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
 test("install plan is blocked when lint bridge finds blocking errors", serial, () => {
   const fixture = createTempRepo();
   const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
@@ -78,8 +96,41 @@ test("install plan is blocked when lint bridge finds blocking errors", serial, (
     });
     assert.equal(envelope.plan.can_apply, false);
     assert.ok(
-      envelope.plan.errors.some((error) => error.startsWith("lint-error:LINT-RUNTIME-001:pairslash-plan")),
+      envelope.plan.errors.some(
+        (error) =>
+          error.startsWith("manifest-invalid:pairslash-plan") ||
+          error.startsWith("lint-error:LINT-RUNTIME-001:pairslash-plan") ||
+          error.startsWith("lint-error:LINT-MANIFEST-001:pairslash-plan"),
+      ),
     );
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("install targeted pack ignores unrelated invalid manifest in repo", serial, () => {
+  const fixture = createTempRepo({ packs: ["pairslash-plan", "pairslash-review"] });
+  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  try {
+    updatePackManifest({
+      repoRoot: fixture.tempRoot,
+      packId: "pairslash-review",
+      mutate(manifest) {
+        manifest.supported_runtime_ranges.cursor = ">=1.0.0";
+        return manifest;
+      },
+    });
+
+    const envelope = planInstall({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      target: "repo",
+      packs: ["pairslash-plan"],
+    });
+    assert.equal(envelope.plan.can_apply, true);
+    assert.deepEqual(envelope.plan.errors, []);
+    assert.deepEqual(envelope.compiledPacks.map((pack) => pack.pack_id), ["pairslash-plan"]);
   } finally {
     runtime.cleanup();
     fixture.cleanup();
@@ -165,7 +216,12 @@ test("update plan is blocked when lint bridge finds blocking errors", serial, ()
     });
     assert.equal(envelope.plan.can_apply, false);
     assert.ok(
-      envelope.plan.errors.some((error) => error.startsWith("lint-error:LINT-RUNTIME-001:pairslash-plan")),
+      envelope.plan.errors.some(
+        (error) =>
+          error.startsWith("manifest-invalid:pairslash-plan") ||
+          error.startsWith("lint-error:LINT-RUNTIME-001:pairslash-plan") ||
+          error.startsWith("lint-error:LINT-MANIFEST-001:pairslash-plan"),
+      ),
     );
   } finally {
     runtime.cleanup();

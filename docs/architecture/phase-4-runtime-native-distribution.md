@@ -30,6 +30,16 @@ Phase 4 introduces a managed install layer without changing the PairSlash runtim
 - `pairslash doctor`
 - `pairslash lint --phase4`
 
+## Runtime mapping references
+
+- `docs/runtime-mapping/codex-cli.md`
+- `docs/runtime-mapping/copilot-cli.md`
+- `docs/runtime-mapping/pilot-acceptance.md`
+
+These pages document where each logical install surface lands on each runtime.
+They are descriptive companions to the compiler and adapter code, not a second
+spec source.
+
 ## Bridge scope
 
 Phase 4 intentionally stops at:

@@ -15,6 +15,10 @@ const requiredDocs = [
   "docs/architecture/compiler-v2-implement-oriented.md",
   "docs/workflows/phase-4-install-commands.md",
   "docs/workflows/phase-4-doctor-troubleshooting.md",
+  "docs/runtime-mapping/README.md",
+  "docs/runtime-mapping/codex-cli.md",
+  "docs/runtime-mapping/copilot-cli.md",
+  "docs/runtime-mapping/pilot-acceptance.md",
   "docs/releases/release-checklist-0.4.0.md",
   "packages/compat-lab/fixtures/README.md",
 ];

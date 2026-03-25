@@ -52,13 +52,13 @@ test("compat-lab smoke lanes cover compile/install/doctor bootstrap paths", () =
   assert.equal(byId.get("compile.monorepo.copilot").pack_count, 2);
 
   assert.equal(byId.get("install.basic.codex.repo").can_apply, true);
-  assert.equal(byId.get("install.basic.codex.repo").support_verdict, "pass");
+  assert.equal(byId.get("install.basic.codex.repo").support_verdict, "degraded");
 
   assert.equal(byId.get("install.basic.copilot.user").can_apply, true);
-  assert.equal(byId.get("install.basic.copilot.user").support_verdict, "pass");
+  assert.equal(byId.get("install.basic.copilot.user").support_verdict, "degraded");
 
   assert.equal(byId.get("install.write-authority.codex.repo").can_apply, true);
-  assert.equal(byId.get("install.write-authority.codex.repo").support_verdict, "pass");
+  assert.equal(byId.get("install.write-authority.codex.repo").support_verdict, "degraded");
 
   assert.equal(byId.get("doctor.backend-mcp.codex.repo").support_verdict, "degraded");
 

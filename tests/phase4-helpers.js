@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import YAML from "yaml";
+import { normalizePackManifestV2, serializePackManifestV2 } from "@pairslash/spec-core";
 
 export const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -34,9 +35,13 @@ export function writeManualInstallFile({ repoRoot: tempRoot, runtime, packId, re
 
 export function updatePackManifest({ repoRoot: tempRoot, packId, mutate }) {
   const manifestPath = join(tempRoot, "packs", "core", packId, "pack.manifest.yaml");
-  const manifest = YAML.parse(readFileSync(manifestPath, "utf8"));
-  const updated = mutate(structuredClone(manifest)) ?? manifest;
-  writeFileSync(manifestPath, YAML.stringify(updated));
+  const rawManifest = YAML.parse(readFileSync(manifestPath, "utf8"));
+  const normalizedManifest = normalizePackManifestV2(rawManifest, { attachAliases: true }) ?? rawManifest;
+  const updated = mutate(structuredClone(normalizedManifest)) ?? normalizedManifest;
+  writeFileSync(manifestPath, YAML.stringify(serializePackManifestV2(updated), {
+    lineWidth: 0,
+    simpleKeys: true,
+  }));
   return manifestPath;
 }
 

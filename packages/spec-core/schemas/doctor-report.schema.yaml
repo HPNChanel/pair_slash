@@ -1,5 +1,5 @@
 $schema: "https://json-schema.org/draft/2020-12/schema"
-$id: "https://pairslash.dev/schemas/doctor-report/2.0.0"
+$id: "https://pairslash.dev/schemas/doctor-report/2.1.0"
 title: PairSlash Doctor Report
 type: object
 required:
@@ -9,17 +9,21 @@ required:
   - runtime
   - target
   - support_verdict
+  - install_blocked
   - environment_summary
+  - scope_probes
+  - support_lane
   - runtime_compatibility
   - checks
   - issues
   - next_actions
   - installed_packs
+  - first_workflow_guidance
 properties:
   kind:
     const: doctor-report
   schema_version:
-    const: "2.0.0"
+    const: "2.1.0"
   generated_at:
     type: string
   runtime:
@@ -39,11 +43,15 @@ properties:
       - warn
       - degraded
       - fail
+      - unsupported
+  install_blocked:
+    type: boolean
   environment_summary:
     type: object
     required:
       - os
       - shell
+      - shell_profile_candidates
       - cwd
       - repo_root
       - config_home
@@ -57,6 +65,10 @@ properties:
         type: string
       shell:
         type: string
+      shell_profile_candidates:
+        type: array
+        items:
+          type: string
       cwd:
         type: string
       repo_root:
@@ -77,6 +89,66 @@ properties:
           - "null"
       runtime_available:
         type: boolean
+  scope_probes:
+    type: object
+    required:
+      - repo
+      - user
+    properties:
+      repo:
+        $ref: "#/$defs/scopeProbe"
+      user:
+        $ref: "#/$defs/scopeProbe"
+  support_lane:
+    type: object
+    required:
+      - os
+      - runtime
+      - target
+      - lane_status
+      - tested_range_status
+      - tested_version_range
+      - evidence_source
+      - blocking_for_install
+      - summary
+    properties:
+      os:
+        type: string
+      runtime:
+        type: string
+        enum:
+          - codex_cli
+          - copilot_cli
+      target:
+        type: string
+        enum:
+          - repo
+          - user
+      lane_status:
+        type: string
+        enum:
+          - supported
+          - unverified
+          - prep
+          - unsupported
+      tested_range_status:
+        type: string
+        enum:
+          - recorded
+          - unrecorded
+          - outside_recorded
+          - prep_lane
+          - unsupported
+      tested_version_range:
+        type:
+          - string
+          - "null"
+      evidence_source:
+        type: string
+      blocking_for_install:
+        type: boolean
+      summary:
+        type: string
   runtime_compatibility:
     type: object
     required:
@@ -114,6 +186,7 @@ properties:
         - summary
         - remediation
         - evidence
+        - blocking_for_install
       properties:
         id:
           type: string
@@ -139,7 +212,9 @@ properties:
           enum:
             - pass
             - warn
+            - degraded
             - fail
+            - unsupported
             - skip
         runtime:
           type: string
@@ -161,19 +236,31 @@ properties:
             - "null"
         evidence:
           type: object
+        blocking_for_install:
+          type: boolean
   issues:
     type: array
     items:
       type: object
       required:
         - code
+        - verdict
         - severity
         - check_id
-        - message
-        - remediation
+        - summary
+        - evidence
+        - suggested_fix
+        - blocking_for_install
       properties:
         code:
           type: string
+        verdict:
+          type: string
+          enum:
+            - warn
+            - degraded
+            - fail
+            - unsupported
         severity:
           type: string
           enum:
@@ -181,8 +268,20 @@ properties:
             - fail
         check_id:
           type: string
-        message:
+        summary:
           type: string
+        evidence:
+          type: object
+        suggested_fix:
+          type:
+            - string
+            - "null"
+        blocking_for_install:
+          type: boolean
+        message:
+          type:
+            - string
+            - "null"
         remediation:
           type:
             - string
@@ -209,3 +308,72 @@ properties:
           type: string
         local_overrides:
           type: integer
+  first_workflow_guidance:
+    type: object
+    required:
+      - ready
+      - recommended_pack_id
+      - rationale
+      - commands
+    properties:
+      ready:
+        type: boolean
+      recommended_pack_id:
+        type:
+          - string
+          - "null"
+      rationale:
+        type: string
+      commands:
+        type: array
+        items:
+          type: string
+$defs:
+  scopeProbe:
+    type: object
+    required:
+      - target
+      - selected
+      - config_home
+      - install_root
+      - state_path
+      - config_home_exists
+      - install_root_exists
+      - writable
+      - verdict
+      - blocking_for_install
+      - issue_codes
+    properties:
+      target:
+        type: string
+        enum:
+          - repo
+          - user
+      selected:
+        type: boolean
+      config_home:
+        type: string
+      install_root:
+        type: string
+      state_path:
+        type: string
+      config_home_exists:
+        type: boolean
+      install_root_exists:
+        type: boolean
+      writable:
+        type: boolean
+      verdict:
+        type: string
+        enum:
+          - pass
+          - warn
+          - degraded
+          - fail
+          - unsupported
+      blocking_for_install:
+        type: boolean
+      issue_codes:
+        type: array
+        items:
+          type: string

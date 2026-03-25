@@ -1,10 +1,11 @@
-export const PHASE4_SCHEMA_VERSION = "2.0.0";
+export const LEGACY_PHASE4_SCHEMA_VERSION = "2.0.0";
+export const PHASE4_SCHEMA_VERSION = "2.1.0";
 export const PHASE4_COMPILER_VERSION = "2.0.0";
 export const NORMALIZED_IR_SCHEMA_VERSION = "1.0.0";
 export const COMPILED_PACK_SCHEMA_VERSION = "1.0.0";
 export const INSTALL_STATE_SCHEMA_VERSION = "1.0.0";
 export const PREVIEW_PLAN_SCHEMA_VERSION = "1.0.0";
-export const DOCTOR_REPORT_SCHEMA_VERSION = "2.0.0";
+export const DOCTOR_REPORT_SCHEMA_VERSION = "2.1.0";
 export const INSTALL_JOURNAL_SCHEMA_VERSION = "1.0.0";
 export const LINT_REPORT_SCHEMA_VERSION = "1.0.0";
 
@@ -13,6 +14,7 @@ export const SUPPORTED_TARGETS = ["repo", "user"];
 export const PACK_STATUSES = ["active", "draft", "deprecated"];
 export const RELEASE_CHANNELS = ["stable", "preview", "canary"];
 export const WORKFLOW_CLASSES = ["read-oriented", "dual-mode", "write-authority"];
+export const MANIFEST_SHAPES = ["legacy-v2.0.0", "canonical-v2.1.0"];
 export const CAPABILITY_FLAGS = [
   "plan_generation",
   "repo_read",
@@ -33,6 +35,31 @@ export const AUDIT_LOG_LEVELS = ["none", "append"];
 export const TOOL_KINDS = ["binary", "script", "env_var"];
 export const TOOL_PHASES = ["compile", "install", "run", "doctor"];
 export const COMPATIBILITY_STATUSES = ["supported", "unverified", "blocked"];
+export const UPDATE_STRATEGY_MODES = ["preserve_valid_local_overrides"];
+export const UPDATE_NON_OVERRIDE_POLICIES = ["block"];
+export const UNINSTALL_STRATEGY_MODES = ["pairslash_owned_only"];
+export const UNINSTALL_BEHAVIORS = ["remove_if_unmodified", "detach_if_modified", "preserve_unmanaged"];
+export const MANIFEST_MARKER_MODES = ["state_or_explicit_marker"];
+export const RUNTIME_METADATA_MODES = ["openai_yaml_optional", "none"];
+export const RUNTIME_ASSET_GENERATORS = [
+  "source_copy",
+  "codex_metadata",
+  "codex_context",
+  "codex_config",
+  "codex_write_authority",
+  "codex_mcp",
+  "copilot_package",
+  "copilot_agent",
+  "copilot_preflight",
+  "copilot_mcp",
+  "pairslash_ownership_receipt",
+];
+export const MANIFEST_SMOKE_ACTIONS = [
+  "preview_install",
+  "preview_update",
+  "preview_uninstall",
+  "doctor",
+];
 export const PREVIEW_OPERATION_KINDS = [
   "mkdir",
   "create",
@@ -45,7 +72,7 @@ export const PREVIEW_OPERATION_KINDS = [
   "write_state",
   "write_journal",
 ];
-export const SUPPORT_VERDICTS = ["pass", "warn", "degraded", "fail"];
+export const SUPPORT_VERDICTS = ["pass", "warn", "degraded", "fail", "unsupported"];
 export const DOCTOR_CHECK_GROUPS = [
   "runtime",
   "scope",
@@ -56,7 +83,7 @@ export const DOCTOR_CHECK_GROUPS = [
   "conflict",
   "platform",
 ];
-export const DOCTOR_CHECK_STATUSES = ["pass", "warn", "fail", "skip"];
+export const DOCTOR_CHECK_STATUSES = ["pass", "warn", "degraded", "fail", "unsupported", "skip"];
 export const DOCTOR_CHECK_SEVERITIES = ["info", "warn", "fail"];
 export const LINT_CHECK_RESULTS = ["pass", "error", "warning", "note"];
 export const OWNERSHIP_FILE = "pairslash.install.json";

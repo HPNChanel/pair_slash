@@ -1,64 +1,25 @@
-import { join } from "node:path";
-
 import {
-  LOGICAL_ASSET_KINDS,
   NORMALIZED_IR_SCHEMA_VERSION,
   PHASE4_COMPILER_VERSION,
-  RUNTIME_SELECTORS,
 } from "./constants.js";
 import { getPackId, loadPackManifest, resolvePackDir } from "./manifest.js";
+import { buildLogicalAssetsFromManifest } from "./runtime-asset-ir.js";
 import { readFileNormalized, relativeFrom, sha256, summarizeCounts } from "./utils.js";
 import { validateNormalizedIr } from "./validate.js";
 
-function classifySourceAsset(relativePath, primarySkillFile) {
-  return relativePath === primarySkillFile ? "skill_markdown" : "support_doc";
-}
-
-function classifyInstallSurface(relativePath, primarySkillFile) {
-  return relativePath === primarySkillFile ? "canonical_skill" : "support_doc";
-}
-
 function buildRuntimeSupport(manifest) {
   return Object.fromEntries(
-    Object.entries(manifest.runtime_targets).map(([runtime, target]) => [
+    Object.entries(manifest.runtime_bindings).map(([runtime, binding]) => [
       runtime,
       {
         semver_range: manifest.supported_runtime_ranges[runtime],
-        direct_invocation: target.direct_invocation,
-        metadata_mode: target.metadata_mode,
-        skill_directory_name: target.skill_directory_name,
-        compatibility: target.compatibility,
+        direct_invocation: binding.direct_invocation,
+        metadata_mode: binding.metadata_mode,
+        skill_directory_name: binding.install_dir_name,
+        compatibility: binding.compatibility,
       },
     ]),
   );
-}
-
-function buildSourceLogicalAsset({
-  sourceDir,
-  relativePath,
-  primarySkillFile,
-  overrideFiles,
-  workflowClass,
-}) {
-  const absolutePath = join(sourceDir, relativePath);
-  const content = readFileNormalized(absolutePath);
-  const assetKind = classifySourceAsset(relativePath, primarySkillFile);
-  const installSurface = classifyInstallSurface(relativePath, primarySkillFile);
-  return {
-    logical_id: `source:${relativePath}`,
-    asset_kind: assetKind,
-    source_relpath: relativePath,
-    install_surface: installSurface,
-    runtime_selector: "shared",
-    content_type: relativePath.endsWith(".yaml") || relativePath.endsWith(".yml") ? "text/yaml" : "text/markdown",
-    generated: false,
-    override_eligible: overrideFiles.has(relativePath),
-    write_authority_guarded: workflowClass === "write-authority",
-    stable_sort_key: `${installSurface}:${relativePath}`,
-    sha256: sha256(content),
-    size: Buffer.byteLength(content),
-    content,
-  };
 }
 
 function stripLogicalAssetContent(asset) {
@@ -76,16 +37,10 @@ export function stripNormalizedIrContent(ir) {
 export function buildNormalizedIr({ repoRoot, manifestPath }) {
   const manifest = loadPackManifest(manifestPath);
   const sourceDir = resolvePackDir(repoRoot, manifest);
-  const overrideFiles = new Set(manifest.local_override_policy.eligible_paths);
-  const logicalAssets = manifest.assets.include.map((relativePath) =>
-    buildSourceLogicalAsset({
-      sourceDir,
-      relativePath,
-      primarySkillFile: manifest.assets.primary_skill_file,
-      overrideFiles,
-      workflowClass: manifest.pack.workflow_class,
-    }),
-  );
+  const logicalAssets = buildLogicalAssetsFromManifest({
+    manifest,
+    sourceDir,
+  });
 
   const ir = {
     kind: "normalized-pack-ir",
@@ -112,8 +67,10 @@ export function buildNormalizedIr({ repoRoot, manifestPath }) {
       required_tools: manifest.required_tools,
       required_mcp_servers: manifest.required_mcp_servers,
       memory_permissions: manifest.memory_permissions,
-      ownership: manifest.ownership,
+      asset_ownership: manifest.asset_ownership,
       local_override_policy: manifest.local_override_policy,
+      update_strategy: manifest.update_strategy,
+      uninstall_strategy: manifest.uninstall_strategy,
     },
     runtime_support: buildRuntimeSupport(manifest),
     logical_assets: logicalAssets,
@@ -129,39 +86,4 @@ export function buildNormalizedIr({ repoRoot, manifestPath }) {
     throw new Error(`invalid normalized ir for ${getPackId(manifest)} :: ${errors.join("; ")}`);
   }
   return ir;
-}
-
-export function createGeneratedLogicalAsset({
-  logicalId,
-  assetKind,
-  runtimeSelector,
-  installSurface,
-  fileName,
-  content,
-  overrideEligible = false,
-  writeAuthorityGuarded = false,
-  contentType = "text/plain",
-}) {
-  if (!LOGICAL_ASSET_KINDS.includes(assetKind)) {
-    throw new Error(`unsupported asset kind ${assetKind}`);
-  }
-  if (!RUNTIME_SELECTORS.includes(runtimeSelector)) {
-    throw new Error(`unsupported runtime selector ${runtimeSelector}`);
-  }
-  return {
-    logical_id: logicalId,
-    asset_kind: assetKind,
-    source_relpath: null,
-    install_surface: installSurface,
-    runtime_selector: runtimeSelector,
-    file_name: fileName,
-    content_type: contentType,
-    generated: true,
-    override_eligible: overrideEligible,
-    write_authority_guarded: writeAuthorityGuarded,
-    stable_sort_key: `${installSurface}:${fileName}`,
-    sha256: sha256(content),
-    size: Buffer.byteLength(content),
-    content,
-  };
 }

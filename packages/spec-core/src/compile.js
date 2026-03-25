@@ -4,11 +4,11 @@ import {
   COMPILED_PACK_FILE,
   COMPILED_PACK_SCHEMA_VERSION,
   NORMALIZED_IR_FILE,
-  OWNERSHIP_FILE,
   PHASE4_COMPILER_VERSION,
 } from "./constants.js";
 import { buildNormalizedIr, stripNormalizedIrContent } from "./ir.js";
-import { ensureDir, sha256, stableJson, writeTextFile } from "./utils.js";
+import { buildOwnershipReceipt } from "./ownership-receipt.js";
+import { ensureDir, sha256, stableJson, toPosix, writeTextFile } from "./utils.js";
 import { validateCompiledPack } from "./validate.js";
 
 function stripCompiledFileContent(file) {
@@ -38,42 +38,44 @@ function normalizeEmittedAssets(emittedAssets) {
   return emittedAssets
     .map((asset) => ({
       ...asset,
+      relative_path: toPosix(asset.relative_path),
       sha256: asset.sha256 ?? sha256(asset.content),
       size: asset.size ?? Buffer.byteLength(asset.content),
     }))
     .sort((left, right) => left.relative_path.localeCompare(right.relative_path));
 }
 
-function buildOwnershipMetadata({
-  ir,
-  runtime,
-  directInvocation,
-  emittedAssets,
+function getOwnershipReceiptAsset(ir) {
+  const receiptAsset =
+    ir.logical_assets.find((asset) => asset.asset_id === "ownership-receipt") ?? null;
+  if (!receiptAsset) {
+    throw new Error(`normalized ir ${ir.pack.id} is missing ownership-receipt asset`);
+  }
+  return receiptAsset;
+}
+
+export function materializeCompiledFile({
+  logicalAsset,
+  relativePath,
+  content,
 }) {
+  const normalizedPath = toPosix(relativePath);
   return {
-    kind: "pairslash-owned-footprint",
-    schema_version: "1.0.0",
-    compiler_version: PHASE4_COMPILER_VERSION,
-    manifest_digest: ir.manifest_digest,
-    pack_id: ir.pack.id,
-    version: ir.pack.version,
-    runtime,
-    canonical_entrypoint: ir.pack.canonical_entrypoint,
-    direct_invocation: directInvocation,
-    ownership_scope: ir.policy.ownership.ownership_scope,
-    ownership_file: ir.policy.ownership.ownership_file,
-    files: emittedAssets.map((file) => ({
-      relative_path: file.relative_path,
-      sha256: file.sha256,
-      generated: file.generated,
-      asset_kind: file.asset_kind,
-      install_surface: file.install_surface,
-      runtime_selector: file.runtime_selector,
-      override_eligible: file.override_eligible,
-      override_strategy: file.override_eligible ? "preserve" : "managed_replace",
-      write_authority_guarded: file.write_authority_guarded,
-      owned_by_pairslash: true,
-    })),
+    asset_id: logicalAsset.asset_id,
+    generator: logicalAsset.generator,
+    required: logicalAsset.required,
+    owner: logicalAsset.owner,
+    uninstall_behavior: logicalAsset.uninstall_behavior,
+    relative_path: normalizedPath,
+    sha256: sha256(content),
+    size: Buffer.byteLength(content),
+    generated: logicalAsset.generated,
+    override_eligible: logicalAsset.override_eligible,
+    write_authority_guarded: logicalAsset.write_authority_guarded,
+    asset_kind: logicalAsset.asset_kind,
+    install_surface: logicalAsset.install_surface,
+    runtime_selector: logicalAsset.runtime_selector,
+    content,
   };
 }
 
@@ -92,31 +94,24 @@ export function finalizeCompiledPack({
   }
 
   const files = normalizeEmittedAssets(emittedAssets);
-  const ownershipMetadata = stableJson(
-    buildOwnershipMetadata({
+  const ownershipFile = materializeCompiledFile({
+    logicalAsset: getOwnershipReceiptAsset(ir),
+    relativePath: ir.policy.asset_ownership.ownership_file,
+    content: buildOwnershipReceipt({
       ir,
       runtime,
       directInvocation: runtimeTarget.direct_invocation,
       emittedAssets: files,
     }),
-  );
-  const ownershipFile = {
-    relative_path: OWNERSHIP_FILE,
-    sha256: sha256(ownershipMetadata),
-    size: Buffer.byteLength(ownershipMetadata),
-    generated: true,
-    override_eligible: false,
-    write_authority_guarded: ir.pack.workflow_class === "write-authority",
-    asset_kind: "ownership_manifest",
-    install_surface: "metadata",
-    runtime_selector: "shared",
-    content: ownershipMetadata,
-  };
+  });
   const compiledFiles = [...files, ownershipFile].sort((left, right) =>
     left.relative_path.localeCompare(right.relative_path),
   );
   const digestInput = compiledFiles
-    .map((file) => `${file.relative_path}:${file.sha256}:${file.asset_kind}:${file.install_surface}`)
+    .map(
+      (file) =>
+        `${file.asset_id}:${file.relative_path}:${file.sha256}:${file.generator}:${file.owner}:${file.uninstall_behavior}`,
+    )
     .join("\n");
   const outputDir = join(distRoot, runtimeAdapter.shortName, ir.pack.id);
   const normalizedIrStripped = stripNormalizedIrContent(ir);

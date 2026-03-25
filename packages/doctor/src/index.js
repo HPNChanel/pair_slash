@@ -1,37 +1,35 @@
 import { readdirSync, statSync } from "node:fs";
 import process from "node:process";
-import { dirname, join, resolve } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 
 import {
   detectRuntimeSelection,
   loadStateForDoctor,
+  planUpdate,
   resolveStatePath,
   satisfiesRuntimeRange,
 } from "@pairslash/installer";
 import {
   DOCTOR_REPORT_SCHEMA_VERSION,
   SUPPORT_VERDICTS,
+  SUPPORTED_TARGETS,
   SUPPORTED_RUNTIMES,
-  discoverPackManifestPaths,
   exists,
-  getPackId,
-  loadPackManifest,
+  loadPackManifestRecords,
   normalizeRuntime,
   normalizeTarget,
   readFileNormalized,
   relativeFrom,
+  selectPackManifestRecords,
   sha256,
   validateDoctorReport,
 } from "@pairslash/spec-core";
 import * as codexAdapter from "@pairslash/runtime-codex-adapter";
 import * as copilotAdapter from "@pairslash/runtime-copilot-adapter";
+import { resolveSupportLane } from "./support-lane.js";
 
-const DEGRADED_CHECKS = new Set([
-  "dependencies.required_tools",
-  "dependencies.required_mcp_servers",
-  "install_state.owned_files_integrity",
-]);
+const ISSUE_STATUSES = new Set(["warn", "degraded", "fail", "unsupported"]);
 
 function getAdapter(runtime) {
   const normalized = normalizeRuntime(runtime);
@@ -39,13 +37,17 @@ function getAdapter(runtime) {
 }
 
 function inferSeverity(status) {
-  if (status === "fail") {
+  if (status === "fail" || status === "unsupported") {
     return "fail";
   }
-  if (status === "warn") {
+  if (status === "warn" || status === "degraded") {
     return "warn";
   }
   return "info";
+}
+
+function buildIssueCode(checkId) {
+  return `DOC-${checkId.replace(/\./g, "-").toUpperCase()}`;
 }
 
 function createCheckResult({
@@ -58,6 +60,7 @@ function createCheckResult({
   summary,
   remediation = null,
   evidence = {},
+  blockingForInstall = false,
 }) {
   return {
     id,
@@ -70,6 +73,7 @@ function createCheckResult({
     summary,
     remediation,
     evidence,
+    blocking_for_install: blockingForInstall,
   };
 }
 
@@ -85,9 +89,32 @@ function findExistingParentPath(path) {
   return current;
 }
 
-function detectShellName() {
-  const raw = process.env.SHELL || process.env.ComSpec || process.env.TERM_PROGRAM || "unknown";
+function detectShellName(shellOverride = null) {
+  const raw = shellOverride ?? process.env.SHELL ?? process.env.ComSpec ?? process.env.TERM_PROGRAM ?? "unknown";
   return raw.toLowerCase();
+}
+
+function detectShellProfileCandidates(shell, homeRootOverride = null) {
+  const homeRoot = homeRootOverride ?? process.env.USERPROFILE ?? process.env.HOME ?? null;
+  if (!homeRoot) {
+    return [];
+  }
+  if (shell.includes("pwsh") || shell.includes("powershell")) {
+    return [
+      join(homeRoot, "Documents", "PowerShell", "Microsoft.PowerShell_profile.ps1"),
+      join(homeRoot, "Documents", "WindowsPowerShell", "Microsoft.PowerShell_profile.ps1"),
+    ];
+  }
+  if (shell.includes("zsh")) {
+    return [join(homeRoot, ".zshrc"), join(homeRoot, ".zprofile")];
+  }
+  if (shell.includes("bash")) {
+    return [join(homeRoot, ".bashrc"), join(homeRoot, ".bash_profile"), join(homeRoot, ".profile")];
+  }
+  if (shell === "sh" || shell.endsWith("/sh") || shell.endsWith("\\sh") || shell.endsWith("sh.exe")) {
+    return [join(homeRoot, ".profile")];
+  }
+  return [];
 }
 
 function safeStat(path) {
@@ -130,47 +157,92 @@ function listInstallRootEntries(installRoot) {
     }));
 }
 
-function loadManifestRecords(repoRoot) {
-  return discoverPackManifestPaths(repoRoot).map((manifestPath) => {
-    try {
-      const manifest = loadPackManifest(manifestPath);
-      return {
-        manifestPath,
-        manifest,
-        packId: getPackId(manifest),
-        error: null,
-      };
-    } catch (error) {
-      return {
-        manifestPath,
-        manifest: null,
-        packId: relativeFrom(join(repoRoot, "packs", "core"), dirname(manifestPath)),
-        error: error.message,
-      };
-    }
-  });
+function summarizeScopeProbeIssue(code, summary, suggestedFix, blockingForInstall) {
+  return {
+    code,
+    summary,
+    suggested_fix: suggestedFix,
+    blocking_for_install: blockingForInstall,
+  };
 }
 
-function selectManifestRecords(records, requestedPacks) {
-  const validRecords = records.filter((record) => !record.error);
-  if (requestedPacks.length === 0) {
-    return {
-      selected: validRecords,
-      missing: [],
-    };
+function pickScopeVerdict(current, candidate) {
+  const order = ["pass", "warn", "degraded", "fail", "unsupported"];
+  return order.indexOf(candidate) > order.indexOf(current) ? candidate : current;
+}
+
+function buildScopeProbe({ repoRoot, runtime, target, adapter, selectedTarget }) {
+  const configHome = adapter.resolveConfigHome({ repoRoot, target });
+  const installRoot = adapter.resolveInstallRoot({ repoRoot, target });
+  const statePath = resolveStatePath({ repoRoot, runtime, target });
+  const selected = target === selectedTarget;
+  let verdict = "pass";
+  const issues = [];
+
+  const configHomeStat = safeStat(configHome);
+  if (exists(configHome) && (!configHomeStat.ok || !configHomeStat.stat.isDirectory())) {
+    const issueVerdict = selected ? "fail" : "warn";
+    verdict = pickScopeVerdict(verdict, issueVerdict);
+    issues.push(
+      summarizeScopeProbeIssue(
+        `scope.${target}.config_home`,
+        `Config home ${configHome} exists but is not a directory.`,
+        "Remove the blocking file or fix the runtime config-home path.",
+        selected,
+      ),
+    );
   }
 
-  const byPackId = new Map(validRecords.map((record) => [record.packId, record]));
-  const selected = [];
-  const missing = [];
-  for (const packId of requestedPacks) {
-    if (!byPackId.has(packId)) {
-      missing.push(packId);
-      continue;
-    }
-    selected.push(byPackId.get(packId));
+  const installRootStat = safeStat(installRoot);
+  if (exists(installRoot) && (!installRootStat.ok || !installRootStat.stat.isDirectory())) {
+    const issueVerdict = selected ? "fail" : "warn";
+    verdict = pickScopeVerdict(verdict, issueVerdict);
+    issues.push(
+      summarizeScopeProbeIssue(
+        `scope.${target}.install_root`,
+        `Install root ${installRoot} exists but is not a directory.`,
+        "Remove the conflicting file so the runtime install root can be created as a directory.",
+        selected,
+      ),
+    );
   }
-  return { selected, missing };
+
+  const writableTargets = [...new Set([
+    findExistingParentPath(configHome),
+    findExistingParentPath(installRoot),
+    findExistingParentPath(dirname(statePath)),
+  ])];
+  const writeFailures = writableTargets
+    .map((path) => ({ path, result: adapter.checkWritablePath(path) }))
+    .filter((entry) => !entry.result.writable);
+
+  if (writeFailures.length > 0) {
+    const issueVerdict = selected ? "fail" : "warn";
+    verdict = pickScopeVerdict(verdict, issueVerdict);
+    issues.push(
+      summarizeScopeProbeIssue(
+        `scope.${target}.write_permission`,
+        `${writeFailures.length} required path(s) for ${target} scope are not writable.`,
+        "Fix filesystem permissions or choose the other target scope before install.",
+        selected,
+      ),
+    );
+  }
+
+  return {
+    target,
+    selected,
+    config_home: configHome,
+    install_root: installRoot,
+    state_path: statePath,
+    config_home_exists: exists(configHome),
+    install_root_exists: exists(installRoot),
+    writable: writeFailures.length === 0,
+    verdict,
+    blocking_for_install: issues.some((issue) => issue.blocking_for_install),
+    issue_codes: issues.map((issue) => issue.code),
+    issues,
+  };
 }
 
 function resolveDoctorRuntime(requestedRuntime, repoRoot, target, runtimeSelectionOverride = null) {
@@ -213,6 +285,9 @@ function buildBaseContext({
   packs = [],
   adapterOverride = null,
   runtimeSelectionOverride = null,
+  osOverride = null,
+  shellOverride = null,
+  cwdOverride = null,
 }) {
   const normalizedTarget = normalizeTarget(target);
   const normalizedRuntime = resolveDoctorRuntime(
@@ -222,9 +297,19 @@ function buildBaseContext({
     runtimeSelectionOverride,
   );
   const adapter = adapterOverride ?? getAdapter(normalizedRuntime);
+  const runtimePresence = Object.fromEntries(
+    SUPPORTED_RUNTIMES.map((supportedRuntime) => {
+      if (supportedRuntime === normalizedRuntime) {
+        return [supportedRuntime, adapter.detectRuntime()];
+      }
+      return [supportedRuntime, getAdapter(supportedRuntime).detectRuntime()];
+    }),
+  );
   const requestedPacks = [...new Set(packs)].sort((left, right) => left.localeCompare(right));
-  const manifestRecords = loadManifestRecords(repoRoot);
-  const selectedManifests = selectManifestRecords(manifestRecords, requestedPacks);
+  const manifestRecords = loadPackManifestRecords(repoRoot);
+  const manifestSelection = selectPackManifestRecords(manifestRecords, requestedPacks);
+  const os = osOverride ?? process.platform;
+  const shell = detectShellName(shellOverride);
   const statePath = resolveStatePath({
     repoRoot,
     runtime: normalizedRuntime,
@@ -244,23 +329,50 @@ function buildBaseContext({
     stateError = error.message;
   }
 
+  const detection = runtimePresence[normalizedRuntime];
+  const supportLane = resolveSupportLane({
+    runtime: normalizedRuntime,
+    target: normalizedTarget,
+    os,
+    runtimeVersion: detection.version,
+    runtimeAvailable: Boolean(detection.available),
+  });
+
   return {
+    os,
+    cwd: cwdOverride ?? process.cwd(),
     repoRoot,
     runtime: normalizedRuntime,
     target: normalizedTarget,
     requestedPacks,
     adapter,
-    detection: adapter.detectRuntime(),
+    runtimePresence,
+    detection,
+    supportLane,
     configHome: adapter.resolveConfigHome({ repoRoot, target: normalizedTarget }),
     installRoot: adapter.resolveInstallRoot({ repoRoot, target: normalizedTarget }),
     statePath,
     stateFileExists,
     state,
     stateError,
-    shell: detectShellName(),
+    shell,
+    shellProfileCandidates: detectShellProfileCandidates(shell),
     manifestRecords,
-    selectedManifests: selectedManifests.selected,
-    missingRequestedPacks: selectedManifests.missing,
+    selectedManifests: manifestSelection.valid,
+    invalidSelectedManifests: manifestSelection.invalid,
+    missingRequestedPacks: manifestSelection.missing,
+    scopeProbes: Object.fromEntries(
+      SUPPORTED_TARGETS.map((supportedTarget) => [
+        supportedTarget,
+        buildScopeProbe({
+          repoRoot,
+          runtime: normalizedRuntime,
+          target: supportedTarget,
+          adapter,
+          selectedTarget: normalizedTarget,
+        }),
+      ]),
+    ),
   };
 }
 
@@ -298,6 +410,40 @@ function runRuntimeDetect(context) {
         : "Install GitHub CLI with Copilot CLI enabled and verify `gh copilot --help` succeeds.",
     evidence: {
       error: detection.error,
+    },
+    blockingForInstall: true,
+  });
+}
+
+function runRuntimePresenceMatrix(context) {
+  const presence = Object.fromEntries(
+    SUPPORTED_RUNTIMES.map((runtime) => [
+      runtime,
+      {
+        available: Boolean(context.runtimePresence[runtime]?.available),
+        executable: context.runtimePresence[runtime]?.executable ?? null,
+        version: context.runtimePresence[runtime]?.version ?? null,
+        error: context.runtimePresence[runtime]?.error ?? null,
+      },
+    ]),
+  );
+  const detected = Object.entries(presence)
+    .filter((entry) => entry[1].available)
+    .map((entry) => entry[0])
+    .sort((left, right) => left.localeCompare(right));
+  return createCheckResult({
+    id: "runtime.presence_matrix",
+    group: "runtime",
+    status: "pass",
+    runtime: context.runtime,
+    target: context.target,
+    inputs: {},
+    summary:
+      detected.length > 0
+        ? `detected runtime(s): ${detected.join(", ")}`
+        : "no supported runtime detected in PATH",
+    evidence: {
+      runtimes: presence,
     },
   });
 }
@@ -350,6 +496,7 @@ function runRuntimeVersionRange(context) {
       evidence: {
         mismatches,
       },
+      blockingForInstall: true,
     });
   }
   if (unknown.length > 0) {
@@ -381,22 +528,143 @@ function runRuntimeVersionRange(context) {
   });
 }
 
+function runRuntimeTestedRange(context) {
+  if (!context.detection.available) {
+    return createCheckResult({
+      id: "runtime.tested_range",
+      group: "runtime",
+      status: "skip",
+      runtime: context.runtime,
+      target: context.target,
+      inputs: {},
+      summary: "skipped because runtime is unavailable",
+      evidence: {},
+    });
+  }
+
+  if (
+    context.supportLane.lane_status === "unsupported" ||
+    context.supportLane.tested_range_status === "unsupported" ||
+    context.supportLane.tested_range_status === "prep_lane"
+  ) {
+    return createCheckResult({
+      id: "runtime.tested_range",
+      group: "runtime",
+      status: "skip",
+      runtime: context.runtime,
+      target: context.target,
+      inputs: {},
+      summary: "skipped because no tested runtime range is recorded for this support lane",
+      evidence: {
+        lane_status: context.supportLane.lane_status,
+        tested_range_status: context.supportLane.tested_range_status,
+      },
+    });
+  }
+
+  if (!context.supportLane.tested_version_range) {
+    return createCheckResult({
+      id: "runtime.tested_range",
+      group: "runtime",
+      status: "warn",
+      runtime: context.runtime,
+      target: context.target,
+      inputs: {},
+      summary: "no recorded tested runtime version exists for this lane yet",
+      remediation: "Proceed with preview/doctor evidence, but treat the lane as unrecorded until live pilot evidence is captured.",
+      evidence: {
+        lane_status: context.supportLane.lane_status,
+        runtime_version: context.detection.version,
+      },
+    });
+  }
+
+  if (context.supportLane.tested_range_status === "recorded") {
+    return createCheckResult({
+      id: "runtime.tested_range",
+      group: "runtime",
+      status: "pass",
+      runtime: context.runtime,
+      target: context.target,
+      inputs: {},
+      summary: `runtime version ${context.detection.version} matches recorded pilot evidence`,
+      evidence: {
+        runtime_version: context.detection.version,
+        tested_version_range: context.supportLane.tested_version_range,
+      },
+    });
+  }
+
+  return createCheckResult({
+    id: "runtime.tested_range",
+    group: "runtime",
+    status: "degraded",
+    runtime: context.runtime,
+    target: context.target,
+    inputs: {},
+    summary: `runtime version ${context.detection.version} is outside recorded pilot evidence ${context.supportLane.tested_version_range}`,
+    remediation: "Prefer a recorded pilot version when you need support-grade evidence, or capture new live validation before broad rollout.",
+    evidence: {
+      runtime_version: context.detection.version,
+      tested_version_range: context.supportLane.tested_version_range,
+    },
+  });
+}
+
+function runSupportLane(context) {
+  const lane = context.supportLane;
+  const status =
+    lane.lane_status === "supported"
+      ? "pass"
+      : lane.lane_status === "unverified"
+        ? "warn"
+        : lane.lane_status === "prep"
+          ? "degraded"
+          : "unsupported";
+  return createCheckResult({
+    id: "platform.support_lane",
+    group: "platform",
+    status,
+    runtime: context.runtime,
+    target: context.target,
+    inputs: {
+      os: lane.os,
+      runtime: lane.runtime,
+      target: lane.target,
+    },
+    summary: lane.summary,
+    remediation:
+      lane.lane_status === "supported"
+        ? null
+        : lane.lane_status === "unverified"
+          ? "Use the lane for local validation, but collect live pilot evidence before claiming support."
+          : lane.lane_status === "prep"
+            ? "Use doctor and preview on Windows, but keep install support claims in prep status until live runtime evidence is recorded."
+            : "Run PairSlash from Windows, Linux, or macOS within a documented Phase 4 support lane.",
+    evidence: {
+      lane_status: lane.lane_status,
+      tested_range_status: lane.tested_range_status,
+      evidence_source: lane.evidence_source,
+      tested_version_range: lane.tested_version_range,
+    },
+    blockingForInstall: lane.blocking_for_install,
+  });
+}
+
 function runPlatformSupport(context) {
-  const supportedOs = ["win32", "linux", "darwin"];
   const knownShells = ["powershell", "pwsh", "cmd", "bash", "zsh", "sh"];
-  if (!supportedOs.includes(process.platform)) {
+  if (!["win32", "linux", "darwin"].includes(context.os)) {
     return createCheckResult({
       id: "platform.os_shell_support",
       group: "platform",
-      status: "fail",
+      status: "skip",
       runtime: context.runtime,
       target: context.target,
       inputs: {
-        os: process.platform,
+        os: context.os,
         shell: context.shell,
       },
-      summary: `unsupported operating system ${process.platform}`,
-      remediation: "Run PairSlash from Windows, Linux, or macOS.",
+      summary: "skipped because support-lane evaluation already marked the OS unsupported",
       evidence: {},
     });
   }
@@ -408,7 +676,7 @@ function runPlatformSupport(context) {
       runtime: context.runtime,
       target: context.target,
       inputs: {
-        os: process.platform,
+        os: context.os,
         shell: context.shell,
       },
       summary: `shell ${context.shell} is unrecognized but runtime detection succeeded`,
@@ -419,15 +687,93 @@ function runPlatformSupport(context) {
   return createCheckResult({
     id: "platform.os_shell_support",
     group: "platform",
-    status: "pass",
+      status: "pass",
+      runtime: context.runtime,
+      target: context.target,
+      inputs: {
+        os: context.os,
+        shell: context.shell,
+      },
+      summary: `platform ${context.os} with shell ${context.shell} is recognized`,
+      evidence: {},
+    });
+}
+
+function runShellProfileCandidates(context) {
+  if (context.shell.includes("cmd")) {
+    return createCheckResult({
+      id: "platform.shell_profile_candidates",
+      group: "platform",
+      status: "pass",
+      runtime: context.runtime,
+      target: context.target,
+      inputs: {
+        shell: context.shell,
+      },
+      summary: "cmd.exe does not use a standard file-based shell profile",
+      evidence: {
+        candidates: [],
+      },
+    });
+  }
+  const profileIssues = [];
+  for (const candidate of context.shellProfileCandidates) {
+    const stat = safeStat(candidate);
+    if (stat.ok && stat.stat.isDirectory()) {
+      profileIssues.push({
+        path: candidate,
+        reason: "profile path resolves to a directory",
+      });
+    }
+  }
+  if (profileIssues.length > 0) {
+    return createCheckResult({
+      id: "platform.shell_profile_candidates",
+      group: "platform",
+      status: "warn",
+      runtime: context.runtime,
+      target: context.target,
+      inputs: {
+        shell: context.shell,
+      },
+      summary: `${profileIssues.length} shell profile candidate(s) are unusable`,
+      remediation: "Fix or remove the invalid profile path before relying on shell-based runtime setup.",
+      evidence: {
+        candidates: context.shellProfileCandidates,
+        profile_issues: profileIssues,
+      },
+    });
+  }
+  if (context.shellProfileCandidates.length > 0) {
+    return createCheckResult({
+      id: "platform.shell_profile_candidates",
+      group: "platform",
+      status: "pass",
+      runtime: context.runtime,
+      target: context.target,
+      inputs: {
+        shell: context.shell,
+      },
+      summary: `detected ${context.shellProfileCandidates.length} shell profile candidate(s)`,
+      evidence: {
+        candidates: context.shellProfileCandidates,
+      },
+    });
+  }
+  return createCheckResult({
+    id: "platform.shell_profile_candidates",
+    group: "platform",
+    status: "warn",
     runtime: context.runtime,
     target: context.target,
     inputs: {
-      os: process.platform,
       shell: context.shell,
     },
-    summary: `platform ${process.platform} with shell ${context.shell} is supported`,
-    evidence: {},
+    summary: `no known shell profile candidates for ${context.shell}`,
+    remediation: "Use a supported shell profile path manually if you need to preload runtime environment variables.",
+    evidence: {
+      candidates: [],
+    },
   });
 }
 
@@ -462,6 +808,7 @@ function runScopeRepoRoot(context) {
       evidence: {
         manifest_count: manifestCount,
       },
+      blockingForInstall: true,
     });
   }
   if (context.requestedPacks.length > 0 && manifestCount === 0) {
@@ -477,6 +824,7 @@ function runScopeRepoRoot(context) {
       summary: "requested packs cannot be resolved because no manifests were discovered",
       remediation: "Run doctor from the PairSlash repo root containing `packs/core`.",
       evidence: {},
+      blockingForInstall: true,
     });
   }
   return createCheckResult({
@@ -529,6 +877,7 @@ function runConfigHomeCheck(context) {
       evidence: {
         error: stat.error ?? null,
       },
+      blockingForInstall: true,
     });
   }
   return createCheckResult({
@@ -579,6 +928,7 @@ function runInstallRootCheck(context) {
       evidence: {
         error: stat.error ?? null,
       },
+      blockingForInstall: true,
     });
   }
   return createCheckResult({
@@ -623,6 +973,7 @@ function runWritePermissionCheck(context) {
       evidence: {
         failures,
       },
+      blockingForInstall: true,
     });
   }
   return createCheckResult({
@@ -653,6 +1004,7 @@ function runInstallStateLoad(context) {
       summary: `install state is invalid: ${context.stateError}`,
       remediation: "Remove or repair the invalid install state file, then rerun install or update.",
       evidence: {},
+      blockingForInstall: true,
     });
   }
   if (!context.state) {
@@ -698,6 +1050,7 @@ function runInstallStateLoad(context) {
       evidence: {
         mismatches,
       },
+      blockingForInstall: true,
     });
   }
 
@@ -733,7 +1086,16 @@ function runInstallStateLoad(context) {
 }
 
 function runManifestValidation(context) {
-  const invalid = context.manifestRecords.filter((record) => record.error);
+  const invalid =
+    context.requestedPacks.length > 0
+      ? context.invalidSelectedManifests
+      : context.manifestRecords.filter((record) => record.error);
+  const normalizationWarnings = context.selectedManifests.flatMap((record) =>
+    (record.normalizationWarnings ?? []).map((warning) => ({
+      manifest_path: record.manifestPath,
+      warning,
+    })),
+  );
   if (invalid.length > 0) {
     return createCheckResult({
       id: "manifest.discover_and_validate",
@@ -752,6 +1114,7 @@ function runManifestValidation(context) {
           error: record.error,
         })),
       },
+      blockingForInstall: true,
     });
   }
   if (context.missingRequestedPacks.length > 0) {
@@ -769,6 +1132,7 @@ function runManifestValidation(context) {
       evidence: {
         missing_packs: context.missingRequestedPacks,
       },
+      blockingForInstall: true,
     });
   }
   if (context.manifestRecords.length === 0) {
@@ -784,6 +1148,24 @@ function runManifestValidation(context) {
       summary: "no pack manifests were discovered",
       remediation: "Run doctor from a PairSlash repository with `packs/core` manifests if you need manifest-aware checks.",
       evidence: {},
+    });
+  }
+  if (normalizationWarnings.length > 0) {
+    return createCheckResult({
+      id: "manifest.discover_and_validate",
+      group: "manifest",
+      status: "warn",
+      runtime: context.runtime,
+      target: context.target,
+      inputs: {
+        requested_packs: context.requestedPacks,
+      },
+      summary: `${normalizationWarnings.length} manifest normalization warning(s) detected`,
+      remediation: "Rewrite legacy manifests using canonical pack.manifest.yaml v2.1.0 fields.",
+      evidence: {
+        discovered: context.manifestRecords.length,
+        normalization_warnings: normalizationWarnings,
+      },
     });
   }
   return createCheckResult({
@@ -843,6 +1225,7 @@ function runManifestRuntimeTargets(context) {
       evidence: {
         missing,
       },
+      blockingForInstall: true,
     });
   }
   return createCheckResult({
@@ -916,6 +1299,7 @@ function runManifestNamingConflicts(context) {
       evidence: {
         conflicts,
       },
+      blockingForInstall: true,
     });
   }
   return createCheckResult({
@@ -990,6 +1374,7 @@ function runRequiredTools(context) {
         failures,
         warnings,
       },
+      blockingForInstall: true,
     });
   }
   if (warnings.length > 0) {
@@ -1084,6 +1469,7 @@ function runRequiredMcpServers(context) {
         failures,
         warnings,
       },
+      blockingForInstall: true,
     });
   }
   if (warnings.length > 0) {
@@ -1200,13 +1586,14 @@ function runOwnedFilesIntegrity(context) {
         failures,
         warnings,
       },
+      blockingForInstall: true,
     });
   }
   if (warnings.length > 0) {
     return createCheckResult({
       id: "install_state.owned_files_integrity",
       group: "install_state",
-      status: "warn",
+      status: "degraded",
       runtime: context.runtime,
       target: context.target,
       inputs: {},
@@ -1261,6 +1648,7 @@ function runUnmanagedInstallRoot(context) {
       evidence: {
         collisions: collisions.map((entry) => entry.absolutePath),
       },
+      blockingForInstall: true,
     });
   }
 
@@ -1282,11 +1670,102 @@ function runUnmanagedInstallRoot(context) {
   });
 }
 
-function runAssetSurfaceConsistency(context) {
+function runUpdatePreviewRisk(context) {
   if (!context.state || context.state.packs.length === 0) {
     return createCheckResult({
-      id: "runtime.asset_surface_consistency",
-      group: "runtime",
+      id: "install_state.update_preview_risk",
+      group: "install_state",
+      status: "pass",
+      runtime: context.runtime,
+      target: context.target,
+      inputs: {},
+      summary: "no installed packs require update-risk analysis yet",
+      evidence: {},
+    });
+  }
+
+  try {
+    const envelope = planUpdate({
+      repoRoot: context.repoRoot,
+      runtime: context.runtime,
+      target: context.target,
+      packs: context.state.packs.map((pack) => pack.id),
+    });
+    const blocked = envelope.plan.operations.filter((operation) => operation.kind === "blocked_conflict");
+    const preserved = envelope.plan.operations.filter((operation) => operation.kind === "preserve_override");
+    if (envelope.plan.errors.length > 0 || blocked.length > 0) {
+      return createCheckResult({
+        id: "install_state.update_preview_risk",
+        group: "install_state",
+        status: "fail",
+        runtime: context.runtime,
+        target: context.target,
+        inputs: {},
+        summary: "update preview found blocking conflicts or plan errors for the installed footprint",
+        remediation: "Run `pairslash update --preview` and resolve blocked conflicts before applying changes.",
+        evidence: {
+          errors: envelope.plan.errors,
+          blocked_conflicts: blocked.map((operation) => ({
+            pack_id: operation.pack_id,
+            relative_path: operation.relative_path,
+            reason: operation.reason,
+          })),
+        },
+        blockingForInstall: true,
+      });
+    }
+    if (preserved.length > 0) {
+      return createCheckResult({
+        id: "install_state.update_preview_risk",
+        group: "install_state",
+        status: "degraded",
+        runtime: context.runtime,
+        target: context.target,
+        inputs: {},
+        summary: `${preserved.length} local override path(s) would be preserved during update`,
+        remediation: "Review preserved overrides with `pairslash update --preview` before updating the pack.",
+        evidence: {
+          preserved_overrides: preserved.map((operation) => ({
+            pack_id: operation.pack_id,
+            relative_path: operation.relative_path,
+            reason: operation.reason,
+          })),
+        },
+      });
+    }
+  } catch (error) {
+    return createCheckResult({
+      id: "install_state.update_preview_risk",
+      group: "install_state",
+      status: "warn",
+      runtime: context.runtime,
+      target: context.target,
+      inputs: {},
+      summary: "update-risk analysis could not be completed from the current install state",
+      remediation: "Rerun `pairslash update --preview` directly after fixing state or manifest issues.",
+      evidence: {
+        error: error.message,
+      },
+    });
+  }
+
+  return createCheckResult({
+    id: "install_state.update_preview_risk",
+    group: "install_state",
+    status: "pass",
+    runtime: context.runtime,
+    target: context.target,
+    inputs: {},
+    summary: "update preview reports no override-preservation or conflict risk",
+    evidence: {},
+  });
+}
+
+function runAssetPlacement(context) {
+  if (!context.state || context.state.packs.length === 0) {
+    return createCheckResult({
+      id: "install_state.asset_placement",
+      group: "install_state",
       status: "pass",
       runtime: context.runtime,
       target: context.target,
@@ -1299,46 +1778,82 @@ function runAssetSurfaceConsistency(context) {
   const invalid = [];
   for (const pack of context.state.packs) {
     for (const file of pack.files) {
+      if (file.asset_kind === "ownership_manifest") {
+        continue;
+      }
       if (!context.adapter.supportsInstallSurface(file.install_surface)) {
         invalid.push({
           pack_id: pack.id,
           relative_path: file.relative_path,
           install_surface: file.install_surface,
+          reason: "install surface is not supported by the selected runtime adapter",
+        });
+        continue;
+      }
+      try {
+        const expectedPath = context.adapter.resolveAssetPath({
+          install_surface: file.install_surface,
+          source_relpath:
+            file.install_surface === "canonical_skill" || file.install_surface === "support_doc"
+              ? file.relative_path
+              : null,
+          file_name: basename(file.relative_path),
+        });
+        if (expectedPath !== file.relative_path) {
+          invalid.push({
+            pack_id: pack.id,
+            relative_path: file.relative_path,
+            install_surface: file.install_surface,
+            expected_relative_path: expectedPath,
+            reason: "asset path does not match runtime-native placement",
+          });
+        }
+      } catch (error) {
+        invalid.push({
+          pack_id: pack.id,
+          relative_path: file.relative_path,
+          install_surface: file.install_surface,
+          reason: error.message,
         });
       }
     }
   }
   if (invalid.length > 0) {
     return createCheckResult({
-      id: "runtime.asset_surface_consistency",
-      group: "runtime",
+      id: "install_state.asset_placement",
+      group: "install_state",
       status: "fail",
       runtime: context.runtime,
       target: context.target,
       inputs: {},
-      summary: `${invalid.length} installed asset surface(s) are invalid for ${context.runtime}`,
-      remediation: "Reinstall the pack for the correct runtime or fix compiler/runtime emitter drift.",
+      summary: `${invalid.length} installed asset placement issue(s) were detected`,
+      remediation: "Reinstall the pack for the correct runtime or fix compiler/runtime emitter drift before updating.",
       evidence: {
         invalid,
       },
+      blockingForInstall: true,
     });
   }
   return createCheckResult({
-    id: "runtime.asset_surface_consistency",
-    group: "runtime",
+    id: "install_state.asset_placement",
+    group: "install_state",
     status: "pass",
     runtime: context.runtime,
     target: context.target,
     inputs: {},
-    summary: "installed asset surfaces are valid for the selected runtime",
+    summary: "installed runtime assets match expected placement for the selected runtime",
     evidence: {},
   });
 }
 
 const CHECKS = [
+  runRuntimePresenceMatrix,
   runRuntimeDetect,
   runRuntimeVersionRange,
+  runRuntimeTestedRange,
+  runSupportLane,
   runPlatformSupport,
+  runShellProfileCandidates,
   runScopeRepoRoot,
   runConfigHomeCheck,
   runInstallRootCheck,
@@ -1350,8 +1865,9 @@ const CHECKS = [
   runRequiredTools,
   runRequiredMcpServers,
   runOwnedFilesIntegrity,
+  runUpdatePreviewRisk,
   runUnmanagedInstallRoot,
-  runAssetSurfaceConsistency,
+  runAssetPlacement,
 ];
 
 function buildRuntimeCompatibility(context, checks) {
@@ -1389,11 +1905,16 @@ function buildInstalledPacks(state) {
 
 function buildIssues(checks) {
   return checks
-    .filter((check) => check.status === "warn" || check.status === "fail")
+    .filter((check) => ISSUE_STATUSES.has(check.status))
     .map((check) => ({
-      code: check.id.replace(/\./g, "_"),
-      severity: check.status === "fail" ? "fail" : "warn",
+      code: buildIssueCode(check.id),
+      verdict: check.status,
+      severity: check.status === "fail" || check.status === "unsupported" ? "fail" : "warn",
       check_id: check.id,
+      summary: check.summary,
+      evidence: check.evidence,
+      suggested_fix: check.remediation,
+      blocking_for_install: check.blocking_for_install,
       message: check.summary,
       remediation: check.remediation,
     }));
@@ -1403,11 +1924,11 @@ function buildNextActions(issues) {
   const deduped = [];
   const seen = new Set();
   for (const issue of issues) {
-    if (!issue.remediation || seen.has(issue.remediation)) {
+    if (!issue.suggested_fix || seen.has(issue.suggested_fix)) {
       continue;
     }
-    seen.add(issue.remediation);
-    deduped.push(issue.remediation);
+    seen.add(issue.suggested_fix);
+    deduped.push(issue.suggested_fix);
   }
   return deduped.length > 0
     ? deduped
@@ -1415,10 +1936,13 @@ function buildNextActions(issues) {
 }
 
 function aggregateVerdict(checks) {
+  if (checks.some((check) => check.status === "unsupported")) {
+    return "unsupported";
+  }
   if (checks.some((check) => check.status === "fail")) {
     return "fail";
   }
-  if (checks.some((check) => check.status === "warn" && DEGRADED_CHECKS.has(check.id))) {
+  if (checks.some((check) => check.status === "degraded")) {
     return "degraded";
   }
   if (checks.some((check) => check.status === "warn")) {
@@ -1429,9 +1953,10 @@ function aggregateVerdict(checks) {
 
 function buildEnvironmentSummary(context) {
   return {
-    os: process.platform,
+    os: context.os,
     shell: context.shell,
-    cwd: process.cwd(),
+    shell_profile_candidates: context.shellProfileCandidates,
+    cwd: context.cwd,
     repo_root: context.repoRoot,
     config_home: context.configHome,
     install_root: context.installRoot,
@@ -1442,6 +1967,91 @@ function buildEnvironmentSummary(context) {
   };
 }
 
+function buildScopeProbes(context) {
+  return Object.fromEntries(
+    SUPPORTED_TARGETS.map((target) => [
+      target,
+      {
+        ...context.scopeProbes[target],
+      },
+    ]),
+  );
+}
+
+function preferredPackId(context) {
+  const selectedPackIds = context.selectedManifests.map((record) => record.packId);
+  if (selectedPackIds.includes("pairslash-plan")) {
+    return "pairslash-plan";
+  }
+  if (selectedPackIds.length > 0) {
+    return selectedPackIds[0];
+  }
+  const installedPackIds = (context.state?.packs ?? []).map((pack) => pack.id);
+  if (installedPackIds.includes("pairslash-plan")) {
+    return "pairslash-plan";
+  }
+  if (installedPackIds.length > 0) {
+    return installedPackIds[0];
+  }
+  const availablePackIds = context.manifestRecords
+    .filter((record) => !record.error)
+    .map((record) => record.packId)
+    .sort((left, right) => left.localeCompare(right));
+  if (availablePackIds.includes("pairslash-plan")) {
+    return "pairslash-plan";
+  }
+  return availablePackIds[0] ?? null;
+}
+
+function runtimeFlag(runtime) {
+  return runtime === "codex_cli" ? "codex" : "copilot";
+}
+
+function buildFirstWorkflowGuidance(context, { installBlocked }) {
+  const recommendedPackId = preferredPackId(context);
+  const doctorCommand = `node packages/cli/src/bin/pairslash.js doctor --runtime ${runtimeFlag(context.runtime)} --target ${context.target}`;
+
+  if (installBlocked) {
+    return {
+      ready: false,
+      recommended_pack_id: recommendedPackId,
+      rationale: "Blocking issues must be fixed before install or first workflow execution.",
+      commands: [doctorCommand],
+    };
+  }
+
+  if ((context.state?.packs ?? []).length > 0) {
+    return {
+      ready: true,
+      recommended_pack_id: recommendedPackId,
+      rationale: "A managed pack is already installed for this runtime and target.",
+      commands: [
+        `Launch ${context.detection.executable ?? runtimeFlag(context.runtime)} from the repo root and use /skills to run ${recommendedPackId ?? "the installed pack"}.`,
+      ],
+    };
+  }
+
+  if (recommendedPackId) {
+    return {
+      ready: false,
+      recommended_pack_id: recommendedPackId,
+      rationale: "Install the baseline pack first, then enter the runtime through /skills.",
+      commands: [
+        `node packages/cli/src/bin/pairslash.js preview install ${recommendedPackId} --runtime ${runtimeFlag(context.runtime)} --target ${context.target}`,
+        `node packages/cli/src/bin/pairslash.js install ${recommendedPackId} --runtime ${runtimeFlag(context.runtime)} --target ${context.target} --apply --yes`,
+        `Launch ${context.detection.executable ?? runtimeFlag(context.runtime)} from the repo root and use /skills to run ${recommendedPackId}.`,
+      ],
+    };
+  }
+
+  return {
+    ready: false,
+    recommended_pack_id: null,
+    rationale: "No valid pack manifest was discovered for this repository yet.",
+    commands: [doctorCommand],
+  };
+}
+
 export function runDoctor({
   repoRoot,
   runtime,
@@ -1449,6 +2059,9 @@ export function runDoctor({
   packs = [],
   _adapter_override = null,
   _runtime_selection_override = null,
+  _os_override = null,
+  _shell_override = null,
+  _cwd_override = null,
 }) {
   const context = buildBaseContext({
     repoRoot,
@@ -1457,9 +2070,15 @@ export function runDoctor({
     packs,
     adapterOverride: _adapter_override,
     runtimeSelectionOverride: _runtime_selection_override,
+    osOverride: _os_override,
+    shellOverride: _shell_override,
+    cwdOverride: _cwd_override,
   });
   const checks = CHECKS.map((check) => check(context));
   const issues = buildIssues(checks);
+  const installBlocked = checks.some(
+    (check) => check.blocking_for_install && ISSUE_STATUSES.has(check.status),
+  );
   const report = {
     kind: "doctor-report",
     schema_version: DOCTOR_REPORT_SCHEMA_VERSION,
@@ -1467,12 +2086,18 @@ export function runDoctor({
     runtime: context.runtime,
     target: context.target,
     support_verdict: aggregateVerdict(checks),
+    install_blocked: installBlocked,
     environment_summary: buildEnvironmentSummary(context),
+    scope_probes: buildScopeProbes(context),
+    support_lane: { ...context.supportLane },
     runtime_compatibility: buildRuntimeCompatibility(context, checks),
     checks,
     issues,
     next_actions: buildNextActions(issues),
     installed_packs: buildInstalledPacks(context.state),
+    first_workflow_guidance: buildFirstWorkflowGuidance(context, {
+      installBlocked,
+    }),
   };
   const errors = validateDoctorReport(report);
   if (errors.length > 0) {

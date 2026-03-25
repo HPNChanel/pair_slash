@@ -12,14 +12,15 @@ import {
   PREVIEW_OPERATION_KINDS,
   PREVIEW_PLAN_SCHEMA_VERSION,
   SUPPORTED_RUNTIMES,
-  discoverPackManifestPaths,
   ensureDir,
   exists,
   loadPackManifest,
+  loadPackManifestRecords,
   normalizeRuntime,
   normalizeTarget,
   readFileNormalized,
   relativeFrom,
+  selectPackManifestRecords,
   sha256,
   stableJson,
   validateInstallJournal,
@@ -47,27 +48,24 @@ function compilePackForRuntime(options) {
 }
 
 function manifestSelection(repoRoot, requestedPacks = []) {
-  const manifestPaths = discoverPackManifestPaths(repoRoot);
-  const loaded = manifestPaths.map((manifestPath) => ({
-    manifestPath,
-    manifest: loadPackManifest(manifestPath),
-  }));
-
-  if (requestedPacks.length === 0) {
-    return { selection: loaded, errors: [] };
-  }
-
-  const byId = new Map(loaded.map((entry) => [entry.manifest.pack.id, entry]));
-  const selection = [];
+  const records = loadPackManifestRecords(repoRoot);
+  const { valid, invalid, missing } = selectPackManifestRecords(records, requestedPacks);
   const errors = [];
-  for (const requested of requestedPacks) {
-    if (!byId.has(requested)) {
-      errors.push(`pack-not-found: ${requested}`);
-      continue;
-    }
-    selection.push(byId.get(requested));
+
+  for (const record of invalid) {
+    errors.push(`manifest-invalid:${record.packId}: ${record.error}`);
   }
-  return { selection, errors };
+  for (const packId of missing) {
+    errors.push(`pack-not-found: ${packId}`);
+  }
+
+  return {
+    selection: valid.map((record) => ({
+      manifestPath: record.manifestPath,
+      manifest: record.manifest,
+    })),
+    errors,
+  };
 }
 
 function createSummary(operations) {
@@ -220,19 +218,24 @@ function buildStatePack({ compiledPack, installDir, operations, previousStatePac
       (entry) => entry.relative_path === file.relative_path,
     );
     const digest = currentDigest(absolutePath);
-    const matchedCompiled = digest === file.sha256;
-    const ownedByPairslash =
-      op?.kind === "create" || op?.kind === "replace"
-        ? true
-        : previousFile
-          ? previousFile.owned_by_pairslash
-          : false;
-    return {
-      relative_path: file.relative_path,
-      absolute_path: absolutePath,
-      source_digest: file.sha256,
-      current_digest: digest,
-      owned_by_pairslash: ownedByPairslash,
+      const matchedCompiled = digest === file.sha256;
+      const ownedByPairslash =
+        op?.kind === "create" || op?.kind === "replace"
+          ? file.owner === "pairslash"
+          : previousFile
+            ? previousFile.owned_by_pairslash
+            : false;
+      return {
+        asset_id: file.asset_id,
+        generator: file.generator,
+        required: file.required,
+        declared_owner: file.owner,
+        uninstall_behavior: file.uninstall_behavior,
+        relative_path: file.relative_path,
+        absolute_path: absolutePath,
+        source_digest: file.sha256,
+        current_digest: digest,
+        owned_by_pairslash: ownedByPairslash,
       override_eligible: file.override_eligible,
       local_override: !matchedCompiled,
       asset_kind: file.asset_kind,

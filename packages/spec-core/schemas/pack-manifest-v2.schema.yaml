@@ -1,74 +1,88 @@
 $schema: "https://json-schema.org/draft/2020-12/schema"
-$id: "https://pairslash.dev/schemas/pack-manifest-v2/2.0.0"
+$id: "https://pairslash.dev/schemas/pack-manifest-v2/2.1.0"
 title: PairSlash Pack Manifest v2
 type: object
 additionalProperties: false
 required:
   - kind
   - schema_version
-  - version
-  - pack
+  - pack_name
+  - display_name
+  - pack_version
+  - summary
+  - category
+  - workflow_class
+  - phase
+  - status
+  - canonical_entrypoint
+  - release_channel
+  - supported_runtimes
   - supported_runtime_ranges
+  - runtime_bindings
   - install_targets
   - capabilities
   - risk_level
   - required_tools
   - required_mcp_servers
   - memory_permissions
-  - assets
-  - ownership
+  - runtime_assets
+  - asset_ownership
   - local_override_policy
-  - release_channel
-  - runtime_targets
+  - update_strategy
+  - uninstall_strategy
+  - smoke_checks
+  - docs_refs
 properties:
   kind:
     const: pack-manifest-v2
   schema_version:
-    const: "2.0.0"
-  version:
+    const: "2.1.0"
+  pack_name:
+    type: string
+    pattern: "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+  display_name:
     type: string
     minLength: 1
-  pack:
-    type: object
-    additionalProperties: false
-    required:
-      - id
-      - display_name
-      - summary
-      - category
-      - workflow_class
-      - phase
-      - status
-      - canonical_entrypoint
-    properties:
-      id:
-        type: string
-        pattern: "^[a-z0-9]+(?:-[a-z0-9]+)*$"
-      display_name:
-        type: string
-        minLength: 1
-      summary:
-        type: string
-        minLength: 1
-      category:
-        type: string
-        minLength: 1
-      workflow_class:
-        type: string
-        enum:
-          - read-oriented
-          - dual-mode
-          - write-authority
-      phase:
-        type: integer
-      status:
-        type: string
-        enum:
-          - active
-          - draft
-          - deprecated
-      canonical_entrypoint:
-        const: /skills
+  pack_version:
+    type: string
+    minLength: 1
+  summary:
+    type: string
+    minLength: 1
+  category:
+    type: string
+    minLength: 1
+  workflow_class:
+    type: string
+    enum:
+      - read-oriented
+      - dual-mode
+      - write-authority
+  phase:
+    type: integer
+  status:
+    type: string
+    enum:
+      - active
+      - draft
+      - deprecated
+  canonical_entrypoint:
+    const: /skills
+  release_channel:
+    type: string
+    enum:
+      - stable
+      - preview
+      - canary
+  supported_runtimes:
+    type: array
+    minItems: 2
+    uniqueItems: true
+    items:
+      type: string
+      enum:
+        - codex_cli
+        - copilot_cli
   supported_runtime_ranges:
     type: object
     additionalProperties: false
@@ -78,10 +92,19 @@ properties:
     properties:
       codex_cli:
         type: string
-        minLength: 1
       copilot_cli:
         type: string
-        minLength: 1
+  runtime_bindings:
+    type: object
+    additionalProperties: false
+    required:
+      - codex_cli
+      - copilot_cli
+    properties:
+      codex_cli:
+        $ref: "#/$defs/runtimeBinding"
+      copilot_cli:
+        $ref: "#/$defs/runtimeBinding"
   install_targets:
     type: array
     minItems: 1
@@ -118,49 +141,205 @@ properties:
   required_tools:
     type: array
     items:
-      type: object
-      additionalProperties: false
-      required:
-        - id
-        - kind
-        - required_for
-        - check_command
-      properties:
-        id:
-          type: string
-          minLength: 1
-        kind:
-          type: string
-          enum:
-            - binary
-            - script
-            - env_var
-        required_for:
-          type: array
-          minItems: 1
-          uniqueItems: true
-          items:
-            type: string
-            enum:
-              - compile
-              - install
-              - run
-              - doctor
-        check_command:
-          type: string
-          minLength: 1
+      $ref: "#/$defs/requiredTool"
   required_mcp_servers:
     type: array
     items:
-      type: object
-      additionalProperties: false
-      required:
-        - id
-      properties:
-        id:
+      $ref: "#/$defs/requiredMcpServer"
+  memory_permissions:
+    $ref: "#/$defs/memoryPermissions"
+  runtime_assets:
+    type: object
+    additionalProperties: false
+    required:
+      - source_root
+      - primary_skill
+      - entries
+    properties:
+      source_root:
+        type: string
+        minLength: 1
+      primary_skill:
+        type: string
+        minLength: 1
+      entries:
+        type: array
+        minItems: 1
+        items:
+          $ref: "#/$defs/runtimeAssetEntry"
+  asset_ownership:
+    type: object
+    additionalProperties: false
+    required:
+      - ownership_file
+      - ownership_scope
+      - safe_delete_policy
+      - records
+    properties:
+      ownership_file:
+        const: pairslash.install.json
+      ownership_scope:
+        const: pack_root
+      safe_delete_policy:
+        const: pairslash-owned-only
+      records:
+        type: array
+        minItems: 1
+        items:
+          $ref: "#/$defs/assetOwnershipRecord"
+  local_override_policy:
+    type: object
+    additionalProperties: false
+    required:
+      - marker_file
+      - marker_mode
+      - eligible_asset_ids
+    properties:
+      marker_file:
+        const: .pairslash.local-overrides.yaml
+      marker_mode:
+        const: state_or_explicit_marker
+      eligible_asset_ids:
+        type: array
+        items:
           type: string
           minLength: 1
-  memory_permissions:
+  update_strategy:
+    type: object
+    additionalProperties: false
+    required:
+      - mode
+      - on_non_override_change
+      - rollback_strategy
+    properties:
+      mode:
+        const: preserve_valid_local_overrides
+      on_non_override_change:
+        const: block
+      rollback_strategy:
+        const: restore_last_managed_state
+  uninstall_strategy:
+    type: object
+    additionalProperties: false
+    required:
+      - mode
+      - detach_modified_files
+      - preserve_unknown_files
+      - remove_empty_pack_dir
+    properties:
+      mode:
+        const: pairslash_owned_only
+      detach_modified_files:
+        type: boolean
+      preserve_unknown_files:
+        type: boolean
+      remove_empty_pack_dir:
+        type: boolean
+  smoke_checks:
+    type: array
+    minItems: 1
+    items:
+      $ref: "#/$defs/smokeCheck"
+  docs_refs:
+    type: object
+    additionalProperties: false
+    required:
+      - contract
+      - example_invocation
+      - example_output
+      - validation_checklist
+    properties:
+      contract:
+        type: string
+      example_invocation:
+        type: string
+      example_output:
+        type: string
+      validation_checklist:
+        type: string
+
+$defs:
+  runtimeBinding:
+    type: object
+    additionalProperties: false
+    required:
+      - direct_invocation
+      - metadata_mode
+      - install_dir_name
+      - compatibility
+    properties:
+      direct_invocation:
+        type: string
+        minLength: 1
+      metadata_mode:
+        type: string
+        enum:
+          - openai_yaml_optional
+          - none
+      install_dir_name:
+        type: string
+        minLength: 1
+      compatibility:
+        type: object
+        additionalProperties: false
+        required:
+          - canonical_picker
+          - direct_invocation
+        properties:
+          canonical_picker:
+            type: string
+            enum:
+              - supported
+              - unverified
+              - blocked
+          direct_invocation:
+            type: string
+            enum:
+              - supported
+              - unverified
+              - blocked
+  requiredTool:
+    type: object
+    additionalProperties: false
+    required:
+      - id
+      - kind
+      - required_for
+      - check_command
+    properties:
+      id:
+        type: string
+        minLength: 1
+      kind:
+        type: string
+        enum:
+          - binary
+          - script
+          - env_var
+      required_for:
+        type: array
+        minItems: 1
+        uniqueItems: true
+        items:
+          type: string
+          enum:
+            - compile
+            - install
+            - run
+            - doctor
+      check_command:
+        type: string
+        minLength: 1
+  requiredMcpServer:
+    type: object
+    additionalProperties: false
+    required:
+      - id
+    properties:
+      id:
+        type: string
+        minLength: 1
+  memoryPermissions:
     type: object
     additionalProperties: false
     required:
@@ -202,144 +381,127 @@ properties:
         enum:
           - none
           - append
-  assets:
+  runtimeAssetEntry:
     type: object
     additionalProperties: false
     required:
-      - pack_dir
-      - primary_skill_file
-      - include
+      - asset_id
+      - runtime
+      - asset_kind
+      - install_surface
+      - source_path
+      - generated_path
+      - generator
+      - required
+      - override_eligible
     properties:
-      pack_dir:
+      asset_id:
         type: string
         minLength: 1
-      primary_skill_file:
-        type: string
-        minLength: 1
-      include:
-        type: array
-        minItems: 1
-        uniqueItems: true
-        items:
-          type: string
-          minLength: 1
-      docs:
-        type: object
-        additionalProperties: false
-        properties:
-          contract_file:
-            type: string
-          example_invocation_file:
-            type: string
-          example_output_file:
-            type: string
-          validation_checklist_file:
-            type: string
-  ownership:
-    type: object
-    additionalProperties: false
-    required:
-      - ownership_file
-      - ownership_scope
-      - safe_delete_policy
-      - record_generated_files
-      - generated_files
-    properties:
-      ownership_file:
-        const: pairslash.install.json
-      ownership_scope:
-        const: pack_root
-      safe_delete_policy:
-        const: pairslash-owned-only
-      record_generated_files:
-        type: boolean
-      generated_files:
-        type: array
-        minItems: 1
-        uniqueItems: true
-        items:
-          type: string
-          minLength: 1
-  local_override_policy:
-    type: object
-    additionalProperties: false
-    required:
-      - strategy
-      - eligible_paths
-      - marker_file
-      - marker_mode
-      - rollback_strategy
-    properties:
-      strategy:
-        const: preserve_valid_local_overrides
-      eligible_paths:
-        type: array
-        minItems: 1
-        uniqueItems: true
-        items:
-          type: string
-          minLength: 1
-      marker_file:
-        const: .pairslash.local-overrides.yaml
-      marker_mode:
-        const: state_or_explicit_marker
-      rollback_strategy:
-        const: restore_last_managed_state
-  release_channel:
-    type: string
-    enum:
-      - stable
-      - preview
-      - canary
-  runtime_targets:
-    type: object
-    additionalProperties: false
-    required:
-      - codex_cli
-      - copilot_cli
-    properties:
-      codex_cli:
-        $ref: "#/$defs/runtimeTarget"
-      copilot_cli:
-        $ref: "#/$defs/runtimeTarget"
-
-$defs:
-  runtimeTarget:
-    type: object
-    additionalProperties: false
-    required:
-      - direct_invocation
-      - metadata_mode
-      - skill_directory_name
-      - compatibility
-    properties:
-      direct_invocation:
-        type: string
-        minLength: 1
-      metadata_mode:
+      runtime:
         type: string
         enum:
-          - openai_yaml_optional
-          - none
-      skill_directory_name:
+          - shared
+          - codex_cli
+          - copilot_cli
+      asset_kind:
+        type: string
+        enum:
+          - skill_markdown
+          - support_doc
+          - context_fragment
+          - agent_fragment
+          - config_fragment
+          - hook_script
+          - mcp_config
+          - runtime_manifest
+          - ownership_manifest
+      install_surface:
+        type: string
+        enum:
+          - canonical_skill
+          - support_doc
+          - metadata
+          - context
+          - config
+          - agent
+          - hook
+          - mcp
+      source_path:
+        type:
+          - string
+          - "null"
+      generated_path:
+        type:
+          - string
+          - "null"
+      generator:
+        type: string
+        enum:
+          - source_copy
+          - codex_metadata
+          - codex_context
+          - codex_config
+          - codex_write_authority
+          - codex_mcp
+          - copilot_package
+          - copilot_agent
+          - copilot_preflight
+          - copilot_mcp
+          - pairslash_ownership_receipt
+      required:
+        type: boolean
+      override_eligible:
+        type: boolean
+  assetOwnershipRecord:
+    type: object
+    additionalProperties: false
+    required:
+      - asset_id
+      - owner
+      - uninstall_behavior
+    properties:
+      asset_id:
         type: string
         minLength: 1
-      compatibility:
-        type: object
-        additionalProperties: false
-        required:
-          - canonical_picker
-          - direct_invocation
-        properties:
-          canonical_picker:
-            type: string
-            enum:
-              - supported
-              - unverified
-              - blocked
-          direct_invocation:
-            type: string
-            enum:
-              - supported
-              - unverified
-              - blocked
+      owner:
+        type: string
+        enum:
+          - pairslash
+          - user
+          - system
+      uninstall_behavior:
+        type: string
+        enum:
+          - remove_if_unmodified
+          - detach_if_modified
+          - preserve_unmanaged
+  smokeCheck:
+    type: object
+    additionalProperties: false
+    required:
+      - id
+      - runtime
+      - target
+      - action
+    properties:
+      id:
+        type: string
+        minLength: 1
+      runtime:
+        type: string
+        enum:
+          - codex_cli
+          - copilot_cli
+      target:
+        type: string
+        enum:
+          - repo
+          - user
+      action:
+        type: string
+        enum:
+          - preview_install
+          - preview_update
+          - preview_uninstall
+          - doctor

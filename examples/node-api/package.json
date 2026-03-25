@@ -1,0 +1,6 @@
+{
+  "name": "pairslash-example-node-api",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module"
+}

@@ -17,6 +17,7 @@
     "test:phase4:release": "node scripts/run-phase4-release-readiness.mjs"
   },
   "dependencies": {
+    "valibot": "^1.3.1",
     "yaml": "^2.8.1"
   }
 }

@@ -23,3 +23,60 @@ properties:
   logical_assets:
     type: array
     minItems: 1
+    items:
+      type: object
+      required:
+        - logical_id
+        - asset_id
+        - generator
+        - required
+        - asset_kind
+        - install_surface
+        - runtime_selector
+        - generated
+        - override_eligible
+        - owner
+        - uninstall_behavior
+        - write_authority_guarded
+        - stable_sort_key
+        - sha256
+        - content_type
+      properties:
+        logical_id:
+          type: string
+        asset_id:
+          type: string
+        generator:
+          type: string
+        required:
+          type: boolean
+        asset_kind:
+          type: string
+        install_surface:
+          type: string
+        runtime_selector:
+          type: string
+        source_relpath:
+          type:
+            - string
+            - "null"
+        generated_relpath:
+          type:
+            - string
+            - "null"
+        generated:
+          type: boolean
+        override_eligible:
+          type: boolean
+        owner:
+          type: string
+        uninstall_behavior:
+          type: string
+        write_authority_guarded:
+          type: boolean
+        stable_sort_key:
+          type: string
+        sha256:
+          type: string
+        content_type:
+          type: string

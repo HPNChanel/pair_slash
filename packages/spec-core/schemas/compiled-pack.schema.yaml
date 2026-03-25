@@ -44,6 +44,11 @@ properties:
     items:
       type: object
       required:
+        - asset_id
+        - generator
+        - required
+        - owner
+        - uninstall_behavior
         - relative_path
         - sha256
         - asset_kind
@@ -53,6 +58,16 @@ properties:
         - override_eligible
         - write_authority_guarded
       properties:
+        asset_id:
+          type: string
+        generator:
+          type: string
+        required:
+          type: boolean
+        owner:
+          type: string
+        uninstall_behavior:
+          type: string
         relative_path:
           type: string
         sha256:

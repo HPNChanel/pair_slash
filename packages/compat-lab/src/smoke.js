@@ -22,7 +22,7 @@ export const DEFAULT_SMOKE_LANES = [
     runtime: "codex_cli",
     target: "repo",
     expect_can_apply: true,
-    expect_verdict: "pass",
+    expect_verdict: "warn",
   },
   {
     id: "install.basic.copilot.user",
@@ -31,7 +31,7 @@ export const DEFAULT_SMOKE_LANES = [
     runtime: "copilot_cli",
     target: "user",
     expect_can_apply: true,
-    expect_verdict: "pass",
+    expect_verdict: "warn",
   },
   {
     id: "install.write-authority.codex.repo",

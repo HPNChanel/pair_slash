@@ -28,16 +28,25 @@ import {
   formatPreviewPlanText,
 } from "../formatters.js";
 
+const LIFECYCLE_ACTIONS = ["install", "update", "uninstall"];
+
 function printUsage(stdout) {
   stdout.write(
     [
       "Usage:",
-      "  pairslash preview <install|update|uninstall> [pack-id...] [--runtime <codex|copilot|auto>] [--target repo|user] [--packs a,b] [--plan-out path]",
-      "  pairslash install [pack-id...] [--runtime <codex|copilot|auto>] [--target repo|user] [--packs a,b] [--apply] [--dry-run] [--yes] [--non-interactive] [--plan-out path]",
-      "  pairslash update [pack-id...] [--runtime <codex|copilot|auto>] [--target repo|user] [--packs a,b] [--from <version|manifest-digest>] [--to <pack.manifest.yaml>] [--apply] [--dry-run] [--yes] [--non-interactive] [--plan-out path]",
-      "  pairslash uninstall [pack-id...] [--runtime <codex|copilot|auto>] [--target repo|user] [--packs a,b] [--apply] [--dry-run] [--yes] [--non-interactive] [--plan-out path]",
+      "  pairslash preview <install|update|uninstall> [pack-id...] [--runtime <codex|copilot|auto>] [--target repo|user] [--packs a,b] [--format text|json] [--plan-out path]",
+      "  pairslash install [pack-id...] [--runtime <codex|copilot|auto>] [--target repo|user] [--packs a,b] [--format text|json] [--apply] [--dry-run] [--yes] [--non-interactive] [--plan-out path]",
+      "  pairslash update [pack-id...] [--runtime <codex|copilot|auto>] [--target repo|user] [--packs a,b] [--from <version|manifest-digest>] [--to <pack.manifest.yaml>] [--format text|json] [--apply] [--dry-run] [--yes] [--non-interactive] [--plan-out path]",
+      "  pairslash uninstall [pack-id...] [--runtime <codex|copilot|auto>] [--target repo|user] [--packs a,b] [--format text|json] [--apply] [--dry-run] [--yes] [--non-interactive] [--plan-out path]",
       "  pairslash doctor [--runtime <codex|copilot|auto>] [--target repo|user] [--packs a,b] [--format text|json] [--strict]",
       "  pairslash lint --phase4 [pack-id...] [--runtime <codex|copilot|auto|all>] [--target repo|user] [--packs a,b] [--format text|json] [--strict]",
+      "",
+      "Defaults:",
+      "  install/update/uninstall preview by default; add --apply to mutate.",
+      "  install with no pack-id selects all valid manifests under packs/core.",
+      "  update/uninstall with no pack-id select all installed packs for the chosen runtime and target.",
+      "  --runtime auto fails if more than one runtime is detected and no state disambiguates the lane.",
+      "  Exit code 1 means invalid usage, blocked preview, or failed apply/doctor/lint.",
       "",
     ].join("\n"),
   );
@@ -157,6 +166,16 @@ function assertRuntime(runtime) {
   }
 }
 
+function assertLifecycleAction(action, { command = "command" } = {}) {
+  if (LIFECYCLE_ACTIONS.includes(action)) {
+    return;
+  }
+  const received = action ?? "(missing)";
+  throw new Error(
+    `unknown ${command} action: ${received}; expected one of ${LIFECYCLE_ACTIONS.join(", ")}`,
+  );
+}
+
 function materializePlan(repoRoot, plan, planOut) {
   if (!planOut) {
     return plan;
@@ -188,29 +207,33 @@ async function confirmApply({ action, stdin, stdout, options }) {
   }
 }
 
+function buildLifecycleEnvelope(action, repoRoot, options) {
+  assertLifecycleAction(action, { command: "preview" });
+  return action === "install"
+    ? planInstall({ repoRoot, runtime: options.runtime, target: options.target, packs: options.packs })
+    : action === "update"
+      ? planUpdate({
+          repoRoot,
+          runtime: options.runtime,
+          target: options.target,
+          packs: options.packs,
+          from: options.from,
+          to: options.to,
+        })
+      : planUninstall({
+          repoRoot,
+          runtime: options.runtime,
+          target: options.target,
+          packs: options.packs,
+        });
+}
+
 function handlePreview(action, repoRoot, options, stdout) {
   assertRuntime(options.runtime);
   if (options.force) {
     throw new Error("unsupported-flag: --force is not available in Phase 4");
   }
-  const envelope =
-    action === "install"
-      ? planInstall({ repoRoot, runtime: options.runtime, target: options.target, packs: options.packs })
-      : action === "update"
-        ? planUpdate({
-            repoRoot,
-            runtime: options.runtime,
-            target: options.target,
-            packs: options.packs,
-            from: options.from,
-            to: options.to,
-          })
-        : planUninstall({
-            repoRoot,
-            runtime: options.runtime,
-            target: options.target,
-            packs: options.packs,
-          });
+  const envelope = buildLifecycleEnvelope(action, repoRoot, options);
   const plan = materializePlan(repoRoot, envelope.plan, options.planOut);
   emit(stdout, plan, {
     format: options.format,
@@ -221,30 +244,14 @@ function handlePreview(action, repoRoot, options, stdout) {
 
 async function handleApply(action, repoRoot, options, stdout, stdin) {
   assertRuntime(options.runtime);
+  assertLifecycleAction(action);
   if (options.apply && options.dryRun) {
     throw new Error("--apply and --dry-run cannot be used together");
   }
   if (options.force) {
     throw new Error("unsupported-flag: --force is not available in Phase 4");
   }
-  const envelope =
-    action === "install"
-      ? planInstall({ repoRoot, runtime: options.runtime, target: options.target, packs: options.packs })
-      : action === "update"
-        ? planUpdate({
-            repoRoot,
-            runtime: options.runtime,
-            target: options.target,
-            packs: options.packs,
-            from: options.from,
-            to: options.to,
-          })
-        : planUninstall({
-            repoRoot,
-            runtime: options.runtime,
-            target: options.target,
-            packs: options.packs,
-          });
+  const envelope = buildLifecycleEnvelope(action, repoRoot, options);
   const plan = materializePlan(repoRoot, envelope.plan, options.planOut);
   if (!options.apply || options.preview) {
     emit(stdout, plan, {
@@ -309,10 +316,10 @@ export async function runCli({
       format: options.format,
       text: formatDoctorText,
     });
-    if (report.support_verdict === "fail") {
+    if (["fail", "unsupported"].includes(report.support_verdict)) {
       return 1;
     }
-    if (options.strict && ["warn", "degraded"].includes(report.support_verdict)) {
+    if (options.strict && report.support_verdict !== "pass") {
       return 1;
     }
     return 0;

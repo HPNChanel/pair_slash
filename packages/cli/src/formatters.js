@@ -48,20 +48,56 @@ export function formatPreviewPlanText(plan) {
 }
 
 export function formatDoctorText(report) {
+  const blockingIssues = report.issues.filter((issue) => issue.blocking_for_install);
+  const advisoryIssues = report.issues.filter((issue) => !issue.blocking_for_install);
+  const selectedScope = report.scope_probes[report.target];
+  const alternateScope = report.scope_probes[report.target === "repo" ? "user" : "repo"];
+  const presenceCheck = report.checks.find((check) => check.id === "runtime.presence_matrix");
+  const immediateNextAction = report.next_actions[0] ?? report.first_workflow_guidance.commands[0] ?? "No action required.";
   const lines = [
     `Runtime: ${report.runtime}`,
     `Target: ${report.target}`,
-    `Verdict: ${report.support_verdict}`,
+    `Verdict: ${report.support_verdict.toUpperCase()}`,
+    `Install blocked: ${report.install_blocked ? "yes" : "no"}`,
     "",
     "Environment summary:",
     `- OS: ${report.environment_summary.os}`,
     `- Shell: ${report.environment_summary.shell}`,
+    `- Shell profiles: ${
+      report.environment_summary.shell_profile_candidates.length > 0
+        ? report.environment_summary.shell_profile_candidates.join(", ")
+        : "none"
+    }`,
     `- Config home: ${report.environment_summary.config_home}`,
     `- Install root: ${report.environment_summary.install_root}`,
     `- State path: ${report.environment_summary.state_path}`,
     `- Runtime executable: ${report.environment_summary.runtime_executable ?? "none"}`,
     `- Runtime version: ${report.environment_summary.runtime_version ?? "unknown"}`,
     `- Runtime available: ${report.environment_summary.runtime_available ? "yes" : "no"}`,
+  ];
+  if (presenceCheck?.evidence?.runtimes) {
+    const runtimes = presenceCheck.evidence.runtimes;
+    lines.push(
+      `- Codex present: ${runtimes.codex_cli?.available ? "yes" : "no"}${runtimes.codex_cli?.version ? ` (${runtimes.codex_cli.version})` : ""}`,
+    );
+    lines.push(
+      `- Copilot present: ${runtimes.copilot_cli?.available ? "yes" : "no"}${runtimes.copilot_cli?.version ? ` (${runtimes.copilot_cli.version})` : ""}`,
+    );
+  }
+  lines.push(
+    "",
+    `Immediate next action: ${immediateNextAction}`,
+    "",
+    "Support lane:",
+    `- Lane status: ${report.support_lane.lane_status}`,
+    `- Tested range status: ${report.support_lane.tested_range_status}`,
+    `- Tested version range: ${report.support_lane.tested_version_range ?? "none recorded"}`,
+    `- Evidence source: ${report.support_lane.evidence_source}`,
+    `- Summary: ${report.support_lane.summary}`,
+    "",
+    "Scope probes:",
+    `- Selected scope (${selectedScope.target}): verdict=${selectedScope.verdict}, writable=${selectedScope.writable ? "yes" : "no"}, config_home=${selectedScope.config_home}, install_root=${selectedScope.install_root}`,
+    `- Alternate scope (${alternateScope.target}): verdict=${alternateScope.verdict}, writable=${alternateScope.writable ? "yes" : "no"}, config_home=${alternateScope.config_home}, install_root=${alternateScope.install_root}`,
     "",
     "Runtime compatibility:",
     `- Requested packs: ${report.runtime_compatibility.selected_pack_count}`,
@@ -73,22 +109,47 @@ export function formatDoctorText(report) {
         : "none"
     }`,
     "",
-    "Issues:",
-  ];
-  if (report.issues.length === 0) {
+    "Blocking issues:",
+  );
+  if (blockingIssues.length === 0) {
     lines.push("- none");
   } else {
-    for (const issue of report.issues) {
-      lines.push(`- ${issue.severity} ${issue.code}: ${issue.message}`);
+    for (const issue of blockingIssues) {
+      lines.push(`- ${issue.verdict} ${issue.code}: ${issue.summary}`);
+      if (issue.suggested_fix) {
+        lines.push(`  fix: ${issue.suggested_fix}`);
+      }
+    }
+  }
+  lines.push("", "Advisory issues:");
+  if (advisoryIssues.length === 0) {
+    lines.push("- none");
+  } else {
+    for (const issue of advisoryIssues) {
+      lines.push(`- ${issue.verdict} ${issue.code}: ${issue.summary}`);
+      if (issue.suggested_fix) {
+        lines.push(`  fix: ${issue.suggested_fix}`);
+      }
     }
   }
   lines.push("", "Checks:");
   for (const check of report.checks) {
-    lines.push(`- ${check.status} ${check.id}: ${check.summary}`);
+    lines.push(
+      `- ${check.status} ${check.id}: ${check.summary}${check.blocking_for_install ? " [blocking]" : ""}`,
+    );
   }
   lines.push("", "Next actions:");
   for (const action of report.next_actions) {
     lines.push(`- ${action}`);
+  }
+  lines.push("", "First workflow:");
+  lines.push(`- Ready now: ${report.first_workflow_guidance.ready ? "yes" : "no"}`);
+  lines.push(
+    `- Recommended pack: ${report.first_workflow_guidance.recommended_pack_id ?? "none"}`,
+  );
+  lines.push(`- Rationale: ${report.first_workflow_guidance.rationale}`);
+  for (const command of report.first_workflow_guidance.commands) {
+    lines.push(`- ${command}`);
   }
   lines.push("", "Installed packs:");
   if (report.installed_packs.length === 0) {

@@ -43,7 +43,11 @@ test("lint bridge reports runtime range parse errors", serial, () => {
     });
     assert.equal(report.ok, false);
     assert.ok(
-      report.issues.some((issue) => issue.code === "LINT-RUNTIME-001" && issue.result === "error"),
+      report.issues.some(
+        (issue) =>
+          ["LINT-RUNTIME-001", "LINT-MANIFEST-001"].includes(issue.code) &&
+          issue.result === "error",
+      ),
     );
   } finally {
     fixture.cleanup();

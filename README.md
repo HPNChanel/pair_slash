@@ -21,7 +21,9 @@ If you are evaluating or operating PairSlash from this repo, use this order:
 4. Use the [compatibility matrix](docs/compatibility/compatibility-matrix.md) and
    [runtime verification guide](docs/compatibility/runtime-verification.md) before
    claiming runtime support.
-5. Use the [legacy system records ADR](docs/architecture/adr-0001-legacy-project-memory-system-records.md)
+5. Use [runtime mapping docs](docs/runtime-mapping/README.md) when you need the exact
+   Codex/Copilot surface layout emitted by Phase 4 compilers.
+6. Use the [legacy system records ADR](docs/architecture/adr-0001-legacy-project-memory-system-records.md)
    for architecture rationale, not the archived Phase 0 docs.
 
 ## Current status
@@ -48,6 +50,7 @@ If you are evaluating or operating PairSlash from this repo, use this order:
 - Validate problem-solution fit before Phase 4 claims: [docs/validation/phase-3-5/README.md](docs/validation/phase-3-5/README.md)
 - Check what runtime behavior is actually supported: [docs/compatibility/compatibility-matrix.md](docs/compatibility/compatibility-matrix.md)
 - Run live CLI verification and record evidence: [docs/compatibility/runtime-verification.md](docs/compatibility/runtime-verification.md)
+- Review runtime-native output mapping: [docs/runtime-mapping/README.md](docs/runtime-mapping/README.md)
 - Understand dual-schema system-record handling: [docs/architecture/adr-0001-legacy-project-memory-system-records.md](docs/architecture/adr-0001-legacy-project-memory-system-records.md)
 - Read archived Phase 0 material only for historical trace: `docs/architecture/phase-0-overview.md`, `docs/compatibility/phase-0-acceptance.md`
 
@@ -135,6 +138,7 @@ for the operational done bar and memory-write safety gates.
 - Install guide: `docs/workflows/install-guide.md`
 - Phase 4 install commands: `docs/workflows/phase-4-install-commands.md`
 - Phase 4 doctor troubleshooting: `docs/workflows/phase-4-doctor-troubleshooting.md`
+- Runtime mapping: `docs/runtime-mapping/README.md`
 - Compatibility matrix: `docs/compatibility/compatibility-matrix.md`
 - Runtime verification: `docs/compatibility/runtime-verification.md`
 - Phase 3 team-pack release notes: `docs/releases/phase-3-team-pack-update.md`
@@ -153,6 +157,7 @@ for the operational done bar and memory-write safety gates.
 - Mutable authoritative records remain under `memory-record.schema.yaml` and write-authority pipeline.
 - `pairslash-memory-write-global` does not write system records.
 - Runtime install folders (`.agents/skills/`, `.github/skills/`) are derived artifacts; source-of-truth is `packs/core/`.
+- Example starter repos live under `examples/` and map to compat-lab fixtures.
 
 ## Troubleshooting (common)
 

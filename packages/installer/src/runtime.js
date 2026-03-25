@@ -1,6 +1,6 @@
 import * as codexAdapter from "@pairslash/runtime-codex-adapter";
 import * as copilotAdapter from "@pairslash/runtime-copilot-adapter";
-import { normalizeRuntime } from "@pairslash/spec-core";
+import { normalizeRuntime, satisfiesRuntimeRange as satisfiesRuntimeRangeFromSpec } from "@pairslash/spec-core";
 
 export function getRuntimeAdapter(runtime) {
   const normalized = normalizeRuntime(runtime);
@@ -11,41 +11,6 @@ export function getRuntimeAdapter(runtime) {
     return copilotAdapter;
   }
   throw new Error(`unsupported runtime: ${runtime}`);
-}
-
-function parseSemver(value) {
-  const match = typeof value === "string" ? value.match(/(\d+)\.(\d+)\.(\d+)/) : null;
-  if (!match) {
-    return null;
-  }
-  return match.slice(1).map((item) => Number.parseInt(item, 10));
-}
-
-function compareSemver(left, right) {
-  for (let index = 0; index < 3; index += 1) {
-    const delta = left[index] - right[index];
-    if (delta !== 0) {
-      return delta;
-    }
-  }
-  return 0;
-}
-
-export function satisfiesRuntimeRange(detectedVersion, range) {
-  const parsedDetected = parseSemver(detectedVersion);
-  if (!parsedDetected) {
-    return range === ">=0.0.0";
-  }
-  if (typeof range !== "string" || range.trim() === "") {
-    return false;
-  }
-  const trimmed = range.trim();
-  if (trimmed.startsWith(">=")) {
-    const minVersion = parseSemver(trimmed.slice(2).trim());
-    return Boolean(minVersion) && compareSemver(parsedDetected, minVersion) >= 0;
-  }
-  const exact = parseSemver(trimmed);
-  return Boolean(exact) && compareSemver(parsedDetected, exact) === 0;
 }
 
 export function detectRuntimeSelection(requestedRuntime) {
@@ -82,4 +47,8 @@ export function detectRuntimeSelection(requestedRuntime) {
     detection,
     ambiguous: false,
   };
+}
+
+export function satisfiesRuntimeRange(detectedVersion, range) {
+  return satisfiesRuntimeRangeFromSpec(detectedVersion, range);
 }

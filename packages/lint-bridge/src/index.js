@@ -1,4 +1,4 @@
-import { basename, join, resolve } from "node:path";
+import { join, resolve } from "node:path";
 import process from "node:process";
 
 import { compileCodexPack } from "@pairslash/compiler-codex";
@@ -10,17 +10,15 @@ import {
   OWNERSHIP_FILE,
   SUPPORTED_RUNTIMES,
   SUPPORTED_TARGETS,
-  discoverPackManifestPaths,
-  loadYamlFile,
+  loadPackManifestRecords,
   normalizeRuntime,
   normalizeTarget,
+  selectPackManifestRecords,
+  validateRuntimeRange,
   validateLintReport,
-  validatePackManifestV2,
 } from "@pairslash/spec-core";
 
 const ISSUE_RESULTS = new Set(["error", "warning", "note"]);
-const SEMVER_RANGE_PATTERN = /^(>=\s*)?\d+\.\d+\.\d+$/;
-
 const RUNTIME_COMPILE = {
   codex_cli: compileCodexPack,
   copilot_cli: compileCopilotPack,
@@ -89,59 +87,26 @@ function sortChecks(checks) {
 }
 
 function parseManifestEntries(repoRoot) {
-  return discoverPackManifestPaths(repoRoot).map((manifestPath) => {
-    const fallbackPackId = basename(resolve(manifestPath, ".."));
-    try {
-      const manifest = loadYamlFile(manifestPath);
-      return {
-        manifestPath,
-        packId:
-          typeof manifest?.pack?.id === "string" && manifest.pack.id.trim() !== ""
-            ? manifest.pack.id
-            : fallbackPackId,
-        manifest,
-        parseError: null,
-      };
-    } catch (error) {
-      return {
-        manifestPath,
-        packId: fallbackPackId,
-        manifest: null,
-        parseError: error.message,
-      };
-    }
-  });
+  return loadPackManifestRecords(repoRoot);
 }
 
 function selectManifestEntries(entries, requestedPacks, checks, target) {
-  if (requestedPacks.length === 0) {
-    return entries.slice().sort((left, right) =>
-      `${left.packId}\u0000${left.manifestPath}`.localeCompare(`${right.packId}\u0000${right.manifestPath}`),
+  const { selected, missing } = selectPackManifestRecords(entries, requestedPacks, {
+    includeInvalid: true,
+  });
+  for (const packId of missing) {
+    checks.push(
+      createCheck({
+        code: "LINT-MANIFEST-000",
+        result: "error",
+        packId,
+        target,
+        message: `requested pack ${packId} was not found`,
+        remediation: "Use a valid pack id or remove the pack selector.",
+      }),
     );
   }
-
-  const deduped = [...new Set(requestedPacks)];
-  const selected = [];
-  for (const packId of deduped) {
-    const entry = entries.find((item) => item.packId === packId);
-    if (!entry) {
-      checks.push(
-        createCheck({
-          code: "LINT-MANIFEST-000",
-          result: "error",
-          packId,
-          target,
-          message: `requested pack ${packId} was not found`,
-          remediation: "Use a valid pack id or remove the pack selector.",
-        }),
-      );
-      continue;
-    }
-    selected.push(entry);
-  }
-  return selected.sort((left, right) =>
-    `${left.packId}\u0000${left.manifestPath}`.localeCompare(`${right.packId}\u0000${right.manifestPath}`),
-  );
+  return selected;
 }
 
 function applyManifestValidation(entry, checks, target) {
@@ -160,7 +125,7 @@ function applyManifestValidation(entry, checks, target) {
     return false;
   }
 
-  const errors = validatePackManifestV2(entry.manifest);
+  const errors = entry.validationErrors ?? [];
   if (errors.length > 0) {
     for (const errorMessage of errors) {
       checks.push(
@@ -188,6 +153,21 @@ function applyManifestValidation(entry, checks, target) {
       message: "manifest v2 validation passed",
     }),
   );
+  if ((entry.normalizationWarnings ?? []).length > 0) {
+    for (const warning of entry.normalizationWarnings) {
+      checks.push(
+        createCheck({
+          code: "LINT-MANIFEST-002",
+          result: "warning",
+          packId: entry.packId,
+          target,
+          path: entry.manifestPath,
+          message: warning,
+          remediation: "Rewrite the manifest using canonical pack.manifest.yaml v2.1.0 fields.",
+        }),
+      );
+    }
+  }
   return true;
 }
 
@@ -195,7 +175,7 @@ function applyRuntimeRangeRule(entry, checks, target) {
   const invalid = [];
   for (const runtime of SUPPORTED_RUNTIMES) {
     const range = entry.manifest.supported_runtime_ranges?.[runtime];
-    if (typeof range !== "string" || !SEMVER_RANGE_PATTERN.test(range.trim())) {
+    if (!validateRuntimeRange(range)) {
       invalid.push(`${runtime}=${range ?? "missing"}`);
     }
   }

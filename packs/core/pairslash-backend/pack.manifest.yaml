@@ -1,18 +1,36 @@
 kind: pack-manifest-v2
-schema_version: "2.0.0"
-version: "0.2.0"
-pack:
-  id: pairslash-backend
-  display_name: PairSlash Backend
-  summary: Plan and implement bounded backend engineering tasks.
-  category: backend
-  workflow_class: dual-mode
-  phase: 3
-  status: active
-  canonical_entrypoint: /skills
+schema_version: 2.1.0
+pack_name: pairslash-backend
+display_name: PairSlash Backend
+pack_version: 0.2.0
+summary: Plan and implement bounded backend engineering tasks.
+category: backend
+workflow_class: dual-mode
+phase: 3
+status: active
+canonical_entrypoint: /skills
+release_channel: stable
+supported_runtimes:
+  - codex_cli
+  - copilot_cli
 supported_runtime_ranges:
   codex_cli: ">=0.116.0"
   copilot_cli: ">=0.0.0"
+runtime_bindings:
+  codex_cli:
+    direct_invocation: $pairslash-backend
+    metadata_mode: openai_yaml_optional
+    install_dir_name: pairslash-backend
+    compatibility:
+      canonical_picker: unverified
+      direct_invocation: unverified
+  copilot_cli:
+    direct_invocation: /pairslash-backend
+    metadata_mode: none
+    install_dir_name: pairslash-backend
+    compatibility:
+      canonical_picker: unverified
+      direct_invocation: unverified
 install_targets:
   - repo
   - user
@@ -26,7 +44,13 @@ capabilities:
   - shell_exec
   - test_exec
 risk_level: high
-required_tools: []
+required_tools:
+  - id: node
+    kind: binary
+    required_for:
+      - run
+      - doctor
+    check_command: node --version
 required_mcp_servers: []
 memory_permissions:
   authority_mode: read-only
@@ -35,53 +59,197 @@ memory_permissions:
   task_memory: read
   session_artifacts: implicit-read
   audit_log: none
-assets:
-  pack_dir: packs/core/pairslash-backend
-  primary_skill_file: SKILL.md
-  include:
-    - contract.md
-    - example-invocation.md
-    - example-output.md
-    - pack.yaml
-    - SKILL.md
-    - validation-checklist.md
-  docs:
-    contract_file: contract.md
-    example_invocation_file: example-invocation.md
-    example_output_file: example-output.md
-    validation_checklist_file: validation-checklist.md
-ownership:
+runtime_assets:
+  source_root: packs/core/pairslash-backend
+  primary_skill: SKILL.md
+  entries:
+    - asset_id: codex-config
+      runtime: codex_cli
+      asset_kind: config_fragment
+      install_surface: config
+      source_path: null
+      generated_path: fragments/config/pack-config.yaml
+      generator: codex_config
+      required: true
+      override_eligible: false
+    - asset_id: codex-context
+      runtime: codex_cli
+      asset_kind: context_fragment
+      install_surface: context
+      source_path: null
+      generated_path: fragments/context/runtime-context.md
+      generator: codex_context
+      required: true
+      override_eligible: false
+    - asset_id: codex-metadata
+      runtime: codex_cli
+      asset_kind: runtime_manifest
+      install_surface: metadata
+      source_path: null
+      generated_path: agents/openai.yaml
+      generator: codex_metadata
+      required: true
+      override_eligible: false
+    - asset_id: copilot-agent-context
+      runtime: copilot_cli
+      asset_kind: agent_fragment
+      install_surface: agent
+      source_path: null
+      generated_path: agents/runtime-context.md
+      generator: copilot_agent
+      required: true
+      override_eligible: false
+    - asset_id: copilot-package
+      runtime: copilot_cli
+      asset_kind: runtime_manifest
+      install_surface: metadata
+      source_path: null
+      generated_path: package/pairslash-bundle.json
+      generator: copilot_package
+      required: true
+      override_eligible: false
+    - asset_id: ownership-receipt
+      runtime: shared
+      asset_kind: ownership_manifest
+      install_surface: metadata
+      source_path: null
+      generated_path: pairslash.install.json
+      generator: pairslash_ownership_receipt
+      required: true
+      override_eligible: false
+    - asset_id: skill
+      runtime: shared
+      asset_kind: skill_markdown
+      install_surface: canonical_skill
+      source_path: SKILL.md
+      generated_path: null
+      generator: source_copy
+      required: true
+      override_eligible: true
+    - asset_id: source:contract.md
+      runtime: shared
+      asset_kind: support_doc
+      install_surface: support_doc
+      source_path: contract.md
+      generated_path: null
+      generator: source_copy
+      required: true
+      override_eligible: true
+    - asset_id: source:example-invocation.md
+      runtime: shared
+      asset_kind: support_doc
+      install_surface: support_doc
+      source_path: example-invocation.md
+      generated_path: null
+      generator: source_copy
+      required: true
+      override_eligible: true
+    - asset_id: source:example-output.md
+      runtime: shared
+      asset_kind: support_doc
+      install_surface: support_doc
+      source_path: example-output.md
+      generated_path: null
+      generator: source_copy
+      required: true
+      override_eligible: true
+    - asset_id: source:pack.yaml
+      runtime: shared
+      asset_kind: support_doc
+      install_surface: support_doc
+      source_path: pack.yaml
+      generated_path: null
+      generator: source_copy
+      required: true
+      override_eligible: true
+    - asset_id: source:validation-checklist.md
+      runtime: shared
+      asset_kind: support_doc
+      install_surface: support_doc
+      source_path: validation-checklist.md
+      generated_path: null
+      generator: source_copy
+      required: true
+      override_eligible: true
+asset_ownership:
   ownership_file: pairslash.install.json
   ownership_scope: pack_root
   safe_delete_policy: pairslash-owned-only
-  record_generated_files: true
-  generated_files:
-    - pairslash.install.json
+  records:
+    - asset_id: codex-config
+      owner: pairslash
+      uninstall_behavior: detach_if_modified
+    - asset_id: codex-context
+      owner: pairslash
+      uninstall_behavior: detach_if_modified
+    - asset_id: codex-metadata
+      owner: pairslash
+      uninstall_behavior: detach_if_modified
+    - asset_id: copilot-agent-context
+      owner: pairslash
+      uninstall_behavior: detach_if_modified
+    - asset_id: copilot-package
+      owner: pairslash
+      uninstall_behavior: detach_if_modified
+    - asset_id: ownership-receipt
+      owner: pairslash
+      uninstall_behavior: remove_if_unmodified
+    - asset_id: skill
+      owner: pairslash
+      uninstall_behavior: detach_if_modified
+    - asset_id: source:contract.md
+      owner: pairslash
+      uninstall_behavior: detach_if_modified
+    - asset_id: source:example-invocation.md
+      owner: pairslash
+      uninstall_behavior: detach_if_modified
+    - asset_id: source:example-output.md
+      owner: pairslash
+      uninstall_behavior: detach_if_modified
+    - asset_id: source:pack.yaml
+      owner: pairslash
+      uninstall_behavior: detach_if_modified
+    - asset_id: source:validation-checklist.md
+      owner: pairslash
+      uninstall_behavior: detach_if_modified
 local_override_policy:
-  strategy: preserve_valid_local_overrides
-  eligible_paths:
-    - contract.md
-    - example-invocation.md
-    - example-output.md
-    - pack.yaml
-    - SKILL.md
-    - validation-checklist.md
   marker_file: .pairslash.local-overrides.yaml
   marker_mode: state_or_explicit_marker
+  eligible_asset_ids:
+    - skill
+    - source:contract.md
+    - source:example-invocation.md
+    - source:example-output.md
+    - source:pack.yaml
+    - source:validation-checklist.md
+update_strategy:
+  mode: preserve_valid_local_overrides
+  on_non_override_change: block
   rollback_strategy: restore_last_managed_state
-release_channel: stable
-runtime_targets:
-  codex_cli:
-    direct_invocation: $pairslash-backend
-    metadata_mode: openai_yaml_optional
-    skill_directory_name: pairslash-backend
-    compatibility:
-      canonical_picker: unverified
-      direct_invocation: unverified
-  copilot_cli:
-    direct_invocation: /pairslash-backend
-    metadata_mode: none
-    skill_directory_name: pairslash-backend
-    compatibility:
-      canonical_picker: unverified
-      direct_invocation: unverified
+uninstall_strategy:
+  mode: pairslash_owned_only
+  detach_modified_files: true
+  preserve_unknown_files: true
+  remove_empty_pack_dir: true
+smoke_checks:
+  - id: codex-repo-doctor
+    runtime: codex_cli
+    target: repo
+    action: doctor
+  - id: codex-repo-preview-install
+    runtime: codex_cli
+    target: repo
+    action: preview_install
+  - id: copilot-user-doctor
+    runtime: copilot_cli
+    target: user
+    action: doctor
+  - id: copilot-user-preview-install
+    runtime: copilot_cli
+    target: user
+    action: preview_install
+docs_refs:
+  contract: contract.md
+  example_invocation: example-invocation.md
+  example_output: example-output.md
+  validation_checklist: validation-checklist.md

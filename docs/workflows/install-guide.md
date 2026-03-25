@@ -1,17 +1,18 @@
-# PairSlash Phase 2 -- Manual Install Guide
+# PairSlash Install Guide
 
-Install PairSlash core workflows into Codex CLI or GitHub Copilot CLI.
+Install PairSlash workflows into Codex CLI or GitHub Copilot CLI.
 
-This page is for getting a local skill install working from repo source.
-Use `/skills` as the canonical entrypoint after install. If you need support
-status rather than install steps, use
-`docs/compatibility/compatibility-matrix.md`.
+Use the managed Phase 4 commands first when you want the safest path with
+preview, rollback, update, uninstall, and doctor coverage. Use `/skills` as the
+canonical entrypoint after install. If you need support status rather than
+install steps, use `docs/compatibility/compatibility-matrix.md`.
 
 ## Phase 4 managed commands
 
-Phase 4 adds a managed install/update/uninstall path:
+Managed lifecycle commands are the default install path:
 
 ```bash
+node packages/cli/src/bin/pairslash.js doctor --runtime codex --target repo
 node packages/cli/src/bin/pairslash.js preview install pairslash-plan --runtime codex --target repo --plan-out .pairslash/tmp/install-plan.json
 node packages/cli/src/bin/pairslash.js install pairslash-plan --runtime codex --target repo --dry-run
 node packages/cli/src/bin/pairslash.js install pairslash-plan --runtime codex --target repo --apply --yes
@@ -20,8 +21,9 @@ node packages/cli/src/bin/pairslash.js uninstall --runtime codex --target repo -
 node packages/cli/src/bin/pairslash.js doctor --runtime codex --target repo
 ```
 
-Use `docs/workflows/phase-4-install-commands.md` for the managed lifecycle.
-The manual copy steps below remain the fallback path.
+Use `docs/workflows/phase-4-install-commands.md` for the managed lifecycle and
+command semantics. The manual copy steps below remain the fallback path when
+policy or troubleshooting requires direct file operations.
 
 ## Before you start
 

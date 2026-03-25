@@ -11,3 +11,6 @@ Current mapping:
 - `examples/monorepo` relates to `repo-monorepo-workspaces`
 
 Write-authority and conflict fixtures are intentionally kept only in `packages/compat-lab/` because they are CI guardrails rather than user-facing starter examples.
+
+Use `docs/runtime-mapping/` together with these examples when you need the
+runtime-native surface map for Codex or Copilot installs.

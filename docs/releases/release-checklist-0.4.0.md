@@ -56,5 +56,9 @@ Status legend:
 - [x] `docs/architecture/compiler-v2-implement-oriented.md`
 - [x] `docs/workflows/phase-4-install-commands.md`
 - [x] `docs/workflows/phase-4-doctor-troubleshooting.md`
+- [x] `docs/runtime-mapping/README.md`
+- [x] `docs/runtime-mapping/codex-cli.md`
+- [x] `docs/runtime-mapping/copilot-cli.md`
+- [x] `docs/runtime-mapping/pilot-acceptance.md`
 - [x] `docs/releases/release-checklist-0.4.0.md`
 - [x] `packages/compat-lab/fixtures/README.md`

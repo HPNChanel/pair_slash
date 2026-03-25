@@ -16,6 +16,8 @@ import {
   LINT_CHECK_RESULTS,
   MEMORY_ACCESS_LEVELS,
   MEMORY_AUTHORITY_MODES,
+  MANIFEST_MARKER_MODES,
+  MANIFEST_SMOKE_ACTIONS,
   NORMALIZED_IR_SCHEMA_VERSION,
   OWNERSHIP_FILE,
   OVERRIDE_MARKER_FILE,
@@ -24,6 +26,8 @@ import {
   PREVIEW_PLAN_SCHEMA_VERSION,
   RELEASE_CHANNELS,
   RISK_LEVELS,
+  RUNTIME_ASSET_GENERATORS,
+  RUNTIME_METADATA_MODES,
   RUNTIME_SELECTORS,
   SESSION_ARTIFACT_LEVELS,
   SUPPORT_VERDICTS,
@@ -31,8 +35,19 @@ import {
   SUPPORTED_TARGETS,
   TOOL_KINDS,
   TOOL_PHASES,
+  UNINSTALL_BEHAVIORS,
+  UNINSTALL_STRATEGY_MODES,
+  UPDATE_NON_OVERRIDE_POLICIES,
+  UPDATE_STRATEGY_MODES,
   WORKFLOW_CLASSES,
 } from "./constants.js";
+import { safeParsePackManifestV2 } from "./manifest-v2.schema.js";
+import {
+  detectPackManifestShape,
+  normalizePackManifestV2,
+  toSerializablePackManifestV2,
+} from "./manifest-v2.normalize.js";
+import { validateRuntimeRange } from "./runtime-range.js";
 
 function push(errors, code, message) {
   errors.push(`${code} ${message}`);
@@ -412,57 +427,470 @@ function validateRuntimeTargets(value, packId, errors) {
   }
 }
 
-export function validatePackManifestV2(record) {
-  const errors = [];
-  const required = [
-    "kind",
-    "schema_version",
-    "version",
-    "pack",
-    "supported_runtime_ranges",
-    "install_targets",
-    "capabilities",
-    "risk_level",
-    "required_tools",
-    "required_mcp_servers",
-    "memory_permissions",
-    "assets",
-    "ownership",
-    "local_override_policy",
-    "release_channel",
-    "runtime_targets",
-  ];
-  for (const field of required) {
-    if (!(field in (record || {}))) {
-      push(errors, "PSM000", `missing field: ${field}`);
+function cloneRecord(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+
+function formatIssuePath(issue) {
+  if (!Array.isArray(issue?.path) || issue.path.length === 0) {
+    return "manifest";
+  }
+  return issue.path
+    .map((segment) => {
+      if (typeof segment?.key === "number") {
+        return `[${segment.key}]`;
+      }
+      return `${segment?.key ?? "?"}`;
+    })
+    .join(".")
+    .replace(/\.\[/g, "[");
+}
+
+function validateCanonicalRuntimeBindings(canonical, errors) {
+  if (!validateObject(canonical.runtime_bindings, "runtime_bindings", errors, "PSM011")) {
+    return;
+  }
+  const keys = Object.keys(canonical.runtime_bindings).sort();
+  const expected = SUPPORTED_RUNTIMES.slice().sort();
+  if (keys.length !== expected.length || keys.some((key, index) => key !== expected[index])) {
+    push(errors, "PSM011", `runtime_bindings must contain exactly ${expected.join(", ")}`);
+  }
+  for (const runtime of SUPPORTED_RUNTIMES) {
+    const binding = canonical.runtime_bindings[runtime];
+    if (!validateObject(binding, `runtime_bindings.${runtime}`, errors, "PSM011")) {
+      continue;
+    }
+    const expectedInvocation = runtime === "codex_cli" ? `$${canonical.pack_name}` : `/${canonical.pack_name}`;
+    if (binding.direct_invocation !== expectedInvocation) {
+      push(
+        errors,
+        runtime === "codex_cli" ? "PSM013" : "PSM014",
+        `runtime_bindings.${runtime}.direct_invocation must be ${expectedInvocation}`,
+      );
+    }
+    if (!RUNTIME_METADATA_MODES.includes(binding.metadata_mode)) {
+      push(
+        errors,
+        "PSM061",
+        `runtime_bindings.${runtime}.metadata_mode must be one of ${RUNTIME_METADATA_MODES.join(", ")}`,
+      );
+    }
+    if (runtime === "codex_cli" && binding.metadata_mode !== "openai_yaml_optional") {
+      push(errors, "PSM061", "runtime_bindings.codex_cli.metadata_mode must be openai_yaml_optional");
+    }
+    if (runtime === "copilot_cli" && binding.metadata_mode !== "none") {
+      push(errors, "PSM061", "runtime_bindings.copilot_cli.metadata_mode must be none");
+    }
+    if (binding.install_dir_name !== canonical.pack_name) {
+      push(errors, "PSM061", `runtime_bindings.${runtime}.install_dir_name must equal ${canonical.pack_name}`);
+    }
+    if (!validateObject(binding.compatibility, `runtime_bindings.${runtime}.compatibility`, errors, "PSM061")) {
+      continue;
+    }
+    for (const field of ["canonical_picker", "direct_invocation"]) {
+      if (!COMPATIBILITY_STATUSES.includes(binding.compatibility[field])) {
+        push(
+          errors,
+          "PSM061",
+          `runtime_bindings.${runtime}.compatibility.${field} must be one of ${COMPATIBILITY_STATUSES.join(", ")}`,
+        );
+      }
     }
   }
+}
+
+function validateCanonicalRuntimeAssets(canonical, errors, { strict = false } = {}) {
+  if (!validateObject(canonical.runtime_assets, "runtime_assets", errors, "PSM020")) {
+    return new Map();
+  }
+  validateNonEmptyString(canonical.runtime_assets.source_root, "runtime_assets.source_root", errors, "PSM004");
+  if (canonical.runtime_assets.source_root !== `packs/core/${canonical.pack_name}`) {
+    push(errors, "PSM004", `runtime_assets.source_root must equal packs/core/${canonical.pack_name}`);
+  }
+  validateNonEmptyString(canonical.runtime_assets.primary_skill, "runtime_assets.primary_skill", errors, "PSM020");
+  if (!Array.isArray(canonical.runtime_assets.entries) || canonical.runtime_assets.entries.length === 0) {
+    push(errors, "PSM021", "runtime_assets.entries must be a non-empty list");
+    return new Map();
+  }
+
+  const assetIds = new Map();
+  const sourcePaths = new Set();
+  const generatedPaths = new Set();
+  let primarySkillCount = 0;
+
+  for (const entry of canonical.runtime_assets.entries) {
+    if (!validateObject(entry, "runtime_assets.entries[]", errors, "PSM021")) {
+      continue;
+    }
+    if (!validateNonEmptyString(entry.asset_id, "runtime_assets.entries[].asset_id", errors, "PSM021")) {
+      continue;
+    }
+    if (assetIds.has(entry.asset_id)) {
+      push(errors, "PSM021", `runtime_assets.entries contains duplicate asset_id ${entry.asset_id}`);
+      continue;
+    }
+    assetIds.set(entry.asset_id, entry);
+    if (!RUNTIME_SELECTORS.includes(entry.runtime)) {
+      push(errors, "PSM021", `runtime_assets.entries.${entry.asset_id}.runtime is unsupported`);
+    }
+    if (!validateNonEmptyString(entry.asset_kind, `runtime_assets.entries.${entry.asset_id}.asset_kind`, errors, "PSM021")) {
+      continue;
+    }
+    if (!validateNonEmptyString(entry.install_surface, `runtime_assets.entries.${entry.asset_id}.install_surface`, errors, "PSM021")) {
+      continue;
+    }
+    if (!RUNTIME_ASSET_GENERATORS.includes(entry.generator)) {
+      push(
+        errors,
+        "PSM021",
+        `runtime_assets.entries.${entry.asset_id}.generator must be one of ${RUNTIME_ASSET_GENERATORS.join(", ")}`,
+      );
+    }
+    if (typeof entry.required !== "boolean") {
+      push(errors, "PSM021", `runtime_assets.entries.${entry.asset_id}.required must be boolean`);
+    }
+    if (typeof entry.override_eligible !== "boolean") {
+      push(errors, "PSM021", `runtime_assets.entries.${entry.asset_id}.override_eligible must be boolean`);
+    }
+    const hasSourcePath = typeof entry.source_path === "string" && entry.source_path.trim() !== "";
+    const hasGeneratedPath = typeof entry.generated_path === "string" && entry.generated_path.trim() !== "";
+    if (hasSourcePath === hasGeneratedPath) {
+      push(
+        errors,
+        "PSM021",
+        `runtime_assets.entries.${entry.asset_id} must declare exactly one of source_path or generated_path`,
+      );
+      continue;
+    }
+    if (entry.generator === "source_copy") {
+      if (entry.runtime !== "shared") {
+        push(errors, "PSM021", `source asset ${entry.asset_id} must use runtime shared`);
+      }
+      if (entry.generated_path !== null) {
+        push(errors, "PSM021", `source asset ${entry.asset_id} must not declare generated_path`);
+      }
+      if (sourcePaths.has(entry.source_path)) {
+        push(errors, "PSM021", `runtime_assets.entries contains duplicate source_path ${entry.source_path}`);
+      }
+      sourcePaths.add(entry.source_path);
+      if (entry.source_path === canonical.runtime_assets.primary_skill) {
+        primarySkillCount += 1;
+        if (entry.asset_kind !== "skill_markdown") {
+          push(errors, "PSM020", "runtime_assets.primary_skill must map to a skill_markdown asset");
+        }
+        if (entry.install_surface !== "canonical_skill") {
+          push(errors, "PSM020", "runtime_assets.primary_skill must map to canonical_skill install surface");
+        }
+      }
+      continue;
+    }
+    if (entry.source_path !== null) {
+      push(errors, "PSM021", `generated asset ${entry.asset_id} must not declare source_path`);
+    }
+    if (generatedPaths.has(entry.generated_path)) {
+      push(errors, "PSM021", `runtime_assets.entries contains duplicate generated_path ${entry.generated_path}`);
+    }
+    generatedPaths.add(entry.generated_path);
+  }
+
+  if (primarySkillCount !== 1) {
+    push(errors, "PSM020", "runtime_assets.primary_skill must appear exactly once in runtime_assets.entries");
+  }
+
+  if (strict) {
+    const derived = toSerializablePackManifestV2(canonical);
+    const expectedGenerated = new Map(
+      derived.runtime_assets.entries
+        .filter((entry) => entry.generated_path)
+        .map((entry) => [entry.asset_id, entry]),
+    );
+    const actualGenerated = new Map(
+      canonical.runtime_assets.entries
+        .filter((entry) => entry.generated_path)
+        .map((entry) => [entry.asset_id, entry]),
+    );
+    for (const [assetId, expected] of expectedGenerated) {
+      const actual = actualGenerated.get(assetId);
+      if (!actual) {
+        push(errors, "PSM021", `runtime_assets.entries is missing required generated asset ${assetId}`);
+        continue;
+      }
+      for (const field of ["runtime", "asset_kind", "install_surface", "generated_path", "generator"]) {
+        if (actual[field] !== expected[field]) {
+          push(errors, "PSM021", `runtime_assets.entries.${assetId}.${field} must equal ${expected[field]}`);
+        }
+      }
+    }
+  }
+
+  return assetIds;
+}
+
+function validateCanonicalAssetOwnership(canonical, assetIds, errors) {
+  if (!validateObject(canonical.asset_ownership, "asset_ownership", errors, "PSM050")) {
+    return;
+  }
+  if (canonical.asset_ownership.ownership_file !== OWNERSHIP_FILE) {
+    push(errors, "PSM050", `asset_ownership.ownership_file must be ${OWNERSHIP_FILE}`);
+  }
+  if (canonical.asset_ownership.ownership_scope !== "pack_root") {
+    push(errors, "PSM050", "asset_ownership.ownership_scope must be pack_root");
+  }
+  if (canonical.asset_ownership.safe_delete_policy !== "pairslash-owned-only") {
+    push(errors, "PSM050", "asset_ownership.safe_delete_policy must be pairslash-owned-only");
+  }
+  if (!Array.isArray(canonical.asset_ownership.records) || canonical.asset_ownership.records.length === 0) {
+    push(errors, "PSM050", "asset_ownership.records must be a non-empty list");
+    return;
+  }
+  const seen = new Set();
+  for (const record of canonical.asset_ownership.records) {
+    if (!validateObject(record, "asset_ownership.records[]", errors, "PSM050")) {
+      continue;
+    }
+    if (!validateNonEmptyString(record.asset_id, "asset_ownership.records[].asset_id", errors, "PSM050")) {
+      continue;
+    }
+    if (seen.has(record.asset_id)) {
+      push(errors, "PSM050", `asset_ownership.records contains duplicate asset_id ${record.asset_id}`);
+      continue;
+    }
+    seen.add(record.asset_id);
+    if (!assetIds.has(record.asset_id)) {
+      push(errors, "PSM050", `asset_ownership.records references unknown asset_id ${record.asset_id}`);
+    }
+    if (!["pairslash", "user", "system"].includes(record.owner)) {
+      push(errors, "PSM050", `asset_ownership.records.${record.asset_id}.owner is invalid`);
+    }
+    if (!UNINSTALL_BEHAVIORS.includes(record.uninstall_behavior)) {
+      push(
+        errors,
+        "PSM050",
+        `asset_ownership.records.${record.asset_id}.uninstall_behavior must be one of ${UNINSTALL_BEHAVIORS.join(", ")}`,
+      );
+    }
+  }
+  for (const assetId of assetIds.keys()) {
+    if (!seen.has(assetId)) {
+      push(errors, "PSM050", `asset_ownership.records is missing asset_id ${assetId}`);
+    }
+  }
+  const receiptRecord = canonical.asset_ownership.records.find((record) => record.asset_id === "ownership-receipt");
+  if (!receiptRecord) {
+    push(errors, "PSM050", "asset_ownership.records must include ownership-receipt");
+  } else {
+    if (receiptRecord.owner !== "pairslash") {
+      push(errors, "PSM050", "ownership-receipt must be owned by pairslash");
+    }
+    if (receiptRecord.uninstall_behavior !== "remove_if_unmodified") {
+      push(errors, "PSM050", "ownership-receipt must use uninstall_behavior remove_if_unmodified");
+    }
+  }
+}
+
+function validateCanonicalOverridePolicy(canonical, assetIds, errors) {
+  if (!validateObject(canonical.local_override_policy, "local_override_policy", errors, "PSM051")) {
+    return;
+  }
+  if (canonical.local_override_policy.marker_file !== OVERRIDE_MARKER_FILE) {
+    push(errors, "PSM051", `local_override_policy.marker_file must be ${OVERRIDE_MARKER_FILE}`);
+  }
+  if (!MANIFEST_MARKER_MODES.includes(canonical.local_override_policy.marker_mode)) {
+    push(
+      errors,
+      "PSM051",
+      `local_override_policy.marker_mode must be one of ${MANIFEST_MARKER_MODES.join(", ")}`,
+    );
+  }
+  const ids = validateStringArray(
+    canonical.local_override_policy.eligible_asset_ids,
+    "local_override_policy.eligible_asset_ids",
+    errors,
+    "PSM051",
+    { allowEmpty: true },
+  );
+  for (const assetId of ids) {
+    if (!assetIds.has(assetId)) {
+      push(errors, "PSM052", `${assetId} is not present in runtime_assets.entries`);
+    }
+    if (assetId === "ownership-receipt") {
+      push(errors, "PSM053", "ownership-receipt cannot be override eligible");
+    }
+  }
+}
+
+function validateCanonicalUpdateAndUninstall(canonical, errors) {
+  if (!validateObject(canonical.update_strategy, "update_strategy", errors, "PSM051")) {
+    return;
+  }
+  if (!UPDATE_STRATEGY_MODES.includes(canonical.update_strategy.mode)) {
+    push(errors, "PSM051", `update_strategy.mode must be one of ${UPDATE_STRATEGY_MODES.join(", ")}`);
+  }
+  if (!UPDATE_NON_OVERRIDE_POLICIES.includes(canonical.update_strategy.on_non_override_change)) {
+    push(
+      errors,
+      "PSM051",
+      `update_strategy.on_non_override_change must be one of ${UPDATE_NON_OVERRIDE_POLICIES.join(", ")}`,
+    );
+  }
+  validateNonEmptyString(canonical.update_strategy.rollback_strategy, "update_strategy.rollback_strategy", errors, "PSM051");
+
+  if (!validateObject(canonical.uninstall_strategy, "uninstall_strategy", errors, "PSM050")) {
+    return;
+  }
+  if (!UNINSTALL_STRATEGY_MODES.includes(canonical.uninstall_strategy.mode)) {
+    push(
+      errors,
+      "PSM050",
+      `uninstall_strategy.mode must be one of ${UNINSTALL_STRATEGY_MODES.join(", ")}`,
+    );
+  }
+  for (const field of ["detach_modified_files", "preserve_unknown_files", "remove_empty_pack_dir"]) {
+    if (typeof canonical.uninstall_strategy[field] !== "boolean") {
+      push(errors, "PSM050", `uninstall_strategy.${field} must be boolean`);
+    }
+  }
+}
+
+function validateCanonicalSmokeChecks(canonical, errors) {
+  if (!Array.isArray(canonical.smoke_checks) || canonical.smoke_checks.length === 0) {
+    push(errors, "PSM062", "smoke_checks must be a non-empty list");
+    return;
+  }
+  const seen = new Set();
+  for (const check of canonical.smoke_checks) {
+    if (!validateObject(check, "smoke_checks[]", errors, "PSM062")) {
+      continue;
+    }
+    if (!validateNonEmptyString(check.id, "smoke_checks[].id", errors, "PSM062")) {
+      continue;
+    }
+    if (seen.has(check.id)) {
+      push(errors, "PSM062", `smoke_checks contains duplicate id ${check.id}`);
+    }
+    seen.add(check.id);
+    if (!SUPPORTED_RUNTIMES.includes(check.runtime)) {
+      push(errors, "PSM062", `smoke_checks.${check.id}.runtime must be one of ${SUPPORTED_RUNTIMES.join(", ")}`);
+    }
+    if (!SUPPORTED_TARGETS.includes(check.target)) {
+      push(errors, "PSM062", `smoke_checks.${check.id}.target must be one of ${SUPPORTED_TARGETS.join(", ")}`);
+    }
+    if (!MANIFEST_SMOKE_ACTIONS.includes(check.action)) {
+      push(errors, "PSM062", `smoke_checks.${check.id}.action must be one of ${MANIFEST_SMOKE_ACTIONS.join(", ")}`);
+    }
+    if (!canonical.supported_runtimes.includes(check.runtime)) {
+      push(errors, "PSM062", `smoke_checks.${check.id}.runtime must exist in supported_runtimes`);
+    }
+    if (!canonical.install_targets.includes(check.target)) {
+      push(errors, "PSM062", `smoke_checks.${check.id}.target must exist in install_targets`);
+    }
+  }
+}
+
+export function validatePackManifestV2(record) {
+  const errors = [];
+  const shape = detectPackManifestShape(record);
+  const hasCompatibilityAliases =
+    shape === "canonical-v2.1.0" &&
+    (Boolean(record?.pack) || Boolean(record?.assets) || Boolean(record?.runtime_targets) || Boolean(record?.ownership));
+
   if (record?.kind !== "pack-manifest-v2") {
     push(errors, "PSM001", "kind must be pack-manifest-v2");
+    return errors;
   }
-  if (record?.schema_version !== "2.0.0") {
-    push(errors, "PSM002", "schema_version must be 2.0.0");
+  if (shape === "unknown") {
+    push(errors, "PSM002", `schema_version must be ${LEGACY_PHASE4_SCHEMA_VERSION} or ${PHASE4_SCHEMA_VERSION}`);
+    return errors;
   }
-  validateNonEmptyString(record?.version, "version", errors, "PSM003");
-  const pack = validatePackBlock(record?.pack, errors);
-  if (!RISK_LEVELS.includes(record?.risk_level)) {
+
+  const rawRuntimeKeys = sortStable([
+    ...Object.keys(record?.supported_runtime_ranges ?? {}),
+    ...Object.keys(record?.runtime_bindings ?? {}),
+    ...Object.keys(record?.runtime_targets ?? {}),
+    ...(Array.isArray(record?.supported_runtimes) ? record.supported_runtimes : []),
+  ]);
+  for (const runtime of rawRuntimeKeys) {
+    if (!SUPPORTED_RUNTIMES.includes(runtime)) {
+      push(errors, "PSM010", `supported runtime declarations include unsupported runtime ${runtime}`);
+      push(errors, "PSM012", `unsupported runtime ${runtime}`);
+    }
+  }
+
+  let canonical;
+  if (shape === "legacy-v2.0.0" || hasCompatibilityAliases) {
+    canonical = toSerializablePackManifestV2(record);
+  } else {
+    canonical = cloneRecord(record);
+  }
+
+  const parseResult = safeParsePackManifestV2(canonical);
+  if (!parseResult.success) {
+    for (const issue of parseResult.issues ?? []) {
+      push(errors, "PSM000", `${formatIssuePath(issue)} :: ${issue.message}`);
+    }
+    return errors;
+  }
+
+  const expectedRuntimeSet = SUPPORTED_RUNTIMES.slice().sort();
+  const supportedRuntimes = validateStringArray(canonical.supported_runtimes, "supported_runtimes", errors, "PSM010");
+  const sortedRuntimes = supportedRuntimes.slice().sort();
+  if (
+    sortedRuntimes.length !== expectedRuntimeSet.length ||
+    sortedRuntimes.some((runtime, index) => runtime !== expectedRuntimeSet[index])
+  ) {
+    push(errors, "PSM010", `supported_runtimes must contain exactly ${expectedRuntimeSet.join(", ")}`);
+  }
+
+  validateNonEmptyString(canonical.pack_version, "pack_version", errors, "PSM003");
+  validateNonEmptyString(canonical.pack_name, "pack_name", errors, "PSM003");
+  if (typeof canonical.pack_name === "string" && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(canonical.pack_name)) {
+    push(errors, "PSM003", "pack_name must be lowercase kebab-case");
+  }
+  validateNonEmptyString(canonical.display_name, "display_name", errors, "PSM003");
+  validateNonEmptyString(canonical.summary, "summary", errors, "PSM003");
+  validateNonEmptyString(canonical.category, "category", errors, "PSM003");
+  if (!WORKFLOW_CLASSES.includes(canonical.workflow_class)) {
+    push(errors, "PSM003", `workflow_class must be one of ${WORKFLOW_CLASSES.join(", ")}`);
+  }
+  if (!Number.isInteger(canonical.phase)) {
+    push(errors, "PSM003", "phase must be an integer");
+  }
+  if (!PACK_STATUSES.includes(canonical.status)) {
+    push(errors, "PSM003", `status must be one of ${PACK_STATUSES.join(", ")}`);
+  }
+  if (canonical.canonical_entrypoint !== "/skills") {
+    push(errors, "PSM005", "canonical_entrypoint must be /skills");
+  }
+  if (!RISK_LEVELS.includes(canonical.risk_level)) {
     push(errors, "PSM031", `risk_level must be one of ${RISK_LEVELS.join(", ")}`);
   }
-  if (!RELEASE_CHANNELS.includes(record?.release_channel)) {
+  if (!RELEASE_CHANNELS.includes(canonical.release_channel)) {
     push(errors, "PSM060", `release_channel must be one of ${RELEASE_CHANNELS.join(", ")}`);
   }
 
-  validateRuntimeRanges(record?.supported_runtime_ranges, errors);
-  validateInstallTargets(record?.install_targets, errors);
-  const capabilities = validateCapabilities(record?.capabilities, record?.risk_level, errors);
-  validateTools(record?.required_tools, errors);
-  validateMcpServers(record?.required_mcp_servers, capabilities, errors);
-  validateMemoryPermissions(record?.memory_permissions, capabilities, record?.risk_level, errors);
-
-  const assetInclude = validateAssets(record?.assets, pack?.id, errors);
-  validateOwnership(record?.ownership, [OWNERSHIP_FILE], errors);
-  validateLocalOverridePolicy(record?.local_override_policy, assetInclude, errors);
-  validateRuntimeTargets(record?.runtime_targets, pack?.id, errors);
+  validateRuntimeRanges(canonical.supported_runtime_ranges, errors);
+  for (const runtime of SUPPORTED_RUNTIMES) {
+    if (!validateRuntimeRange(canonical.supported_runtime_ranges?.[runtime])) {
+      push(
+        errors,
+        "PSM010",
+        `supported_runtime_ranges.${runtime} must use exact x.y.z or >=x.y.z semver format`,
+      );
+    }
+  }
+  validateInstallTargets(canonical.install_targets, errors);
+  const capabilities = validateCapabilities(canonical.capabilities, canonical.risk_level, errors);
+  validateTools(canonical.required_tools, errors);
+  validateMcpServers(canonical.required_mcp_servers, capabilities, errors);
+  validateMemoryPermissions(canonical.memory_permissions, capabilities, canonical.risk_level, errors);
+  validateCanonicalRuntimeBindings(canonical, errors);
+  const assetIds = validateCanonicalRuntimeAssets(canonical, errors, {
+    strict: shape === "canonical-v2.1.0" && !hasCompatibilityAliases,
+  });
+  validateCanonicalAssetOwnership(canonical, assetIds, errors);
+  validateCanonicalOverridePolicy(canonical, assetIds, errors);
+  validateCanonicalUpdateAndUninstall(canonical, errors);
+  validateCanonicalSmokeChecks(canonical, errors);
 
   return errors;
 }
@@ -501,6 +929,8 @@ export function validateNormalizedIr(record) {
   }
   for (const asset of record.logical_assets) {
     validateNonEmptyString(asset?.logical_id, "logical_assets[].logical_id", errors, "NIR001");
+    validateNonEmptyString(asset?.asset_id, "logical_assets[].asset_id", errors, "NIR001");
+    validateNonEmptyString(asset?.generator, "logical_assets[].generator", errors, "NIR001");
     if (!LOGICAL_ASSET_KINDS.includes(asset?.asset_kind)) {
       errors.push(`unsupported logical asset kind: ${asset?.asset_kind}`);
     }
@@ -512,11 +942,32 @@ export function validateNormalizedIr(record) {
     }
     validateNonEmptyString(asset?.stable_sort_key, "logical_assets[].stable_sort_key", errors, "NIR001");
     validateNonEmptyString(asset?.sha256, "logical_assets[].sha256", errors, "NIR001");
+    if (asset?.source_relpath !== null && typeof asset?.source_relpath !== "string") {
+      errors.push("logical_assets[].source_relpath must be string or null");
+    }
+    if (asset?.generated_relpath !== null && typeof asset?.generated_relpath !== "string") {
+      errors.push("logical_assets[].generated_relpath must be string or null");
+    }
+    if ("file_name" in (asset ?? {}) && asset?.file_name !== null && typeof asset?.file_name !== "string") {
+      errors.push("logical_assets[].file_name must be string when present");
+    }
+    if (typeof asset?.content_type !== "string" || asset.content_type.trim() === "") {
+      errors.push("logical_assets[].content_type must be a non-empty string");
+    }
     if (typeof asset?.generated !== "boolean") {
       errors.push("logical_assets[].generated must be boolean");
     }
+    if (typeof asset?.required !== "boolean") {
+      errors.push("logical_assets[].required must be boolean");
+    }
     if (typeof asset?.override_eligible !== "boolean") {
       errors.push("logical_assets[].override_eligible must be boolean");
+    }
+    if (!["pairslash", "user", "system"].includes(asset?.owner)) {
+      errors.push(`unsupported logical_assets[].owner: ${asset?.owner}`);
+    }
+    if (!UNINSTALL_BEHAVIORS.includes(asset?.uninstall_behavior)) {
+      errors.push(`unsupported logical_assets[].uninstall_behavior: ${asset?.uninstall_behavior}`);
     }
     if (typeof asset?.write_authority_guarded !== "boolean") {
       errors.push("logical_assets[].write_authority_guarded must be boolean");
@@ -547,6 +998,8 @@ export function validateCompiledPack(record) {
     return errors;
   }
   for (const file of record.files) {
+    validateNonEmptyString(file?.asset_id, "files[].asset_id", errors, "CPK001");
+    validateNonEmptyString(file?.generator, "files[].generator", errors, "CPK001");
     validateNonEmptyString(file?.relative_path, "files[].relative_path", errors, "CPK001");
     validateNonEmptyString(file?.sha256, "files[].sha256", errors, "CPK001");
     if (!LOGICAL_ASSET_KINDS.includes(file?.asset_kind)) {
@@ -561,8 +1014,17 @@ export function validateCompiledPack(record) {
     if (typeof file?.generated !== "boolean") {
       errors.push("files[].generated must be boolean");
     }
+    if (typeof file?.required !== "boolean") {
+      errors.push("files[].required must be boolean");
+    }
     if (typeof file?.override_eligible !== "boolean") {
       errors.push("files[].override_eligible must be boolean");
+    }
+    if (!["pairslash", "user", "system"].includes(file?.owner)) {
+      errors.push(`unsupported files[].owner: ${file?.owner}`);
+    }
+    if (!UNINSTALL_BEHAVIORS.includes(file?.uninstall_behavior)) {
+      errors.push(`unsupported files[].uninstall_behavior: ${file?.uninstall_behavior}`);
     }
     if (typeof file?.write_authority_guarded !== "boolean") {
       errors.push("files[].write_authority_guarded must be boolean");
@@ -613,6 +1075,12 @@ export function validateInstallState(record) {
       continue;
     }
     for (const file of pack.files) {
+      if ("asset_id" in file) {
+        validateNonEmptyString(file?.asset_id, "packs[].files[].asset_id", errors, "IST001");
+      }
+      if ("generator" in file) {
+        validateNonEmptyString(file?.generator, "packs[].files[].generator", errors, "IST001");
+      }
       validateNonEmptyString(file?.relative_path, "packs[].files[].relative_path", errors, "IST001");
       validateNonEmptyString(file?.absolute_path, "packs[].files[].absolute_path", errors, "IST001");
       validateNonEmptyString(file?.source_digest, "packs[].files[].source_digest", errors, "IST001");
@@ -637,6 +1105,15 @@ export function validateInstallState(record) {
       }
       if (typeof file?.override_eligible !== "boolean") {
         errors.push("packs[].files[].override_eligible must be boolean");
+      }
+      if ("required" in file && typeof file?.required !== "boolean") {
+        errors.push("packs[].files[].required must be boolean when present");
+      }
+      if ("declared_owner" in file && !["pairslash", "user", "system"].includes(file?.declared_owner)) {
+        errors.push(`unsupported packs[].files[].declared_owner: ${file?.declared_owner}`);
+      }
+      if ("uninstall_behavior" in file && !UNINSTALL_BEHAVIORS.includes(file?.uninstall_behavior)) {
+        errors.push(`unsupported packs[].files[].uninstall_behavior: ${file?.uninstall_behavior}`);
       }
       if (typeof file?.local_override !== "boolean") {
         errors.push("packs[].files[].local_override must be boolean");
@@ -763,6 +1240,9 @@ export function validateDoctorReport(record) {
   if (!SUPPORT_VERDICTS.includes(record?.support_verdict)) {
     errors.push(`unsupported support_verdict: ${record?.support_verdict}`);
   }
+  if (typeof record?.install_blocked !== "boolean") {
+    errors.push("install_blocked must be boolean");
+  }
   if (typeof record?.generated_at !== "string") {
     errors.push("generated_at must be string");
   }
@@ -789,6 +1269,76 @@ export function validateDoctorReport(record) {
     }
     if (typeof summary?.runtime_available !== "boolean") {
       errors.push("environment_summary.runtime_available must be boolean");
+    }
+    if (!Array.isArray(summary?.shell_profile_candidates)) {
+      errors.push("environment_summary.shell_profile_candidates must be a list");
+    } else {
+      for (const candidate of summary.shell_profile_candidates) {
+        if (typeof candidate !== "string" || candidate.trim() === "") {
+          errors.push("environment_summary.shell_profile_candidates entries must be non-empty strings");
+        }
+      }
+    }
+  }
+  if (!isObject(record?.scope_probes)) {
+    errors.push("scope_probes must be an object");
+  } else {
+    for (const target of SUPPORTED_TARGETS) {
+      const probe = record.scope_probes?.[target];
+      if (!isObject(probe)) {
+        errors.push(`scope_probes.${target} must be an object`);
+        continue;
+      }
+      if (probe?.target !== target) {
+        errors.push(`scope_probes.${target}.target must be ${target}`);
+      }
+      if (typeof probe?.selected !== "boolean") {
+        errors.push(`scope_probes.${target}.selected must be boolean`);
+      }
+      for (const field of ["config_home", "install_root", "state_path"]) {
+        validateNonEmptyString(probe?.[field], `scope_probes.${target}.${field}`, errors, "DCR001");
+      }
+      for (const field of ["config_home_exists", "install_root_exists", "writable", "blocking_for_install"]) {
+        if (typeof probe?.[field] !== "boolean") {
+          errors.push(`scope_probes.${target}.${field} must be boolean`);
+        }
+      }
+      if (!SUPPORT_VERDICTS.includes(probe?.verdict)) {
+        errors.push(`unsupported scope_probes.${target}.verdict: ${probe?.verdict}`);
+      }
+      if (!Array.isArray(probe?.issue_codes)) {
+        errors.push(`scope_probes.${target}.issue_codes must be a list`);
+      } else {
+        for (const issueCode of probe.issue_codes) {
+          validateNonEmptyString(issueCode, `scope_probes.${target}.issue_codes[]`, errors, "DCR001");
+        }
+      }
+    }
+  }
+  if (!isObject(record?.support_lane)) {
+    errors.push("support_lane must be an object");
+  } else {
+    const lane = record.support_lane;
+    validateNonEmptyString(lane?.os, "support_lane.os", errors, "DCR001");
+    if (!SUPPORTED_RUNTIMES.includes(lane?.runtime)) {
+      errors.push(`unsupported support_lane.runtime: ${lane?.runtime}`);
+    }
+    if (!SUPPORTED_TARGETS.includes(lane?.target)) {
+      errors.push(`unsupported support_lane.target: ${lane?.target}`);
+    }
+    if (!["supported", "unverified", "prep", "unsupported"].includes(lane?.lane_status)) {
+      errors.push(`unsupported support_lane.lane_status: ${lane?.lane_status}`);
+    }
+    if (!["recorded", "unrecorded", "outside_recorded", "prep_lane", "unsupported"].includes(lane?.tested_range_status)) {
+      errors.push(`unsupported support_lane.tested_range_status: ${lane?.tested_range_status}`);
+    }
+    if (lane?.tested_version_range !== null && typeof lane?.tested_version_range !== "string") {
+      errors.push("support_lane.tested_version_range must be string or null");
+    }
+    validateNonEmptyString(lane?.evidence_source, "support_lane.evidence_source", errors, "DCR001");
+    validateNonEmptyString(lane?.summary, "support_lane.summary", errors, "DCR001");
+    if (typeof lane?.blocking_for_install !== "boolean") {
+      errors.push("support_lane.blocking_for_install must be boolean");
     }
   }
   if (!isObject(record?.runtime_compatibility)) {
@@ -838,6 +1388,9 @@ export function validateDoctorReport(record) {
       if (!isObject(check?.evidence)) {
         errors.push("checks[].evidence must be an object");
       }
+      if (typeof check?.blocking_for_install !== "boolean") {
+        errors.push("checks[].blocking_for_install must be boolean");
+      }
     }
   }
   if (!Array.isArray(record?.issues)) {
@@ -845,12 +1398,27 @@ export function validateDoctorReport(record) {
   } else {
     for (const issue of record.issues) {
       validateNonEmptyString(issue?.code, "issues[].code", errors, "DCR003");
+      if (!["warn", "degraded", "fail", "unsupported"].includes(issue?.verdict)) {
+        errors.push(`unsupported issues[].verdict: ${issue?.verdict}`);
+      }
       if (!["warn", "fail"].includes(issue?.severity)) {
         errors.push(`unsupported issues[].severity: ${issue?.severity}`);
       }
       validateNonEmptyString(issue?.check_id, "issues[].check_id", errors, "DCR003");
-      validateNonEmptyString(issue?.message, "issues[].message", errors, "DCR003");
-      if (issue?.remediation !== null && typeof issue?.remediation !== "string") {
+      validateNonEmptyString(issue?.summary, "issues[].summary", errors, "DCR003");
+      if (!isObject(issue?.evidence)) {
+        errors.push("issues[].evidence must be an object");
+      }
+      if (issue?.suggested_fix !== null && typeof issue?.suggested_fix !== "string") {
+        errors.push("issues[].suggested_fix must be string or null");
+      }
+      if (typeof issue?.blocking_for_install !== "boolean") {
+        errors.push("issues[].blocking_for_install must be boolean");
+      }
+      if ("message" in issue && issue?.message !== null && typeof issue?.message !== "string") {
+        errors.push("issues[].message must be string or null");
+      }
+      if ("remediation" in issue && issue?.remediation !== null && typeof issue?.remediation !== "string") {
         errors.push("issues[].remediation must be string or null");
       }
     }
@@ -873,6 +1441,27 @@ export function validateDoctorReport(record) {
       validateNonEmptyString(pack?.install_dir, "installed_packs[].install_dir", errors, "DCR004");
       if (!Number.isInteger(pack?.local_overrides)) {
         errors.push("installed_packs[].local_overrides must be an integer");
+      }
+    }
+  }
+  if (!isObject(record?.first_workflow_guidance)) {
+    errors.push("first_workflow_guidance must be an object");
+  } else {
+    const guidance = record.first_workflow_guidance;
+    if (typeof guidance?.ready !== "boolean") {
+      errors.push("first_workflow_guidance.ready must be boolean");
+    }
+    if (guidance?.recommended_pack_id !== null && typeof guidance?.recommended_pack_id !== "string") {
+      errors.push("first_workflow_guidance.recommended_pack_id must be string or null");
+    }
+    validateNonEmptyString(guidance?.rationale, "first_workflow_guidance.rationale", errors, "DCR005");
+    if (!Array.isArray(guidance?.commands)) {
+      errors.push("first_workflow_guidance.commands must be a list");
+    } else {
+      for (const command of guidance.commands) {
+        if (typeof command !== "string" || command.trim() === "") {
+          errors.push("first_workflow_guidance.commands entries must be non-empty strings");
+        }
       }
     }
   }

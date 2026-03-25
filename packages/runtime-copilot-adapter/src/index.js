@@ -1,6 +1,6 @@
 import { accessSync, constants } from "node:fs";
 import { homedir } from "node:os";
-import { join, posix } from "node:path";
+import { basename, join, posix } from "node:path";
 import { spawnSync } from "node:child_process";
 import process from "node:process";
 
@@ -52,6 +52,38 @@ export function resolveAssetPath(asset) {
   }
 }
 
+function toPosix(value) {
+  return value.split("\\").join("/");
+}
+
+export function validateAssetRelativePath(asset, relativePath) {
+  const normalizedPath = toPosix(relativePath);
+  const expectedPath = resolveAssetPath({
+    install_surface: asset.install_surface,
+    source_relpath: asset.source_relpath ?? asset.source_path ?? null,
+    file_name: asset.file_name ?? basename(normalizedPath),
+  });
+  if (normalizedPath !== expectedPath) {
+    throw new Error(
+      `copilot runtime path ${normalizedPath} does not match install surface ${asset.install_surface} -> ${expectedPath}`,
+    );
+  }
+  return normalizedPath;
+}
+
+export function resolveRuntimeAssetPath(asset) {
+  const candidate =
+    asset.generated_relpath ??
+    asset.generated_path ??
+    asset.source_relpath ??
+    asset.source_path ??
+    asset.file_name;
+  if (!candidate) {
+    throw new Error("copilot runtime asset is missing a relative path");
+  }
+  return validateAssetRelativePath(asset, candidate);
+}
+
 export function supportsInstallSurface(surface) {
   return supportedInstallSurfaces.includes(surface);
 }
@@ -68,12 +100,16 @@ function spawnRuntime(args) {
   return spawnSync(process.env.ComSpec || "cmd.exe", ["/d", "/s", "/c", executable, ...args], options);
 }
 
+function extractSemver(rawValue) {
+  const match = typeof rawValue === "string" ? rawValue.match(/(\d+\.\d+\.\d+)/) : null;
+  return match?.[1] ?? null;
+}
+
 export function detectRuntime() {
   const copilot = spawnRuntime(["copilot", "--help"]);
   const ghVersion = spawnRuntime(["--version"]);
   const versionLine = ghVersion.stdout?.trim().split(/\r?\n/, 1)[0] ?? "";
-  const versionMatch = versionLine.match(/(\d+\.\d+\.\d+)/);
-  const version = versionMatch?.[1] ?? "unknown";
+  const version = extractSemver(versionLine) || versionLine || "unknown";
   if (copilot.status === 0) {
     return {
       available: true,
