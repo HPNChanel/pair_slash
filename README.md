@@ -9,6 +9,10 @@ Canonical entrypoint: `/skills`.
 
 ## Start here
 
+Before treating managed installability or release readiness as proof that
+PairSlash deserves broader rollout, run the
+[Phase 3.5 validation gate](docs/validation/phase-3-5/README.md).
+
 If you are evaluating or operating PairSlash from this repo, use this order:
 
 1. Install skills for your runtime with the [manual install guide](docs/workflows/install-guide.md).
@@ -41,6 +45,7 @@ If you are evaluating or operating PairSlash from this repo, use this order:
 - Install or reinstall skills: [docs/workflows/install-guide.md](docs/workflows/install-guide.md)
 - Managed Phase 4 install commands: [docs/workflows/phase-4-install-commands.md](docs/workflows/phase-4-install-commands.md)
 - Validate a local checkout and memory-write safety gates: [docs/workflows/phase-2-operations.md](docs/workflows/phase-2-operations.md)
+- Validate problem-solution fit before Phase 4 claims: [docs/validation/phase-3-5/README.md](docs/validation/phase-3-5/README.md)
 - Check what runtime behavior is actually supported: [docs/compatibility/compatibility-matrix.md](docs/compatibility/compatibility-matrix.md)
 - Run live CLI verification and record evidence: [docs/compatibility/runtime-verification.md](docs/compatibility/runtime-verification.md)
 - Understand dual-schema system-record handling: [docs/architecture/adr-0001-legacy-project-memory-system-records.md](docs/architecture/adr-0001-legacy-project-memory-system-records.md)
@@ -114,7 +119,11 @@ npm run test:phase4
 npm run test:phase4:release
 ```
 
-Both commands must pass for local “Phase 2 done” checks.
+`npm run test:phase4:release` now also requires
+`docs/validation/phase-3-5/verdict.md` to be updated to `Gate status: GO`.
+
+The Phase 3.5 gate must be satisfied before treating Phase 4 release readiness
+as a valid next step.
 
 After validation passes, continue to [Phase 2 operations](docs/workflows/phase-2-operations.md)
 for the operational done bar and memory-write safety gates.
@@ -122,6 +131,7 @@ for the operational done bar and memory-write safety gates.
 ## Docs
 
 - Phase 2 operations: `docs/workflows/phase-2-operations.md`
+- Phase 3.5 validation gate: `docs/validation/phase-3-5/README.md`
 - Install guide: `docs/workflows/install-guide.md`
 - Phase 4 install commands: `docs/workflows/phase-4-install-commands.md`
 - Phase 4 doctor troubleshooting: `docs/workflows/phase-4-doctor-troubleshooting.md`

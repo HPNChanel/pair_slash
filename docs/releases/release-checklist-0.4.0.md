@@ -20,8 +20,11 @@ Status legend:
 ## Blockers
 
 - [ ] Block release if `npm run test:phase4:release` fails
+- [ ] Block release if `docs/validation/phase-3-5/verdict.md` is absent or remains `Gate status: NO-GO`
+- [ ] Block release if `docs/validation/phase-3-5/evidence-log.md` has no recorded benchmark evidence
 - [ ] Block release if docs claim live runtime compatibility beyond `docs/compatibility/runtime-verification.md` evidence
 - [ ] Block release if a new runtime is mentioned outside Codex CLI and GitHub Copilot CLI
+- [ ] Block release if messaging drifts beyond `docs/validation/phase-3-5/messaging-narrative.md`
 
 ## Deferred to Phase 5 / 6
 
@@ -41,6 +44,14 @@ Status legend:
 
 ## Minimum docs that must ship
 
+- [x] `docs/validation/phase-3-5/README.md`
+- [x] `docs/validation/phase-3-5/problem-statement.md`
+- [x] `docs/validation/phase-3-5/benchmark-tasks.md`
+- [x] `docs/validation/phase-3-5/scoring-rubric.md`
+- [x] `docs/validation/phase-3-5/runbook.md`
+- [x] `docs/validation/phase-3-5/evidence-log.md`
+- [x] `docs/validation/phase-3-5/messaging-narrative.md`
+- [x] `docs/validation/phase-3-5/verdict.md`
 - [x] `docs/architecture/pack-manifest-v2-practical-spec.md`
 - [x] `docs/architecture/compiler-v2-implement-oriented.md`
 - [x] `docs/workflows/phase-4-install-commands.md`

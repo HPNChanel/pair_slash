@@ -1,0 +1,210 @@
+version: "0.1.0"
+decision_date: "2026-03-25"
+status: "pre-benchmark-working-score"
+
+scoring:
+  scale: "1-5"
+  formula: "weighted_score = sum((raw_score / 5) * weight)"
+  weights:
+    pain_severity: 20
+    recurrence: 15
+    trust_gain: 15
+    measurable_roi: 15
+    repeated_weekly_use_potential: 15
+    trust_layer_fit: 10
+    adjacency_to_phase_4_5: 5
+    implementation_realism: 5
+
+biases:
+  - id: architecture_memory_bias
+    description: "Memory workflows may score too high because the repo has already invested heavily in memory authority and audit semantics."
+  - id: validation_structure_bias
+    description: "Current validation docs already frame safe memory write as the primary wedge, which can be mistaken for proven user pull."
+  - id: formalization_bias
+    description: "Registry-backed or runtime-documented packs can look more important than they are from an adoption perspective."
+
+candidates:
+  - id: onboard-repo
+    display_name: "onboard-repo"
+    workflow_shape: "single-pack"
+    underlying_packs:
+      - "pairslash-onboard-repo"
+    status: "selected"
+    sequence_rank: 1
+    raw_scores:
+      pain_severity: 4
+      recurrence: 5
+      trust_gain: 4
+      measurable_roi: 5
+      repeated_weekly_use_potential: 5
+      trust_layer_fit: 4
+      adjacency_to_phase_4_5: 4
+      implementation_realism: 3
+    weighted_score: 88
+    why_it_wins: "Best acquisition wedge, fastest measurable ROI, strong weekly-use potential, and good trust-layer fit without leading with high-friction memory writes."
+    why_not_higher: "Differentiation is weaker than the memory lane if it becomes only a repo summary workflow."
+    evidence_refs:
+      - "docs/phase-3.5/product-thesis.md"
+      - "docs/phase-3.5/painpoint-map.md"
+      - "docs/phase-3.5/icp.md"
+      - "docs/phase-3.5/jtbd.md"
+      - "packs/core/pairslash-onboard-repo/contract.md"
+
+  - id: memory-candidate-to-memory-write-global
+    display_name: "memory-candidate -> memory-write-global"
+    workflow_shape: "composite"
+    underlying_packs:
+      - "pairslash-memory-candidate"
+      - "pairslash-memory-write-global"
+    status: "selected"
+    sequence_rank: 2
+    raw_scores:
+      pain_severity: 5
+      recurrence: 4
+      trust_gain: 5
+      measurable_roi: 4
+      repeated_weekly_use_potential: 4
+      trust_layer_fit: 5
+      adjacency_to_phase_4_5: 5
+      implementation_realism: 4
+    weighted_score: 90
+    why_it_wins: "Strongest moat and clearest trust-layer proof because it makes durable project memory explicit, previewable, and auditable."
+    why_not_first: "Current evidence supports the thesis but does not yet prove that durable memory writes are the first habit-forming entry point."
+    evidence_refs:
+      - "docs/validation/phase-3-5/problem-statement.md"
+      - "docs/validation/phase-3-5/benchmark-tasks.md"
+      - "docs/validation/phase-3-5/messaging-narrative.md"
+      - "packs/core/pairslash-memory-candidate/contract.md"
+      - "packs/core/pairslash-memory-write-global/contract.md"
+      - ".pairslash/project-memory/80-incidents-and-lessons/llm-write-script-dropped-tags-and-source-refs.yaml"
+
+  - id: review-fix-loop
+    display_name: "review/fix loop"
+    workflow_shape: "composite"
+    underlying_packs:
+      - "pairslash-review"
+    status: "selected"
+    sequence_rank: 3
+    raw_scores:
+      pain_severity: 5
+      recurrence: 5
+      trust_gain: 4
+      measurable_roi: 5
+      repeated_weekly_use_potential: 5
+      trust_layer_fit: 3
+      adjacency_to_phase_4_5: 3
+      implementation_realism: 3
+    weighted_score: 89
+    why_it_wins: "Targets severe recurring rework and cleanup pain with strong ROI and repeat intent."
+    why_not_higher: "Needs tight trust framing or it becomes indistinguishable from a generic code assistant workflow."
+    notes:
+      - "Current base workflow is pairslash-review."
+      - "Fix is an explicit user-approved handoff to the normal edit loop, not an autonomous auto-fix pack."
+    evidence_refs:
+      - "docs/phase-3.5/product-thesis.md"
+      - "docs/phase-3.5/painpoint-map.md"
+      - "docs/phase-3.5/icp.md"
+      - "packs/core/pairslash-review/contract.md"
+      - "packs/core/pairslash-review/SKILL.md"
+
+  - id: pairslash-plan
+    display_name: "pairslash-plan"
+    workflow_shape: "single-pack"
+    underlying_packs:
+      - "pairslash-plan"
+    status: "deferred-supporting"
+    raw_scores:
+      pain_severity: 3
+      recurrence: 4
+      trust_gain: 3
+      measurable_roi: 3
+      repeated_weekly_use_potential: 4
+      trust_layer_fit: 3
+      adjacency_to_phase_4_5: 4
+      implementation_realism: 5
+    weighted_score: 69
+    why_deferred: "Useful supporting workflow with high readiness, but too generic to lead the wedge strategy."
+    evidence_refs:
+      - "packs/core/pairslash-plan/contract.md"
+      - "docs/compatibility/compatibility-matrix.md"
+      - "docs/releases/phase-3-team-pack-update.md"
+
+  - id: pairslash-memory-audit
+    display_name: "pairslash-memory-audit"
+    workflow_shape: "single-pack"
+    underlying_packs:
+      - "pairslash-memory-audit"
+    status: "deferred"
+    raw_scores:
+      pain_severity: 3
+      recurrence: 2
+      trust_gain: 4
+      measurable_roi: 2
+      repeated_weekly_use_potential: 2
+      trust_layer_fit: 4
+      adjacency_to_phase_4_5: 3
+      implementation_realism: 3
+    weighted_score: 56
+    why_deferred: "Important hygiene workflow, but too infrequent to be a primary adoption wedge."
+    evidence_refs:
+      - "packs/core/pairslash-memory-audit/contract.md"
+      - "docs/phase-3.5/product-thesis.md"
+
+  - id: pairslash-command-suggest
+    display_name: "pairslash-command-suggest"
+    workflow_shape: "single-pack"
+    underlying_packs:
+      - "pairslash-command-suggest"
+    status: "deferred"
+    raw_scores:
+      pain_severity: 2
+      recurrence: 4
+      trust_gain: 2
+      measurable_roi: 3
+      repeated_weekly_use_potential: 3
+      trust_layer_fit: 2
+      adjacency_to_phase_4_5: 2
+      implementation_realism: 4
+    weighted_score: 54
+    why_deferred: "Advisory-only workflow with weak differentiation from manual command lookup and normal shell habits."
+    evidence_refs:
+      - "packs/core/pairslash-command-suggest/contract.md"
+      - ".pairslash/project-memory/50-constraints.yaml"
+
+excluded_candidates:
+  - id: pairslash-backend
+    reason: "Too broad for wedge proof and all documented runtime surfaces are unverified."
+    evidence_refs:
+      - "docs/compatibility/compatibility-matrix.md"
+      - "packs/core/pairslash-backend/contract.md"
+  - id: pairslash-frontend
+    reason: "Too broad for wedge proof and all documented runtime surfaces are unverified."
+    evidence_refs:
+      - "docs/compatibility/compatibility-matrix.md"
+      - "packs/core/pairslash-frontend/contract.md"
+  - id: pairslash-devops
+    reason: "Too environment-sensitive and enterprise-adjacent before local wedge validation."
+    evidence_refs:
+      - "docs/compatibility/compatibility-matrix.md"
+      - "packs/core/pairslash-devops/contract.md"
+  - id: pairslash-release
+    reason: "Too release-operator oriented and too far from the first recurring trust wedge."
+    evidence_refs:
+      - "docs/compatibility/compatibility-matrix.md"
+      - "packs/core/pairslash-release/contract.md"
+
+decision:
+  final_wedges:
+    - sequence_rank: 1
+      id: onboard-repo
+    - sequence_rank: 2
+      id: memory-candidate-to-memory-write-global
+    - sequence_rank: 3
+      id: review-fix-loop
+  why_this_set_is_strongest: "It balances acquisition, moat, and repeated day-to-day utility without drifting into fake breadth."
+  invalidate_if:
+    - "onboard-repo does not beat manual cold start on speed or correctness"
+    - "memory preview and acceptance are seen as ceremony without trust upside"
+    - "review-fix loop shows stronger repeat intent than a selected wedge while preserving trust-layer differentiation"
+    - "a deferred workflow records at least two stronger weekly-return signals than the weakest selected wedge"
+    - "a chosen wedge requires unsupported runtime or enterprise breadth claims to look compelling"

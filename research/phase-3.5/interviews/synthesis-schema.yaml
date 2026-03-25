@@ -1,0 +1,279 @@
+version: "0.1.0"
+record_type: "pairslash_phase_3_5_interview"
+
+description: >
+  Standard field schema for PairSlash Phase 3.5 interviews.
+  Designed to keep behavioral evidence separate from willingness claims.
+
+fields:
+  interview_id:
+    type: string
+    required: true
+    example: "INT-001"
+
+  date:
+    type: date
+    required: true
+    example: "2026-03-24"
+
+  interviewer:
+    type: string
+    required: true
+
+  participant_name:
+    type: string
+    required: true
+
+  role:
+    type: string
+    required: true
+
+  icp_segment:
+    type: enum
+    required: true
+    allowed_values:
+      - p1_power_user
+      - p1_tech_lead
+      - p2_platform_devex
+      - p3_oss_consultant
+
+  runtime_primary:
+    type: enum
+    required: true
+    allowed_values:
+      - codex_cli
+      - github_copilot_cli
+      - both
+      - none
+
+  runtime_secondary:
+    type: enum
+    required: false
+    allowed_values:
+      - codex_cli
+      - github_copilot_cli
+      - none
+
+  repo_type:
+    type: string
+    required: false
+
+  team_context:
+    type: string
+    required: false
+
+  interview_confidence:
+    type: enum
+    required: true
+    allowed_values:
+      - low
+      - medium
+      - high
+
+  recent_workflow_summary:
+    type: string
+    required: true
+
+  recent_example_within_14_days:
+    type: boolean
+    required: true
+
+  concrete_incident_present:
+    type: boolean
+    required: true
+
+  painpoints:
+    type: list
+    required: true
+    item_schema:
+      category:
+        type: enum
+        required: true
+        allowed_values:
+          - repo_understanding
+          - review_fix_test_loop
+          - memory_continuity
+          - trust_governance_auditability
+          - install_friction
+          - repeated_use_vs_novelty
+      frequency:
+        type: enum
+        required: true
+        allowed_values:
+          - rare
+          - occasional
+          - weekly
+          - daily
+      severity:
+        type: enum
+        required: true
+        allowed_values:
+          - low
+          - medium
+          - high
+      reported_pain:
+        type: string
+        required: true
+      behavioral_evidence:
+        type: string
+        required: false
+      workaround_cost:
+        type: string
+        required: false
+      pairslash_fit:
+        type: enum
+        required: false
+        allowed_values:
+          - weak
+          - medium
+          - strong
+
+  recent_incidents:
+    type: list
+    required: true
+    item_schema:
+      incident_type:
+        type: enum
+        required: true
+        allowed_values:
+          - almost_right_ai_rework
+          - repo_reorientation
+          - repeated_workflow_rebuild
+          - context_loss
+          - trust_block
+          - install_block
+          - other
+      summary:
+        type: string
+        required: true
+      cleanup_required:
+        type: string
+        required: false
+      recurrence:
+        type: enum
+        required: false
+        allowed_values:
+          - one_off
+          - occasional
+          - repeated
+
+  workarounds:
+    type: list
+    required: false
+    item_schema:
+      workaround:
+        type: string
+        required: true
+      cost:
+        type: string
+        required: false
+      stability:
+        type: enum
+        required: false
+        allowed_values:
+          - brittle
+          - acceptable
+          - durable
+
+  trust_thresholds:
+    type: list
+    required: true
+    item_schema:
+      threshold:
+        type: string
+        required: true
+      current_guardrail:
+        type: string
+        required: false
+      explicit_review_value:
+        type: enum
+        required: false
+        allowed_values:
+          - value
+          - friction
+          - mixed
+          - unclear
+
+  repeat_use_signals:
+    type: list
+    required: true
+    item_schema:
+      signal:
+        type: string
+        required: true
+      strength:
+        type: enum
+        required: true
+        allowed_values:
+          - none
+          - novelty_only
+          - conditional
+          - strong
+      trigger:
+        type: string
+        required: false
+
+  install_friction_signal:
+    type: enum
+    required: true
+    allowed_values:
+      - none
+      - minor
+      - meaningful
+      - blocking
+
+  problem_severity:
+    type: enum
+    required: true
+    allowed_values:
+      - low
+      - medium
+      - high
+
+  solution_pull:
+    type: enum
+    required: true
+    allowed_values:
+      - none
+      - weak
+      - medium
+      - strong
+
+  evidence_strength:
+    type: enum
+    required: true
+    allowed_values:
+      - weak
+      - medium
+      - strong
+
+  willingness_claim:
+    type: string
+    required: false
+
+  contradictions:
+    type: list
+    required: false
+    item_type: string
+
+  verbatim_quotes:
+    type: list
+    required: false
+    item_type: string
+
+  opportunities:
+    type: list
+    required: false
+    item_type: string
+
+  recommended_follow_up:
+    type: string
+    required: false
+
+analysis_notes:
+  required_principles:
+    - Prefer recent incidents over opinions.
+    - Record what happened last time before recording what they say they would do.
+    - Separate repeated pain from novelty reactions.
+    - Separate install friction from core workflow pain.
+    - Do not infer demand from praise alone.
