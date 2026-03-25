@@ -29,13 +29,18 @@ import {
 } from "../formatters.js";
 
 const LIFECYCLE_ACTIONS = ["install", "update", "uninstall"];
+const INSTALL_PACK_SETS = {
+  bootstrap: ["pairslash-plan"],
+  core: [],
+};
+const INSTALL_PACK_SET_VALUES = Object.keys(INSTALL_PACK_SETS);
 
 function printUsage(stdout) {
   stdout.write(
     [
       "Usage:",
-      "  pairslash preview <install|update|uninstall> [pack-id...] [--runtime <codex|copilot|auto>] [--target repo|user] [--packs a,b] [--format text|json] [--plan-out path]",
-      "  pairslash install [pack-id...] [--runtime <codex|copilot|auto>] [--target repo|user] [--packs a,b] [--format text|json] [--apply] [--dry-run] [--yes] [--non-interactive] [--plan-out path]",
+      "  pairslash preview <install|update|uninstall> [pack-id...] [--runtime <codex|copilot|auto>] [--target repo|user] [--packs a,b] [--pack-set bootstrap|core] [--all] [--format text|json] [--plan-out path]",
+      "  pairslash install [pack-id...] [--runtime <codex|copilot|auto>] [--target repo|user] [--packs a,b] [--pack-set bootstrap|core] [--all] [--format text|json] [--apply] [--dry-run] [--yes] [--non-interactive] [--plan-out path]",
       "  pairslash update [pack-id...] [--runtime <codex|copilot|auto>] [--target repo|user] [--packs a,b] [--from <version|manifest-digest>] [--to <pack.manifest.yaml>] [--format text|json] [--apply] [--dry-run] [--yes] [--non-interactive] [--plan-out path]",
       "  pairslash uninstall [pack-id...] [--runtime <codex|copilot|auto>] [--target repo|user] [--packs a,b] [--format text|json] [--apply] [--dry-run] [--yes] [--non-interactive] [--plan-out path]",
       "  pairslash doctor [--runtime <codex|copilot|auto>] [--target repo|user] [--packs a,b] [--format text|json] [--strict]",
@@ -43,7 +48,8 @@ function printUsage(stdout) {
       "",
       "Defaults:",
       "  install/update/uninstall preview by default; add --apply to mutate.",
-      "  install with no pack-id selects all valid manifests under packs/core.",
+      "  install with no pack-id selects bootstrap pack-set (pairslash-plan).",
+      "  use --pack-set core or --all to select all valid manifests under packs/core.",
       "  update/uninstall with no pack-id select all installed packs for the chosen runtime and target.",
       "  --runtime auto fails if more than one runtime is detected and no state disambiguates the lane.",
       "  Exit code 1 means invalid usage, blocked preview, or failed apply/doctor/lint.",
@@ -69,6 +75,8 @@ function parseOptions(argv) {
     to: null,
     force: false,
     strict: false,
+    packSet: "bootstrap",
+    packSetProvided: false,
   };
   for (let index = 0; index < argv.length; index += 1) {
     const token = argv[index];
@@ -89,6 +97,21 @@ function parseOptions(argv) {
         .map((item) => item.trim())
         .filter(Boolean);
       index += 1;
+      continue;
+    }
+    if (token === "--pack-set") {
+      const packSet = argv[index + 1];
+      if (!INSTALL_PACK_SET_VALUES.includes(packSet)) {
+        throw new Error(`invalid --pack-set value: ${packSet}; expected one of ${INSTALL_PACK_SET_VALUES.join(", ")}`);
+      }
+      options.packSet = packSet;
+      options.packSetProvided = true;
+      index += 1;
+      continue;
+    }
+    if (token === "--all") {
+      options.packSet = "core";
+      options.packSetProvided = true;
       continue;
     }
     if (token === "--format") {
@@ -176,6 +199,13 @@ function assertLifecycleAction(action, { command = "command" } = {}) {
   );
 }
 
+function resolveInstallPacks(options) {
+  if (options.packs.length > 0) {
+    return options.packs;
+  }
+  return INSTALL_PACK_SETS[options.packSet] ?? INSTALL_PACK_SETS.bootstrap;
+}
+
 function materializePlan(repoRoot, plan, planOut) {
   if (!planOut) {
     return plan;
@@ -209,14 +239,18 @@ async function confirmApply({ action, stdin, stdout, options }) {
 
 function buildLifecycleEnvelope(action, repoRoot, options) {
   assertLifecycleAction(action, { command: "preview" });
+  if (action !== "install" && options.packSetProvided) {
+    throw new Error("--pack-set and --all are only available for install");
+  }
+  const packs = action === "install" ? resolveInstallPacks(options) : options.packs;
   return action === "install"
-    ? planInstall({ repoRoot, runtime: options.runtime, target: options.target, packs: options.packs })
+    ? planInstall({ repoRoot, runtime: options.runtime, target: options.target, packs })
     : action === "update"
       ? planUpdate({
           repoRoot,
           runtime: options.runtime,
           target: options.target,
-          packs: options.packs,
+          packs,
           from: options.from,
           to: options.to,
         })
@@ -224,7 +258,7 @@ function buildLifecycleEnvelope(action, repoRoot, options) {
           repoRoot,
           runtime: options.runtime,
           target: options.target,
-          packs: options.packs,
+          packs,
         });
 }
 

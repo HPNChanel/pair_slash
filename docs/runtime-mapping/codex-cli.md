@@ -30,6 +30,6 @@ Codex bundles are emitted as `codex-skill-bundle`.
 
 ## Notes
 
-- `/skills` stays canonical even when `$<pack-id>` is available.
+- `/skills` is the only documented activation path in Phase 4.
 - Write-authority behavior is declared in metadata; it is not inferred by installer.
 - Uninstall removes only PairSlash-owned unchanged files recorded in the receipt/state.

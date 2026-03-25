@@ -23,7 +23,6 @@ function renderCodexContext(ir) {
     ir.pack.summary,
     "",
     `- Canonical entrypoint: ${ir.pack.canonical_entrypoint}`,
-    `- Direct invocation: ${ir.runtime_support.codex_cli.direct_invocation}`,
     `- Workflow class: ${ir.pack.workflow_class}`,
     `- Risk level: ${ir.pack.risk_level}`,
     `- Release channel: ${ir.pack.release_channel}`,

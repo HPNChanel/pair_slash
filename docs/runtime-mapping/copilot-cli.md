@@ -29,6 +29,6 @@ Copilot bundles are emitted as `copilot-package-bundle`.
 
 ## Notes
 
-- `/skills` stays canonical even when `/<pack-id>` is available.
+- `/skills` is the only documented activation path in Phase 4.
 - Hooks stay declarative in Phase 4; no background service or daemon is introduced.
 - Update preserves valid local overrides on override-eligible files and blocks unmanaged conflicts.

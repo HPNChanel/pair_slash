@@ -1,11 +1,86 @@
-import { cpSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, cpSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join, resolve } from "node:path";
+import { delimiter, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import YAML from "yaml";
 import { normalizePackManifestV2, serializePackManifestV2 } from "@pairslash/spec-core";
 
 export const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+
+function writeExecutable(path, contents) {
+  writeFileSync(path, contents, { mode: 0o755 });
+  try {
+    chmodSync(path, 0o755);
+  } catch {
+    // chmod is best-effort for cross-platform fake runtimes.
+  }
+}
+
+function writeCodexShim(binDir, version) {
+  writeFileSync(
+    join(binDir, "codex.cmd"),
+    [
+      "@echo off",
+      "if \"%1\"==\"--version\" (",
+      `  echo ${version}`,
+      "  exit /b 0",
+      ")",
+      "echo unsupported codex command 1>&2",
+      "exit /b 1",
+      "",
+    ].join("\r\n"),
+  );
+  writeExecutable(
+    join(binDir, "codex"),
+    [
+      "#!/bin/sh",
+      "if [ \"$1\" = \"--version\" ]; then",
+      `  printf '%s\\n' '${version}'`,
+      "  exit 0",
+      "fi",
+      "printf '%s\\n' 'unsupported codex command' >&2",
+      "exit 1",
+      "",
+    ].join("\n"),
+  );
+}
+
+function writeCopilotShim(binDir, version) {
+  writeFileSync(
+    join(binDir, "gh.cmd"),
+    [
+      "@echo off",
+      "if \"%1\"==\"--version\" (",
+      `  echo gh version ${version}`,
+      "  exit /b 0",
+      ")",
+      "if \"%1\"==\"copilot\" if \"%2\"==\"--help\" (",
+      "  echo gh copilot help",
+      "  exit /b 0",
+      ")",
+      "echo unsupported gh command 1>&2",
+      "exit /b 1",
+      "",
+    ].join("\r\n"),
+  );
+  writeExecutable(
+    join(binDir, "gh"),
+    [
+      "#!/bin/sh",
+      "if [ \"$1\" = \"--version\" ]; then",
+      `  printf '%s\\n' 'gh version ${version}'`,
+      "  exit 0",
+      "fi",
+      "if [ \"$1\" = \"copilot\" ] && [ \"$2\" = \"--help\" ]; then",
+      "  printf '%s\\n' 'gh copilot help'",
+      "  exit 0",
+      "fi",
+      "printf '%s\\n' 'unsupported gh command' >&2",
+      "exit 1",
+      "",
+    ].join("\n"),
+  );
+}
 
 export function createTempRepo({ packs = ["pairslash-plan"] } = {}) {
   const tempRoot = mkdtempSync(join(tmpdir(), "pairslash-phase4-"));
@@ -52,46 +127,19 @@ export function installFakeRuntime({ codexVersion = null, copilotVersion = null 
   const previousUserProfile = process.env.USERPROFILE;
 
   if (codexVersion) {
-    writeFileSync(
-      join(binDir, "codex.cmd"),
-      [
-        "@echo off",
-        "if \"%1\"==\"--version\" (",
-        `  echo ${codexVersion}`,
-        "  exit /b 0",
-        ")",
-        "echo unsupported codex command 1>&2",
-        "exit /b 1",
-        "",
-      ].join("\r\n"),
-    );
+    writeCodexShim(binDir, codexVersion);
   }
 
   if (copilotVersion) {
-    writeFileSync(
-      join(binDir, "gh.cmd"),
-      [
-        "@echo off",
-        "if \"%1\"==\"--version\" (",
-        `  echo gh version ${copilotVersion}`,
-        "  exit /b 0",
-        ")",
-        "if \"%1\"==\"copilot\" if \"%2\"==\"--help\" (",
-        "  echo gh copilot help",
-        "  exit /b 0",
-        ")",
-        "echo unsupported gh command 1>&2",
-        "exit /b 1",
-        "",
-      ].join("\r\n"),
-    );
+    writeCopilotShim(binDir, copilotVersion);
   }
 
-  process.env.PATH = `${binDir};${previousPath}`;
+  process.env.PATH = `${binDir}${delimiter}${previousPath}`;
 
   return {
     binDir,
     setHome(homePath) {
+      mkdirSync(homePath, { recursive: true });
       process.env.HOME = homePath;
       process.env.USERPROFILE = homePath;
     },

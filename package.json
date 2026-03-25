@@ -14,6 +14,7 @@
     "pairslash": "node packages/cli/src/bin/pairslash.js",
     "lint:phase4": "node packages/cli/src/bin/pairslash.js lint --phase4",
     "test:phase4": "node scripts/run-phase4-tests.mjs",
+    "test:phase4:acceptance": "node scripts/run-phase4-acceptance.mjs",
     "test:phase4:release": "node scripts/run-phase4-release-readiness.mjs"
   },
   "dependencies": {

@@ -84,7 +84,7 @@ test("pairslash install --apply requires confirmation in non-interactive mode", 
   }
 });
 
-test("pairslash install without pack id selects all valid manifests in the repo", serial, async () => {
+test("pairslash install without pack id selects bootstrap pack-set", serial, async () => {
   const fixture = createTempRepo({ packs: ["pairslash-plan", "pairslash-review"] });
   const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
   let output = "";
@@ -100,11 +100,62 @@ test("pairslash install without pack id selects all valid manifests in the repo"
     });
     assert.equal(exitCode, 0);
     const payload = JSON.parse(output);
+    assert.deepEqual(payload.selected_packs, ["pairslash-plan"]);
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("pairslash install --all selects all valid manifests in the repo", serial, async () => {
+  const fixture = createTempRepo({ packs: ["pairslash-plan", "pairslash-review"] });
+  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  let output = "";
+  try {
+    const exitCode = await runCli({
+      argv: ["install", "--runtime", "codex", "--all", "--format", "json"],
+      cwd: fixture.tempRoot,
+      stdout: {
+        write(chunk) {
+          output += chunk;
+        },
+      },
+    });
+    assert.equal(exitCode, 0);
+    const payload = JSON.parse(output);
     assert.deepEqual(payload.selected_packs, ["pairslash-plan", "pairslash-review"]);
   } finally {
     runtime.cleanup();
     fixture.cleanup();
   }
+});
+
+test("pairslash install rejects invalid --pack-set", serial, async () => {
+  await assert.rejects(
+    () =>
+      runCli({
+        argv: ["install", "--runtime", "codex", "--pack-set", "unknown"],
+        cwd: repoRoot,
+        stdout: {
+          write() {},
+        },
+      }),
+    /invalid --pack-set value/,
+  );
+});
+
+test("pairslash update rejects install-only --pack-set flags", serial, async () => {
+  await assert.rejects(
+    () =>
+      runCli({
+        argv: ["update", "--runtime", "codex", "--pack-set", "core"],
+        cwd: repoRoot,
+        stdout: {
+          write() {},
+        },
+      }),
+    /only available for install/,
+  );
 });
 
 test("pairslash install writes preview plan to disk", serial, async () => {
@@ -278,7 +329,7 @@ test("pairslash update without pack id selects all installed packs", serial, asy
   let output = "";
   try {
     await runCli({
-      argv: ["install", "--runtime", "codex", "--apply", "--yes"],
+      argv: ["install", "--runtime", "codex", "--all", "--apply", "--yes"],
       cwd: fixture.tempRoot,
       stdout: { write() {}, isTTY: true },
       stdin: { isTTY: true },
@@ -324,7 +375,7 @@ test("pairslash uninstall without pack id selects all installed packs", serial, 
   let output = "";
   try {
     await runCli({
-      argv: ["install", "--runtime", "codex", "--apply", "--yes"],
+      argv: ["install", "--runtime", "codex", "--all", "--apply", "--yes"],
       cwd: fixture.tempRoot,
       stdout: { write() {}, isTTY: true },
       stdin: { isTTY: true },

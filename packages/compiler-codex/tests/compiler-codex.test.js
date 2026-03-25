@@ -28,6 +28,9 @@ test("compileCodexPack is deterministic and emits ownership metadata", () => {
         file.relative_path === "fragments/context/runtime-context.md",
     ),
   );
+  const contextFile = first.files.find((file) => file.asset_id === "codex-context");
+  assert.ok(contextFile);
+  assert.equal(contextFile.content.includes("Direct invocation"), false);
   assert.ok(
     first.files.some(
       (file) =>

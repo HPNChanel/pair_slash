@@ -1,3 +1,4 @@
+export * from "./acceptance.js";
 export * from "./fixtures.js";
 export * from "./materialize.js";
 export * from "./normalize.js";

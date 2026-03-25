@@ -24,7 +24,6 @@ function renderCopilotAgentContext(ir) {
     `# ${ir.pack.display_name}`,
     "",
     `- Canonical entrypoint: ${ir.pack.canonical_entrypoint}`,
-    `- Direct invocation: ${ir.runtime_support.copilot_cli.direct_invocation}`,
     `- Workflow class: ${ir.pack.workflow_class}`,
     "",
     "## Runtime package surfaces",

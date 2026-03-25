@@ -28,7 +28,8 @@ Swap `--runtime codex` for `--runtime copilot` and `--target repo` for
 - `--plan-out <path>` writes the preview plan JSON to disk before any apply
   step. This is safe to use in preview mode and dry-run mode.
 - `--apply` enables mutation. In non-interactive runs, pair it with `--yes`.
-- Omit pack ids on `install` to select all valid manifests under `packs/core/`.
+- Omit pack ids on `install` to select the bootstrap pack-set (currently `pairslash-plan`).
+- Use `--pack-set core` or `--all` on install when you want all valid manifests under `packs/core/`.
 - Omit pack ids on `update` or `uninstall` to select all installed packs for
   the chosen runtime and target.
 - `--runtime auto` is allowed, but it fails if both supported runtimes are
@@ -120,6 +121,6 @@ Doctor verdict meanings and common remediations live in
 
 ## Related references
 
-- Manual copy fallback: `docs/workflows/install-guide.md`
+- Install guide: `docs/workflows/install-guide.md`
 - Release gate: `docs/releases/release-checklist-0.4.0.md`
 - Runtime lane evidence: `docs/runtime-mapping/pilot-acceptance.md`

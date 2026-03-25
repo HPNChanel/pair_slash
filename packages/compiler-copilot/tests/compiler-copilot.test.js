@@ -29,6 +29,9 @@ test("compileCopilotPack is deterministic and runtime-native", () => {
         file.relative_path === "agents/runtime-context.md",
     ),
   );
+  const contextFile = compiled.files.find((file) => file.asset_id === "copilot-agent-context");
+  assert.ok(contextFile);
+  assert.equal(contextFile.content.includes("Direct invocation"), false);
   const ownershipFile = compiled.files.find((file) => file.relative_path === "pairslash.install.json");
   assert.ok(ownershipFile);
   const ownership = JSON.parse(ownershipFile.content);

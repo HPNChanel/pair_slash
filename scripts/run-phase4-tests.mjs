@@ -10,6 +10,8 @@ const testFiles = [
   "packages/doctor/tests/doctor.test.js",
   "packages/cli/tests/cli.test.js",
   "packages/compat-lab/tests/compat-lab.test.js",
+  "packages/compat-lab/tests/acceptance.test.js",
+  "packages/compat-lab/tests/docs-surface.test.js",
 ];
 
 let exitCode = 0;

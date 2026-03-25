@@ -1,0 +1,55 @@
+name: phase4-acceptance
+
+on:
+  pull_request:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: phase4-acceptance-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  acceptance:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            lane: macos
+            artifact: phase4-acceptance-macos.json
+          - os: ubuntu-latest
+            lane: linux
+            artifact: phase4-acceptance-linux.json
+          - os: windows-latest
+            lane: windows-prep
+            artifact: phase4-acceptance-windows-prep.json
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Phase 4 JS suite
+        run: npm run test:phase4
+
+      - name: Run Phase 4 acceptance lane
+        run: npm run test:phase4:acceptance -- --lane ${{ matrix.lane }} --report-out artifacts/${{ matrix.artifact }}
+
+      - name: Upload acceptance artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: artifacts/${{ matrix.artifact }}

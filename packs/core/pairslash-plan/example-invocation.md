@@ -1,73 +1,34 @@
 # pairslash-plan -- Example Invocations
 
-These examples show how to activate the skill and what to provide as input.
+## Canonical activation (both runtimes)
 
----
-
-## Activation sequence
-
-### Via /skills (canonical path, both runtimes)
-
-```
-> /skills
-[skill picker opens]
-> select pairslash-plan
-> Add a rate-limiting layer to the public API endpoints.
+```text
+/skills
+select pairslash-plan
+Create a repo plan from the current repo state.
 ```
 
-### Via direct invocation on Codex CLI (when runtime surface allows)
+## Minimal invocation
 
-```
-> $pairslash-plan Add a rate-limiting layer to the public API endpoints.
-```
-
-*Fallback to /skills if $pairslash-plan is not available on this runtime surface.*
-
-### Via direct invocation on Copilot CLI (interactive mode only, unverified)
-
-```
-> Use the /pairslash-plan skill to plan: Add a rate-limiting layer to the public API endpoints.
+```text
+Create a repo plan from the current repo state.
 ```
 
-*Note: Interactive prompt invocation is not yet proven in-repo, and it does not work in `-p`/`--prompt` mode due to a known Copilot CLI bug.*
+## With scope hint
 
----
-
-## Minimal invocation (goal only)
-
-```
-Add a rate-limiting layer to the public API endpoints.
+```text
+Create a repo plan for the installer package.
+scope: packages/installer
 ```
 
-The workflow reads project memory automatically and asks for clarification only if
-the goal is too vague to plan.
+## With additional constraint
 
----
-
-## Invocation with scope hint
-
-```
-Add a rate-limiting layer to the public API endpoints.
-scope: subsystem api-gateway
+```text
+Create a repo plan for installer command UX.
+constraint: preserve local overrides and keep preview-first behavior.
 ```
 
----
+## No project memory present
 
-## Invocation with extra constraint
-
-```
-Add a rate-limiting layer to the public API endpoints.
-constraint: Must not introduce a new external dependency without a team review.
-```
-
----
-
-## What happens when there is no project memory
-
-If `.pairslash/project-memory/` is missing or empty, the workflow warns:
-
-> "No PairSlash project memory found. This plan is based solely on your
-> input and repository inspection. Consider running pairslash-memory-write-global
-> to establish project memory."
-
-It then proceeds and marks all context as `[assumption]` rather than `[from memory]`.
+If `.pairslash/project-memory/` is missing, the workflow should continue with
+repo inspection and mark assumptions explicitly.

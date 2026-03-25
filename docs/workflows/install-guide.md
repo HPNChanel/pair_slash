@@ -1,147 +1,71 @@
 # PairSlash Install Guide
 
-Install PairSlash workflows into Codex CLI or GitHub Copilot CLI.
+Install PairSlash workflows into Codex CLI or GitHub Copilot CLI using the
+managed Phase 4 command surface.
 
-Use the managed Phase 4 commands first when you want the safest path with
-preview, rollback, update, uninstall, and doctor coverage. Use `/skills` as the
-canonical entrypoint after install. If you need support status rather than
-install steps, use `docs/compatibility/compatibility-matrix.md`.
+`/skills` is the canonical entrypoint after install on both runtimes.
 
-## Phase 4 managed commands
+## Fast path (time-to-first-success)
 
-Managed lifecycle commands are the default install path:
+Use:
+
+1. `doctor`
+2. `preview install`
+3. `install --apply`
+4. `/skills` -> first workflow
+
+For the shortest onboarding path, use `docs/workflows/phase-4-quickstart.md`.
+
+## Managed lifecycle commands
 
 ```bash
 node packages/cli/src/bin/pairslash.js doctor --runtime codex --target repo
-node packages/cli/src/bin/pairslash.js preview install pairslash-plan --runtime codex --target repo --plan-out .pairslash/tmp/install-plan.json
-node packages/cli/src/bin/pairslash.js install pairslash-plan --runtime codex --target repo --dry-run
-node packages/cli/src/bin/pairslash.js install pairslash-plan --runtime codex --target repo --apply --yes
-node packages/cli/src/bin/pairslash.js update --runtime codex --target repo --apply --yes
-node packages/cli/src/bin/pairslash.js uninstall --runtime codex --target repo --apply --yes
+node packages/cli/src/bin/pairslash.js preview install --runtime codex --target repo --plan-out .pairslash/tmp/install-plan.json
+node packages/cli/src/bin/pairslash.js install --runtime codex --target repo --apply --yes
 node packages/cli/src/bin/pairslash.js doctor --runtime codex --target repo
 ```
 
-Use `docs/workflows/phase-4-install-commands.md` for the managed lifecycle and
-command semantics. The manual copy steps below remain the fallback path when
-policy or troubleshooting requires direct file operations.
+Swap `--runtime codex` for `--runtime copilot` and `--target repo` for
+`--target user` when that is your lane.
 
-## Before you start
+## Default pack selection
 
-- Repository root contains `.pairslash/`, `packs/core/`, `packages/spec-core/`.
-- Runtime installed:
-  - Codex CLI: https://developers.openai.com/codex/cli
-  - Copilot CLI: https://docs.github.com/copilot
-- Choose one runtime path below.
-- `packs/core/` is the source of truth. `.agents/skills/` and `.github/skills/`
-  are derived install targets.
+- `pairslash install` with no pack id uses bootstrap pack-set (currently `pairslash-plan`).
+- Use `--pack-set core` or `--all` to install all valid manifests under `packs/core/`.
+- `update` and `uninstall` with no pack id select all managed packs in the chosen lane.
 
-## Skill inventory
+## Examples
 
-| Skill | Class | Source path |
-|---|---|---|
-| `pairslash-plan` | read-oriented | `packs/core/pairslash-plan/` |
-| `pairslash-review` | read-oriented | `packs/core/pairslash-review/` |
-| `pairslash-onboard-repo` | read-oriented | `packs/core/pairslash-onboard-repo/` |
-| `pairslash-command-suggest` | read-oriented | `packs/core/pairslash-command-suggest/` |
-| `pairslash-memory-candidate` | candidate-producing | `packs/core/pairslash-memory-candidate/` |
-| `pairslash-memory-write-global` | write-authority | `packs/core/pairslash-memory-write-global/` |
-| `pairslash-memory-audit` | audit | `packs/core/pairslash-memory-audit/` |
-
-## Codex CLI path
-
-Use this path when installing PairSlash into Codex CLI.
-
-### Bash / macOS / Linux
+### Codex repo-scope bootstrap install
 
 ```bash
-mkdir -p .agents/skills
-cp -r packs/core/pairslash-plan .agents/skills/
-cp -r packs/core/pairslash-review .agents/skills/
-cp -r packs/core/pairslash-onboard-repo .agents/skills/
-cp -r packs/core/pairslash-command-suggest .agents/skills/
-cp -r packs/core/pairslash-memory-candidate .agents/skills/
-cp -r packs/core/pairslash-memory-write-global .agents/skills/
-cp -r packs/core/pairslash-memory-audit .agents/skills/
+node packages/cli/src/bin/pairslash.js preview install --runtime codex --target repo
+node packages/cli/src/bin/pairslash.js install --runtime codex --target repo --apply --yes
+node packages/cli/src/bin/pairslash.js doctor --runtime codex --target repo
 ```
 
-### PowerShell / Windows
-
-```powershell
-New-Item -ItemType Directory -Force -Path .agents\skills
-Copy-Item -Recurse packs\core\pairslash-plan .agents\skills\
-Copy-Item -Recurse packs\core\pairslash-review .agents\skills\
-Copy-Item -Recurse packs\core\pairslash-onboard-repo .agents\skills\
-Copy-Item -Recurse packs\core\pairslash-command-suggest .agents\skills\
-Copy-Item -Recurse packs\core\pairslash-memory-candidate .agents\skills\
-Copy-Item -Recurse packs\core\pairslash-memory-write-global .agents\skills\
-Copy-Item -Recurse packs\core\pairslash-memory-audit .agents\skills\
-```
-
-### Verify in Codex CLI
-
-1. Launch Codex CLI from repo root.
-2. Use `/skills`.
-3. Confirm all 7 skills appear.
-4. Continue to `docs/workflows/phase-2-operations.md` for validation and safety gates.
-
-## GitHub Copilot CLI path
-
-Use this path when installing PairSlash into GitHub Copilot CLI.
-
-### Bash / macOS / Linux
+### Copilot user-scope bootstrap install
 
 ```bash
-mkdir -p .github/skills
-cp -r packs/core/pairslash-plan .github/skills/
-cp -r packs/core/pairslash-review .github/skills/
-cp -r packs/core/pairslash-onboard-repo .github/skills/
-cp -r packs/core/pairslash-command-suggest .github/skills/
-cp -r packs/core/pairslash-memory-candidate .github/skills/
-cp -r packs/core/pairslash-memory-write-global .github/skills/
-cp -r packs/core/pairslash-memory-audit .github/skills/
+node packages/cli/src/bin/pairslash.js preview install --runtime copilot --target user
+node packages/cli/src/bin/pairslash.js install --runtime copilot --target user --apply --yes
+node packages/cli/src/bin/pairslash.js doctor --runtime copilot --target user
 ```
 
-### PowerShell / Windows
-
-```powershell
-New-Item -ItemType Directory -Force -Path .github\skills
-Copy-Item -Recurse packs\core\pairslash-plan .github\skills\
-Copy-Item -Recurse packs\core\pairslash-review .github\skills\
-Copy-Item -Recurse packs\core\pairslash-onboard-repo .github\skills\
-Copy-Item -Recurse packs\core\pairslash-command-suggest .github\skills\
-Copy-Item -Recurse packs\core\pairslash-memory-candidate .github\skills\
-Copy-Item -Recurse packs\core\pairslash-memory-write-global .github\skills\
-Copy-Item -Recurse packs\core\pairslash-memory-audit .github\skills\
-```
-
-### Verify in GitHub Copilot CLI
-
-1. Launch Copilot CLI from repo root.
-2. Run `/skills list`.
-3. Confirm all 7 skills appear.
-4. Continue to `docs/workflows/phase-2-operations.md` for validation and safety gates.
-
-## Required filesystem
-
-Ensure:
-
-```text
-.pairslash/project-memory/
-.pairslash/task-memory/
-.pairslash/sessions/
-.pairslash/audit-log/
-.pairslash/staging/
-```
-
-## Post-install validation
-
-Run these from repo root after either runtime path:
+### Install full core set
 
 ```bash
-python scripts/phase2_checks.py --all
-python -m unittest discover -s tests -p "test_*.py"
+node packages/cli/src/bin/pairslash.js preview install --runtime codex --target repo --all
+node packages/cli/src/bin/pairslash.js install --runtime codex --target repo --all --apply --yes
 ```
 
-If you are claiming runtime support rather than just installing locally, continue
-to `docs/compatibility/runtime-verification.md` and record the outcome in the
-compatibility artifacts.
+## Validation
+
+After install:
+
+1. Launch runtime from repo root.
+2. Run `/skills`.
+3. Select `pairslash-plan`.
+4. Ask: `Create a repo plan from the current repo state.`
+
+If setup problems appear, use `docs/workflows/phase-4-doctor-troubleshooting.md`.
