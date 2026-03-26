@@ -1,0 +1,13 @@
+{
+  "name": "@pairslash/contract-engine",
+  "version": "0.5.0",
+  "private": true,
+  "type": "module",
+  "exports": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "dependencies": {
+    "@pairslash/spec-core": "file:../spec-core",
+    "@pairslash/runtime-codex-adapter": "file:../runtime-codex-adapter",
+    "@pairslash/runtime-copilot-adapter": "file:../runtime-copilot-adapter"
+  }
+}

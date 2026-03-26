@@ -88,6 +88,36 @@ export function supportsInstallSurface(surface) {
   return supportedInstallSurfaces.includes(surface);
 }
 
+export function describeEnforcementBoundary(manifest = null) {
+  return [
+    "slash-entrypoint:/skills",
+    `direct-invocation-prefix:${renderDirectInvocation(manifest?.pack_name ?? "pack-id").slice(0, 1)}`,
+    `install-surfaces:${supportedInstallSurfaces.join(",")}`,
+    "metadata-surface:package/pairslash-bundle.json",
+  ];
+}
+
+export function describePolicyEnforcement() {
+  return {
+    runtime,
+    primary_enforcement: "pairslash-wrapper-plus-hook-assist",
+    hook_support: "advisory",
+    supported_surfaces: [
+      "agent",
+      "canonical_skill",
+      "direct_invocation",
+      "hook",
+      "mcp",
+      "metadata",
+      "support_doc",
+    ],
+    surface_notes: [
+      "PairSlash wrapper/runtime adapter remains authoritative for Copilot CLI policy enforcement.",
+      "Copilot hooks may assist preflight enforcement, but policy must not rely on hooks alone.",
+    ],
+  };
+}
+
 function spawnRuntime(args) {
   const options = { encoding: "utf8" };
   const direct = spawnSync(executable, args, options);

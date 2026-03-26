@@ -1,0 +1,11 @@
+{
+  "kind": "contract-envelope",
+  "schema_version": "2.0.0",
+  "contract_id": "invalid:codex_cli:repo:lint",
+  "runtime": "codex_cli",
+  "target": "repo",
+  "canonical_entrypoint": "/skills",
+  "workflow_class": "read-oriented",
+  "risk_level": "low",
+  "input_contract": {}
+}

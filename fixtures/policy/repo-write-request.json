@@ -1,0 +1,8 @@
+{
+  "action": "workflow.apply",
+  "requested_runtime": "codex_cli",
+  "requested_target": "repo",
+  "apply": true,
+  "preview_requested": false,
+  "approval": "none"
+}

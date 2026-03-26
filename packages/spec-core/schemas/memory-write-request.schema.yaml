@@ -1,0 +1,29 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://pairslash.dev/schemas/memory-write-request/1.0.0"
+title: PairSlash Memory Write Request
+description: Structured Phase 5 request for the authoritative memory write pipeline.
+
+type: object
+required:
+  - kind
+  - schema_version
+  - runtime
+  - target
+  - request_source
+  - record
+
+properties:
+  kind:
+    const: memory-write-request
+  schema_version:
+    const: "1.0.0"
+  runtime:
+    enum: [codex_cli, copilot_cli]
+  target:
+    enum: [repo, user]
+  request_source:
+    enum: [cli, workflow, api]
+  record:
+    type: object
+
+additionalProperties: true

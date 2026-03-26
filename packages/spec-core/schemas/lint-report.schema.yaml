@@ -22,7 +22,9 @@ properties:
   schema_version:
     const: "1.0.0"
   phase:
-    const: phase4-bridge
+    enum:
+      - phase4-bridge
+      - phase5-contract-policy
   generated_at:
     type: string
     minLength: 1
@@ -77,6 +79,12 @@ properties:
     items:
       $ref: "#/$defs/issueEntry"
   blocking_errors:
+    type: array
+  contract_schema_version:
+    type: string
+  policy_schema_version:
+    type: string
+  policy_verdicts:
     type: array
     items:
       type: object

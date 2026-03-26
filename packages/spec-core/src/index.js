@@ -8,3 +8,4 @@ export * from "./manifest-v2.schema.js";
 export * from "./runtime-range.js";
 export * from "./utils.js";
 export * from "./validate.js";
+export * from "./validate-phase5.js";

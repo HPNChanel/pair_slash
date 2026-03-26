@@ -12,6 +12,7 @@
     "@pairslash/compiler-copilot": "file:../compiler-copilot",
     "@pairslash/lint-bridge": "file:../lint-bridge",
     "@pairslash/installer": "file:../installer",
-    "@pairslash/doctor": "file:../doctor"
+    "@pairslash/doctor": "file:../doctor",
+    "@pairslash/memory-engine": "file:../memory-engine"
   }
 }

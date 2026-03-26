@@ -1,0 +1,74 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://pairslash.dev/schemas/memory-write-staging-artifact/1.0.0"
+title: PairSlash Memory Write Staging Artifact
+description: Persisted preview artifact used as the only allowed source for authoritative memory apply.
+
+type: object
+required:
+  - kind
+  - schema_version
+  - runtime
+  - target
+  - artifact_id
+  - request_key
+  - content_fingerprint
+  - path
+  - request
+  - preview_patch
+  - pipeline_stages
+  - related_records
+  - duplicate_matches
+  - conflict_matches
+  - scope_warnings
+  - record_disposition
+  - approval
+  - policy_verdict
+  - ready_for_apply
+  - warnings
+  - errors
+
+properties:
+  kind:
+    const: memory-write-staging-artifact
+  schema_version:
+    const: "1.0.0"
+  runtime:
+    enum: [codex_cli, copilot_cli]
+  target:
+    enum: [repo, user]
+  artifact_id:
+    type: string
+  request_key:
+    type: string
+  content_fingerprint:
+    type: string
+  path:
+    type: string
+  request:
+    type: object
+  preview_patch:
+    type: object
+  pipeline_stages:
+    type: array
+  related_records:
+    type: array
+  duplicate_matches:
+    type: array
+  conflict_matches:
+    type: array
+  scope_warnings:
+    type: array
+  record_disposition:
+    enum: [append, supersede, reject-candidate-if-conflict]
+  approval:
+    type: object
+  policy_verdict:
+    type: object
+  ready_for_apply:
+    type: boolean
+  warnings:
+    type: array
+  errors:
+    type: array
+
+additionalProperties: true

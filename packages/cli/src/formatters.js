@@ -166,9 +166,18 @@ export function formatDoctorText(report) {
 
 export function formatLintText(report) {
   const lines = [
-    `Phase 4 lint bridge: ${report.ok ? "pass" : "fail"}`,
+    `PairSlash lint: ${report.ok ? "pass" : "fail"}`,
+    `Phase: ${report.phase}`,
     `Target: ${report.target}`,
     `Runtime scope: ${report.runtime_scope}`,
+  ];
+  if (report.contract_schema_version && report.policy_schema_version) {
+    lines.push(
+      `Contract schema: ${report.contract_schema_version}`,
+      `Policy schema: ${report.policy_schema_version}`,
+    );
+  }
+  lines.push(
     "",
     "Summary:",
     `- packs: ${report.summary.pack_count}`,
@@ -179,7 +188,7 @@ export function formatLintText(report) {
     `- notes: ${report.summary.note_count}`,
     "",
     "Issues:",
-  ];
+  );
   if (report.issues.length === 0) {
     lines.push("- none");
   } else {
@@ -189,6 +198,19 @@ export function formatLintText(report) {
       lines.push(`  ${issue.message}`);
       if (issue.remediation) {
         lines.push(`  remediation: ${issue.remediation}`);
+      }
+    }
+  }
+  if (Array.isArray(report.policy_verdicts)) {
+    lines.push("", "Policy Verdicts:");
+    if (report.policy_verdicts.length === 0) {
+      lines.push("- none");
+    } else {
+      for (const verdict of report.policy_verdicts) {
+        lines.push(`- ${verdict.pack_id ?? "global"} :: ${verdict.runtime} :: ${verdict.overall_verdict}`);
+        if (verdict.explanation?.summary) {
+          lines.push(`  ${verdict.explanation.summary}`);
+        }
       }
     }
   }
@@ -213,6 +235,99 @@ export function formatInstallResult(result) {
   for (const [kind, count] of Object.entries(result.summary)) {
     if (count > 0) {
       lines.push(`- ${kind}: ${count}`);
+    }
+  }
+  return `${lines.join("\n")}\n`;
+}
+
+export function formatMemoryWritePreviewText(preview) {
+  const lines = [
+    "Action: memory.write-global",
+    `Runtime: ${preview.runtime}`,
+    `Target: ${preview.target}`,
+    `Disposition: ${preview.record_disposition}`,
+    `Policy verdict: ${preview.policy_verdict.overall_verdict}`,
+    `Ready for apply: ${preview.ready_for_apply ? "yes" : "no"}`,
+    `Requires confirmation: ${preview.requires_confirmation ? "yes" : "no"}`,
+    `Target file: ${preview.preview_patch.target_file ?? "unresolved"}`,
+    `Staging artifact: ${preview.staging_artifact.path} (${preview.staging_artifact.exists ? "present" : "missing"})`,
+  ];
+  if (preview.related_records.length > 0) {
+    lines.push(`Related records: ${preview.related_records.length}`);
+  }
+  if (preview.duplicate_matches.length > 0) {
+    lines.push(`Duplicate matches: ${preview.duplicate_matches.length}`);
+  }
+  if (preview.conflict_matches.length > 0) {
+    lines.push(`Conflict matches: ${preview.conflict_matches.length}`);
+  }
+  if (preview.policy_verdict.explanation?.summary) {
+    lines.push(`Policy summary: ${preview.policy_verdict.explanation.summary}`);
+  }
+  if (preview.policy_verdict.reasons?.length > 0) {
+    lines.push("", "Policy reasons:");
+    for (const reason of preview.policy_verdict.reasons) {
+      lines.push(`- ${reason.code}: ${reason.message}`);
+    }
+  }
+  if (preview.warnings.length > 0) {
+    lines.push("", "Warnings:");
+    for (const warning of preview.warnings) {
+      lines.push(`- ${warning}`);
+    }
+  }
+  if (preview.errors.length > 0) {
+    lines.push("", "Errors:");
+    for (const error of preview.errors) {
+      lines.push(`- ${error}`);
+    }
+  }
+  lines.push("", preview.preview_patch.text || "Preview unavailable.");
+  return `${lines.join("\n")}\n`;
+}
+
+export function formatMemoryWriteResultText(result) {
+  const lines = [
+    "Action: memory.write-global",
+    `Status: ${result.status}`,
+    `Runtime: ${result.runtime}`,
+    `Target: ${result.target}`,
+    `Disposition: ${result.record_disposition}`,
+    `Committed: ${result.committed ? "yes" : "no"}`,
+    `Policy verdict: ${result.policy_verdict.overall_verdict}`,
+    `Target file: ${result.target_file ?? "none"}`,
+    `Staging artifact: ${result.staging_artifact.path} (${result.staging_artifact.exists ? "present" : "missing"})`,
+    `Audit log: ${result.audit_log_path ?? "none"}`,
+    `Index updated: ${result.index_updated ? "yes" : "no"}`,
+  ];
+  if (result.related_records.length > 0) {
+    lines.push(`Related records: ${result.related_records.length}`);
+  }
+  if (result.duplicate_matches.length > 0) {
+    lines.push(`Duplicate matches: ${result.duplicate_matches.length}`);
+  }
+  if (result.conflict_matches.length > 0) {
+    lines.push(`Conflict matches: ${result.conflict_matches.length}`);
+  }
+  if (result.policy_verdict.explanation?.summary) {
+    lines.push(`Policy summary: ${result.policy_verdict.explanation.summary}`);
+  }
+  if (result.policy_verdict.reasons?.length > 0) {
+    lines.push("", "Policy reasons:");
+    for (const reason of result.policy_verdict.reasons) {
+      lines.push(`- ${reason.code}: ${reason.message}`);
+    }
+  }
+  if (result.warnings.length > 0) {
+    lines.push("", "Warnings:");
+    for (const warning of result.warnings) {
+      lines.push(`- ${warning}`);
+    }
+  }
+  if (result.errors.length > 0) {
+    lines.push("", "Errors:");
+    for (const error of result.errors) {
+      lines.push(`- ${error}`);
     }
   }
   return `${lines.join("\n")}\n`;

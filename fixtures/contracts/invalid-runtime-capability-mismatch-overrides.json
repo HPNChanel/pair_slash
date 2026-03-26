@@ -1,0 +1,10 @@
+{
+  "runtime_bindings": {
+    "copilot_cli": {
+      "compatibility": {
+        "canonical_picker": "blocked",
+        "direct_invocation": "blocked"
+      }
+    }
+  }
+}

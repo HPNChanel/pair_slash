@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createInterface } from "node:readline/promises";
@@ -19,12 +18,21 @@ import {
   planUninstall,
   planUpdate,
 } from "@pairslash/installer";
+import {
+  applyMemoryWrite,
+  loadRequestFile,
+  loadStagedMemoryWritePreview,
+  previewMemoryWrite,
+  rejectMemoryWrite,
+} from "@pairslash/memory-engine";
 import { runDoctor } from "@pairslash/doctor";
 
 import {
   formatDoctorText,
   formatInstallResult,
   formatLintText,
+  formatMemoryWritePreviewText,
+  formatMemoryWriteResultText,
   formatPreviewPlanText,
 } from "../formatters.js";
 
@@ -39,15 +47,17 @@ function printUsage(stdout) {
   stdout.write(
     [
       "Usage:",
-      "  pairslash preview <install|update|uninstall> [pack-id...] [--runtime <codex|copilot|auto>] [--target repo|user] [--packs a,b] [--pack-set bootstrap|core] [--all] [--format text|json] [--plan-out path]",
+      "  pairslash preview <install|update|uninstall|memory-write-global> [pack-id...] [--runtime <codex|copilot|auto>] [--target repo|user] [--packs a,b] [--pack-set bootstrap|core] [--all] [--format text|json] [--plan-out path]",
       "  pairslash install [pack-id...] [--runtime <codex|copilot|auto>] [--target repo|user] [--packs a,b] [--pack-set bootstrap|core] [--all] [--format text|json] [--apply] [--dry-run] [--yes] [--non-interactive] [--plan-out path]",
       "  pairslash update [pack-id...] [--runtime <codex|copilot|auto>] [--target repo|user] [--packs a,b] [--from <version|manifest-digest>] [--to <pack.manifest.yaml>] [--format text|json] [--apply] [--dry-run] [--yes] [--non-interactive] [--plan-out path]",
       "  pairslash uninstall [pack-id...] [--runtime <codex|copilot|auto>] [--target repo|user] [--packs a,b] [--format text|json] [--apply] [--dry-run] [--yes] [--non-interactive] [--plan-out path]",
       "  pairslash doctor [--runtime <codex|copilot|auto>] [--target repo|user] [--packs a,b] [--format text|json] [--strict]",
-      "  pairslash lint --phase4 [pack-id...] [--runtime <codex|copilot|auto|all>] [--target repo|user] [--packs a,b] [--format text|json] [--strict]",
+      "  pairslash lint [pack-id...] [--runtime <codex|copilot|auto|all>] [--target repo|user] [--packs a,b] [--format text|json] [--strict]",
+      "  pairslash memory write-global [--request path] [--kind <kind>] [--title text] [--statement text] [--evidence text] [--scope <whole-project|subsystem|path-prefix>] [--scope-detail text] [--confidence <low|medium|high>] [--action <append|supersede|reject-candidate-if-conflict>] [--tags a,b] [--source-refs a,b] [--supersedes kind/title] [--updated-by text] [--format text|json] [--apply] [--yes]",
       "",
       "Defaults:",
       "  install/update/uninstall preview by default; add --apply to mutate.",
+      "  memory write-global previews by default; add --apply and explicit approval to commit.",
       "  install with no pack-id selects bootstrap pack-set (pairslash-plan).",
       "  use --pack-set core or --all to select all valid manifests under packs/core.",
       "  update/uninstall with no pack-id select all installed packs for the chosen runtime and target.",
@@ -77,6 +87,19 @@ function parseOptions(argv) {
     strict: false,
     packSet: "bootstrap",
     packSetProvided: false,
+    requestPath: null,
+    recordKind: null,
+    title: null,
+    statement: null,
+    evidence: null,
+    scope: null,
+    scopeDetail: null,
+    confidence: null,
+    recordAction: null,
+    tags: [],
+    sourceRefs: [],
+    supersedes: null,
+    updatedBy: null,
   };
   for (let index = 0; index < argv.length; index += 1) {
     const token = argv[index];
@@ -167,6 +190,77 @@ function parseOptions(argv) {
       options.strict = true;
       continue;
     }
+    if (token === "--request") {
+      options.requestPath = argv[index + 1];
+      index += 1;
+      continue;
+    }
+    if (token === "--kind") {
+      options.recordKind = argv[index + 1];
+      index += 1;
+      continue;
+    }
+    if (token === "--title") {
+      options.title = argv[index + 1];
+      index += 1;
+      continue;
+    }
+    if (token === "--statement") {
+      options.statement = argv[index + 1];
+      index += 1;
+      continue;
+    }
+    if (token === "--evidence") {
+      options.evidence = argv[index + 1];
+      index += 1;
+      continue;
+    }
+    if (token === "--scope") {
+      options.scope = argv[index + 1];
+      index += 1;
+      continue;
+    }
+    if (token === "--scope-detail") {
+      options.scopeDetail = argv[index + 1];
+      index += 1;
+      continue;
+    }
+    if (token === "--confidence") {
+      options.confidence = argv[index + 1];
+      index += 1;
+      continue;
+    }
+    if (token === "--action") {
+      options.recordAction = argv[index + 1];
+      index += 1;
+      continue;
+    }
+    if (token === "--tags") {
+      options.tags = argv[index + 1]
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean);
+      index += 1;
+      continue;
+    }
+    if (token === "--source-refs") {
+      options.sourceRefs = argv[index + 1]
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean);
+      index += 1;
+      continue;
+    }
+    if (token === "--supersedes") {
+      options.supersedes = argv[index + 1];
+      index += 1;
+      continue;
+    }
+    if (token === "--updated-by") {
+      options.updatedBy = argv[index + 1];
+      index += 1;
+      continue;
+    }
     if (!token.startsWith("--")) {
       options.packs.push(token);
     }
@@ -237,6 +331,44 @@ async function confirmApply({ action, stdin, stdout, options }) {
   }
 }
 
+async function confirmMemoryWrite({ stdin, stdout, options }) {
+  if (options.yes) {
+    return true;
+  }
+  if (options.nonInteractive || !stdin?.isTTY || !stdout?.isTTY) {
+    throw new Error("confirmation-required: rerun with --yes or use an interactive terminal");
+  }
+  const rl = createInterface({
+    input: stdin,
+    output: stdout,
+  });
+  try {
+    const answer = await rl.question("Type 'write-global' to confirm: ");
+    return answer.trim() === "write-global";
+  } finally {
+    rl.close();
+  }
+}
+
+function buildMemoryRequest(repoRoot, options) {
+  const requestFromFile = options.requestPath ? loadRequestFile(resolve(repoRoot, options.requestPath)) : {};
+  return {
+    ...requestFromFile,
+    ...(options.recordKind ? { kind: options.recordKind } : {}),
+    ...(options.title ? { title: options.title } : {}),
+    ...(options.statement ? { statement: options.statement } : {}),
+    ...(options.evidence ? { evidence: options.evidence } : {}),
+    ...(options.scope ? { scope: options.scope } : {}),
+    ...(options.scopeDetail ? { scope_detail: options.scopeDetail } : {}),
+    ...(options.confidence ? { confidence: options.confidence } : {}),
+    ...(options.recordAction ? { action: options.recordAction } : {}),
+    ...(options.tags.length > 0 ? { tags: options.tags } : {}),
+    ...(options.sourceRefs.length > 0 ? { source_refs: options.sourceRefs } : {}),
+    ...(options.supersedes ? { supersedes: options.supersedes } : {}),
+    ...(options.updatedBy ? { updated_by: options.updatedBy } : {}),
+  };
+}
+
 function buildLifecycleEnvelope(action, repoRoot, options) {
   assertLifecycleAction(action, { command: "preview" });
   if (action !== "install" && options.packSetProvided) {
@@ -263,6 +395,9 @@ function buildLifecycleEnvelope(action, repoRoot, options) {
 }
 
 function handlePreview(action, repoRoot, options, stdout) {
+  if (action === "memory-write-global") {
+    throw new Error("memory-write-global preview requires interactive handler");
+  }
   assertRuntime(options.runtime);
   if (options.force) {
     throw new Error("unsupported-flag: --force is not available in Phase 4");
@@ -318,6 +453,75 @@ async function handleApply(action, repoRoot, options, stdout, stdin) {
   return 0;
 }
 
+async function handleMemoryWrite(repoRoot, options, stdout, stdin, { forcePreview = false } = {}) {
+  const request = buildMemoryRequest(repoRoot, options);
+  const runtime = options.runtime === "auto" ? "codex_cli" : options.runtime;
+  const target = options.target;
+  if (!options.apply || options.preview || forcePreview) {
+    const preview = previewMemoryWrite({
+      repoRoot,
+      request,
+      runtime,
+      target,
+    });
+    emit(stdout, preview, {
+      format: options.format,
+      text: formatMemoryWritePreviewText,
+    });
+    return preview.ready_for_apply ? 0 : 1;
+  }
+  const stagedPreview = loadStagedMemoryWritePreview({
+    repoRoot,
+    request,
+    runtime,
+    target,
+  });
+  if (stagedPreview && options.format === "text") {
+    emit(stdout, stagedPreview, {
+      format: options.format,
+      text: formatMemoryWritePreviewText,
+    });
+  }
+  if (!stagedPreview?.ready_for_apply) {
+    const blocked = applyMemoryWrite({
+      repoRoot,
+      request,
+      runtime,
+      target,
+    });
+    emit(stdout, blocked, {
+      format: options.format,
+      text: formatMemoryWriteResultText,
+    });
+    return blocked.committed ? 0 : 1;
+  }
+  const confirmed = await confirmMemoryWrite({ stdin, stdout, options });
+  if (!confirmed) {
+    const rejected = rejectMemoryWrite({
+      repoRoot,
+      request,
+      runtime,
+      target,
+    });
+    emit(stdout, rejected, {
+      format: options.format,
+      text: formatMemoryWriteResultText,
+    });
+    return 1;
+  }
+  const result = applyMemoryWrite({
+    repoRoot,
+    request,
+    runtime,
+    target,
+  });
+  emit(stdout, result, {
+    format: options.format,
+    text: formatMemoryWriteResultText,
+  });
+  return result.committed ? 0 : 1;
+}
+
 export async function runCli({
   argv = process.argv.slice(2),
   cwd = process.cwd(),
@@ -330,11 +534,22 @@ export async function runCli({
   }
   const repoRoot = resolve(cwd);
   const command = argv[0];
-  const options = parseOptions(argv.slice(command === "preview" ? 2 : 1));
+  const options = parseOptions(
+    argv.slice(command === "preview" ? 2 : command === "memory" ? 2 : 1),
+  );
 
   if (command === "preview") {
     const action = argv[1];
+    if (action === "memory-write-global") {
+      return handleMemoryWrite(repoRoot, options, stdout, stdin, { forcePreview: true });
+    }
     return handlePreview(action, repoRoot, options, stdout);
+  }
+  if (command === "memory") {
+    if (argv[1] !== "write-global") {
+      throw new Error(`unknown memory command: ${argv[1] ?? "(missing)"}`);
+    }
+    return handleMemoryWrite(repoRoot, options, stdout, stdin);
   }
   if (command === "install" || command === "update" || command === "uninstall") {
     return handleApply(command, repoRoot, options, stdout, stdin);
@@ -359,9 +574,6 @@ export async function runCli({
     return 0;
   }
   if (command === "lint") {
-    if (!options.phase4) {
-      throw new Error("lint requires --phase4 in this release");
-    }
     const report = runLintBridge({
       repoRoot,
       runtime: options.runtime,

@@ -1,0 +1,72 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://pairslash.dev/schemas/memory-write-result/1.0.0"
+title: PairSlash Memory Write Result
+description: Final result for the Phase 5 authoritative memory pipeline.
+
+type: object
+required:
+  - kind
+  - schema_version
+  - status
+  - runtime
+  - target
+  - request
+  - policy_verdict
+  - pipeline_stages
+  - related_records
+  - duplicate_matches
+  - conflict_matches
+  - scope_warnings
+  - record_disposition
+  - staging_artifact
+  - approval
+  - committed
+  - index_updated
+  - warnings
+  - errors
+
+properties:
+  kind:
+    const: memory-write-result
+  schema_version:
+    const: "1.0.0"
+  status:
+    enum: [preview, committed, rejected, conflict, denied, failed]
+  runtime:
+    enum: [codex_cli, copilot_cli]
+  target:
+    enum: [repo, user]
+  request:
+    type: object
+  policy_verdict:
+    type: object
+  pipeline_stages:
+    type: array
+  related_records:
+    type: array
+  duplicate_matches:
+    type: array
+  conflict_matches:
+    type: array
+  scope_warnings:
+    type: array
+  record_disposition:
+    enum: [append, supersede, reject-candidate-if-conflict]
+  staging_artifact:
+    type: object
+  approval:
+    type: object
+  target_file:
+    type: [string, "null"]
+  audit_log_path:
+    type: [string, "null"]
+  committed:
+    type: boolean
+  index_updated:
+    type: boolean
+  warnings:
+    type: array
+  errors:
+    type: array
+
+additionalProperties: true

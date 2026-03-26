@@ -56,6 +56,15 @@ surface.
 
 No other workflow may write Global Project Memory as a side effect.
 
+## Side-effect contract
+
+- Filesystem writes are limited to:
+  - `.pairslash/project-memory/*`
+  - `.pairslash/project-memory/90-memory-index.yaml`
+  - `.pairslash/audit-log/*.yaml`
+- Writes are allowed only after preview is generated and explicit acceptance is obtained.
+- No hidden write, no silent fallback, and no freeform authoritative blob is permitted.
+
 ## Compatibility authority
 
 - Pack metadata: `packs/core/pairslash-memory-write-global/pack.manifest.yaml`

@@ -113,7 +113,7 @@ Uninstall semantics:
 ```bash
 node packages/cli/src/bin/pairslash.js doctor --runtime codex --target repo
 node packages/cli/src/bin/pairslash.js doctor --runtime copilot --target user
-node packages/cli/src/bin/pairslash.js lint --phase4
+node packages/cli/src/bin/pairslash.js lint
 ```
 
 Doctor verdict meanings and common remediations live in

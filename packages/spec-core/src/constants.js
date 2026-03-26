@@ -8,6 +8,12 @@ export const PREVIEW_PLAN_SCHEMA_VERSION = "1.0.0";
 export const DOCTOR_REPORT_SCHEMA_VERSION = "2.1.0";
 export const INSTALL_JOURNAL_SCHEMA_VERSION = "1.0.0";
 export const LINT_REPORT_SCHEMA_VERSION = "1.0.0";
+export const CONTRACT_ENVELOPE_SCHEMA_VERSION = "2.0.0";
+export const POLICY_VERDICT_SCHEMA_VERSION = "2.0.0";
+export const MEMORY_WRITE_REQUEST_SCHEMA_VERSION = "1.0.0";
+export const MEMORY_WRITE_PREVIEW_SCHEMA_VERSION = "1.0.0";
+export const MEMORY_WRITE_RESULT_SCHEMA_VERSION = "1.0.0";
+export const MEMORY_WRITE_STAGING_SCHEMA_VERSION = "1.0.0";
 
 export const SUPPORTED_RUNTIMES = ["codex_cli", "copilot_cli"];
 export const SUPPORTED_TARGETS = ["repo", "user"];
@@ -73,6 +79,60 @@ export const PREVIEW_OPERATION_KINDS = [
   "write_journal",
 ];
 export const SUPPORT_VERDICTS = ["pass", "warn", "degraded", "fail", "unsupported"];
+export const POLICY_DECISIONS = ["allow", "ask", "deny", "require-preview"];
+export const POLICY_RISK_CATEGORIES = [
+  "read-only",
+  "local-write",
+  "repo-write",
+  "destructive",
+  "networked",
+  "secret-touching",
+];
+export const POLICY_REASON_AREAS = [
+  "contract",
+  "runtime-boundary",
+  "capability",
+  "tool",
+  "preview",
+  "approval",
+  "memory-authority",
+  "fallback",
+  "conflict",
+  "risk",
+];
+export const POLICY_PRIMARY_ENFORCEMENT_MODES = [
+  "pairslash-wrapper",
+  "pairslash-wrapper-plus-hook-assist",
+];
+export const POLICY_HOOK_SUPPORT_LEVELS = ["none", "advisory", "enforcing"];
+export const CAPABILITY_NEGOTIATION_RESULTS = [
+  "granted",
+  "ask",
+  "denied",
+  "fallback-blocked",
+];
+export const CONTRACT_INPUT_SOURCES = ["cli", "workflow", "api"];
+export const CONTRACT_INPUT_MODES = ["read", "preview", "apply", "lint", "doctor"];
+export const CONTRACT_OUTPUT_SHAPES = [
+  "structured-markdown",
+  "structured-json",
+  "structured-yaml",
+];
+export const CONTRACT_MEMORY_MODES = ["none", "read", "write", "promote"];
+export const CONTRACT_MEMORY_TARGET_SCOPES = [
+  "global-project-memory",
+  "task-memory",
+  "staging",
+  "none",
+];
+export const CONTRACT_RUNTIME_SCOPES = ["codex-only", "copilot-only", "both"];
+export const CONTRACT_FAILURE_TYPES = [
+  "validation-failure",
+  "capability-mismatch",
+  "runtime-unsupported",
+  "policy-blocked",
+  "tool-unavailable",
+];
 export const DOCTOR_CHECK_GROUPS = [
   "runtime",
   "scope",
@@ -91,6 +151,29 @@ export const OVERRIDE_MARKER_FILE = ".pairslash.local-overrides.yaml";
 export const NORMALIZED_IR_FILE = "normalized-ir.json";
 export const COMPILED_PACK_FILE = "compiled-pack.json";
 export const INSTALL_JOURNAL_DIR = "install-journal";
+export const MEMORY_RECORD_KINDS = [
+  "decision",
+  "command",
+  "glossary",
+  "constraint",
+  "ownership",
+  "incident-lesson",
+  "pattern",
+];
+export const MEMORY_RECORD_SCOPES = ["whole-project", "subsystem", "path-prefix"];
+export const MEMORY_RECORD_CONFIDENCE = ["low", "medium", "high"];
+export const MEMORY_RECORD_ACTIONS = ["append", "supersede", "reject-candidate-if-conflict"];
+export const MEMORY_INDEX_STATUSES = ["active", "superseded", "deprecated"];
+export const MEMORY_REQUEST_SOURCES = ["cli", "workflow", "api"];
+export const MEMORY_WRITE_STATUSES = ["preview", "committed", "rejected", "conflict", "denied", "failed"];
+export const MEMORY_PIPELINE_STAGE_STATUSES = ["ok", "warn", "blocked", "skipped"];
+export const MEMORY_APPROVAL_STATES = ["pending", "explicit", "rejected", "not-required"];
+export const MEMORY_RECORD_LAYERS = [
+  "global-project-memory",
+  "task-memory",
+  "session",
+  "staging",
+];
 
 export const BUNDLE_KINDS = ["codex-skill-bundle", "copilot-package-bundle"];
 export const RUNTIME_SELECTORS = ["shared", ...SUPPORTED_RUNTIMES];

@@ -1,0 +1,13 @@
+{
+  "workflow_class": "read-oriented",
+  "risk_level": "critical",
+  "capabilities": ["plan_generation", "repo_read", "memory_read", "memory_write_global", "preview_emit"],
+  "memory_permissions": {
+    "authority_mode": "write-authority",
+    "explicit_write_only": true,
+    "global_project_memory": "write",
+    "task_memory": "read",
+    "session_artifacts": "implicit-read",
+    "audit_log": "append"
+  }
+}

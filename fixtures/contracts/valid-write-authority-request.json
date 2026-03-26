@@ -1,0 +1,6 @@
+{
+  "runtime": "copilot_cli",
+  "target": "user",
+  "action": "memory.write-global",
+  "source_type": "workflow"
+}

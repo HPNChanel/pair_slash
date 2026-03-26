@@ -28,7 +28,7 @@ Phase 4 introduces a managed install layer without changing the PairSlash runtim
 - `pairslash update`
 - `pairslash uninstall`
 - `pairslash doctor`
-- `pairslash lint --phase4`
+- `pairslash lint`
 
 ## Runtime mapping references
 

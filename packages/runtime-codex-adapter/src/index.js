@@ -88,6 +88,36 @@ export function supportsInstallSurface(surface) {
   return supportedInstallSurfaces.includes(surface);
 }
 
+export function describeEnforcementBoundary(manifest = null) {
+  return [
+    "slash-entrypoint:/skills",
+    `direct-invocation-prefix:${renderDirectInvocation(manifest?.pack_name ?? "pack-id").slice(0, 1)}`,
+    `install-surfaces:${supportedInstallSurfaces.join(",")}`,
+    "metadata-surface:agents/openai.yaml",
+  ];
+}
+
+export function describePolicyEnforcement() {
+  return {
+    runtime,
+    primary_enforcement: "pairslash-wrapper",
+    hook_support: "none",
+    supported_surfaces: [
+      "canonical_skill",
+      "config",
+      "context",
+      "direct_invocation",
+      "mcp",
+      "metadata",
+      "support_doc",
+    ],
+    surface_notes: [
+      "PairSlash wrapper/runtime adapter is the primary enforcement boundary for Codex CLI.",
+      "Codex CLI is not assumed to provide a native hook enforcement surface.",
+    ],
+  };
+}
+
 function spawnRuntime(args) {
   const options = { encoding: "utf8" };
   const direct = spawnSync(executable, args, options);

@@ -8,6 +8,8 @@
     "@pairslash/spec-core": "file:../spec-core",
     "@pairslash/compiler-codex": "file:../compiler-codex",
     "@pairslash/compiler-copilot": "file:../compiler-copilot",
+    "@pairslash/contract-engine": "file:../contract-engine",
+    "@pairslash/policy-engine": "file:../policy-engine",
     "@pairslash/runtime-codex-adapter": "file:../runtime-codex-adapter",
     "@pairslash/runtime-copilot-adapter": "file:../runtime-copilot-adapter"
   }

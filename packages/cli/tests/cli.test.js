@@ -1,7 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import YAML from "yaml";
 
 import { runCli } from "../src/bin/pairslash.js";
 
@@ -13,6 +14,47 @@ import {
 } from "../../../tests/phase4-helpers.js";
 
 const serial = { concurrency: false };
+
+function buildMemoryWriteArgs(extra = []) {
+  return [
+    "--runtime",
+    "codex",
+    "--target",
+    "repo",
+    "--kind",
+    "constraint",
+    "--title",
+    "Preview required before memory commit",
+    "--statement",
+    "Preview must be shown before authoritative memory commit.",
+    "--evidence",
+    "packages/cli/tests/cli.test.js",
+    "--scope",
+    "whole-project",
+    "--confidence",
+    "high",
+    "--action",
+    "append",
+    ...extra,
+  ];
+}
+
+function seedMemoryIndex(repoRoot) {
+  const indexPath = join(repoRoot, ".pairslash", "project-memory", "90-memory-index.yaml");
+  mkdirSync(join(repoRoot, ".pairslash", "project-memory"), { recursive: true });
+  writeFileSync(
+    indexPath,
+    YAML.stringify(
+      {
+        version: "0.1.0",
+        last_updated: "2026-03-26T00:00:00.000Z",
+        updated_by: "tests",
+        records: [],
+      },
+      { lineWidth: 0, simpleKeys: true },
+    ),
+  );
+}
 
 test("pairslash preview install emits json plan", serial, async () => {
   const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
@@ -533,12 +575,12 @@ test("pairslash doctor auto runtime resolves from install state", serial, async 
   }
 });
 
-test("pairslash lint --phase4 emits bridge json report", serial, async () => {
+test("pairslash lint emits contract/policy json report", serial, async () => {
   const fixture = createTempRepo({ packs: ["pairslash-plan"] });
   let output = "";
   try {
     const exitCode = await runCli({
-      argv: ["lint", "--phase4", "pairslash-plan", "--runtime", "all", "--format", "json"],
+      argv: ["lint", "pairslash-plan", "--runtime", "all", "--format", "json"],
       cwd: fixture.tempRoot,
       stdout: {
         write(chunk) {
@@ -549,22 +591,42 @@ test("pairslash lint --phase4 emits bridge json report", serial, async () => {
     assert.equal(exitCode, 0);
     const payload = JSON.parse(output);
     assert.equal(payload.kind, "lint-report");
-    assert.equal(payload.phase, "phase4-bridge");
+    assert.equal(payload.phase, "phase5-contract-policy");
+    assert.ok(Array.isArray(payload.policy_verdicts));
   } finally {
     fixture.cleanup();
   }
 });
 
-test("pairslash lint requires --phase4", serial, async () => {
-  await assert.rejects(
-    () =>
-      runCli({
-        argv: ["lint", "--format", "json"],
-        cwd: repoRoot,
-        stdout: { write() {} },
-      }),
-    /requires --phase4/,
-  );
+test("pairslash preview memory-write-global emits preview without mutating memory", serial, async () => {
+  const fixture = createTempRepo({ packs: ["pairslash-memory-write-global"] });
+  let output = "";
+  try {
+    seedMemoryIndex(fixture.tempRoot);
+    const exitCode = await runCli({
+      argv: ["preview", "memory-write-global", ...buildMemoryWriteArgs(["--format", "json"])],
+      cwd: fixture.tempRoot,
+      stdout: {
+        write(chunk) {
+          output += chunk;
+        },
+      },
+    });
+    assert.equal(exitCode, 0);
+    const payload = JSON.parse(output);
+    assert.equal(payload.kind, "memory-write-preview");
+    assert.equal(payload.policy_verdict.machine_readable, true);
+    assert.equal(
+      existsSync(join(fixture.tempRoot, payload.staging_artifact.path)),
+      true,
+    );
+    assert.equal(
+      existsSync(join(fixture.tempRoot, ".pairslash", "project-memory", "50-constraints.yaml")),
+      false,
+    );
+  } finally {
+    fixture.cleanup();
+  }
 });
 
 test("pairslash lint --strict fails on warnings", serial, async () => {
@@ -594,6 +656,101 @@ test("pairslash lint --strict fails on warnings", serial, async () => {
     const payload = JSON.parse(output);
     assert.equal(payload.summary.error_count, 0);
     assert.ok(payload.summary.warning_count > 0);
+  } finally {
+    fixture.cleanup();
+  }
+});
+
+test("pairslash memory write-global --apply is blocked when no preview artifact exists", serial, async () => {
+  const fixture = createTempRepo({ packs: ["pairslash-memory-write-global"] });
+  let output = "";
+  try {
+    seedMemoryIndex(fixture.tempRoot);
+    const exitCode = await runCli({
+      argv: ["memory", "write-global", ...buildMemoryWriteArgs(["--apply", "--format", "json"])],
+      cwd: fixture.tempRoot,
+      stdout: {
+        isTTY: false,
+        write(chunk) {
+          output += chunk;
+        },
+      },
+      stdin: {
+        isTTY: false,
+      },
+    });
+    assert.equal(exitCode, 1);
+    const payload = JSON.parse(output);
+    assert.equal(payload.status, "denied");
+    assert.ok(payload.errors.some((entry) => entry.startsWith("preview-required:")));
+  } finally {
+    fixture.cleanup();
+  }
+});
+
+test("pairslash memory write-global requires explicit confirmation after a preview artifact exists", serial, async () => {
+  const fixture = createTempRepo({ packs: ["pairslash-memory-write-global"] });
+  try {
+    seedMemoryIndex(fixture.tempRoot);
+    await runCli({
+      argv: ["preview", "memory-write-global", ...buildMemoryWriteArgs(["--format", "json"])],
+      cwd: fixture.tempRoot,
+      stdout: {
+        write() {},
+      },
+    });
+    await assert.rejects(
+      () =>
+        runCli({
+          argv: ["memory", "write-global", ...buildMemoryWriteArgs(["--apply"])],
+          cwd: fixture.tempRoot,
+          stdout: {
+            isTTY: false,
+            write() {},
+          },
+          stdin: {
+            isTTY: false,
+          },
+        }),
+      /confirmation-required/,
+    );
+  } finally {
+    fixture.cleanup();
+  }
+});
+
+test("pairslash memory write-global commits with --apply --yes after preview", serial, async () => {
+  const fixture = createTempRepo({ packs: ["pairslash-memory-write-global"] });
+  let output = "";
+  try {
+    seedMemoryIndex(fixture.tempRoot);
+    await runCli({
+      argv: ["preview", "memory-write-global", ...buildMemoryWriteArgs(["--format", "json"])],
+      cwd: fixture.tempRoot,
+      stdout: {
+        write() {},
+      },
+    });
+    const exitCode = await runCli({
+      argv: ["memory", "write-global", ...buildMemoryWriteArgs(["--apply", "--yes", "--format", "json"])],
+      cwd: fixture.tempRoot,
+      stdout: {
+        write(chunk) {
+          output += chunk;
+        },
+        isTTY: true,
+      },
+      stdin: {
+        isTTY: true,
+      },
+    });
+    assert.equal(exitCode, 0);
+    const payload = JSON.parse(output);
+    assert.equal(payload.status, "committed");
+    assert.equal(
+      existsSync(join(fixture.tempRoot, ".pairslash", "project-memory", "50-constraints.yaml")),
+      true,
+    );
   } finally {
     fixture.cleanup();
   }

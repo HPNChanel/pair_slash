@@ -1,7 +1,7 @@
 # pairslash-plan -- Workflow Contract
 
-**Version:** 0.4.0
-**Phase:** 4
+**Version:** 0.2.0
+**Phase:** 2
 **Class:** read-oriented
 **Status:** active
 

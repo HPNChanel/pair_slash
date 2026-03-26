@@ -1,0 +1,226 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://pairslash.dev/schemas/policy-verdict/2.0.0"
+title: PairSlash Policy Verdict
+description: Machine-readable Phase 5 policy verdict used by lint, preview, runtime adapters, and memory authority workflows.
+
+type: object
+required:
+  - kind
+  - schema_version
+  - contract_id
+  - runtime
+  - target
+  - action
+  - overall_verdict
+  - machine_readable
+  - preview_required
+  - approval_required
+  - allowed_operations
+  - blocked_operations
+  - evaluated_risks
+  - reasons
+  - capability_negotiation
+  - enforcement_context
+  - runtime_boundary
+  - explanation
+
+properties:
+  kind:
+    const: policy-verdict
+  schema_version:
+    const: "2.0.0"
+  contract_id:
+    type: [string, "null"]
+  runtime:
+    enum: [codex_cli, copilot_cli]
+  target:
+    enum: [repo, user]
+  action:
+    type: string
+    minLength: 1
+  overall_verdict:
+    enum: [allow, ask, deny, require-preview]
+  machine_readable:
+    type: boolean
+  preview_required:
+    type: boolean
+  approval_required:
+    type: boolean
+  allowed_operations:
+    type: array
+    items:
+      type: string
+      minLength: 1
+    uniqueItems: true
+  blocked_operations:
+    type: array
+    items:
+      type: string
+      minLength: 1
+    uniqueItems: true
+  evaluated_risks:
+    type: array
+    items:
+      type: object
+      required: [category, present, sources, rationale]
+      properties:
+        category:
+          enum:
+            - read-only
+            - local-write
+            - repo-write
+            - destructive
+            - networked
+            - secret-touching
+        present:
+          type: boolean
+        sources:
+          type: array
+          minItems: 1
+          items:
+            type: string
+            minLength: 1
+          uniqueItems: true
+        rationale:
+          type: string
+          minLength: 1
+      additionalProperties: false
+  reasons:
+    type: array
+    items:
+      type: object
+      required:
+        - code
+        - verdict
+        - policy_area
+        - related_risks
+        - message
+        - contract_fields
+        - runtime_factors
+      properties:
+        code:
+          type: string
+          minLength: 1
+        verdict:
+          enum: [allow, ask, deny, require-preview]
+        policy_area:
+          enum:
+            - contract
+            - runtime-boundary
+            - capability
+            - tool
+            - preview
+            - approval
+            - memory-authority
+            - fallback
+            - conflict
+            - risk
+        related_risks:
+          type: array
+          items:
+            enum:
+              - read-only
+              - local-write
+              - repo-write
+              - destructive
+              - networked
+              - secret-touching
+          uniqueItems: true
+        message:
+          type: string
+          minLength: 1
+        contract_fields:
+          type: array
+          items:
+            type: string
+            minLength: 1
+          uniqueItems: true
+        runtime_factors:
+          type: array
+          items:
+            type: string
+            minLength: 1
+          uniqueItems: true
+      additionalProperties: false
+  capability_negotiation:
+    type: array
+    items:
+      type: object
+      required: [capability, status]
+      properties:
+        capability:
+          type: string
+          minLength: 1
+        status:
+          enum: [granted, ask, denied, fallback-blocked]
+        reason:
+          type: [string, "null"]
+      additionalProperties: false
+  enforcement_context:
+    type: object
+    required:
+      - runtime
+      - primary_enforcement
+      - hook_support
+      - supported_surfaces
+      - surface_notes
+      - no_silent_fallback
+    properties:
+      runtime:
+        enum: [codex_cli, copilot_cli]
+      primary_enforcement:
+        enum: [pairslash-wrapper, pairslash-wrapper-plus-hook-assist]
+      hook_support:
+        enum: [none, advisory, enforcing]
+      supported_surfaces:
+        type: array
+        items:
+          type: string
+          minLength: 1
+        uniqueItems: true
+      surface_notes:
+        type: array
+        items:
+          type: string
+          minLength: 1
+        uniqueItems: true
+      no_silent_fallback:
+        type: boolean
+    additionalProperties: false
+  runtime_boundary:
+    type: object
+  explanation:
+    type: object
+    required:
+      - summary
+      - decisive_reason_codes
+      - decisive_contract_fields
+      - decisive_runtime_factors
+      - no_silent_fallback
+    properties:
+      summary:
+        type: string
+        minLength: 1
+      decisive_reason_codes:
+        type: array
+        items:
+          type: string
+          minLength: 1
+        uniqueItems: true
+      decisive_contract_fields:
+        type: array
+        items:
+          type: string
+          minLength: 1
+        uniqueItems: true
+      decisive_runtime_factors:
+        type: array
+        items:
+          type: string
+          minLength: 1
+        uniqueItems: true
+      no_silent_fallback:
+        type: boolean
+    additionalProperties: false
+
+additionalProperties: true

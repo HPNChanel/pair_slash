@@ -11,7 +11,7 @@ Status legend:
 - [x] compiler v2 stays one-spec-two-runtimes through shared IR coverage in `packages/compiler-codex/tests/compiler-codex.test.js` and `packages/compiler-copilot/tests/compiler-copilot.test.js`
 - [x] `install`, `update`, and `uninstall` exercise preview, rollback, override preservation, repo scope, and user scope in `packages/installer/tests/installer.test.js`
 - [x] `doctor` covers runtime/version/path/permission/conflict/tool/MCP checks in `packages/doctor/tests/doctor.test.js`
-- [x] `lint --phase4` blocks installability regressions in `packages/lint-bridge/tests/lint-bridge.test.js`
+- [x] `pairslash lint` blocks installability regressions in `packages/lint-bridge/tests/lint-bridge.test.js`
 - [x] CLI wiring for `preview`, `install`, `update`, `uninstall`, `doctor`, and `lint` is covered in `packages/cli/tests/cli.test.js`
 - [x] compat-lab bootstrap keeps 5 fixtures and deterministic Codex/Copilot goldens in `packages/compat-lab/tests/compat-lab.test.js`
 - [x] Phase 4 acceptance slice covers macOS, Linux, and Windows prep in `packages/compat-lab/tests/acceptance.test.js`
@@ -29,7 +29,7 @@ Status legend:
 
 ## Deferred to Phase 5 / 6
 
-- [ ] Phase 5: replace bridge lint with full contract/policy enforcement
+- [x] Phase 5: replace bridge lint with full contract/policy enforcement
 - [ ] Phase 5: extend override policy only after a safe merged-file contract exists
 - [ ] Phase 6: add live runtime matrix, auth/session checks, and real MCP interaction coverage
 - [ ] Phase 6: expand compat-lab beyond bootstrap fixtures and fake runtime lanes

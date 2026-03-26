@@ -1476,8 +1476,8 @@ export function validateLintReport(record) {
   if (record?.schema_version !== LINT_REPORT_SCHEMA_VERSION) {
     errors.push(`schema_version must be ${LINT_REPORT_SCHEMA_VERSION}`);
   }
-  if (record?.phase !== "phase4-bridge") {
-    errors.push("phase must be phase4-bridge");
+  if (!["phase4-bridge", "phase5-contract-policy"].includes(record?.phase)) {
+    errors.push("phase must be phase4-bridge or phase5-contract-policy");
   }
   if (typeof record?.generated_at !== "string") {
     errors.push("generated_at must be string");
@@ -1571,6 +1571,32 @@ export function validateLintReport(record) {
         errors.push(`unsupported blocking_errors[].runtime: ${item?.runtime}`);
       }
       validateNonEmptyString(item?.message, "blocking_errors[].message", errors, "LBR003");
+    }
+  }
+  if ("contract_schema_version" in record && typeof record?.contract_schema_version !== "string") {
+    errors.push("contract_schema_version must be string");
+  }
+  if ("policy_schema_version" in record && typeof record?.policy_schema_version !== "string") {
+    errors.push("policy_schema_version must be string");
+  }
+  if ("policy_verdicts" in record) {
+    if (!Array.isArray(record.policy_verdicts)) {
+      errors.push("policy_verdicts must be a list");
+    } else {
+      for (const verdict of record.policy_verdicts) {
+        if (verdict?.pack_id !== null && typeof verdict?.pack_id !== "string") {
+          errors.push("policy_verdicts[].pack_id must be string or null");
+        }
+        if (typeof verdict?.kind !== "string") {
+          errors.push("policy_verdicts[].kind must be string");
+        }
+        if (typeof verdict?.overall_verdict !== "string") {
+          errors.push("policy_verdicts[].overall_verdict must be string");
+        }
+        if (!Array.isArray(verdict?.reasons)) {
+          errors.push("policy_verdicts[].reasons must be a list");
+        }
+      }
     }
   }
   if (!Array.isArray(record?.next_actions)) {

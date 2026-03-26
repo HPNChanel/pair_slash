@@ -1,0 +1,8 @@
+{
+  "action": "lint",
+  "requested_runtime": "codex_cli",
+  "requested_target": "repo",
+  "apply": false,
+  "preview_requested": true,
+  "approval": "explicit"
+}

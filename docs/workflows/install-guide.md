@@ -15,6 +15,8 @@ Use:
 4. `/skills` -> first workflow
 
 For the shortest onboarding path, use `docs/workflows/phase-4-quickstart.md`.
+For the broader operations flow, use `docs/workflows/phase-2-operations.md`.
+For runtime evidence and guardrails, use `docs/compatibility/runtime-verification.md`.
 
 ## Managed lifecycle commands
 

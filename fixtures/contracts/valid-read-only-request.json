@@ -1,0 +1,6 @@
+{
+  "runtime": "codex_cli",
+  "target": "repo",
+  "action": "lint",
+  "source_type": "manifest"
+}
