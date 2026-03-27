@@ -1,0 +1,14 @@
+kind: constraint
+title: Preview trust boundary must be explicit
+statement: Preview must show deterministic patch and policy verdict before apply.
+evidence: docs/architecture/phase-5-contract-policy-engine.md
+scope: whole-project
+confidence: high
+action: append
+tags:
+  - preview
+  - trust-surface
+source_refs:
+  - packages/tools/cli/src/bin/pairslash.js
+updated_by: preview-tests
+timestamp: 2026-03-27T00:00:00.000Z

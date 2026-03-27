@@ -1,0 +1,95 @@
+{
+  "kind": "contract-envelope",
+  "schema_version": "2.0.0",
+  "contract_id": "pairslash-plan:codex_cli:repo:lint",
+  "source": {
+    "type": "manifest",
+    "pack_id": "pairslash-plan",
+    "manifest_path": null
+  },
+  "runtime": "codex_cli",
+  "target": "repo",
+  "canonical_entrypoint": "/skills",
+  "direct_invocation": "$pairslash-plan",
+  "workflow_class": "read-oriented",
+  "risk_level": "low",
+  "input_contract": {
+    "required_fields": ["runtime", "target"],
+    "optional_fields": ["packs"],
+    "accepted_sources": ["cli"],
+    "accepted_modes": ["read"],
+    "validation_hints": {
+      "schema_refs": ["packages/core/spec-core/schemas/pack-manifest-v2.schema.yaml@2.1.0"],
+      "strict_required_fields": true,
+      "reject_unknown_fields": true,
+      "error_codes": ["CONTRACT-VALIDATION-FAILED"]
+    }
+  },
+  "output_contract": {
+    "output_shape": "structured-markdown",
+    "structured_sections": [
+      {
+        "id": "summary",
+        "label": "Summary",
+        "required": true,
+        "machine_readable": false
+      }
+    ],
+    "machine_readable_fields": ["policy_verdict"],
+    "artifacts": [
+      {
+        "id": "result_payload",
+        "when": "after processing request",
+        "required": true
+      }
+    ],
+    "allowed_side_effects_summary": {
+      "memory": "read",
+      "network_allowed": false,
+      "destructive_allowed": false,
+      "secret_touching_allowed": false,
+      "preview_required": false,
+      "explicit_approval_required": false,
+      "filesystem_write_paths": []
+    }
+  },
+  "failure_contract": {
+    "no_silent_fallback": true,
+    "categories": [
+      {
+        "code": "CONTRACT-VALIDATION-FAILED",
+        "type": "validation-failure",
+        "retryable": false,
+        "description": "Input or manifest data does not satisfy contract schema."
+      }
+    ],
+    "codes": ["CONTRACT-VALIDATION-FAILED"]
+  },
+  "tool_contract": {
+    "tools_allowed": [],
+    "tools_required": [],
+    "required_tools": [],
+    "required_mcp_servers": [],
+    "network_allowance": false,
+    "destructive_allowance": false,
+    "secret_touching_allowance": false
+  },
+  "capability_scope": {
+    "runtime_scope": "both",
+    "requested": ["plan_generation", "repo_read", "memory_read"],
+    "granted": ["plan_generation", "repo_read", "memory_read"],
+    "negotiation": [
+      {
+        "capability": "plan_generation",
+        "status": "granted",
+        "reason": null
+      }
+    ],
+    "degraded_behavior_notes": []
+  },
+  "runtime_boundary": {
+    "adapter": "codex_cli",
+    "enforcement_mode": "runtime-aware",
+    "differences": ["slash-entrypoint:/skills"]
+  }
+}

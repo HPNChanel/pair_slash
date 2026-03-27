@@ -17,7 +17,7 @@ risks:
     severity: high
     status: active
     mitigation:
-      - Enforce checks in scripts/phase2_checks.py.
+      - Enforce checks in npm run lint.
       - Require preview + acceptance language in skill/spec lint checks.
       - Audit memory changes in git review.
 

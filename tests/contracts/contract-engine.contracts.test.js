@@ -13,14 +13,14 @@ import {
 import { repoRoot } from "../phase4-helpers.js";
 
 function loadJsonFixture(fileName) {
-  return JSON.parse(readFileSync(join(repoRoot, "fixtures", "contracts", fileName), "utf8"));
+  return JSON.parse(readFileSync(join(repoRoot, "tests", "fixtures", "phase5", "contracts", fileName), "utf8"));
 }
 
 function loadManifest(packId) {
   return loadPackManifest(join(repoRoot, "packs", "core", packId, "pack.manifest.yaml"));
 }
 
-test("fixtures/contracts valid read-only request compiles into contract v2", () => {
+test("tests/fixtures/phase5/contracts valid read-only request compiles into contract v2", () => {
   const request = loadJsonFixture("valid-read-only-request.json");
   const contract = buildContractEnvelope({
     manifest: loadManifest("pairslash-plan"),
@@ -33,7 +33,7 @@ test("fixtures/contracts valid read-only request compiles into contract v2", () 
   assert.equal(contract.memory_contract.authoritative_write_allowed, false);
 });
 
-test("fixtures/contracts invalid missing contract fixture fails parsing", () => {
+test("tests/fixtures/phase5/contracts invalid missing contract fixture fails parsing", () => {
   const payload = loadJsonFixture("invalid-missing-contract.json");
   assert.throws(
     () => parseContractEnvelope(payload),

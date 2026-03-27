@@ -3,8 +3,8 @@
 # Updated whenever a record is added, modified, or superseded.
 
 version: "0.1.0"
-last_updated: "2026-03-22T13:25:00+07:00"
-updated_by: phase2-hardening
+last_updated: "2026-03-27T12:15:00+07:00"
+updated_by: repo-normalization
 
 records:
   - file: 00-project-charter.yaml

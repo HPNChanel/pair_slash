@@ -95,9 +95,9 @@ confirmed with real CLI testing.
 | Project charter | `.pairslash/project-memory/00-project-charter.yaml` | Authoritative project identity |
 | Stack profile | `.pairslash/project-memory/10-stack-profile.yaml` | Runtime targets and tool paths |
 | Memory index | `.pairslash/project-memory/90-memory-index.yaml` | Index of active memory records |
-| Memory record schema | `packages/spec-core/schemas/memory-record.schema.yaml` | JSON Schema for all 11 semantic fields |
-| pairslash-plan spec | `packages/spec-core/specs/pairslash-plan.spec.yaml` | Formal workflow contracts |
-| pairslash-memory-write-global spec | `packages/spec-core/specs/pairslash-memory-write-global.spec.yaml` | Formal workflow contracts + 11-step pipeline |
+| Memory record schema | `packages/core/spec-core/schemas/memory-record.schema.yaml` | JSON Schema for all 11 semantic fields |
+| pairslash-plan spec | `packages/core/spec-core/specs/pairslash-plan.spec.yaml` | Formal workflow contracts |
+| pairslash-memory-write-global spec | `packages/core/spec-core/specs/pairslash-memory-write-global.spec.yaml` | Formal workflow contracts + 11-step pipeline |
 | pairslash-plan SKILL.md | `packs/core/pairslash-plan/SKILL.md` | Working skill definition |
 | pairslash-memory-write-global SKILL.md | `packs/core/pairslash-memory-write-global/SKILL.md` | Working skill definition |
 | Runtime surface matrix | `docs/compatibility/runtime-surface-matrix.yaml` | Documented facts per runtime, V1-V7 |
@@ -134,6 +134,6 @@ See `docs/compatibility/runtime-verification.md` for step-by-step testing instru
 | Skill reads `.pairslash/` files from instructions | **Unverified** | Requires real CLI testing |
 | Preview patch appears before write | **Unverified** | Requires real CLI testing |
 | `.pairslash/` directory structure exists | **Verified** | Filesystem listing 2026-03-21 |
-| All YAML files parse correctly | **Verified** | Python yaml.safe_load 2026-03-21 (9 files, 0 failures) |
+| All YAML files parse correctly | **Verified** | YAML parse verification recorded 2026-03-21 (9 files, 0 failures) |
 | No third-runtime references in skills | **Verified** | Grep returned 0 matches |
 | No silent memory writes in skills | **Verified** | Explicit prohibitions in SKILL.md lines confirmed |

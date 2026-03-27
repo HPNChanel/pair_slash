@@ -86,6 +86,9 @@ export function createTempRepo({ packs = ["pairslash-plan"] } = {}) {
   const tempRoot = mkdtempSync(join(tmpdir(), "pairslash-phase4-"));
   mkdirSync(join(tempRoot, "packs", "core"), { recursive: true });
   mkdirSync(join(tempRoot, ".pairslash"), { recursive: true });
+  cpSync(join(repoRoot, "packages"), join(tempRoot, "packages"), {
+    recursive: true,
+  });
   for (const packId of packs) {
     cpSync(join(repoRoot, "packs", "core", packId), join(tempRoot, "packs", "core", packId), {
       recursive: true,

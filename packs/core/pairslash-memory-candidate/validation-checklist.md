@@ -12,8 +12,8 @@ workflow.
 - [ ] `SKILL.md` states no-write rule for `.pairslash/project-memory/`
 - [ ] `SKILL.md` defines exactly 4 required output sections
 - [ ] `SKILL.md` includes the 4-class classification enum
-- [ ] `packages/spec-core/specs/pairslash-memory-candidate.spec.yaml` exists
-- [ ] `packages/spec-core/schemas/candidate-report.schema.yaml` exists
+- [ ] `packages/core/spec-core/specs/pairslash-memory-candidate.spec.yaml` exists
+- [ ] `packages/core/spec-core/schemas/candidate-report.schema.yaml` exists
 - [ ] `packs/core/pairslash-memory-candidate/contract.md` exists
 - [ ] `packs/core/pairslash-memory-candidate/example-invocation.md` exists
 - [ ] `packs/core/pairslash-memory-candidate/example-output.md` exists

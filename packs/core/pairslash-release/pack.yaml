@@ -97,5 +97,5 @@ source_of_truth:
   pack_dir: packs/core/pairslash-release
   skill: packs/core/pairslash-release/SKILL.md
   contract: packs/core/pairslash-release/contract.md
-  spec: packages/spec-core/specs/pairslash-release.spec.yaml
+  spec: packages/core/spec-core/specs/pairslash-release.spec.yaml
   validation_checklist: packs/core/pairslash-release/validation-checklist.md

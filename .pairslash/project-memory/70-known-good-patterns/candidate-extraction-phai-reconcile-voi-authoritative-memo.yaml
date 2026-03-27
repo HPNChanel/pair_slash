@@ -1,7 +1,7 @@
 kind: pattern
 title: "Candidate extraction phải reconcile với authoritative memory trước khi giữ candidate"
 statement: "Trong pairslash-memory-candidate, workflow phải đối chiếu từng claim với .pairslash/project-memory/ trước khi cho phép keep-as-candidate; nếu không reconcile được thì phải downgrade hoặc reject claim."
-evidence: "packs/core/pairslash-memory-candidate/SKILL.md#L59; packs/core/pairslash-memory-candidate/SKILL.md#L78; packages/spec-core/specs/pairslash-memory-candidate.spec.yaml#L94"
+evidence: "packs/core/pairslash-memory-candidate/SKILL.md#L59; packs/core/pairslash-memory-candidate/SKILL.md#L78; packages/core/spec-core/specs/pairslash-memory-candidate.spec.yaml#L94"
 scope: subsystem
 scope_detail: pairslash-memory-candidate
 confidence: high
@@ -15,7 +15,7 @@ tags:
   - pairslash-memory-candidate
 source_refs:
   - packs/core/pairslash-memory-candidate/SKILL.md
-  - packages/spec-core/specs/pairslash-memory-candidate.spec.yaml
+  - packages/core/spec-core/specs/pairslash-memory-candidate.spec.yaml
   - packs/core/pairslash-memory-candidate/validation-checklist.md
 updated_by: "session-user"
 timestamp: "2026-03-22T10:58:04.6107343+07:00"

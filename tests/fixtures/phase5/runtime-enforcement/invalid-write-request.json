@@ -1,0 +1,11 @@
+{
+  "action": "run",
+  "apply": true,
+  "preview_requested": true,
+  "approval": "explicit",
+  "trigger_surface": "canonical_skill",
+  "read_only_workflow": true,
+  "authority_mode": "write-authority",
+  "hidden_write_attempted": true,
+  "capability_request": ["memory_write_global"]
+}

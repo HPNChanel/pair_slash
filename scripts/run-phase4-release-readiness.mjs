@@ -13,6 +13,7 @@ const requiredDocs = [
   "docs/validation/phase-3-5/verdict.md",
   "docs/architecture/pack-manifest-v2-practical-spec.md",
   "docs/architecture/compiler-v2-implement-oriented.md",
+  "docs/architecture/repo-structure.md",
   "docs/workflows/phase-4-install-commands.md",
   "docs/workflows/phase-4-quickstart.md",
   "docs/workflows/phase-4-doctor-troubleshooting.md",
@@ -22,7 +23,7 @@ const requiredDocs = [
   "docs/runtime-mapping/pilot-acceptance.md",
   "docs/releases/release-checklist-0.4.0.md",
   "docs/releases/phase-4-acceptance-checklist.md",
-  "packages/compat-lab/fixtures/README.md",
+  "packages/tools/compat-lab/fixtures/README.md",
 ];
 
 for (const file of requiredDocs) {

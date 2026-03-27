@@ -27,15 +27,16 @@ runtimes:
     optional_metadata: null
     documentation: https://docs.github.com/copilot/how-tos/copilot-cli/customize-copilot/create-skills
 
-project_language: YAML + Markdown + Python (validation tooling)
+project_language: YAML + Markdown + JavaScript (Node.js validation tooling)
 memory_format: YAML (schema-first, file-based)
 build_tooling:
-  - python scripts/phase2_checks.py
-  - python -m unittest discover -s tests -p "test_*.py"
-  - github workflow: .github/workflows/phase2-checks.yml
+  - npm run lint
+  - npm run test
+  - npm run test:release
+  - github workflow: .github/workflows/repo-checks.yml
 
 provenance:
   created_by: phase-0-scaffold
-  updated_by: phase2-hardening
-  timestamp: "2026-03-22T13:20:00+07:00"
-  source: OpenAI Codex docs, GitHub Copilot CLI docs, Phase 2 validation tooling
+  updated_by: repo-normalization
+  timestamp: "2026-03-27T12:15:00+07:00"
+  source: OpenAI Codex docs, GitHub Copilot CLI docs, layered Node workspace validation tooling

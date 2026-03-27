@@ -8,9 +8,9 @@ Use this path when the goal is simple: install PairSlash, run doctor, reach
 ## Codex CLI on macOS repo scope
 
 ```bash
-node packages/cli/src/bin/pairslash.js preview install pairslash-plan --runtime codex --target repo
-node packages/cli/src/bin/pairslash.js install pairslash-plan --runtime codex --target repo --apply --yes
-node packages/cli/src/bin/pairslash.js doctor --runtime codex --target repo
+node packages/tools/cli/src/bin/pairslash.js preview install pairslash-plan --runtime codex --target repo
+node packages/tools/cli/src/bin/pairslash.js install pairslash-plan --runtime codex --target repo --apply --yes
+node packages/tools/cli/src/bin/pairslash.js doctor --runtime codex --target repo
 ```
 
 Then:
@@ -23,9 +23,9 @@ Then:
 ## GitHub Copilot CLI on Linux user scope
 
 ```bash
-node packages/cli/src/bin/pairslash.js preview install pairslash-plan --runtime copilot --target user
-node packages/cli/src/bin/pairslash.js install pairslash-plan --runtime copilot --target user --apply --yes
-node packages/cli/src/bin/pairslash.js doctor --runtime copilot --target user
+node packages/tools/cli/src/bin/pairslash.js preview install pairslash-plan --runtime copilot --target user
+node packages/tools/cli/src/bin/pairslash.js install pairslash-plan --runtime copilot --target user --apply --yes
+node packages/tools/cli/src/bin/pairslash.js doctor --runtime copilot --target user
 ```
 
 Then:
@@ -41,10 +41,10 @@ Windows is still a prep lane in Phase 4. Use it to confirm doctor, preview, and
 path/profile behavior without claiming live install parity:
 
 ```powershell
-node packages/cli/src/bin/pairslash.js doctor --runtime codex --target repo
-node packages/cli/src/bin/pairslash.js preview install pairslash-plan --runtime codex --target repo
-node packages/cli/src/bin/pairslash.js doctor --runtime copilot --target user
-node packages/cli/src/bin/pairslash.js preview install pairslash-plan --runtime copilot --target user
+node packages/tools/cli/src/bin/pairslash.js doctor --runtime codex --target repo
+node packages/tools/cli/src/bin/pairslash.js preview install pairslash-plan --runtime codex --target repo
+node packages/tools/cli/src/bin/pairslash.js doctor --runtime copilot --target user
+node packages/tools/cli/src/bin/pairslash.js preview install pairslash-plan --runtime copilot --target user
 ```
 
 ## Acceptance automation

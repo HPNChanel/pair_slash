@@ -5,7 +5,7 @@
 ## Preview only
 
 ```bash
-node packages/cli/src/bin/pairslash.js preview memory-write-global \
+node packages/tools/cli/src/bin/pairslash.js preview memory-write-global \
   --runtime codex \
   --target repo \
   --kind constraint \
@@ -21,7 +21,7 @@ node packages/cli/src/bin/pairslash.js preview memory-write-global \
 ## Commit with explicit approval
 
 ```bash
-node packages/cli/src/bin/pairslash.js memory write-global \
+node packages/tools/cli/src/bin/pairslash.js memory write-global \
   --runtime codex \
   --target repo \
   --kind constraint \

@@ -34,13 +34,13 @@ a substitute for live interactive runtime evidence.
 ## Minimum commands
 
 ```bash
-node packages/cli/src/bin/pairslash.js preview install pairslash-plan --runtime codex --target repo
-node packages/cli/src/bin/pairslash.js install pairslash-plan --runtime codex --target repo --apply --yes
-node packages/cli/src/bin/pairslash.js doctor --runtime codex --target repo
+node packages/tools/cli/src/bin/pairslash.js preview install pairslash-plan --runtime codex --target repo
+node packages/tools/cli/src/bin/pairslash.js install pairslash-plan --runtime codex --target repo --apply --yes
+node packages/tools/cli/src/bin/pairslash.js doctor --runtime codex --target repo
 
-node packages/cli/src/bin/pairslash.js preview install pairslash-plan --runtime copilot --target user
-node packages/cli/src/bin/pairslash.js install pairslash-plan --runtime copilot --target user --apply --yes
-node packages/cli/src/bin/pairslash.js doctor --runtime copilot --target user
+node packages/tools/cli/src/bin/pairslash.js preview install pairslash-plan --runtime copilot --target user
+node packages/tools/cli/src/bin/pairslash.js install pairslash-plan --runtime copilot --target user --apply --yes
+node packages/tools/cli/src/bin/pairslash.js doctor --runtime copilot --target user
 ```
 
 ## Evidence discipline

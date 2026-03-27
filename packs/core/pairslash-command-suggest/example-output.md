@@ -5,11 +5,11 @@
 - platform: windows
 
 ## SUGGESTED_COMMANDS
-- command: `python scripts/phase2_checks.py --all`
+- command: `npm run lint`
   rationale: Runs doctor, lint, schema checks, fixture checks, and golden checks.
   source_memory: .pairslash/project-memory/50-constraints.yaml
   confidence: high
-- command: `python -m unittest discover -s tests -p \"test_*.py\"`
+- command: `npm run test`
   rationale: Executes deterministic local regression tests.
   source_memory: docs/workflows/phase-2-operations.md
   confidence: high
@@ -20,4 +20,3 @@
 
 ## NEXT_WORKFLOW
 - pairslash-review
-

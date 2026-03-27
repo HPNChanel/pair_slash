@@ -1,0 +1,245 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://pairslash.dev/schemas/preview-plan/1.0.0"
+title: PairSlash Preview Plan
+type: object
+required:
+  - kind
+  - schema_version
+  - action
+  - runtime
+  - target
+  - install_root
+  - state_path
+  - can_apply
+  - requires_confirmation
+  - selected_packs
+  - summary
+  - warnings
+  - errors
+  - operations
+properties:
+  kind:
+    const: preview-plan
+  schema_version:
+    const: "1.0.0"
+  action:
+    type: string
+    enum:
+      - install
+      - update
+      - uninstall
+  runtime:
+    type: string
+    enum:
+      - codex_cli
+      - copilot_cli
+  target:
+    type: string
+    enum:
+      - repo
+      - user
+  install_root:
+    type: string
+  state_path:
+    type: string
+  can_apply:
+    type: boolean
+  requires_confirmation:
+    type: boolean
+  selected_packs:
+    type: array
+    items:
+      type: string
+  plan_path:
+    type: string
+  summary:
+    type: object
+  warnings:
+    type: array
+    items:
+      type: string
+  errors:
+    type: array
+    items:
+      type: string
+  asset_diff:
+    type: object
+    required:
+      - create_count
+      - update_count
+      - delete_count
+      - mutating_operation_count
+      - runtime_targeted_outputs
+      - config_fragments_affected
+      - risky_mutations
+    properties:
+      create_count:
+        type: integer
+      update_count:
+        type: integer
+      delete_count:
+        type: integer
+      mutating_operation_count:
+        type: integer
+      runtime_targeted_outputs:
+        type: array
+        items:
+          type: object
+          required:
+            - runtime
+            - operation
+            - pack_id
+            - path
+            - install_surface
+            - asset_kind
+          properties:
+            runtime:
+              type: string
+            operation:
+              type: string
+            pack_id:
+              type: string
+            path:
+              type: string
+            install_surface:
+              type: string
+            asset_kind:
+              type: string
+      config_fragments_affected:
+        type: array
+        items:
+          type: string
+      risky_mutations:
+        type: array
+        items:
+          type: string
+  policy_summary:
+    type: object
+    required:
+      - machine_readable
+      - overall_verdict
+      - pack_verdicts
+      - no_silent_fallback
+      - unsupported_runtime_capability
+      - reasons
+      - summary
+    properties:
+      machine_readable:
+        type: boolean
+      overall_verdict:
+        type: string
+      pack_verdicts:
+        type: array
+        items:
+          type: object
+          required:
+            - pack_id
+            - runtime
+            - verdict
+            - reason_codes
+          properties:
+            pack_id:
+              type:
+                - string
+                - "null"
+            runtime:
+              type: string
+            verdict:
+              type: string
+            reason_codes:
+              type: array
+              items:
+                type: string
+      no_silent_fallback:
+        type: boolean
+      unsupported_runtime_capability:
+        type: boolean
+      reasons:
+        type: array
+        items:
+          type: string
+      summary:
+        type: string
+  commitability:
+    type: object
+    required:
+      - status
+      - can_proceed
+      - blocked
+      - needs_explicit_approval
+      - can_proceed_operations
+      - blocked_operations_count
+      - blocked_reasons
+    properties:
+      status:
+        type: string
+      can_proceed:
+        type: boolean
+      blocked:
+        type: boolean
+      needs_explicit_approval:
+        type: boolean
+      can_proceed_operations:
+        type: array
+        items:
+          type: string
+      blocked_operations_count:
+        type: integer
+      blocked_reasons:
+        type: array
+        items:
+          type: string
+      explicit_approval_hint:
+        type:
+          - string
+          - "null"
+  preview_boundary:
+    type: object
+    required:
+      - preview_only
+      - no_commit_on_preview
+      - commit_path
+      - note
+    properties:
+      preview_only:
+        type: boolean
+      no_commit_on_preview:
+        type: boolean
+      commit_path:
+        type: string
+      note:
+        type: string
+  operations:
+    type: array
+    items:
+      type: object
+      required:
+        - kind
+        - pack_id
+        - absolute_path
+        - reason
+      properties:
+        kind:
+          type: string
+        pack_id:
+          type: string
+        relative_path:
+          type: string
+        absolute_path:
+          type: string
+        asset_kind:
+          type: string
+        install_surface:
+          type: string
+        ownership:
+          type: string
+        override_eligible:
+          type: boolean
+        runtime_selector:
+          type: string
+        generated:
+          type: boolean
+        write_authority_guarded:
+          type: boolean
+        reason:
+          type: string

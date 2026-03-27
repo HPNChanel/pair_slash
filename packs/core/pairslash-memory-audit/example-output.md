@@ -12,7 +12,7 @@
   type: schema-drift
   file_or_record: 00-project-charter.yaml
   explanation: Record uses system schema kind not covered by mutable memory-record schema.
-  evidence: packages/spec-core/schemas/memory-record.schema.yaml
+  evidence: packages/core/spec-core/schemas/memory-record.schema.yaml
   recommended_fix: Validate with dedicated system-record schema.
   write_workflow_needed: no
 

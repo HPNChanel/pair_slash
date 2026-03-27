@@ -7,14 +7,14 @@ Status legend:
 
 ## Pass / fail gate
 
-- [x] `pack.manifest.yaml v2` validator, schemas, and registry discovery pass in `packages/spec-core/tests/spec-core.test.js`
-- [x] compiler v2 stays one-spec-two-runtimes through shared IR coverage in `packages/compiler-codex/tests/compiler-codex.test.js` and `packages/compiler-copilot/tests/compiler-copilot.test.js`
-- [x] `install`, `update`, and `uninstall` exercise preview, rollback, override preservation, repo scope, and user scope in `packages/installer/tests/installer.test.js`
-- [x] `doctor` covers runtime/version/path/permission/conflict/tool/MCP checks in `packages/doctor/tests/doctor.test.js`
-- [x] `pairslash lint` blocks installability regressions in `packages/lint-bridge/tests/lint-bridge.test.js`
-- [x] CLI wiring for `preview`, `install`, `update`, `uninstall`, `doctor`, and `lint` is covered in `packages/cli/tests/cli.test.js`
-- [x] compat-lab bootstrap keeps 5 fixtures and deterministic Codex/Copilot goldens in `packages/compat-lab/tests/compat-lab.test.js`
-- [x] Phase 4 acceptance slice covers macOS, Linux, and Windows prep in `packages/compat-lab/tests/acceptance.test.js`
+- [x] `pack.manifest.yaml v2` validator, schemas, and registry discovery pass in `packages/core/spec-core/tests/spec-core.test.js`
+- [x] compiler v2 stays one-spec-two-runtimes through shared IR coverage in `packages/runtimes/codex/compiler/tests/compiler-codex.test.js` and `packages/runtimes/copilot/compiler/tests/compiler-copilot.test.js`
+- [x] `install`, `update`, and `uninstall` exercise preview, rollback, override preservation, repo scope, and user scope in `packages/tools/installer/tests/installer.test.js`
+- [x] `doctor` covers runtime/version/path/permission/conflict/tool/MCP checks in `packages/tools/doctor/tests/doctor.test.js`
+- [x] `pairslash lint` blocks installability regressions in `packages/tools/lint-bridge/tests/lint-bridge.test.js`
+- [x] CLI wiring for `preview`, `install`, `update`, `uninstall`, `doctor`, and `lint` is covered in `packages/tools/cli/tests/cli.test.js`
+- [x] compat-lab bootstrap keeps 5 fixtures and deterministic Codex/Copilot goldens in `packages/tools/compat-lab/tests/compat-lab.test.js`
+- [x] Phase 4 acceptance slice covers macOS, Linux, and Windows prep in `packages/tools/compat-lab/tests/acceptance.test.js`
 - [ ] Do not declare Phase 4 complete if any managed command mutates without preview or dry-run support
 - [ ] Do not declare Phase 4 complete if uninstall removes unmanaged or user-edited content
 
@@ -42,10 +42,10 @@ Status legend:
 - [x] `npm run test:phase4:acceptance -- --lane linux`
 - [x] `npm run test:phase4:acceptance -- --lane windows-prep`
 - [x] `npm run test:phase4:release`
-- [ ] `node packages/cli/src/bin/pairslash.js doctor --runtime codex --target repo`
-- [ ] `node packages/cli/src/bin/pairslash.js doctor --runtime copilot --target user`
-- [ ] `node packages/cli/src/bin/pairslash.js preview install pairslash-plan --runtime codex --target repo`
-- [ ] `node packages/cli/src/bin/pairslash.js preview install pairslash-plan --runtime copilot --target user`
+- [ ] `node packages/tools/cli/src/bin/pairslash.js doctor --runtime codex --target repo`
+- [ ] `node packages/tools/cli/src/bin/pairslash.js doctor --runtime copilot --target user`
+- [ ] `node packages/tools/cli/src/bin/pairslash.js preview install pairslash-plan --runtime codex --target repo`
+- [ ] `node packages/tools/cli/src/bin/pairslash.js preview install pairslash-plan --runtime copilot --target user`
 
 ## Minimum docs that must ship
 
@@ -68,4 +68,4 @@ Status legend:
 - [x] `docs/runtime-mapping/pilot-acceptance.md`
 - [x] `docs/releases/release-checklist-0.4.0.md`
 - [x] `docs/releases/phase-4-acceptance-checklist.md`
-- [x] `packages/compat-lab/fixtures/README.md`
+- [x] `packages/tools/compat-lab/fixtures/README.md`

@@ -1,0 +1,12 @@
+kind: constraint
+title: Invalid preview payload
+statement: This request intentionally omits evidence.
+scope: whole-project
+confidence: medium
+action: append
+tags:
+  - invalid
+source_refs:
+  - tests/preview/preview.command.test.js
+updated_by: preview-tests
+timestamp: 2026-03-27T00:00:00.000Z

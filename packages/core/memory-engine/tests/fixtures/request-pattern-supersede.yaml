@@ -1,0 +1,17 @@
+kind: pattern
+title: Candidate extraction phải reconcile với authoritative memory trước khi giữ candidate
+statement: Candidate extraction must reconcile against authoritative memory before promotion into global memory.
+evidence: packages/core/memory-engine/tests/fixtures/request-pattern-supersede.yaml
+scope: subsystem
+scope_detail: pairslash-memory-candidate
+confidence: high
+action: supersede
+supersedes: pattern/Candidate extraction phải reconcile với authoritative memory trước khi giữ candidate
+tags:
+  - candidate
+  - reconcile
+  - authoritative-memory
+source_refs:
+  - .pairslash/project-memory/70-known-good-patterns/candidate-extraction-phai-reconcile-voi-authoritative-memo.yaml
+updated_by: tests
+timestamp: "2026-03-26T01:00:00.000Z"

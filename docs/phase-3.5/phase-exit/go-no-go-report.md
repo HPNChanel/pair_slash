@@ -76,7 +76,7 @@ has been recorded.
   `[Hypothesis]`.
 - `docs/phase-3.5/icp.md` and `docs/phase-3.5/jtbd.md` are strong framing docs,
   but they are not yet backed by interview ingest or benchmark logs.
-- `research/phase-3.5/synthesis/evidence-table.md`,
+- `docs/archive/research/phase-3.5/synthesis/evidence-table.md`,
   `painpoint-clusters.md`, and `return-next-week-analysis.md` are still
   placeholder or threshold-setting artifacts, not actual evidence.
 

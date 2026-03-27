@@ -8,9 +8,9 @@ Status legend:
 ## Artifact coherence
 
 - [x] `README.md` presents release version `0.2.0`
-- [x] `packages/spec-core/registry/packs.yaml` stays at version `0.2.0`
+- [x] `packages/core/spec-core/registry/packs.yaml` stays at version `0.2.0`
 - [x] `packs/core/pairslash-plan/pack.yaml` stays aligned to pack version `0.2.0`
-- [x] `packages/spec-core/specs/pairslash-plan.spec.yaml` stays aligned to pack version `0.2.0`
+- [x] `packages/core/spec-core/specs/pairslash-plan.spec.yaml` stays aligned to pack version `0.2.0`
 - [x] Registry-backed team packs declare explicit model pins and read-only Global
   Project Memory access in `pack.yaml`
 - [x] `docs/compatibility/compatibility-matrix.md` states that registry
@@ -19,8 +19,8 @@ Status legend:
 
 ## Validation commands
 
-- [x] `python scripts/phase2_checks.py --all`
-- [x] `python -m unittest discover -s tests -p "test_*.py"`
+- [x] `npm run lint`
+- [x] `npm run test`
 
 ## Manual verification before publish
 

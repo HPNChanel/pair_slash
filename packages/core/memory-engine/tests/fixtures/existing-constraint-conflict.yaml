@@ -1,0 +1,13 @@
+kind: constraint
+title: Preview required before memory commit
+statement: Existing authoritative statement conflicts with requested statement.
+evidence: existing-evidence
+scope: whole-project
+confidence: high
+action: append
+tags:
+  - preview
+source_refs:
+  - existing-source
+updated_by: fixture-seed
+timestamp: "2026-03-26T00:10:00.000Z"

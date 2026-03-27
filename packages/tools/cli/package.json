@@ -1,0 +1,18 @@
+{
+  "name": "@pairslash/cli",
+  "version": "0.4.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "pairslash": "src/bin/pairslash.js"
+  },
+  "dependencies": {
+    "@pairslash/spec-core": "file:../../core/spec-core",
+    "@pairslash/compiler-codex": "file:../../runtimes/codex/compiler",
+    "@pairslash/compiler-copilot": "file:../../runtimes/copilot/compiler",
+    "@pairslash/lint-bridge": "file:../lint-bridge",
+    "@pairslash/installer": "file:../installer",
+    "@pairslash/doctor": "file:../doctor",
+    "@pairslash/memory-engine": "file:../../core/memory-engine"
+  }
+}

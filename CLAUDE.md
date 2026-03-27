@@ -674,32 +674,36 @@ The long-term package direction remains:
 ```text
 pairslash/
   packages/
-    cli/
-    spec-core/
-    compiler-codex/
-    compiler-copilot/
-    memory-engine/
-    installer/
-    doctor/
-    registry/
+    core/
+      spec-core/
+      memory-engine/
+      policy-engine/
+      contract-engine/
+    runtimes/
+      codex/
+        compiler/
+        adapter/
+      copilot/
+        compiler/
+        adapter/
+    tools/
+      cli/
+      installer/
+      doctor/
+      lint-bridge/
+      compat-lab/
   packs/
     core/
     backend/
     frontend/
     devops/
     release/
-  templates/
-    skill/
-    memory/
-    repo/
   docs/
     architecture/
     workflows/
     compatibility/
-  examples/
-    monorepo/
-    rails-service/
-    node-api/
+    examples/
+    archive/
 ```
 
 This layout is directional, not sacred.

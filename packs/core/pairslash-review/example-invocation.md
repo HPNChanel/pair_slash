@@ -11,7 +11,7 @@ Select `pairslash-review`, then provide:
 ```yaml
 review_subject: "Phase 2 memory hardening changes"
 diff_source: "working-tree"
-scope_hint: ".pairslash/, packs/core/, packages/spec-core/"
+scope_hint: ".pairslash/, packs/core/, packages/core/spec-core/"
 strictness: strict
 ```
 

@@ -42,10 +42,9 @@ No silent writes. No hidden conflict resolution.
 ## Source-of-truth locations
 
 - Workflow packs: `packs/core/`
-- Specs/schemas: `packages/spec-core/`
+- Specs/schemas: `packages/core/spec-core/`
 - Authoritative memory: `.pairslash/project-memory/`
-- Validation gates: `scripts/phase2_checks.py`, `tests/`
+- Validation gates: `npm run lint`, `npm run test`, `npm run test:release`
 
 Runtime install locations (`.agents/skills/`, `.github/skills/`) are derived
 artifacts, not source-of-truth.
-

@@ -1,0 +1,6 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://pairslash.dev/schemas/contracts/workflow-contract-v2"
+title: PairSlash Workflow Contract v2
+description: Mirror schema for workflow contracts consumed across lint/preview/policy/runtime lanes.
+
+$ref: "../contract-envelope.schema.yaml"

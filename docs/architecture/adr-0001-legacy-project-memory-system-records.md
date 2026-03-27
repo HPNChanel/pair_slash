@@ -32,7 +32,7 @@ separate schema contract from mutable memory records:
 
 1. They remain authoritative and index-visible.
 2. They are excluded from `memory-record.schema.yaml`.
-3. They are validated by `packages/spec-core/schemas/system-record.schema.yaml`.
+3. They are validated by `packages/core/spec-core/schemas/system-record.schema.yaml`.
 4. `90-memory-index.yaml` marks them with `record_family: system`.
 5. They must not be modified through `pairslash-memory-write-global` in the
    current phase.

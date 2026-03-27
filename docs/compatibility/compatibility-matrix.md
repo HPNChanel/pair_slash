@@ -45,7 +45,7 @@ as canonical compatibility proof.
 
 ## Formalized pack surfaces
 
-Formalized pack support is defined only by `packages/spec-core/registry/packs.yaml`.
+Formalized pack support is defined only by `packages/core/spec-core/registry/packs.yaml`.
 The current registry-backed set is:
 
 - `pairslash-plan`
@@ -74,7 +74,7 @@ Relevant feature surfaces for the Phase 3 packs are:
 
 | Pack name | Version | Codex support | Copilot support | Required capabilities | Known limitations | Migration notes | Validation status | Open risks |
 |---|---|---|---|---|---|---|---|---|
-| pairslash-backend | `0.2.0` | not yet validated | not yet validated | `/skills`; installed skill files; read access to `.pairslash/project-memory/`; workspace file access for bounded backend edits | Direct invocation is unverified on both runtimes; pack is read-only for Global Project Memory | No install-path change; tooling should discover formalized packs through `packages/spec-core/registry/packs.yaml` | Metadata, registry, and docs validate locally; no live runtime verification recorded | Support claims can outrun evidence if docs are promoted before manual runtime verification |
+| pairslash-backend | `0.2.0` | not yet validated | not yet validated | `/skills`; installed skill files; read access to `.pairslash/project-memory/`; workspace file access for bounded backend edits | Direct invocation is unverified on both runtimes; pack is read-only for Global Project Memory | No install-path change; tooling should discover formalized packs through `packages/core/spec-core/registry/packs.yaml` | Metadata, registry, and docs validate locally; no live runtime verification recorded | Support claims can outrun evidence if docs are promoted before manual runtime verification |
 | pairslash-frontend | `0.2.0` | not yet validated | not yet validated | `/skills`; installed skill files; read access to `.pairslash/project-memory/`; workspace file access for UI/component edits | Direct invocation is unverified on both runtimes; depends on defined UI/backend contracts; pack is read-only for Global Project Memory | No install-path change; registry-backed discovery is the migration boundary for tooling | Metadata, registry, and docs validate locally; no live runtime verification recorded | Undefined product or backend contracts can be mistaken for runtime support if the matrix is not kept evidence-bound |
 | pairslash-devops | `0.2.0` | not yet validated | not yet validated | `/skills`; installed skill files; read access to `.pairslash/project-memory/`; repo workflow/script access; operator environment access when validation depends on external systems | Direct invocation is unverified on both runtimes; environment-dependent behavior cannot be claimed without operator verification; pack is read-only for Global Project Memory | No install-path change; formalized-pack discovery should start from the registry manifest | Metadata, registry, and docs validate locally; environment-sensitive runtime behavior remains manually unverified | Operational support could be overstated if environment-specific checks are inferred from local schema/test success |
 | pairslash-release | `0.2.0` | not yet validated | not yet validated | `/skills`; installed skill files; read access to registry, metadata, compatibility docs, and validated diffs | Direct invocation is unverified on both runtimes; release claims must remain evidence-bound; pack is read-only for Global Project Memory | No install-path change; tooling should use registry membership to identify formalized release packs | Metadata, registry, and docs validate locally; no live runtime verification recorded | Release messaging may imply broader runtime support than has actually been verified if this summary drifts from the surface matrix |
@@ -119,7 +119,7 @@ Both runtimes must preserve identical semantics:
 ## Validation references
 
 - Acceptance gates: `docs/compatibility/acceptance-gates.yaml`
-- Local gates: `scripts/phase2_checks.py --all`
-- Regression tests: `python -m unittest discover -s tests -p "test_*.py"`
+- Local gates: `npm run lint`
+- Regression tests: `npm run test`
 - Live verification steps: `docs/compatibility/runtime-verification.md`
 - Release checklist: `docs/releases/release-checklist-0.2.0.md`

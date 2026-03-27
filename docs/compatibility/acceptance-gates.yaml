@@ -6,38 +6,38 @@ must_gates:
   - id: A1
     title: Canonical memory filesystem exists
     status: pass
-    evidence: Validated by scripts/phase2_checks.py --doctor
+    evidence: Validated by npm run test
   - id: A2
     title: Seven core workflows present with contracts
     status: pass
-    evidence: Validated by scripts/phase2_checks.py --lint
+    evidence: Validated by npm run lint
   - id: A3
     title: Memory write path enforces preview+acceptance semantics in skill/spec contracts
     status: pass
-    evidence: Validated by scripts/phase2_checks.py --lint
+    evidence: Validated by npm run lint
   - id: A4
     title: Schema checks pass for memory record, system record, index, and audit entries
     status: pass
-    evidence: Validated by scripts/phase2_checks.py --schema
+    evidence: Validated by npm run test
   - id: A5
     title: Golden outputs pass for preview patch, index update, and audit entry
     status: pass
-    evidence: Validated by scripts/phase2_checks.py --golden
+    evidence: Validated by npm run test
   - id: A6
     title: Fixture checks pass for duplicate/supersede/stale/orphan/weak-evidence/invalid-scope
     status: pass
-    evidence: Validated by scripts/phase2_checks.py --fixtures
+    evidence: Validated by npm run test
   - id: A7
     title: Unit regression tests pass
     status: pass
-    evidence: Validated by python -m unittest discover -s tests -p test_*.py
+    evidence: Validated by npm run test
 will_not_gates:
   gates:
   - id: W1
     title: No third runtime in core artifacts
     status: pass
-    evidence: Validated by scripts/phase2_checks.py --lint
+    evidence: Validated by npm run lint
   - id: W2
     title: No read workflow writes Global Project Memory
     status: pass
-    evidence: Validated by scripts/phase2_checks.py --lint
+    evidence: Validated by npm run lint

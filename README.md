@@ -37,9 +37,13 @@ If you are evaluating or operating PairSlash from this repo, use this order:
 - Constitution: `CLAUDE.md`
 - Global memory and audit trail: `.pairslash/`
 - Source workflow packs: `packs/core/`
-- Source specs/schemas: `packages/spec-core/`
-- Phase 4 packages: `packages/cli/`, `packages/compiler-codex/`, `packages/compiler-copilot/`, `packages/installer/`, `packages/doctor/`, `packages/compat-lab/`
-- Validation tooling: `scripts/phase2_checks.py`
+- Source specs/schemas: `packages/core/spec-core/`
+- Layered packages:
+  - `packages/core/*`
+  - `packages/runtimes/codex/*`
+  - `packages/runtimes/copilot/*`
+  - `packages/tools/*`
+- Validation tooling: `npm run lint`, `npm run test`, `npm run test:release`
 - Fixtures and regression tests: `tests/`
 
 ## Choose your path
@@ -51,6 +55,7 @@ If you are evaluating or operating PairSlash from this repo, use this order:
 - Check what runtime behavior is actually supported: [docs/compatibility/compatibility-matrix.md](docs/compatibility/compatibility-matrix.md)
 - Run live CLI verification and record evidence: [docs/compatibility/runtime-verification.md](docs/compatibility/runtime-verification.md)
 - Review runtime-native output mapping: [docs/runtime-mapping/README.md](docs/runtime-mapping/README.md)
+- Review the normalized repo layout and dependency rules: [docs/architecture/repo-structure.md](docs/architecture/repo-structure.md)
 - Understand dual-schema system-record handling: [docs/architecture/adr-0001-legacy-project-memory-system-records.md](docs/architecture/adr-0001-legacy-project-memory-system-records.md)
 - Read archived Phase 0 material only for historical trace: `docs/architecture/phase-0-overview.md`, `docs/compatibility/phase-0-acceptance.md`
 
@@ -115,14 +120,13 @@ Notes:
 Run from repo root:
 
 ```bash
-python scripts/phase2_checks.py --all
-python -m unittest discover -s tests -p "test_*.py"
-npm run lint:phase4
-npm run test:phase4
-npm run test:phase4:release
+npm run lint
+npm run test
+npm run test:acceptance
+npm run test:release
 ```
 
-`npm run test:phase4:release` now also requires
+`npm run test:release` now also requires
 `docs/validation/phase-3-5/verdict.md` to be updated to `Gate status: GO`.
 
 The Phase 3.5 gate must be satisfied before treating Phase 4 release readiness
@@ -148,6 +152,7 @@ for the operational done bar and memory-write safety gates.
 - Phase 4 release checklist: `docs/releases/release-checklist-0.4.0.md`
 - Acceptance gates: `docs/compatibility/acceptance-gates.yaml`
 - ADR (legacy system records): `docs/architecture/adr-0001-legacy-project-memory-system-records.md`
+- Repo structure and boundaries: `docs/architecture/repo-structure.md`
 - Phase 4 architecture note: `docs/architecture/phase-4-runtime-native-distribution.md`
 - Archived Phase 0 overview: `docs/architecture/phase-0-overview.md`
 
@@ -157,11 +162,12 @@ for the operational done bar and memory-write safety gates.
 - Mutable authoritative records remain under `memory-record.schema.yaml` and write-authority pipeline.
 - `pairslash-memory-write-global` does not write system records.
 - Runtime install folders (`.agents/skills/`, `.github/skills/`) are derived artifacts; source-of-truth is `packs/core/`.
-- Example starter repos live under `examples/` and map to compat-lab fixtures.
+- Example starter repos live under `docs/examples/` and map to compat-lab fixtures.
+- Phase 4 command aliases (`lint:phase4`, `test:phase4`, `test:phase4:acceptance`, `test:phase4:release`) now forward to the normalized root scripts and should be treated as deprecated.
 
 ## Troubleshooting (common)
 
-- Missing Python dependency errors: run with Python 3.11+ and install required libs listed by `phase2_checks.py`.
+- Repo validation mismatch: run `npm install`, then `npm run lint`, `npm run test`, and `npm run test:release`.
 - Schema drift findings for `charter`/`stack-profile`: verify `system-record.schema.yaml` and index `record_family`.
 - System-record write request: `pairslash-memory-write-global` only accepts mutable kinds; do not route `charter`/`stack-profile` through it.
 - Write-global rejects input: ensure required fields are complete (`kind`, `title`, `statement`, `evidence`, `scope`, `confidence`, `action`, `tags`, `source_refs`, `updated_by`, `timestamp`).

@@ -54,9 +54,9 @@ Use `pairslash doctor` before install, after install, and before update. Phase 4
 ## Suggested operator flow
 
 ```bash
-node packages/cli/src/bin/pairslash.js doctor --runtime codex --target repo
-node packages/cli/src/bin/pairslash.js doctor --runtime copilot --target user
-node packages/cli/src/bin/pairslash.js doctor --runtime auto --target repo --format json
+node packages/tools/cli/src/bin/pairslash.js doctor --runtime codex --target repo
+node packages/tools/cli/src/bin/pairslash.js doctor --runtime copilot --target user
+node packages/tools/cli/src/bin/pairslash.js doctor --runtime auto --target repo --format json
 ```
 
 If the verdict is `degraded`, review the non-blocking issues before install. If the verdict is `fail` or `unsupported`, fix the blocking issue first. Do not force `update` or `uninstall` around a failing doctor result.

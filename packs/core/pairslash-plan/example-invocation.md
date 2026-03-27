@@ -18,7 +18,7 @@ Create a repo plan from the current repo state.
 
 ```text
 Create a repo plan for the installer package.
-scope: packages/installer
+scope: packages/tools/installer
 ```
 
 ## With additional constraint

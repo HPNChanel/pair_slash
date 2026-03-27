@@ -20,8 +20,8 @@ These can be verified from Cursor or any text editor.
 - [ ] Step 9 defines file routing rules for all 7 `kind` values
 - [ ] Step 11 defines the audit log entry format
 - [ ] `SKILL.md` ends with "What this workflow MUST NOT do" section
-- [ ] `packages/spec-core/specs/pairslash-memory-write-global.spec.yaml` exists and parses as valid YAML
-- [ ] `packages/spec-core/schemas/memory-record.schema.yaml` exists and parses as valid YAML
+- [ ] `packages/core/spec-core/specs/pairslash-memory-write-global.spec.yaml` exists and parses as valid YAML
+- [ ] `packages/core/spec-core/schemas/memory-record.schema.yaml` exists and parses as valid YAML
 - [ ] Schema lists all 11 required fields: kind, title, statement, evidence, scope, confidence, action, tags, source_refs, updated_by, timestamp
 - [ ] Schema `source_refs.minItems` is `0` (not `1`)
 - [ ] `contract.md` exists with all 8 contract sections

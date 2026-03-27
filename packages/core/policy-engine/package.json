@@ -1,0 +1,10 @@
+{
+  "name": "@pairslash/policy-engine",
+  "version": "0.5.0",
+  "private": true,
+  "type": "module",
+  "exports": "./src/index.js",
+  "dependencies": {
+    "@pairslash/spec-core": "file:../spec-core"
+  }
+}

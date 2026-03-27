@@ -18,8 +18,8 @@ These can be verified from Cursor or any text editor.
 - [ ] `SKILL.md` Step 3 defines all 9 output sections in order
 - [ ] `SKILL.md` Rules section prohibits memory writes explicitly
 - [ ] `packs/core/pairslash-plan/pack.yaml` exists and parses as valid YAML
-- [ ] `packages/spec-core/registry/packs.yaml` exists and contains `pairslash-plan`
-- [ ] `packages/spec-core/specs/pairslash-plan.spec.yaml` exists and parses as valid YAML
+- [ ] `packages/core/spec-core/registry/packs.yaml` exists and contains `pairslash-plan`
+- [ ] `packages/core/spec-core/specs/pairslash-plan.spec.yaml` exists and parses as valid YAML
 - [ ] `packs/core/pairslash-plan/contract.md` exists with metadata/registry notes aligned to pack metadata
 - [ ] `packs/core/pairslash-plan/example-invocation.md` exists
 - [ ] `packs/core/pairslash-plan/example-output.md` exists with all 9 plan sections
@@ -116,7 +116,7 @@ Update these files with evidence:
    - `pack_surfaces`: update `pairslash-plan` runtime/surface status or evidence refs
    - `verification_items`: keep generic V1-V7 statuses aligned with latest proof
 
-2. `packages/spec-core/registry/packs.yaml`
+2. `packages/core/spec-core/registry/packs.yaml`
    - confirm `pairslash-plan` version/path references stay correct after any move or rename
 
 3. `docs/compatibility/acceptance-gates.yaml`

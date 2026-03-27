@@ -23,9 +23,9 @@ The current formalized registry-backed pack set is `pairslash-plan`,
 - `pairslash-frontend` formalized as pack version `0.2.0`
 - `pairslash-devops` formalized as pack version `0.2.0`
 - `pairslash-release` formalized as pack version `0.2.0`
-- pack metadata schema: `packages/spec-core/schemas/pack-metadata.schema.yaml`
-- pack registry schema: `packages/spec-core/schemas/pack-registry.schema.yaml`
-- pack registry manifest: `packages/spec-core/registry/packs.yaml`
+- pack metadata schema: `packages/core/spec-core/schemas/pack-metadata.schema.yaml`
+- pack registry schema: `packages/core/spec-core/schemas/pack-registry.schema.yaml`
+- pack registry manifest: `packages/core/spec-core/registry/packs.yaml`
 - validation and CI coverage for pack metadata and registry consistency
 
 ## Compatibility and scope
@@ -44,7 +44,7 @@ The current formalized registry-backed pack set is `pairslash-plan`,
 
 - Existing source-pack users do not need to change install paths
 - Tooling that wants formalized pack metadata should read
-  `packages/spec-core/registry/packs.yaml` first and follow the referenced
+  `packages/core/spec-core/registry/packs.yaml` first and follow the referenced
   metadata files
 - No Global Project Memory migration is required
 - No runtime compatibility expansion is included in this release

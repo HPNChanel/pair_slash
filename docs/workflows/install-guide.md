@@ -21,10 +21,10 @@ For runtime evidence and guardrails, use `docs/compatibility/runtime-verificatio
 ## Managed lifecycle commands
 
 ```bash
-node packages/cli/src/bin/pairslash.js doctor --runtime codex --target repo
-node packages/cli/src/bin/pairslash.js preview install --runtime codex --target repo --plan-out .pairslash/tmp/install-plan.json
-node packages/cli/src/bin/pairslash.js install --runtime codex --target repo --apply --yes
-node packages/cli/src/bin/pairslash.js doctor --runtime codex --target repo
+node packages/tools/cli/src/bin/pairslash.js doctor --runtime codex --target repo
+node packages/tools/cli/src/bin/pairslash.js preview install --runtime codex --target repo --plan-out .pairslash/tmp/install-plan.json
+node packages/tools/cli/src/bin/pairslash.js install --runtime codex --target repo --apply --yes
+node packages/tools/cli/src/bin/pairslash.js doctor --runtime codex --target repo
 ```
 
 Swap `--runtime codex` for `--runtime copilot` and `--target repo` for
@@ -41,24 +41,24 @@ Swap `--runtime codex` for `--runtime copilot` and `--target repo` for
 ### Codex repo-scope bootstrap install
 
 ```bash
-node packages/cli/src/bin/pairslash.js preview install --runtime codex --target repo
-node packages/cli/src/bin/pairslash.js install --runtime codex --target repo --apply --yes
-node packages/cli/src/bin/pairslash.js doctor --runtime codex --target repo
+node packages/tools/cli/src/bin/pairslash.js preview install --runtime codex --target repo
+node packages/tools/cli/src/bin/pairslash.js install --runtime codex --target repo --apply --yes
+node packages/tools/cli/src/bin/pairslash.js doctor --runtime codex --target repo
 ```
 
 ### Copilot user-scope bootstrap install
 
 ```bash
-node packages/cli/src/bin/pairslash.js preview install --runtime copilot --target user
-node packages/cli/src/bin/pairslash.js install --runtime copilot --target user --apply --yes
-node packages/cli/src/bin/pairslash.js doctor --runtime copilot --target user
+node packages/tools/cli/src/bin/pairslash.js preview install --runtime copilot --target user
+node packages/tools/cli/src/bin/pairslash.js install --runtime copilot --target user --apply --yes
+node packages/tools/cli/src/bin/pairslash.js doctor --runtime copilot --target user
 ```
 
 ### Install full core set
 
 ```bash
-node packages/cli/src/bin/pairslash.js preview install --runtime codex --target repo --all
-node packages/cli/src/bin/pairslash.js install --runtime codex --target repo --all --apply --yes
+node packages/tools/cli/src/bin/pairslash.js preview install --runtime codex --target repo --all
+node packages/tools/cli/src/bin/pairslash.js install --runtime codex --target repo --all --apply --yes
 ```
 
 ## Validation

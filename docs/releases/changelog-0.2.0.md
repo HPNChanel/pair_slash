@@ -12,7 +12,7 @@ Status: draft, not yet published
   - `pairslash-devops` pack version `0.2.0`
   - `pairslash-release` pack version `0.2.0`
 - Registry-backed formalization remains limited to the entries present in
-  `packages/spec-core/registry/packs.yaml`
+  `packages/core/spec-core/registry/packs.yaml`
 
 ## Breaking changes
 
@@ -23,10 +23,10 @@ Status: draft, not yet published
 ## Additive changes
 
 - Added a versioned pack metadata schema at
-  `packages/spec-core/schemas/pack-metadata.schema.yaml`
+  `packages/core/spec-core/schemas/pack-metadata.schema.yaml`
 - Added a versioned pack registry schema at
-  `packages/spec-core/schemas/pack-registry.schema.yaml`
-- Added the registry manifest at `packages/spec-core/registry/packs.yaml`
+  `packages/core/spec-core/schemas/pack-registry.schema.yaml`
+- Added the registry manifest at `packages/core/spec-core/registry/packs.yaml`
 - Added formal pack metadata for `pairslash-plan` at
   `packs/core/pairslash-plan/pack.yaml`
 - Added formal team-pack metadata and source artifacts for `pairslash-backend`,
@@ -52,7 +52,7 @@ Status: draft, not yet published
 
 ## Validation status captured by this draft
 
-- Validated locally: `python scripts/phase2_checks.py --all`
-- Validated locally: `python -m unittest discover -s tests -p "test_*.py"`
+- Validated locally: `npm run lint`
+- Validated locally: `npm run test`
 - Still manual: live runtime verification steps in
   `docs/compatibility/runtime-verification.md`

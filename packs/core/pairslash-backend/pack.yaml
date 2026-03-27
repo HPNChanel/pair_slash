@@ -96,5 +96,5 @@ source_of_truth:
   pack_dir: packs/core/pairslash-backend
   skill: packs/core/pairslash-backend/SKILL.md
   contract: packs/core/pairslash-backend/contract.md
-  spec: packages/spec-core/specs/pairslash-backend.spec.yaml
+  spec: packages/core/spec-core/specs/pairslash-backend.spec.yaml
   validation_checklist: packs/core/pairslash-backend/validation-checklist.md

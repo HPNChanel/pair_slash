@@ -2,7 +2,7 @@
 
 ## SUMMARY
 - subject: Phase 2 memory hardening changes
-- scope: `.pairslash/`, `packs/core/`, `packages/spec-core/`
+- scope: `.pairslash/`, `packs/core/`, `packages/core/spec-core/`
 - overall_risk: medium
 
 ## FINDINGS

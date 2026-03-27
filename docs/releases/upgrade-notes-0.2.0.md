@@ -15,14 +15,14 @@
   - `pairslash-devops`
   - `pairslash-release`
 - Formalized-pack metadata now resolves through
-  `packages/spec-core/registry/packs.yaml`
+  `packages/core/spec-core/registry/packs.yaml`
 - Runtime support claims remain bounded by
   `docs/compatibility/runtime-surface-matrix.yaml`
 
 ## Manual upgrade steps
 
 1. Keep existing source-pack installation paths unchanged.
-2. If your tooling enumerates packs, read `packages/spec-core/registry/packs.yaml`
+2. If your tooling enumerates packs, read `packages/core/spec-core/registry/packs.yaml`
    first and treat registry membership as the authority for which packs are
    formalized.
 3. Follow each registry entry's `metadata_file` to load pack metadata rather
@@ -36,8 +36,8 @@
 Run from repo root:
 
 ```bash
-python scripts/phase2_checks.py --all
-python -m unittest discover -s tests -p "test_*.py"
+npm run lint
+npm run test
 ```
 
 ## No migration required

@@ -42,7 +42,7 @@ enforced by code that does not depend on LLM compliance.
 
 | Capability | Phase 2 implementation | What it replaces |
 |------------|----------------------|------------------|
-| Input validation | JSON Schema validation script in `scripts/validate-input.py` | LLM field-checking (Step 1-2) |
+| Input validation | JSON Schema validation module in `packages/core/spec-core/` | LLM field-checking (Step 1-2) |
 | Duplicate detection | Script scans all YAML in `project-memory/`, indexes `kind`+`title` | LLM manual file reading (Step 3-4) |
 | YAML lint | Post-write YAML lint (`yamllint` or equivalent) | Trust in LLM YAML formatting |
 | Schema conformance | Post-write JSON Schema check on the written file | Trust in LLM record completeness |
@@ -71,18 +71,18 @@ These invariants hold in every phase:
 
 ## Migration path: Phase 0 to Phase 2
 
-1. **Add `scripts/validate-input.py`** -- reads proposed record, validates against
+1. **Add a Node validation module** -- reads proposed record, validates against
    `memory-record.schema.yaml`, exits non-zero on failure. SKILL.md Step 2 calls
-   this script instead of relying on LLM field-checking.
+   this module instead of relying on LLM field-checking.
 
-2. **Add `scripts/detect-duplicates.py`** -- scans `project-memory/` YAML files,
+2. **Add duplicate detection in `packages/core/memory-engine/`** -- scans `project-memory/` YAML files,
    checks `kind`+`title` collision, outputs matches. SKILL.md Step 4 calls this
    instead of relying on LLM manual comparison.
 
-3. **Add `scripts/write-audit.py`** -- deterministic audit log writer. SKILL.md
+3. **Add deterministic audit writing in `packages/core/memory-engine/`** -- SKILL.md
    Step 11 calls this instead of LLM file creation.
 
-4. **Add `scripts/rebuild-index.py`** -- regenerates `90-memory-index.yaml` from
+4. **Add a Node index rebuild path** -- regenerates `90-memory-index.yaml` from
    all YAML files in `project-memory/`. Can be run as a doctor/repair tool.
 
 5. **Add pre-write hook** -- the hook verifies that a preview was shown and

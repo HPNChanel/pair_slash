@@ -1,0 +1,14 @@
+kind: constraint
+title: Preview required before memory commit
+statement: Preview must be shown before authoritative memory commit.
+evidence: packages/tools/cli/tests/cli.test.js
+scope: whole-project
+confidence: high
+action: append
+tags:
+  - phase5
+  - preview
+source_refs:
+  - packages/tools/cli/tests/cli.test.js
+updated_by: session-user
+timestamp: "2026-03-27T00:00:00.000Z"

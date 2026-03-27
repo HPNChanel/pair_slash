@@ -16,7 +16,7 @@ tags:
   - system-record
 source_refs:
   - docs/architecture/adr-0001-legacy-project-memory-system-records.md
-  - packages/spec-core/schemas/system-record.schema.yaml
+  - packages/core/spec-core/schemas/system-record.schema.yaml
 updated_by: phase2-hardening
 timestamp: "2026-03-22T13:20:00+07:00"
 

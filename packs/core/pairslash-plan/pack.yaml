@@ -107,5 +107,5 @@ source_of_truth:
   pack_dir: packs/core/pairslash-plan
   skill: packs/core/pairslash-plan/SKILL.md
   contract: packs/core/pairslash-plan/contract.md
-  spec: packages/spec-core/specs/pairslash-plan.spec.yaml
+  spec: packages/core/spec-core/specs/pairslash-plan.spec.yaml
   validation_checklist: packs/core/pairslash-plan/validation-checklist.md

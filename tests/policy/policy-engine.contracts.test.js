@@ -12,7 +12,7 @@ import { evaluatePolicy } from "@pairslash/policy-engine";
 
 import { repoRoot } from "../phase4-helpers.js";
 
-const fixturesDir = join(repoRoot, "fixtures", "policy");
+const fixturesDir = join(repoRoot, "tests", "fixtures", "phase5", "policy");
 
 function readJson(name) {
   return JSON.parse(readFileSync(join(fixturesDir, name), "utf8"));

@@ -25,11 +25,12 @@ Use this checklist after install to decide if local Phase 2 is operationally com
 ## Local validation commands
 
 ```bash
-python scripts/phase2_checks.py --all
-python -m unittest discover -s tests -p "test_*.py"
+npm run lint
+npm run test
+npm run test:release
 ```
 
-Both commands should pass before treating the local checkout as operationally ready.
+All three commands should pass before treating the local checkout as operationally ready.
 
 ## Memory-write safety gates
 

@@ -17,20 +17,20 @@ Harden Phase 2 memory workflows with deterministic validation gates.
 ## Proposed steps
 1. Add missing workflow specs and packs for review/onboard/command-suggest/memory-audit.
 2. Add dual-schema handling for system records and mutable records.
-3. Implement doctor/lint/schema/fixture/golden checks in Python.
+3. Implement doctor/lint/schema/fixture/golden checks in Node.js.
 4. Add regression tests and CI gate.
 5. Update docs and acceptance gates.
 
 ## Files likely affected
 - packs/core/
-- packages/spec-core/
+- packages/core/spec-core/
 - scripts/
 - docs/
 - .pairslash/project-memory/
 
 ## Tests and checks
-- python scripts/phase2_checks.py --all
-- python -m unittest discover -s tests -p "test_*.py"
+- npm run lint
+- npm run test
 
 ## Risks
 - Drift between source packs and installed runtime copies.
@@ -43,4 +43,3 @@ Harden Phase 2 memory workflows with deterministic validation gates.
 
 ## Open questions
 - [I assumed] Runtime-specific direct invocation syntax remains secondary to `/skills`.
-

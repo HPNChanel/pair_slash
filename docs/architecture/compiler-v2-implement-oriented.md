@@ -13,20 +13,20 @@
 This design maps to current packages and files:
 
 - Shared contracts and pipeline:
-  - `packages/spec-core/src/ir.js`
-  - `packages/spec-core/src/compile.js`
-  - `packages/spec-core/src/constants.js`
-  - `packages/spec-core/src/validate.js`
+  - `packages/core/spec-core/src/ir.js`
+  - `packages/core/spec-core/src/compile.js`
+  - `packages/core/spec-core/src/constants.js`
+  - `packages/core/spec-core/src/validate.js`
 - Runtime emitters:
-  - `packages/compiler-codex/src/index.js`
-  - `packages/compiler-copilot/src/index.js`
+  - `packages/runtimes/codex/compiler/src/index.js`
+  - `packages/runtimes/copilot/compiler/src/index.js`
 - Runtime adapters:
-  - `packages/runtime-codex-adapter/src/index.js`
-  - `packages/runtime-copilot-adapter/src/index.js`
+  - `packages/runtimes/codex/adapter/src/index.js`
+  - `packages/runtimes/copilot/adapter/src/index.js`
 
 Suggested new contract file for implementation (`d.ts` only, no runtime impact):
 
-- `packages/spec-core/src/compiler-v2-contract.d.ts`
+- `packages/core/spec-core/src/compiler-v2-contract.d.ts`
 
 ```ts
 export type RuntimeId = "codex_cli" | "copilot_cli";

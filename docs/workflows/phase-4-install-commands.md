@@ -10,10 +10,10 @@ entrypoint after install.
 Use this path when you want first success with the least friction:
 
 ```bash
-node packages/cli/src/bin/pairslash.js doctor --runtime codex --target repo
-node packages/cli/src/bin/pairslash.js preview install pairslash-plan --runtime codex --target repo --plan-out .pairslash/tmp/install-plan.json
-node packages/cli/src/bin/pairslash.js install pairslash-plan --runtime codex --target repo --apply --yes
-node packages/cli/src/bin/pairslash.js doctor --runtime codex --target repo
+node packages/tools/cli/src/bin/pairslash.js doctor --runtime codex --target repo
+node packages/tools/cli/src/bin/pairslash.js preview install pairslash-plan --runtime codex --target repo --plan-out .pairslash/tmp/install-plan.json
+node packages/tools/cli/src/bin/pairslash.js install pairslash-plan --runtime codex --target repo --apply --yes
+node packages/tools/cli/src/bin/pairslash.js doctor --runtime codex --target repo
 ```
 
 Swap `--runtime codex` for `--runtime copilot` and `--target repo` for
@@ -42,10 +42,10 @@ Swap `--runtime codex` for `--runtime copilot` and `--target repo` for
 Use `install` to go from source packs to managed runtime-native assets.
 
 ```bash
-node packages/cli/src/bin/pairslash.js install pairslash-plan --runtime codex --target repo
-node packages/cli/src/bin/pairslash.js install pairslash-plan --runtime codex --target repo --dry-run
-node packages/cli/src/bin/pairslash.js install pairslash-plan --runtime codex --target repo --apply --yes
-node packages/cli/src/bin/pairslash.js install --runtime codex --target repo --format json
+node packages/tools/cli/src/bin/pairslash.js install pairslash-plan --runtime codex --target repo
+node packages/tools/cli/src/bin/pairslash.js install pairslash-plan --runtime codex --target repo --dry-run
+node packages/tools/cli/src/bin/pairslash.js install pairslash-plan --runtime codex --target repo --apply --yes
+node packages/tools/cli/src/bin/pairslash.js install --runtime codex --target repo --format json
 ```
 
 Install semantics:
@@ -62,10 +62,10 @@ Install semantics:
 Use `update` to refresh managed packs without clobbering valid local overrides.
 
 ```bash
-node packages/cli/src/bin/pairslash.js preview update --runtime copilot --target user
-node packages/cli/src/bin/pairslash.js update --runtime copilot --target user --dry-run
-node packages/cli/src/bin/pairslash.js update --runtime copilot --target user --apply --yes
-node packages/cli/src/bin/pairslash.js update pairslash-plan --runtime codex --from 0.4.0 --to packs/core/pairslash-plan/pack.manifest.yaml --dry-run
+node packages/tools/cli/src/bin/pairslash.js preview update --runtime copilot --target user
+node packages/tools/cli/src/bin/pairslash.js update --runtime copilot --target user --dry-run
+node packages/tools/cli/src/bin/pairslash.js update --runtime copilot --target user --apply --yes
+node packages/tools/cli/src/bin/pairslash.js update pairslash-plan --runtime codex --from 0.4.0 --to packs/core/pairslash-plan/pack.manifest.yaml --dry-run
 ```
 
 Update semantics:
@@ -83,10 +83,10 @@ Update semantics:
 Use `uninstall` to remove only PairSlash-managed footprint for the chosen lane.
 
 ```bash
-node packages/cli/src/bin/pairslash.js preview uninstall --runtime codex --target repo
-node packages/cli/src/bin/pairslash.js uninstall --runtime codex --target repo --dry-run
-node packages/cli/src/bin/pairslash.js uninstall --runtime codex --target repo --apply --yes
-node packages/cli/src/bin/pairslash.js uninstall --runtime codex --target repo --format json
+node packages/tools/cli/src/bin/pairslash.js preview uninstall --runtime codex --target repo
+node packages/tools/cli/src/bin/pairslash.js uninstall --runtime codex --target repo --dry-run
+node packages/tools/cli/src/bin/pairslash.js uninstall --runtime codex --target repo --apply --yes
+node packages/tools/cli/src/bin/pairslash.js uninstall --runtime codex --target repo --format json
 ```
 
 Uninstall semantics:
@@ -111,9 +111,9 @@ Uninstall semantics:
   tool/MCP config.
 
 ```bash
-node packages/cli/src/bin/pairslash.js doctor --runtime codex --target repo
-node packages/cli/src/bin/pairslash.js doctor --runtime copilot --target user
-node packages/cli/src/bin/pairslash.js lint
+node packages/tools/cli/src/bin/pairslash.js doctor --runtime codex --target repo
+node packages/tools/cli/src/bin/pairslash.js doctor --runtime copilot --target user
+node packages/tools/cli/src/bin/pairslash.js lint
 ```
 
 Doctor verdict meanings and common remediations live in

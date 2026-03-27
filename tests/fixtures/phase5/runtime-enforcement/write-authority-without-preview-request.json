@@ -1,0 +1,8 @@
+{
+  "action": "memory.write-global",
+  "apply": true,
+  "preview_requested": false,
+  "approval": "explicit",
+  "trigger_surface": "canonical_skill",
+  "capability_request": ["preview_emit"]
+}

@@ -1,0 +1,416 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import YAML from "yaml";
+
+import {
+  buildNormalizedIr,
+  buildManifestTemplate,
+  discoverPackManifestPaths,
+  loadPackManifest,
+  loadPackManifestRecords,
+  resolveManifestInstallSpec,
+  serializePackManifestV2,
+  selectPackManifestRecords,
+  validateDoctorReport,
+  validateLintReport,
+  validatePackManifestV2,
+} from "@pairslash/spec-core";
+
+import { createTempRepo, repoRoot, updatePackManifest } from "../../../../tests/phase4-helpers.js";
+
+function loadManifestFixture(fileName) {
+  const fixturePath = join(repoRoot, "packages", "core", "spec-core", "tests", "fixtures", fileName);
+  return YAML.parse(readFileSync(fixturePath, "utf8"));
+}
+
+function hasCode(errors, code) {
+  return errors.some((error) => error.startsWith(`${code} `));
+}
+
+test("discoverPackManifestPaths finds phase 4 manifests", () => {
+  const manifestPaths = discoverPackManifestPaths(repoRoot);
+  assert.ok(manifestPaths.length >= 11);
+  assert.ok(manifestPaths.every((path) => path.endsWith("pack.manifest.yaml")));
+});
+
+test("pairslash-plan manifest v2 validates", () => {
+  const manifest = loadPackManifest(join(repoRoot, "packs", "core", "pairslash-plan", "pack.manifest.yaml"));
+  assert.deepEqual(validatePackManifestV2(manifest), []);
+  assert.equal(manifest.pack.canonical_entrypoint, "/skills");
+  assert.deepEqual(Object.keys(manifest.runtime_targets).sort(), ["codex_cli", "copilot_cli"]);
+  assert.equal(manifest.ownership.ownership_file, "pairslash.install.json");
+});
+
+test("pairslash-memory-write-global manifest enforces write-authority contract", () => {
+  const manifest = loadPackManifest(
+    join(repoRoot, "packs", "core", "pairslash-memory-write-global", "pack.manifest.yaml"),
+  );
+  assert.equal(manifest.memory_permissions.authority_mode, "write-authority");
+  assert.equal(manifest.memory_permissions.global_project_memory, "write");
+  assert.equal(manifest.risk_level, "critical");
+  assert.ok(manifest.capabilities.includes("memory_write_global"));
+});
+
+test("buildNormalizedIr produces deterministic canonical asset graph", () => {
+  const manifestPath = join(repoRoot, "packs", "core", "pairslash-plan", "pack.manifest.yaml");
+  const ir = buildNormalizedIr({ repoRoot, manifestPath });
+  assert.equal(ir.kind, "normalized-pack-ir");
+  assert.equal(ir.pack.id, "pairslash-plan");
+  assert.equal(ir.pack.canonical_entrypoint, "/skills");
+  assert.ok(ir.logical_assets.some((asset) => asset.asset_id === "skill"));
+  assert.ok(ir.logical_assets.some((asset) => asset.asset_id === "codex-config"));
+  assert.ok(ir.logical_assets.some((asset) => asset.asset_id === "copilot-package"));
+  assert.ok(ir.logical_assets.some((asset) => asset.asset_id === "ownership-receipt"));
+  assert.ok(ir.logical_assets.some((asset) => asset.runtime_selector === "codex_cli"));
+  assert.ok(ir.logical_assets.some((asset) => asset.runtime_selector === "copilot_cli"));
+  assert.ok(ir.logical_assets.find((asset) => asset.asset_id === "skill").source_relpath === "SKILL.md");
+  assert.ok(
+    ir.logical_assets.find((asset) => asset.asset_id === "codex-config").generated_relpath ===
+      "fragments/config/pack-config.yaml",
+  );
+});
+
+test("canonical manifest fields remain authoritative when compatibility aliases are present", () => {
+  const fixture = createTempRepo();
+  try {
+    const manifestPath = join(
+      fixture.tempRoot,
+      "packs",
+      "core",
+      "pairslash-plan",
+      "pack.manifest.yaml",
+    );
+    const rawManifest = YAML.parse(readFileSync(manifestPath, "utf8"));
+    rawManifest.assets = {
+      pack_dir: "packs/core/wrong-pack",
+      primary_skill_file: "WRONG.md",
+      include: ["SKILL.md"],
+    };
+    rawManifest.runtime_targets = {
+      codex_cli: {
+        direct_invocation: "$wrong-pack",
+        metadata_mode: "openai_yaml_optional",
+        skill_directory_name: "wrong-pack",
+        compatibility: {
+          canonical_picker: "supported",
+          direct_invocation: "supported",
+        },
+      },
+      copilot_cli: {
+        direct_invocation: "/wrong-pack",
+        metadata_mode: "none",
+        skill_directory_name: "wrong-pack",
+        compatibility: {
+          canonical_picker: "supported",
+          direct_invocation: "unverified",
+        },
+      },
+    };
+    rawManifest.local_override_policy.eligible_paths = ["SKILL.md"];
+    writeFileSync(
+      manifestPath,
+      YAML.stringify(rawManifest, {
+        lineWidth: 0,
+        simpleKeys: true,
+      }),
+    );
+
+    const manifest = loadPackManifest(manifestPath);
+    assert.equal(manifest.runtime_assets.source_root, "packs/core/pairslash-plan");
+    assert.equal(manifest.runtime_bindings.codex_cli.direct_invocation, "$pairslash-plan");
+
+    const ir = buildNormalizedIr({ repoRoot: fixture.tempRoot, manifestPath });
+    assert.ok(ir.logical_assets.some((asset) => asset.asset_id === "contract-doc"));
+    assert.ok(
+      ir.logical_assets.find((asset) => asset.asset_id === "codex-config").generated_relpath ===
+        "fragments/config/pack-config.yaml",
+    );
+  } finally {
+    fixture.cleanup();
+  }
+});
+
+test("validator rejects unsupported runtime and invalid memory write policy", () => {
+  const manifest = loadPackManifest(join(repoRoot, "packs", "core", "pairslash-plan", "pack.manifest.yaml"));
+  const invalid = structuredClone(manifest);
+  invalid.supported_runtime_ranges.cursor = ">=1.0.0";
+  invalid.memory_permissions.global_project_memory = "write";
+  invalid.memory_permissions.authority_mode = "read-only";
+  invalid.capabilities = invalid.capabilities.filter((item) => item !== "memory_write_global");
+  const errors = validatePackManifestV2(invalid);
+  assert.ok(errors.some((error) => error.includes("PSM010")));
+  assert.ok(errors.some((error) => error.includes("PSM041")));
+});
+
+test("buildManifestTemplate emits validator-compatible runtime target shape", () => {
+  const manifest = buildManifestTemplate({
+    id: "pairslash-template-check",
+    phase: 4,
+    include: ["SKILL.md", "contract.md", "validation-checklist.md"],
+    overridePaths: ["SKILL.md", "contract.md"],
+  });
+  assert.deepEqual(validatePackManifestV2(manifest), []);
+  assert.equal(manifest.runtime_targets.codex_cli.metadata_mode, "openai_yaml_optional");
+  assert.equal(manifest.runtime_targets.codex_cli.skill_directory_name, "pairslash-template-check");
+  assert.equal("adapter" in manifest.runtime_targets.codex_cli, false);
+});
+
+test("raw canonical pack.manifest.yaml v2.1.0 validates for core pack", () => {
+  const manifestPath = join(repoRoot, "packs", "core", "pairslash-plan", "pack.manifest.yaml");
+  const rawManifest = YAML.parse(readFileSync(manifestPath, "utf8"));
+  assert.deepEqual(validatePackManifestV2(rawManifest), []);
+  assert.equal(rawManifest.schema_version, "2.1.0");
+  assert.equal(rawManifest.pack_name, "pairslash-plan");
+});
+
+test("sample manifests validate in canonical pack.manifest.yaml v2.1.0 shape", () => {
+  const coreSample = loadManifestFixture("pack.manifest.v2.core.sample.yaml");
+  const runtimeTargetedSample = loadManifestFixture("pack.manifest.v2.runtime-targeted.sample.yaml");
+  assert.deepEqual(validatePackManifestV2(coreSample), []);
+  assert.deepEqual(validatePackManifestV2(runtimeTargetedSample), []);
+});
+
+test("validator rejects invalid runtime range formats", () => {
+  const manifest = loadManifestFixture("pack.manifest.v2.core.sample.yaml");
+  manifest.supported_runtime_ranges.codex_cli = "latest";
+  const errors = validatePackManifestV2(manifest);
+  assert.ok(hasCode(errors, "PSM010"));
+  assert.ok(
+    errors.some((error) =>
+      error.includes("supported_runtime_ranges.codex_cli must use exact x.y.z or >=x.y.z semver format"),
+    ),
+  );
+});
+
+test("validator rejects low-risk manifests with write capabilities", () => {
+  const manifest = loadManifestFixture("pack.manifest.v2.core.sample.yaml");
+  manifest.capabilities = [...manifest.capabilities, "repo_write"];
+  const errors = validatePackManifestV2(manifest);
+  assert.ok(hasCode(errors, "PSM031"));
+});
+
+test("validator enforces memory write authority contract", () => {
+  const manifest = loadManifestFixture("pack.manifest.v2.runtime-targeted.sample.yaml");
+  manifest.memory_permissions.authority_mode = "read-only";
+  manifest.capabilities = manifest.capabilities.filter((capability) => capability !== "memory_write_global");
+  manifest.risk_level = "high";
+  const errors = validatePackManifestV2(manifest);
+  assert.ok(hasCode(errors, "PSM041"));
+  assert.ok(hasCode(errors, "PSM042"));
+});
+
+test("validator rejects incomplete asset ownership records", () => {
+  const manifest = loadManifestFixture("pack.manifest.v2.core.sample.yaml");
+  manifest.asset_ownership.records = manifest.asset_ownership.records.filter(
+    (record) => record.asset_id !== "skill",
+  );
+  const errors = validatePackManifestV2(manifest);
+  assert.ok(hasCode(errors, "PSM050"));
+  assert.ok(errors.some((error) => error.includes("asset_ownership.records is missing asset_id skill")));
+});
+
+test("validator enforces uninstall safety policy", () => {
+  const manifest = loadManifestFixture("pack.manifest.v2.core.sample.yaml");
+  manifest.asset_ownership.safe_delete_policy = "unsafe-delete-all";
+  const errors = validatePackManifestV2(manifest);
+  assert.ok(hasCode(errors, "PSM050"));
+  assert.ok(
+    errors.some((error) => error.includes("asset_ownership.safe_delete_policy must be pairslash-owned-only")),
+  );
+});
+
+test("manifest resolver returns runtime and target install contract", () => {
+  const manifest = loadPackManifest(join(repoRoot, "packs", "core", "pairslash-plan", "pack.manifest.yaml"));
+  const resolved = resolveManifestInstallSpec(manifest, {
+    runtime: "codex_cli",
+    target: "repo",
+  });
+  assert.equal(resolved.runtime_binding.direct_invocation, "$pairslash-plan");
+  assert.equal(resolved.runtime_range, ">=0.116.0");
+  assert.ok(resolved.assets.some((asset) => asset.generated_path === "agents/openai.yaml"));
+  assert.ok(resolved.assets.some((asset) => asset.source_path === "SKILL.md"));
+});
+
+test("serializePackManifestV2 preserves alias edits when rewriting canonical manifests", () => {
+  const manifest = loadPackManifest(join(repoRoot, "packs", "core", "pairslash-plan", "pack.manifest.yaml"));
+  manifest.pack.id = "pairslash-plan-rewrite";
+  manifest.assets.pack_dir = "packs/core/pairslash-plan-rewrite";
+  manifest.runtime_targets.codex_cli.direct_invocation = "$pairslash-plan-rewrite";
+  manifest.runtime_targets.codex_cli.skill_directory_name = "pairslash-plan-rewrite";
+  const serialized = serializePackManifestV2(manifest);
+  assert.equal(serialized.pack_name, "pairslash-plan-rewrite");
+  assert.equal(serialized.runtime_bindings.codex_cli.direct_invocation, "$pairslash-plan-rewrite");
+  assert.equal(serialized.runtime_bindings.codex_cli.install_dir_name, "pairslash-plan-rewrite");
+});
+
+test("manifest selection isolates unrelated invalid manifests for targeted pack operations", () => {
+  const fixture = createTempRepo({ packs: ["pairslash-plan", "pairslash-review"] });
+  try {
+    updatePackManifest({
+      repoRoot: fixture.tempRoot,
+      packId: "pairslash-review",
+      mutate(manifest) {
+        manifest.supported_runtime_ranges.cursor = ">=1.0.0";
+        return manifest;
+      },
+    });
+    const records = loadPackManifestRecords(fixture.tempRoot);
+    const selection = selectPackManifestRecords(records, ["pairslash-plan"]);
+    assert.deepEqual(selection.missing, []);
+    assert.deepEqual(selection.invalid, []);
+    assert.deepEqual(selection.valid.map((record) => record.packId), ["pairslash-plan"]);
+  } finally {
+    fixture.cleanup();
+  }
+});
+
+test("doctor report validator accepts phase 4 execution report shape", () => {
+  const errors = validateDoctorReport({
+    kind: "doctor-report",
+    schema_version: "2.1.0",
+    generated_at: "2026-03-24T10:00:00.000Z",
+    runtime: "codex_cli",
+    target: "repo",
+    support_verdict: "warn",
+    install_blocked: false,
+    environment_summary: {
+      os: "win32",
+      shell: "powershell",
+      shell_profile_candidates: [join(repoRoot, "Documents", "PowerShell", "Microsoft.PowerShell_profile.ps1")],
+      cwd: repoRoot,
+      repo_root: repoRoot,
+      config_home: join(repoRoot, ".agents"),
+      install_root: join(repoRoot, ".agents", "skills"),
+      state_path: join(repoRoot, ".pairslash", "install-state", "repo-codex_cli.json"),
+      runtime_executable: "codex",
+      runtime_version: "0.116.0",
+      runtime_available: true,
+    },
+    scope_probes: {
+      repo: {
+        target: "repo",
+        selected: true,
+        config_home: join(repoRoot, ".agents"),
+        install_root: join(repoRoot, ".agents", "skills"),
+        state_path: join(repoRoot, ".pairslash", "install-state", "repo-codex_cli.json"),
+        config_home_exists: false,
+        install_root_exists: false,
+        writable: true,
+        verdict: "pass",
+        blocking_for_install: false,
+        issue_codes: [],
+      },
+      user: {
+        target: "user",
+        selected: false,
+        config_home: join(repoRoot, "home", ".agents"),
+        install_root: join(repoRoot, "home", ".agents", "skills"),
+        state_path: join(repoRoot, ".pairslash", "install-state", "user-codex_cli.json"),
+        config_home_exists: false,
+        install_root_exists: false,
+        writable: true,
+        verdict: "pass",
+        blocking_for_install: false,
+        issue_codes: [],
+      },
+    },
+    support_lane: {
+      os: "win32",
+      runtime: "codex_cli",
+      target: "repo",
+      lane_status: "prep",
+      tested_range_status: "prep_lane",
+      tested_version_range: null,
+      evidence_source: "docs/runtime-mapping/pilot-acceptance.md",
+      blocking_for_install: false,
+      summary: "Windows is a prep lane for Phase 4 doctor and preview coverage.",
+    },
+    runtime_compatibility: {
+      requested_runtime_range_max_status: "supported",
+      selected_pack_count: 1,
+      compatible_pack_count: 1,
+      incompatible_pack_ids: [],
+    },
+    checks: [
+      {
+        id: "runtime.detect",
+        group: "runtime",
+        severity: "info",
+        status: "pass",
+        runtime: "codex_cli",
+        target: "repo",
+        inputs: {},
+        summary: "runtime available",
+        remediation: null,
+        evidence: {},
+        blocking_for_install: false,
+      },
+    ],
+    issues: [
+      {
+        code: "DOC-PLATFORM-SUPPORT-LANE",
+        verdict: "warn",
+        severity: "warn",
+        check_id: "platform.support_lane",
+        summary: "Windows is a prep lane for Phase 4 doctor and preview coverage.",
+        evidence: {
+          os: "win32",
+        },
+        suggested_fix: "Use macOS Codex repo lane or Linux Copilot user lane for pilot-grade install evidence.",
+        blocking_for_install: false,
+        message: "Windows is a prep lane for Phase 4 doctor and preview coverage.",
+        remediation: "Use macOS Codex repo lane or Linux Copilot user lane for pilot-grade install evidence.",
+      },
+    ],
+    next_actions: ["No action required."],
+    installed_packs: [],
+    first_workflow_guidance: {
+      ready: false,
+      recommended_pack_id: "pairslash-plan",
+      rationale: "Install the baseline planning pack first to validate /skills workflow activation.",
+      commands: [
+        "node packages/tools/cli/src/bin/pairslash.js preview install pairslash-plan --runtime codex --target repo",
+        "node packages/tools/cli/src/bin/pairslash.js install pairslash-plan --runtime codex --target repo --apply --yes",
+      ],
+    },
+  });
+  assert.deepEqual(errors, []);
+});
+
+test("lint report validator accepts phase 4 bridge report shape", () => {
+  const errors = validateLintReport({
+    kind: "lint-report",
+    schema_version: "1.0.0",
+    phase: "phase4-bridge",
+    generated_at: "2026-03-24T10:00:00.000Z",
+    ok: true,
+    target: "repo",
+    runtime_scope: "all",
+    summary: {
+      pack_count: 1,
+      runtime_count: 2,
+      check_count: 2,
+      error_count: 0,
+      warning_count: 0,
+      note_count: 0,
+    },
+    checks: [
+      {
+        code: "LINT-MANIFEST-001",
+        result: "pass",
+        pack_id: "pairslash-plan",
+        runtime: "shared",
+        target: "repo",
+        path: "packs/core/pairslash-plan/pack.manifest.yaml",
+        message: "manifest v2 validation passed",
+        remediation: null,
+      },
+    ],
+    issues: [],
+    blocking_errors: [],
+    next_actions: ["No blocking lint issues detected for Phase 4 bridge."],
+  });
+  assert.deepEqual(errors, []);
+});

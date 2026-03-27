@@ -16,7 +16,7 @@ Phase 5 adds machine-readable enforcement on top of the Phase 4 installability s
 
 ## Schemas
 
-Shipped under `packages/spec-core/schemas/`:
+Shipped under `packages/core/spec-core/schemas/`:
 
 - `contract-envelope.schema.yaml`
 - `policy-verdict.schema.yaml`
