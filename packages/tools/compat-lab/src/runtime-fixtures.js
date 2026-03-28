@@ -25,6 +25,9 @@ function writeCodexShim(binDir, version) {
       "",
     ].join("\r\n"),
   );
+  if (process.platform === "win32") {
+    return;
+  }
   writeExecutable(
     join(binDir, "codex"),
     [
@@ -58,6 +61,9 @@ function writeCopilotShim(binDir, version) {
       "",
     ].join("\r\n"),
   );
+  if (process.platform === "win32") {
+    return;
+  }
   writeExecutable(
     join(binDir, "gh"),
     [
@@ -79,7 +85,7 @@ function writeCopilotShim(binDir, version) {
 
 export function installFakeRuntimes({
   codexVersion = "0.116.0",
-  copilotVersion = "1.0.0",
+  copilotVersion = "2.50.0",
 } = {}) {
   const binDir = join(tmpdir(), `pairslash-compat-runtime-${process.pid}-${Date.now()}`);
   mkdirSync(binDir, { recursive: true });
@@ -87,11 +93,15 @@ export function installFakeRuntimes({
   const previousPath = process.env.PATH ?? "";
   const previousHome = process.env.HOME;
   const previousUserProfile = process.env.USERPROFILE;
+  const previousCodexVersion = process.env.PAIRSLASH_FAKE_CODEX_VERSION;
+  const previousCopilotVersion = process.env.PAIRSLASH_FAKE_COPILOT_VERSION;
 
   writeCodexShim(binDir, codexVersion);
   writeCopilotShim(binDir, copilotVersion);
 
   process.env.PATH = `${binDir}${delimiter}${previousPath}`;
+  process.env.PAIRSLASH_FAKE_CODEX_VERSION = codexVersion;
+  process.env.PAIRSLASH_FAKE_COPILOT_VERSION = copilotVersion;
 
   return {
     binDir,
@@ -108,6 +118,16 @@ export function installFakeRuntimes({
       process.env.PATH = previousPath;
       process.env.HOME = previousHome;
       process.env.USERPROFILE = previousUserProfile;
+      if (previousCodexVersion === undefined) {
+        delete process.env.PAIRSLASH_FAKE_CODEX_VERSION;
+      } else {
+        process.env.PAIRSLASH_FAKE_CODEX_VERSION = previousCodexVersion;
+      }
+      if (previousCopilotVersion === undefined) {
+        delete process.env.PAIRSLASH_FAKE_COPILOT_VERSION;
+      } else {
+        process.env.PAIRSLASH_FAKE_COPILOT_VERSION = previousCopilotVersion;
+      }
       rmSync(binDir, { recursive: true, force: true });
     },
   };

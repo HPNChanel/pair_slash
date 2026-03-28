@@ -1,0 +1,49 @@
+import { existsSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import process from "node:process";
+
+const requiredDocs = [
+  "docs/compatibility/compatibility-matrix.md",
+  "docs/compatibility/runtime-surface-matrix.yaml",
+  "docs/compatibility/runtime-verification.md",
+  "docs/troubleshooting/compat-lab-bug-repro.md",
+  "packages/tools/compat-lab/fixtures/README.md",
+  "packages/tools/compat-lab/fixtures/repos/README.md",
+];
+
+for (const file of requiredDocs) {
+  if (!existsSync(file)) {
+    console.error(`missing required compatibility doc: ${file}`);
+    process.exit(1);
+  }
+}
+
+const syncCheck = spawnSync(process.execPath, ["scripts/sync-compat-lab-artifacts.mjs", "--check"], {
+  stdio: "inherit",
+});
+
+if (syncCheck.status !== 0) {
+  process.exit(syncCheck.status ?? 1);
+}
+
+const tests = spawnSync(process.execPath, ["scripts/run-compat-lab-tests.mjs"], {
+  stdio: "inherit",
+});
+
+if (tests.status !== 0) {
+  process.exit(tests.status ?? 1);
+}
+
+const acceptance = spawnSync(
+  process.execPath,
+  ["scripts/run-compat-lab-acceptance.mjs", "--lane", "all", "--format", "text"],
+  {
+    stdio: "inherit",
+  },
+);
+
+if (acceptance.status !== 0) {
+  process.exit(acceptance.status ?? 1);
+}
+
+console.log("Compat-lab release-readiness checks passed.");

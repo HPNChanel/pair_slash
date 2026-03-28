@@ -1,42 +1,59 @@
 # PairSlash Runtime Verification
 
-Run this checklist in live CLI sessions to validate runtime support claims.
+Use this checklist when you are collecting manual live evidence for the public
+compatibility matrix. Compat-lab automation is deterministic and release-gating,
+but it does not replace live `/skills` verification.
 
-This page verifies runtime behavior after managed install. Do not use it as the
-primary install path. Use `docs/workflows/install-guide.md` first.
+Do not use this page as the install guide. Start with
+`docs/workflows/install-guide.md`.
 
 ## Before you start
 
 - Complete managed install for the target lane.
-- Launch the runtime from repo root.
-- Keep `docs/compatibility/compatibility-matrix.md` open so support claims stay
-  aligned with recorded evidence.
-- If a surface is unverified or blocked, record that directly.
+- Open `docs/compatibility/compatibility-matrix.md` and confirm which support
+  level the lane currently claims.
+- Keep notes on the exact runtime version, OS, shell, and what you actually saw.
+- If a surface is degraded, prep-only, or blocked, record that explicitly. Do
+  not infer success from deterministic compat-lab coverage alone.
 
-## Codex CLI
+## Stable-tested or degraded lane verification
 
-1. Run `/skills`.
-2. Verify target skills are visible.
-3. Select `pairslash-plan` and run a basic plan prompt.
-4. Select `pairslash-memory-write-global` and verify write-authority flow:
-   - preview patch appears before write
-   - explicit user acceptance is required
+Run these steps inside the live runtime from repo root:
+
+1. Launch the runtime and open `/skills`.
+2. Verify the expected PairSlash workflows are visible.
+3. Run `pairslash-plan` through `/skills` and confirm it behaves like a
+   read-oriented workflow.
+4. Run `pairslash-memory-write-global` and confirm:
+   - preview appears before any write
+   - explicit confirmation is required
    - no hidden writes occur
-5. Confirm read workflows do not write `.pairslash/project-memory/`.
+   - rejected or blocked previews do not silently fall back
+5. Confirm read workflows do not mutate `.pairslash/project-memory/`.
+6. If the lane is degraded, record exactly which caveat still applies.
 
-## GitHub Copilot CLI
+## Prep lane verification
 
-1. Run `/skills`.
-2. Verify target skills are visible.
-3. Select `pairslash-plan` and run a basic plan prompt.
-4. Select `pairslash-memory-write-global` and verify the same write-authority
-   controls as Codex lane.
-5. Confirm read workflows do not write `.pairslash/project-memory/`.
+For prep lanes, do not promote support claims from doctor/preview alone.
+
+Verify only what the lane actually promises:
+
+1. `pairslash doctor`
+2. `pairslash preview install ...`
+3. Any install-root, shell-profile, or path-resolution checks relevant to the
+   runtime
+
+Only move a prep lane beyond prep when real install and `/skills` evidence is
+captured.
 
 ## Record results
 
-Update:
+When evidence changes, update:
 
-- `docs/compatibility/acceptance-gates.yaml`
 - `docs/compatibility/runtime-surface-matrix.yaml`
-- `docs/compatibility/compatibility-matrix.md` only when evidence supports the change
+- `docs/compatibility/compatibility-matrix.md`
+- `docs/troubleshooting/compat-lab-bug-repro.md` if a new repro path or caveat
+  becomes part of maintainer workflow
+
+Keep manual evidence separate from deterministic compat-lab output. The matrix
+must tell users what is truly supported today.

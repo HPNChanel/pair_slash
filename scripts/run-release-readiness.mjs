@@ -1,1 +1,1 @@
-import "./run-phase4-release-readiness.mjs";
+import "./run-compat-lab-release-readiness.mjs";

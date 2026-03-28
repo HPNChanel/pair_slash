@@ -8,8 +8,8 @@ const PILOT_LANES = [
     lane_status: "supported",
     tested_version_range: "0.116.0",
     evidence_source:
-      "docs/runtime-mapping/pilot-acceptance.md; .pairslash/project-memory/60-architecture-decisions/phase-0-codex-cli-verification-on-v0-116-0.yaml",
-    summary: "macOS Codex repo scope is the primary pilot lane for Phase 4.",
+      "docs/compatibility/compatibility-matrix.md; docs/runtime-mapping/pilot-acceptance.md; .pairslash/project-memory/60-architecture-decisions/phase-0-codex-cli-verification-on-v0-116-0.yaml",
+    summary: "macOS Codex repo scope is the primary stable-tested compatibility lane.",
   },
   {
     runtime: "copilot_cli",
@@ -17,8 +17,8 @@ const PILOT_LANES = [
     os: "linux",
     lane_status: "supported",
     tested_version_range: null,
-    evidence_source: "docs/runtime-mapping/pilot-acceptance.md",
-    summary: "Linux Copilot user scope is the secondary pilot lane for Phase 4.",
+    evidence_source: "docs/compatibility/compatibility-matrix.md; docs/runtime-mapping/pilot-acceptance.md",
+    summary: "Linux Copilot user scope is the secondary compatibility lane and remains degraded until live runtime evidence is tightened.",
   },
 ];
 
@@ -31,9 +31,9 @@ export function resolveSupportLane({ runtime, target, os, runtimeVersion = null,
       lane_status: "unsupported",
       tested_range_status: "unsupported",
       tested_version_range: null,
-      evidence_source: "docs/runtime-mapping/pilot-acceptance.md",
+      evidence_source: "docs/compatibility/compatibility-matrix.md",
       blocking_for_install: true,
-      summary: `Operating system ${os} is outside the documented PairSlash Phase 4 support lanes.`,
+      summary: `Operating system ${os} is outside the documented PairSlash compatibility lanes.`,
     };
   }
 
@@ -45,9 +45,9 @@ export function resolveSupportLane({ runtime, target, os, runtimeVersion = null,
       lane_status: "prep",
       tested_range_status: "prep_lane",
       tested_version_range: null,
-      evidence_source: "docs/runtime-mapping/pilot-acceptance.md",
+      evidence_source: "docs/compatibility/compatibility-matrix.md; docs/runtime-mapping/pilot-acceptance.md",
       blocking_for_install: false,
-      summary: "Windows is a prep lane for Phase 4: doctor and preview are expected, but live install evidence is still pending.",
+      summary: "Windows is a prep lane: doctor and preview are expected, but live install evidence is still pending.",
     };
   }
 
@@ -64,7 +64,7 @@ export function resolveSupportLane({ runtime, target, os, runtimeVersion = null,
       tested_range_status: "unrecorded",
       tested_version_range: null,
       evidence_source:
-        "docs/runtime-mapping/pilot-acceptance.md; docs/compatibility/runtime-surface-matrix.yaml",
+        "docs/compatibility/compatibility-matrix.md; docs/runtime-mapping/pilot-acceptance.md; docs/compatibility/runtime-surface-matrix.yaml",
       blocking_for_install: false,
       summary: "This runtime/target/OS combination is supported by product intent but does not have a recorded pilot lane yet.",
     };

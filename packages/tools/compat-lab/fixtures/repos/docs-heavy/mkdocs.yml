@@ -1,0 +1,3 @@
+site_name: Compat Docs Heavy
+nav:
+  - Getting Started: docs/getting-started.md

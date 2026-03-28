@@ -30,6 +30,9 @@ function writeCodexShim(binDir, version) {
       "",
     ].join("\r\n"),
   );
+  if (process.platform === "win32") {
+    return;
+  }
   writeExecutable(
     join(binDir, "codex"),
     [
@@ -63,6 +66,9 @@ function writeCopilotShim(binDir, version) {
       "",
     ].join("\r\n"),
   );
+  if (process.platform === "win32") {
+    return;
+  }
   writeExecutable(
     join(binDir, "gh"),
     [
@@ -128,13 +134,17 @@ export function installFakeRuntime({ codexVersion = null, copilotVersion = null 
   const previousPath = process.env.PATH ?? "";
   const previousHome = process.env.HOME;
   const previousUserProfile = process.env.USERPROFILE;
+  const previousCodexVersion = process.env.PAIRSLASH_FAKE_CODEX_VERSION;
+  const previousCopilotVersion = process.env.PAIRSLASH_FAKE_COPILOT_VERSION;
 
   if (codexVersion) {
     writeCodexShim(binDir, codexVersion);
+    process.env.PAIRSLASH_FAKE_CODEX_VERSION = codexVersion;
   }
 
   if (copilotVersion) {
     writeCopilotShim(binDir, copilotVersion);
+    process.env.PAIRSLASH_FAKE_COPILOT_VERSION = copilotVersion;
   }
 
   process.env.PATH = `${binDir}${delimiter}${previousPath}`;
@@ -154,6 +164,16 @@ export function installFakeRuntime({ codexVersion = null, copilotVersion = null 
       process.env.PATH = previousPath;
       process.env.HOME = previousHome;
       process.env.USERPROFILE = previousUserProfile;
+      if (previousCodexVersion === undefined) {
+        delete process.env.PAIRSLASH_FAKE_CODEX_VERSION;
+      } else {
+        process.env.PAIRSLASH_FAKE_CODEX_VERSION = previousCodexVersion;
+      }
+      if (previousCopilotVersion === undefined) {
+        delete process.env.PAIRSLASH_FAKE_COPILOT_VERSION;
+      } else {
+        process.env.PAIRSLASH_FAKE_COPILOT_VERSION = previousCopilotVersion;
+      }
       rmSync(binDir, { recursive: true, force: true });
     },
   };

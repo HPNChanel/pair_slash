@@ -19,10 +19,14 @@
     "test": "node scripts/run-tests.mjs",
     "test:acceptance": "node scripts/run-acceptance-tests.mjs",
     "test:release": "node scripts/run-release-readiness.mjs",
+    "test:compat": "node scripts/run-compat-lab-tests.mjs",
+    "test:compat:acceptance": "node scripts/run-compat-lab-acceptance.mjs",
+    "test:compat:release": "node scripts/run-compat-lab-release-readiness.mjs",
+    "sync:compat-lab": "node scripts/sync-compat-lab-artifacts.mjs",
     "lint:phase4": "npm run lint",
-    "test:phase4": "npm run test",
-    "test:phase4:acceptance": "npm run test:acceptance",
-    "test:phase4:release": "npm run test:release"
+    "test:phase4": "npm run test:compat",
+    "test:phase4:acceptance": "npm run test:compat:acceptance",
+    "test:phase4:release": "npm run test:compat:release"
   },
   "dependencies": {
     "valibot": "^1.3.1",

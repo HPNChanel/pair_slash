@@ -5,7 +5,13 @@ import { applyInstall, planInstall } from "@pairslash/installer";
 import { runDoctor } from "@pairslash/doctor";
 
 import { materializeCompatFixture } from "./materialize.js";
-import { buildPathMarkers, normalizeCompiledPack, normalizeDoctorReport, normalizeInstallState, normalizePreviewPlan } from "./normalize.js";
+import {
+  buildPathMarkers,
+  normalizeCompiledPack,
+  normalizeDoctorReport,
+  normalizeInstallState,
+  normalizePreviewPlan,
+} from "./normalize.js";
 import { installFakeRuntimes } from "./runtime-fixtures.js";
 import { listCompatFixtures } from "./fixtures.js";
 
@@ -23,6 +29,31 @@ function compileForRuntime(runtime, tempRoot, manifestPath) {
     : compileCopilotPack({ repoRoot: tempRoot, manifestPath });
 }
 
+function laneOverrides(runtime, target) {
+  if (runtime === "codex_cli" && target === "repo") {
+    return {
+      os_override: "darwin",
+      shell_override: "zsh",
+    };
+  }
+  if (runtime === "copilot_cli" && target === "user") {
+    return {
+      os_override: "linux",
+      shell_override: "bash",
+    };
+  }
+  if (runtime === "copilot_cli" && target === "repo") {
+    return {
+      os_override: "linux",
+      shell_override: "bash",
+    };
+  }
+  return {
+    os_override: "win32",
+    shell_override: "powershell",
+  };
+}
+
 function buildRuntimeSnapshot({
   workspaceRoot,
   tempRoot,
@@ -32,6 +63,7 @@ function buildRuntimeSnapshot({
   runtime,
   target = "repo",
 }) {
+  const overrides = laneOverrides(runtime, target);
   const markers = buildPathMarkers({
     workspaceRoot,
     repoRoot: tempRoot,
@@ -53,6 +85,8 @@ function buildRuntimeSnapshot({
     runtime,
     target,
     packs: packIds,
+    _os_override: overrides.os_override,
+    _shell_override: overrides.shell_override,
   });
 
   const snapshot = {
@@ -78,6 +112,8 @@ function buildRuntimeSnapshot({
     runtime,
     target,
     packs: packIds,
+    _os_override: overrides.os_override,
+    _shell_override: overrides.shell_override,
   });
   snapshot.apply_result = {
     status: "applied",
@@ -97,11 +133,17 @@ export function buildCompatFixtureSnapshot({ repoRoot: workspaceRoot, fixtureId 
 
   try {
     const runtimeBinRoot = runtimeHarness.binDir;
-    const base = {
+    runtimeHarness.setHome(materialized.homeRoot);
+    return {
       kind: "compat-fixture-snapshot",
       fixture_id: materialized.fixture.id,
+      repo_archetype: materialized.fixture.repo_archetype,
       purpose: materialized.fixture.purpose,
+      primary_pack_id: materialized.fixture.primary_pack_id,
       source_packs: materialized.fixture.source_packs.slice(),
+      supported_workflows: materialized.fixture.supported_workflows.slice(),
+      expected_capabilities: materialized.fixture.expected_capabilities.slice(),
+      modeled_risks: materialized.fixture.modeled_risks.slice(),
       runtimes: {
         codex_cli: buildRuntimeSnapshot({
           workspaceRoot,
@@ -110,6 +152,7 @@ export function buildCompatFixtureSnapshot({ repoRoot: workspaceRoot, fixtureId 
           runtimeBinRoot,
           packIds: materialized.fixture.source_packs,
           runtime: "codex_cli",
+          target: "repo",
         }),
         copilot_cli: buildRuntimeSnapshot({
           workspaceRoot,
@@ -118,10 +161,10 @@ export function buildCompatFixtureSnapshot({ repoRoot: workspaceRoot, fixtureId 
           runtimeBinRoot,
           packIds: materialized.fixture.source_packs,
           runtime: "copilot_cli",
+          target: "user",
         }),
       },
     };
-    return base;
   } finally {
     runtimeHarness.cleanup();
     materialized.cleanup();

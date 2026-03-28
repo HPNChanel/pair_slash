@@ -9,46 +9,43 @@ import { installFakeRuntimes } from "./runtime-fixtures.js";
 
 export const DEFAULT_SMOKE_LANES = [
   {
-    id: "compile.monorepo.copilot",
-    fixture_id: "repo-monorepo-workspaces",
+    id: "compile.node-service.codex",
+    fixture_id: "repo-node-service",
     kind: "compile",
-    runtime: "copilot_cli",
-    expect_bundle_kind: "copilot-package-bundle",
+    runtime: "codex_cli",
   },
   {
-    id: "install.basic.codex.repo",
-    fixture_id: "repo-basic-readonly",
+    id: "compile.python-service.copilot",
+    fixture_id: "repo-python-service",
+    kind: "compile",
+    runtime: "copilot_cli",
+  },
+  {
+    id: "install.docs-heavy.codex.repo",
+    fixture_id: "repo-docs-heavy",
     kind: "install",
     runtime: "codex_cli",
     target: "repo",
-    expect_can_apply: true,
-    expect_verdict: "warn",
+    os_override: "darwin",
+    shell_override: "zsh",
   },
   {
-    id: "install.basic.copilot.user",
-    fixture_id: "repo-basic-readonly",
+    id: "install.infra-repo.copilot.user",
+    fixture_id: "repo-infra-repo",
     kind: "install",
     runtime: "copilot_cli",
     target: "user",
-    expect_can_apply: true,
-    expect_verdict: "warn",
+    os_override: "linux",
+    shell_override: "bash",
   },
   {
-    id: "install.write-authority.codex.repo",
-    fixture_id: "repo-write-authority-memory",
-    kind: "install",
-    runtime: "codex_cli",
-    target: "repo",
-    expect_can_apply: true,
-    expect_verdict: "pass",
-  },
-  {
-    id: "doctor.backend-mcp.codex.repo",
+    id: "doctor.backend-mcp.codex.windows-prep",
     fixture_id: "repo-backend-mcp",
     kind: "doctor",
     runtime: "codex_cli",
     target: "repo",
-    expect_verdict: "degraded",
+    os_override: "win32",
+    shell_override: "powershell",
   },
   {
     id: "install.conflict.copilot.repo",
@@ -56,8 +53,8 @@ export const DEFAULT_SMOKE_LANES = [
     kind: "install",
     runtime: "copilot_cli",
     target: "repo",
-    expect_can_apply: false,
-    expect_verdict: "fail",
+    os_override: "linux",
+    shell_override: "bash",
   },
 ];
 
@@ -92,6 +89,7 @@ function installLane({ tempRoot, runtime, target, packIds }) {
     can_apply: preview.plan.can_apply,
     summary: { ...preview.plan.summary },
     blocked_operations: preview.plan.operations.filter((operation) => operation.kind === "blocked_conflict").length,
+    policy_summary: preview.plan.policy_summary ? { ...preview.plan.policy_summary } : null,
   };
   if (preview.plan.can_apply) {
     const result = applyInstall(preview);
@@ -100,15 +98,18 @@ function installLane({ tempRoot, runtime, target, packIds }) {
   return out;
 }
 
-function doctorLane({ tempRoot, runtime, target, packIds }) {
+function doctorLane({ tempRoot, lane, packIds }) {
   const report = runDoctor({
     repoRoot: tempRoot,
-    runtime,
-    target,
+    runtime: lane.runtime,
+    target: lane.target,
     packs: packIds,
+    _os_override: lane.os_override,
+    _shell_override: lane.shell_override,
   });
   return {
     support_verdict: report.support_verdict,
+    lane_status: report.support_lane.lane_status,
     issue_count: report.issues.length,
   };
 }
@@ -156,8 +157,7 @@ export function runCompatSmoke({ repoRoot, lanes = DEFAULT_SMOKE_LANES } = {}) {
           });
           const doctor = doctorLane({
             tempRoot: materialized.tempRoot,
-            runtime: lane.runtime,
-            target: lane.target,
+            lane,
             packIds,
           });
           results.push({
@@ -167,6 +167,7 @@ export function runCompatSmoke({ repoRoot, lanes = DEFAULT_SMOKE_LANES } = {}) {
             target: lane.target,
             ...install,
             support_verdict: doctor.support_verdict,
+            lane_status: doctor.lane_status,
             issue_count: doctor.issue_count,
           });
           continue;
@@ -175,8 +176,7 @@ export function runCompatSmoke({ repoRoot, lanes = DEFAULT_SMOKE_LANES } = {}) {
         if (lane.kind === "doctor") {
           const doctor = doctorLane({
             tempRoot: materialized.tempRoot,
-            runtime: lane.runtime,
-            target: lane.target,
+            lane,
             packIds,
           });
           results.push({

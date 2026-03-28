@@ -1,4 +1,4 @@
-# PairSlash Phase 4 Quickstart
+# PairSlash Quickstart (Phase 6 Compat-Lab Baseline)
 
 Use this path when the goal is simple: install PairSlash, run doctor, reach
 `/skills`, and execute the first workflow with the least friction.
@@ -37,7 +37,7 @@ Then:
 
 ## Windows prep lane
 
-Windows is still a prep lane in Phase 4. Use it to confirm doctor, preview, and
+Windows is still a prep lane in Phase 6. Use it to confirm doctor, preview, and
 path/profile behavior without claiming live install parity:
 
 ```powershell
@@ -49,10 +49,10 @@ node packages/tools/cli/src/bin/pairslash.js preview install pairslash-plan --ru
 
 ## Acceptance automation
 
-Run the Phase 4 acceptance slice when you need an artifact-backed smoke result:
+Run compat-lab acceptance when you need an artifact-backed smoke result:
 
 ```bash
-npm run test:phase4:acceptance -- --lane macos --report-out artifacts/phase4-acceptance-macos.json
-npm run test:phase4:acceptance -- --lane linux --report-out artifacts/phase4-acceptance-linux.json
-npm run test:phase4:acceptance -- --lane windows-prep --report-out artifacts/phase4-acceptance-windows-prep.json
+npm run test:acceptance -- --lane macos --report-out artifacts/compat-lab-acceptance-macos.json
+npm run test:acceptance -- --lane linux --report-out artifacts/compat-lab-acceptance-linux.json
+npm run test:acceptance -- --lane windows-prep --report-out artifacts/compat-lab-acceptance-windows-prep.json
 ```

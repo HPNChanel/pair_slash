@@ -6,6 +6,7 @@
   "exports": "./src/index.js",
   "dependencies": {
     "@pairslash/spec-core": "file:../../core/spec-core",
+    "@pairslash/memory-engine": "file:../../core/memory-engine",
     "@pairslash/compiler-codex": "file:../../runtimes/codex/compiler",
     "@pairslash/compiler-copilot": "file:../../runtimes/copilot/compiler",
     "@pairslash/installer": "file:../installer",

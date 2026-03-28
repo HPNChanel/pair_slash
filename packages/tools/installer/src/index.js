@@ -509,15 +509,61 @@ function findExistingParentPath(path) {
   return current;
 }
 
+function parseSimpleCommand(command) {
+  if (typeof command !== "string" || command.trim() === "") {
+    return null;
+  }
+  if (/[\"'`|&;<>$()]/.test(command)) {
+    return null;
+  }
+  const tokens = command.trim().split(/\s+/);
+  if (tokens.length === 0) {
+    return null;
+  }
+  return {
+    file: tokens[0],
+    args: tokens.slice(1),
+  };
+}
+
+function isCurrentNodeVersionCheck(parsed) {
+  if (!parsed) {
+    return false;
+  }
+  const file = parsed.file.toLowerCase();
+  if (file !== "node" && file !== "node.exe") {
+    return false;
+  }
+  return parsed.args.length === 1 && ["--version", "-v"].includes(parsed.args[0]);
+}
+
+function runCheckCommand(command) {
+  const parsed = parseSimpleCommand(command);
+  if (isCurrentNodeVersionCheck(parsed)) {
+    return {
+      status: 0,
+      stdout: `${process.version}\n`,
+      stderr: "",
+      error: null,
+    };
+  }
+  if (parsed) {
+    return spawnSync(parsed.file, parsed.args, {
+      encoding: "utf8",
+    });
+  }
+  return spawnSync(command, {
+    shell: true,
+    encoding: "utf8",
+  });
+}
+
 function runRequiredToolChecks(manifest, errors) {
   for (const tool of manifest.required_tools ?? []) {
     if (!tool.required_for?.includes("install")) {
       continue;
     }
-    const result = spawnSync(tool.check_command, {
-      shell: true,
-      encoding: "utf8",
-    });
+    const result = runCheckCommand(tool.check_command);
     if (result.status !== 0) {
       errors.push(
         `missing-tool:${manifest.pack.id}:${tool.id}: ${

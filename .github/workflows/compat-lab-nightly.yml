@@ -1,0 +1,69 @@
+name: compat-lab-nightly
+
+on:
+  schedule:
+    - cron: "0 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: compat-lab-nightly-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  nightly-acceptance:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            lane: macos
+            artifact: compat-lab-nightly-macos.json
+          - os: ubuntu-latest
+            lane: linux
+            artifact: compat-lab-nightly-linux.json
+          - os: windows-latest
+            lane: windows-prep
+            artifact: compat-lab-nightly-windows-prep.json
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run acceptance lane
+        run: npm run test:acceptance -- --lane ${{ matrix.lane }} --report-out artifacts/${{ matrix.artifact }}
+
+      - name: Upload nightly acceptance artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: artifacts/${{ matrix.artifact }}
+
+  nightly-release-readiness:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run release-readiness gates
+        run: npm run test:release

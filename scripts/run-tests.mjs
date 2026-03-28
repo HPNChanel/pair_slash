@@ -1,1 +1,1 @@
-import "./run-phase4-tests.mjs";
+import "./run-compat-lab-tests.mjs";

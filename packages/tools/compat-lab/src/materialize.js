@@ -1,6 +1,7 @@
 import { cpSync, mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { compileCodexPack } from "@pairslash/compiler-codex";
 import * as codexAdapter from "@pairslash/runtime-codex-adapter";
@@ -16,10 +17,26 @@ import { resolveStatePath } from "@pairslash/installer";
 
 import { getCompatFixture } from "./fixtures.js";
 
+const compatLabRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
+const fixtureRepoRoot = join(compatLabRoot, "fixtures", "repos");
+
 function writeOverlayFiles(tempRoot, overlayFiles = {}) {
   for (const [relativePath, content] of Object.entries(overlayFiles)) {
     writeTextFile(join(tempRoot, relativePath), content);
   }
+}
+
+function copyRepoTemplate({ fixture, tempRoot }) {
+  if (!fixture.repo_template) {
+    return;
+  }
+  const templateRoot = join(fixtureRepoRoot, fixture.repo_template);
+  if (!exists(templateRoot)) {
+    throw new Error(`compat fixture template is missing: ${fixture.repo_template}`);
+  }
+  cpSync(templateRoot, tempRoot, {
+    recursive: true,
+  });
 }
 
 function copySourcePacks({ workspaceRoot, tempRoot, sourcePacks }) {
@@ -130,12 +147,32 @@ function runFixtureSetup({ fixture, tempRoot }) {
   }
 }
 
+function writeFixtureMetadata({ fixture, tempRoot }) {
+  const metadata = {
+    id: fixture.id,
+    repo_archetype: fixture.repo_archetype,
+    purpose: fixture.purpose,
+    primary_pack_id: fixture.primary_pack_id,
+    source_packs: fixture.source_packs.slice(),
+    repo_template: fixture.repo_template ?? null,
+    supported_workflows: fixture.supported_workflows.slice(),
+    expected_capabilities: fixture.expected_capabilities.slice(),
+    modeled_risks: fixture.modeled_risks.slice(),
+    supported_lanes: fixture.supported_lanes.map((lane) => ({ ...lane })),
+  };
+  writeTextFile(join(tempRoot, ".pairslash-compat-lab", "fixture.json"), stableJson(metadata));
+}
+
 export function materializeCompatFixture({ repoRoot: workspaceRoot, fixtureId }) {
   const fixture = getCompatFixture(fixtureId);
   const tempRoot = mkdtempSync(join(tmpdir(), `pairslash-compat-${fixtureId}-`));
   const homeRoot = join(tempRoot, ".compat-home");
 
   mkdirSync(homeRoot, { recursive: true });
+  copyRepoTemplate({
+    fixture,
+    tempRoot,
+  });
   copySourcePacks({
     workspaceRoot,
     tempRoot,
@@ -147,6 +184,10 @@ export function materializeCompatFixture({ repoRoot: workspaceRoot, fixtureId })
     tempRoot,
   });
   runFixtureSetup({
+    fixture,
+    tempRoot,
+  });
+  writeFixtureMetadata({
     fixture,
     tempRoot,
   });

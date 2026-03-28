@@ -1,0 +1,100 @@
+{
+  "fixture_id": "repo-unsafe-repo",
+  "install_preview": {
+    "action": "install",
+    "asset_diff": {
+      "config_fragments_affected": [],
+      "create_count": 0,
+      "delete_count": 0,
+      "mutating_operation_count": 0,
+      "risky_mutations": [],
+      "runtime_targeted_outputs": [],
+      "update_count": 0
+    },
+    "can_apply": false,
+    "commitability": {
+      "blocked": true,
+      "blocked_operations_count": 0,
+      "blocked_reasons": [
+        "lint-error:LINT-RUNTIME-004:pairslash-devops:copilot_cli: runtime compatibility copilot_cli.direct_invocation=blocked is not allowed for shippable Phase 5 workflows",
+        "LINT-RUNTIME-004:pairslash-devops:copilot_cli",
+        "unsupported-runtime-capability:no-silent-fallback"
+      ],
+      "can_proceed": false,
+      "can_proceed_operations": [],
+      "explicit_approval_hint": "Run the same action with --apply and explicit confirmation.",
+      "needs_explicit_approval": true,
+      "status": "blocked"
+    },
+    "errors": [
+      "lint-error:LINT-RUNTIME-004:pairslash-devops:copilot_cli: runtime compatibility copilot_cli.direct_invocation=blocked is not allowed for shippable Phase 5 workflows"
+    ],
+    "operations": [],
+    "policy_summary": {
+      "machine_readable": true,
+      "no_silent_fallback": true,
+      "overall_verdict": "deny",
+      "pack_verdicts": [
+        {
+          "pack_id": "pairslash-devops",
+          "reason_codes": [
+            "POLICY-ALLOW"
+          ],
+          "runtime": "codex_cli",
+          "verdict": "allow"
+        },
+        {
+          "pack_id": "pairslash-memory-write-global",
+          "reason_codes": [
+            "POLICY-APPROVAL-REQUIRED",
+            "POLICY-PREVIEW-REQUIRED"
+          ],
+          "runtime": "codex_cli",
+          "verdict": "require-preview"
+        }
+      ],
+      "reasons": [
+        "LINT-RUNTIME-004:pairslash-devops:copilot_cli",
+        "unsupported-runtime-capability:no-silent-fallback"
+      ],
+      "summary": "Unsupported runtime/capability is blocked explicitly; no silent fallback is allowed.",
+      "unsupported_runtime_capability": true
+    },
+    "preview_boundary": {
+      "commit_path": "pairslash install ... --apply",
+      "no_commit_on_preview": true,
+      "note": "Preview is deterministic and does not write assets/config/memory.",
+      "preview_only": true
+    },
+    "runtime": "codex_cli",
+    "selected_packs": [],
+    "summary": {
+      "blocked_conflict": 0,
+      "create": 0,
+      "mkdir": 0,
+      "preserve_override": 0,
+      "remove": 0,
+      "replace": 0,
+      "skip_identical": 0,
+      "skip_unmanaged": 0,
+      "write_journal": 1,
+      "write_state": 1
+    },
+    "target": "repo",
+    "warnings": [
+      "lint-warning:LINT-RUNTIME-004:pairslash-devops:shared: runtime support has degraded/unverified surfaces: codex_cli.canonical_picker=unverified, codex_cli.direct_invocation=unverified, copilot_cli.canonical_picker=unverified",
+      "lint-warning:LINT-RUNTIME-004:pairslash-memory-write-global:shared: runtime support has degraded/unverified surfaces: codex_cli.direct_invocation=unverified, copilot_cli.direct_invocation=unverified"
+    ]
+  },
+  "kind": "compat-preview-policy-golden",
+  "memory_preview": {
+    "overall_verdict": "deny",
+    "ready_for_apply": false,
+    "reason_codes": [
+      "POLICY-NO-SILENT-FALLBACK"
+    ],
+    "requires_confirmation": true
+  },
+  "repo_archetype": "unsafe-repo",
+  "runtime": "codex_cli"
+}

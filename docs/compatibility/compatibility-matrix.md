@@ -1,125 +1,58 @@
 # PairSlash Compatibility Matrix
 
-Use this page to answer "what support can we truthfully claim?" It is not the
-install guide and it is not the live verification checklist.
+Generated from compat-lab metadata and deterministic release gates for PairSlash 0.4.0.
 
-## How to use this page
+## Support semantics
 
-- Need install steps: use `docs/workflows/install-guide.md`
-- Need live CLI verification steps: use `docs/compatibility/runtime-verification.md`
-- Need current operational safety rules: use `docs/workflows/phase-2-operations.md`
-- Need historical context only: use the archived Phase 0 docs, not this page
-## Runtime boundary
+- `stable-tested`: deterministic compat-lab gates are green and matching live runtime evidence exists.
+- `degraded`: deterministic gates are green, but support has caveats or incomplete live evidence.
+- `prep`: doctor and preview are expected, but install support is not yet claimed as live evidence.
+- `known-broken`: PairSlash has an explicit blocked or broken surface. No silent fallback is allowed.
 
-PairSlash core supports exactly:
+## Runtime lanes
 
-- Codex CLI
-- GitHub Copilot CLI
+| Runtime | Target | OS lane | Support level | Recommended version | Live tested range | Deterministic baseline | Release gate |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Codex CLI | repo | macOS | stable-tested | 0.116.0 | 0.116.0 | 0.116.0 | required |
+| GitHub Copilot CLI | user | Linux | degraded | 2.50.x | none recorded | 2.50.0 | required |
+| Codex CLI | repo | Windows | prep | 0.116.0 | none recorded | 0.116.0 | nightly-only |
+| GitHub Copilot CLI | user | Windows | prep | 2.50.x | none recorded | 2.50.0 | nightly-only |
 
-Canonical entrypoint on both: `/skills`.
+## Known issues
 
-## Skill format compatibility
+| Issue | Surface | Status | Affected lanes | Details |
+| --- | --- | --- | --- | --- |
+| K1 | Copilot direct invocation with -p/--prompt | known-broken | GitHub Copilot CLI | Use /skills as the canonical entrypoint. Prompt-mode direct invocation remains blocked. |
+| K2 | Windows live install evidence | prep | Codex CLI repo, GitHub Copilot CLI user | Compat-lab covers doctor and preview; stable-tested claims require manual live install evidence. |
+| K3 | Codex read-only sandbox complex PowerShell | degraded | Codex CLI | Prefer simple single-statement PowerShell commands in verification and troubleshooting steps. |
 
-| Property | Codex CLI | Copilot CLI | Compatible |
-|---|---|---|---|
-| `SKILL.md` + YAML frontmatter | Yes | Yes | Yes |
-| Repo skill path | `.agents/skills/` | `.github/skills/` | Path differs only |
-| User skill path | `~/.agents/skills/` | `~/.copilot/skills/` | Path differs only |
-| Direct invocation | `$skill-name` | `/skill-name` | Syntax differs only |
-| Canonical invocation | `/skills` | `/skills` | Yes |
+## Release-gating matrix
 
-## Core workflow compatibility targets
+| Gate | Trigger | Checks | Required | Notes |
+| --- | --- | --- | --- | --- |
+| quick-pr | pull_request and push | lint, unit, compat goldens, matrix sync | yes | Fast deterministic gate that blocks obvious compiler/installer/docs regressions. |
+| cross-os-acceptance | pull_request and push | macOS Codex acceptance, Linux Copilot acceptance, Windows prep acceptance | yes | Cross-OS installability and doctor coverage with fake runtimes and deterministic lanes. |
+| nightly-smoke | nightly schedule or workflow_dispatch | fixture smoke matrix, behavior evals, artifact regeneration check | yes | Deeper regression control without forcing the full cost into every PR. |
+| release-readiness | manual pre-release gate | full JS suite, compat-lab suite, public docs present, generated artifacts up to date | yes | Release promotion must not proceed unless this gate is green. |
 
-| Workflow | Codex CLI target | Copilot CLI target |
-|---|---|---|
-| pairslash-plan | `/skills` -> select | `/skills` -> select |
-| pairslash-review | `/skills` -> select | `/skills` -> select |
-| pairslash-onboard-repo | `/skills` -> select | `/skills` -> select |
-| pairslash-command-suggest | `/skills` -> select | `/skills` -> select |
-| pairslash-memory-candidate | `/skills` -> select | `/skills` -> select |
-| pairslash-memory-write-global | `/skills` -> select | `/skills` -> select |
-| pairslash-memory-audit | `/skills` -> select | `/skills` -> select |
+## Fixture coverage
 
-Direct invocation is secondary and runtime-dependent. Do not treat direct path
-as canonical compatibility proof.
+| Fixture | Archetype | Primary workflow | Modeled risks |
+| --- | --- | --- | --- |
+| repo-basic-readonly | baseline-readonly | pairslash-plan | docs-drift, preview-regression, readonly-install-surface |
+| repo-write-authority-memory | write-authority-memory | pairslash-memory-write-global | hidden-write, preview-regression, no-silent-fallback |
+| repo-backend-mcp | node-service | pairslash-backend | mcp-config-drift, tooling-gap, degraded-runtime-surface |
+| repo-monorepo-workspaces | monorepo | pairslash-plan | workspace-root-resolution, install-path-drift, multi-pack-selection |
+| repo-conflict-existing-runtime | runtime-conflict | pairslash-plan | unmanaged-runtime-footprint, orphaned-state, blocked-install |
+| repo-node-service | node-service | pairslash-backend | service-config-drift, workflow-selection, generated-asset-noise |
+| repo-python-service | python-service | pairslash-backend | polyglot-repo-coverage, config-fragment-placement, service-onboarding-regression |
+| repo-docs-heavy | docs-heavy | pairslash-plan | docs-surface-regression, preview-boundary, release-doc-drift |
+| repo-infra-repo | infra-repo | pairslash-devops | config-fragment-placement, release-gating-drift, high-blast-radius-changes |
+| repo-unsafe-repo | unsafe-repo | pairslash-devops | destructive-commands, hidden-write, silent-fallback, approval-boundary |
 
-## Formalized pack surfaces
+## How to use this matrix
 
-Formalized pack support is defined only by `packages/core/spec-core/registry/packs.yaml`.
-The current registry-backed set is:
-
-- `pairslash-plan`
-- `pairslash-backend`
-- `pairslash-frontend`
-- `pairslash-devops`
-- `pairslash-release`
-
-The broader core workflow table above is a compatibility target list, not a
-formalized-pack inventory.
-
-## Phase 3 pack compatibility summary
-
-Pack-level support for Phase 3 team packs is derived from
-`docs/compatibility/runtime-surface-matrix.yaml`. Use these labels exactly:
-
-- `supported`: live runtime evidence exists for the relevant surface set
-- `supported with caveat`: at least one relevant surface is supported, with a
-  documented runtime limitation on another relevant surface
-- `not yet validated`: no relevant runtime surface has live validation evidence
-
-Relevant feature surfaces for the Phase 3 packs are:
-
-- Codex CLI: `/skills` -> select pack, `$pack-name`
-- Copilot CLI: `/skills` -> select pack, `/pack-name`
-
-| Pack name | Version | Codex support | Copilot support | Required capabilities | Known limitations | Migration notes | Validation status | Open risks |
-|---|---|---|---|---|---|---|---|---|
-| pairslash-backend | `0.2.0` | not yet validated | not yet validated | `/skills`; installed skill files; read access to `.pairslash/project-memory/`; workspace file access for bounded backend edits | Direct invocation is unverified on both runtimes; pack is read-only for Global Project Memory | No install-path change; tooling should discover formalized packs through `packages/core/spec-core/registry/packs.yaml` | Metadata, registry, and docs validate locally; no live runtime verification recorded | Support claims can outrun evidence if docs are promoted before manual runtime verification |
-| pairslash-frontend | `0.2.0` | not yet validated | not yet validated | `/skills`; installed skill files; read access to `.pairslash/project-memory/`; workspace file access for UI/component edits | Direct invocation is unverified on both runtimes; depends on defined UI/backend contracts; pack is read-only for Global Project Memory | No install-path change; registry-backed discovery is the migration boundary for tooling | Metadata, registry, and docs validate locally; no live runtime verification recorded | Undefined product or backend contracts can be mistaken for runtime support if the matrix is not kept evidence-bound |
-| pairslash-devops | `0.2.0` | not yet validated | not yet validated | `/skills`; installed skill files; read access to `.pairslash/project-memory/`; repo workflow/script access; operator environment access when validation depends on external systems | Direct invocation is unverified on both runtimes; environment-dependent behavior cannot be claimed without operator verification; pack is read-only for Global Project Memory | No install-path change; formalized-pack discovery should start from the registry manifest | Metadata, registry, and docs validate locally; environment-sensitive runtime behavior remains manually unverified | Operational support could be overstated if environment-specific checks are inferred from local schema/test success |
-| pairslash-release | `0.2.0` | not yet validated | not yet validated | `/skills`; installed skill files; read access to registry, metadata, compatibility docs, and validated diffs | Direct invocation is unverified on both runtimes; release claims must remain evidence-bound; pack is read-only for Global Project Memory | No install-path change; tooling should use registry membership to identify formalized release packs | Metadata, registry, and docs validate locally; no live runtime verification recorded | Release messaging may imply broader runtime support than has actually been verified if this summary drifts from the surface matrix |
-
-| Pack | Runtime | Surface | Status | Evidence |
-|---|---|---|---|---|
-| pairslash-plan | Codex CLI | `/skills` -> select | supported | compatibility docs + runtime matrix |
-| pairslash-plan | Codex CLI | `$pairslash-plan` | supported | archived acceptance + runtime matrix |
-| pairslash-plan | Copilot CLI | `/skills` -> select | supported | compatibility docs + install guide |
-| pairslash-plan | Copilot CLI | `/pairslash-plan` interactive | unverified | contract note + archived acceptance |
-| pairslash-plan | Copilot CLI | `/pairslash-plan` with `-p/--prompt` | blocked | known runtime limitation in contract |
-| pairslash-backend | Codex CLI | `/skills` -> select | unverified | compatibility docs + runtime matrix |
-| pairslash-backend | Codex CLI | `$pairslash-backend` | unverified | compatibility docs + runtime matrix |
-| pairslash-backend | Copilot CLI | `/skills` -> select | unverified | compatibility docs + runtime matrix |
-| pairslash-backend | Copilot CLI | `/pairslash-backend` | unverified | compatibility docs + runtime matrix |
-| pairslash-frontend | Codex CLI | `/skills` -> select | unverified | compatibility docs + runtime matrix |
-| pairslash-frontend | Codex CLI | `$pairslash-frontend` | unverified | compatibility docs + runtime matrix |
-| pairslash-frontend | Copilot CLI | `/skills` -> select | unverified | compatibility docs + runtime matrix |
-| pairslash-frontend | Copilot CLI | `/pairslash-frontend` | unverified | compatibility docs + runtime matrix |
-| pairslash-devops | Codex CLI | `/skills` -> select | unverified | compatibility docs + runtime matrix |
-| pairslash-devops | Codex CLI | `$pairslash-devops` | unverified | compatibility docs + runtime matrix |
-| pairslash-devops | Copilot CLI | `/skills` -> select | unverified | compatibility docs + runtime matrix |
-| pairslash-devops | Copilot CLI | `/pairslash-devops` | unverified | compatibility docs + runtime matrix |
-| pairslash-release | Codex CLI | `/skills` -> select | unverified | compatibility docs + runtime matrix |
-| pairslash-release | Codex CLI | `$pairslash-release` | unverified | compatibility docs + runtime matrix |
-| pairslash-release | Copilot CLI | `/skills` -> select | unverified | compatibility docs + runtime matrix |
-| pairslash-release | Copilot CLI | `/pairslash-release` | unverified | compatibility docs + runtime matrix |
-
-For formalized packs, human-facing docs must not claim stronger support than the
-status recorded in `docs/compatibility/runtime-surface-matrix.yaml`.
-
-## Memory authority parity requirements
-
-Both runtimes must preserve identical semantics:
-
-- Global Project Memory is authoritative.
-- Read workflows cannot write Global Memory.
-- Write-authority path is only `pairslash-memory-write-global`.
-- Write path must enforce preview patch, explicit acceptance, conflict checks,
-  audit log append, and index update.
-
-## Validation references
-
-- Acceptance gates: `docs/compatibility/acceptance-gates.yaml`
-- Local gates: `npm run lint`
-- Regression tests: `npm run test`
-- Live verification steps: `docs/compatibility/runtime-verification.md`
-- Release checklist: `docs/releases/release-checklist-0.2.0.md`
+- Choose `stable-tested` when you need the strongest support claim for release or rollout decisions.
+- Treat `degraded` as supported with caveats, not as a silent fallback lane.
+- Treat `prep` as preview/doctor coverage only until live install evidence is recorded.
+- Reproduce issues through compat-lab fixtures and behavior evals before broadening support claims.

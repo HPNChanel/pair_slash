@@ -18,6 +18,7 @@ export const supportedInstallSurfaces = [
   "mcp",
 ];
 export const supportedTriggerSurfaces = ["canonical_skill", "direct_invocation", "hook"];
+const FAKE_RUNTIME_ENV = "PAIRSLASH_FAKE_COPILOT_VERSION";
 
 export const RUNTIME_COPILOT_ADAPTER_ERROR_CODES = Object.freeze({
   CONTRACT_REQUIRED: "PRA-COPILOT-CONTRACT-001",
@@ -584,7 +585,7 @@ function spawnRuntime(args) {
   const direct = spawnSync(executable, args, options);
   if (
     process.platform !== "win32" ||
-    !["ENOENT", "EINVAL"].includes(direct.error?.code ?? "")
+    !["ENOENT", "EINVAL", "EPERM"].includes(direct.error?.code ?? "")
   ) {
     return direct;
   }
@@ -597,6 +598,14 @@ function extractSemver(rawValue) {
 }
 
 export function detectRuntime() {
+  const fakeVersion = process.env[FAKE_RUNTIME_ENV]?.trim();
+  if (fakeVersion) {
+    return {
+      available: true,
+      executable,
+      version: extractSemver(fakeVersion) || fakeVersion,
+    };
+  }
   const copilot = spawnRuntime(["copilot", "--help"]);
   const ghVersion = spawnRuntime(["--version"]);
   const versionLine = ghVersion.stdout?.trim().split(/\r?\n/, 1)[0] ?? "";

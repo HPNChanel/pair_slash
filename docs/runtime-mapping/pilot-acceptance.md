@@ -1,6 +1,6 @@
 # Pilot Acceptance Lanes
 
-Phase 4 automation is local and deterministic. Support claims still need
+Compat-lab automation is local and deterministic. Support claims still need
 runtime evidence.
 
 ## Lanes
@@ -11,13 +11,13 @@ runtime evidence.
 
 ## Automation baseline
 
-Phase 4 now ships an acceptance slice that exercises installability as a
+Phase 6 ships a compat-lab acceptance slice that exercises installability as a
 product surface without claiming live runtime evidence:
 
 ```bash
-npm run test:phase4:acceptance -- --lane macos --report-out artifacts/phase4-acceptance-macos.json
-npm run test:phase4:acceptance -- --lane linux --report-out artifacts/phase4-acceptance-linux.json
-npm run test:phase4:acceptance -- --lane windows-prep --report-out artifacts/phase4-acceptance-windows-prep.json
+npm run test:acceptance -- --lane macos --report-out artifacts/compat-lab-acceptance-macos.json
+npm run test:acceptance -- --lane linux --report-out artifacts/compat-lab-acceptance-linux.json
+npm run test:acceptance -- --lane windows-prep --report-out artifacts/compat-lab-acceptance-windows-prep.json
 ```
 
 The acceptance slice covers:
@@ -48,5 +48,5 @@ node packages/tools/cli/src/bin/pairslash.js doctor --runtime copilot --target u
 - Record what runtime and OS were actually used.
 - Keep Windows as a prep lane until the runtime behavior is observed, not inferred.
 - Do not mark a lane supported only because fake-runtime tests passed.
-- Treat `npm run test:phase4:acceptance` as installability evidence, not as a
+- Treat `npm run test:acceptance` as installability evidence, not as a
   replacement for `/skills` interaction notes or live runtime verification.

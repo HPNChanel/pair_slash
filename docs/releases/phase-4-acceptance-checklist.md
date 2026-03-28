@@ -1,13 +1,14 @@
 # PairSlash Phase 4 Acceptance Checklist
 
-Use this checklist when closing Phase 4 as an installable product surface.
+This historical file path remains for continuity, but the checklist now tracks
+the Phase 6 compat-lab acceptance slice that backs `npm run test:acceptance`.
 
 ## Automation baseline
 
-- [ ] `npm run test:phase4`
-- [ ] `npm run test:phase4:acceptance -- --lane macos --report-out artifacts/phase4-acceptance-macos.json`
-- [ ] `npm run test:phase4:acceptance -- --lane linux --report-out artifacts/phase4-acceptance-linux.json`
-- [ ] `npm run test:phase4:acceptance -- --lane windows-prep --report-out artifacts/phase4-acceptance-windows-prep.json`
+- [ ] `npm run test:compat`
+- [ ] `npm run test:acceptance -- --lane macos --report-out artifacts/compat-lab-acceptance-macos.json`
+- [ ] `npm run test:acceptance -- --lane linux --report-out artifacts/compat-lab-acceptance-linux.json`
+- [ ] `npm run test:acceptance -- --lane windows-prep --report-out artifacts/compat-lab-acceptance-windows-prep.json`
 
 ## Required scenarios
 
@@ -21,19 +22,21 @@ Use this checklist when closing Phase 4 as an installable product surface.
 
 - [ ] Acceptance JSON exists for every lane.
 - [ ] Each report contains `install_success`, `doctor_success`, `time_to_first_success_ms`, `issue_codes`, and `repro_key`.
-- [ ] `repo-basic-readonly` remains the pilot fixture for first-success coverage.
+- [ ] `repo-basic-readonly` remains the pilot fixture for first-success coverage while compat-lab keeps broader fixture lanes for drift and policy regressions.
 - [ ] Windows prep report keeps `install_success = null` and `time_to_first_success_ms = null`.
 
 ## Docs that must line up
 
 - [ ] `docs/workflows/phase-4-quickstart.md`
 - [ ] `docs/workflows/install-guide.md`
+- [ ] `docs/compatibility/compatibility-matrix.md`
+- [ ] `docs/compatibility/runtime-verification.md`
+- [ ] `docs/troubleshooting/compat-lab-bug-repro.md`
 - [ ] `docs/runtime-mapping/pilot-acceptance.md`
 - [ ] `docs/releases/release-checklist-0.4.0.md`
 
-## Deferred to Phase 6
+## Noted follow-up after Phase 6
 
-- [ ] Live runtime matrix beyond the current pilot lanes
-- [ ] Interactive `/skills` capture and auth/session checks
-- [ ] Real MCP liveness checks
-- [ ] Larger compat-lab fixture catalog and richer reproducibility tooling
+- [ ] Interactive `/skills` capture and auth/session checks still rely on manual live evidence
+- [ ] Real MCP liveness checks remain outside deterministic release-gating
+- [ ] Windows live install evidence remains prep-only until the public matrix is promoted

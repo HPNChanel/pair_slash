@@ -1,4 +1,4 @@
-name: phase4-acceptance
+name: compat-lab-acceptance
 
 on:
   pull_request:
@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: phase4-acceptance-${{ github.ref }}
+  group: compat-lab-acceptance-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -21,13 +21,13 @@ jobs:
         include:
           - os: macos-latest
             lane: macos
-            artifact: phase4-acceptance-macos.json
+            artifact: compat-lab-acceptance-macos.json
           - os: ubuntu-latest
             lane: linux
-            artifact: phase4-acceptance-linux.json
+            artifact: compat-lab-acceptance-linux.json
           - os: windows-latest
             lane: windows-prep
-            artifact: phase4-acceptance-windows-prep.json
+            artifact: compat-lab-acceptance-windows-prep.json
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
@@ -42,11 +42,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run Phase 4 JS suite
-        run: npm run test:phase4
+      - name: Run test suite
+        run: npm run test
 
-      - name: Run Phase 4 acceptance lane
-        run: npm run test:phase4:acceptance -- --lane ${{ matrix.lane }} --report-out artifacts/${{ matrix.artifact }}
+      - name: Run acceptance lane
+        run: npm run test:acceptance -- --lane ${{ matrix.lane }} --report-out artifacts/${{ matrix.artifact }}
 
       - name: Upload acceptance artifact
         uses: actions/upload-artifact@v4

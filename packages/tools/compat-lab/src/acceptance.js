@@ -609,7 +609,7 @@ function buildLaneReport(lane, scenarios) {
   const doctorScenarios = scenarios.filter((scenario) => scenario.doctor_success !== null);
   const status = scenarios.every((scenario) => scenario.status === "pass") ? "pass" : "fail";
   return {
-    kind: "phase4-acceptance-report",
+    kind: "compat-lab-acceptance-report",
     schema_version: SCHEMA_VERSION,
     lane_id: lane.id,
     lane_key: lane.key,
@@ -624,7 +624,7 @@ function buildLaneReport(lane, scenarios) {
         : null,
     time_to_first_success_ms: installScenario?.time_to_first_success_ms ?? null,
     issue_codes: uniqueSorted(scenarios.flatMap((scenario) => scenario.issue_codes)),
-    repro_key: `phase4-acceptance:${lane.key}`,
+    repro_key: `compat-lab-acceptance:${lane.key}`,
     commands: laneCommandsFor(lane),
     artifact_paths: {
       report_path: null,
@@ -663,7 +663,7 @@ function runLaneReport({ repoRoot, lane }) {
   }
 }
 
-export function runPhase4Acceptance({ repoRoot, lane = "all" } = {}) {
+export function runCompatAcceptance({ repoRoot, lane = "all" } = {}) {
   const resolvedLane = resolveLane(lane);
   if (resolvedLane === "all") {
     const lanes = DEFAULT_ACCEPTANCE_LANES.map((entry) =>
@@ -673,7 +673,7 @@ export function runPhase4Acceptance({ repoRoot, lane = "all" } = {}) {
       }),
     );
     return {
-      kind: "phase4-acceptance-suite",
+      kind: "compat-lab-acceptance-suite",
       schema_version: SCHEMA_VERSION,
       status: lanes.every((entry) => entry.status === "pass") ? "pass" : "fail",
       lanes,
@@ -697,10 +697,10 @@ function formatScenarioLine(scenario) {
   ].join("\n");
 }
 
-export function formatPhase4AcceptanceText(report) {
-  if (report.kind === "phase4-acceptance-suite") {
+export function formatCompatAcceptanceReportText(report) {
+  if (report.kind === "compat-lab-acceptance-suite") {
     const lines = [
-      "Phase 4 acceptance suite",
+      "Compat lab acceptance suite",
       `Status: ${report.status.toUpperCase()}`,
       `Lanes: ${report.summary.passed_lanes}/${report.summary.total_lanes} passing`,
       "",
@@ -715,7 +715,7 @@ export function formatPhase4AcceptanceText(report) {
   }
 
   const lines = [
-    `Phase 4 acceptance lane: ${report.lane_id}`,
+    `Compat lab acceptance lane: ${report.lane_id}`,
     `Status: ${report.status.toUpperCase()}`,
     `Evidence mode: ${report.evidence_mode}`,
     `Install success: ${report.install_success ?? "n/a"}`,
@@ -728,4 +728,16 @@ export function formatPhase4AcceptanceText(report) {
     ...report.commands.map((command) => `- ${command}`),
   ];
   return `${lines.join("\n")}\n`;
+}
+
+export function runPhase4Acceptance(options = {}) {
+  return runCompatAcceptance(options);
+}
+
+export function formatCompatAcceptanceText(report) {
+  return formatCompatAcceptanceReportText(report);
+}
+
+export function formatPhase4AcceptanceText(report) {
+  return formatCompatAcceptanceReportText(report);
 }

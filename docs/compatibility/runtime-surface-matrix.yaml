@@ -1,230 +1,227 @@
-version: "0.2.0"
-phase: 3
-last_updated: "2026-03-23"
-
-runtimes:
-  codex_cli:
-    repo_skill_path: ".agents/skills/"
-    user_skill_path: "~/.agents/skills/"
-    canonical_entrypoint: "/skills"
-    direct_invocation: "$skill-name"
-    status: supported
-  copilot_cli:
-    repo_skill_path: ".github/skills/"
-    user_skill_path: "~/.copilot/skills/"
-    canonical_entrypoint: "/skills"
-    direct_invocation: "/skill-name"
-    status: supported
-
-verification_items:
-  - id: V1
-    question: "Canonical /skills path available"
-    status: pending-runtime-check
-  - id: V2
-    question: "Read workflows can load .pairslash/project-memory/"
-    status: pending-runtime-check
-  - id: V3
-    question: "Write-global shows preview patch before file mutation"
-    status: pending-runtime-check
-  - id: V4
-    question: "Explicit acceptance is required for write-global"
-    status: pending-runtime-check
-  - id: V5
-    question: "Read workflows do not mutate authoritative memory"
-    status: pending-runtime-check
-  - id: V6
-    question: "All 7 core skills discoverable in /skills"
-    status: pending-runtime-check
-  - id: V7
-    question: "Semantic parity across codex/copilot for memory authority rules"
-    status: pending-runtime-check
-
-pack_surfaces:
-  - pack: pairslash-plan
-    version: "0.2.0"
-    runtime: codex_cli
-    surface_id: canonical-picker
-    invocation: /skills -> select pairslash-plan
-    status: supported
-    evidence_refs:
-      - docs/compatibility/compatibility-matrix.md
-      - docs/compatibility/runtime-verification.md
-  - pack: pairslash-plan
-    version: "0.2.0"
-    runtime: codex_cli
-    surface_id: direct-invocation
-    invocation: $pairslash-plan
-    status: supported
-    evidence_refs:
-      - docs/compatibility/phase-0-acceptance.md
-      - docs/compatibility/runtime-verification.md
-  - pack: pairslash-plan
-    version: "0.2.0"
-    runtime: copilot_cli
-    surface_id: canonical-picker
-    invocation: /skills -> select pairslash-plan
-    status: supported
-    evidence_refs:
-      - docs/compatibility/compatibility-matrix.md
-      - docs/workflows/install-guide.md
-  - pack: pairslash-plan
-    version: "0.2.0"
-    runtime: copilot_cli
-    surface_id: direct-invocation-interactive
-    invocation: /pairslash-plan
-    status: unverified
-    evidence_refs:
-      - docs/compatibility/phase-0-acceptance.md
-      - packs/core/pairslash-plan/contract.md
-  - pack: pairslash-plan
-    version: "0.2.0"
-    runtime: copilot_cli
-    surface_id: direct-invocation-prompt-mode
-    invocation: /pairslash-plan with -p/--prompt
-    status: blocked
-    evidence_refs:
-      - packs/core/pairslash-plan/contract.md
-  - pack: pairslash-backend
-    version: "0.2.0"
-    runtime: codex_cli
-    surface_id: canonical-picker
-    invocation: /skills -> select pairslash-backend
-    status: unverified
-    evidence_refs:
-      - docs/compatibility/compatibility-matrix.md
-      - docs/compatibility/runtime-surface-matrix.yaml
-  - pack: pairslash-backend
-    version: "0.2.0"
-    runtime: codex_cli
-    surface_id: direct-invocation
-    invocation: $pairslash-backend
-    status: unverified
-    evidence_refs:
-      - docs/compatibility/compatibility-matrix.md
-      - docs/compatibility/runtime-surface-matrix.yaml
-  - pack: pairslash-backend
-    version: "0.2.0"
-    runtime: copilot_cli
-    surface_id: canonical-picker
-    invocation: /skills -> select pairslash-backend
-    status: unverified
-    evidence_refs:
-      - docs/compatibility/compatibility-matrix.md
-      - docs/compatibility/runtime-surface-matrix.yaml
-  - pack: pairslash-backend
-    version: "0.2.0"
-    runtime: copilot_cli
-    surface_id: direct-invocation
-    invocation: /pairslash-backend
-    status: unverified
-    evidence_refs:
-      - docs/compatibility/compatibility-matrix.md
-      - docs/compatibility/runtime-surface-matrix.yaml
-  - pack: pairslash-frontend
-    version: "0.2.0"
-    runtime: codex_cli
-    surface_id: canonical-picker
-    invocation: /skills -> select pairslash-frontend
-    status: unverified
-    evidence_refs:
-      - docs/compatibility/compatibility-matrix.md
-      - docs/compatibility/runtime-surface-matrix.yaml
-  - pack: pairslash-frontend
-    version: "0.2.0"
-    runtime: codex_cli
-    surface_id: direct-invocation
-    invocation: $pairslash-frontend
-    status: unverified
-    evidence_refs:
-      - docs/compatibility/compatibility-matrix.md
-      - docs/compatibility/runtime-surface-matrix.yaml
-  - pack: pairslash-frontend
-    version: "0.2.0"
-    runtime: copilot_cli
-    surface_id: canonical-picker
-    invocation: /skills -> select pairslash-frontend
-    status: unverified
-    evidence_refs:
-      - docs/compatibility/compatibility-matrix.md
-      - docs/compatibility/runtime-surface-matrix.yaml
-  - pack: pairslash-frontend
-    version: "0.2.0"
-    runtime: copilot_cli
-    surface_id: direct-invocation
-    invocation: /pairslash-frontend
-    status: unverified
-    evidence_refs:
-      - docs/compatibility/compatibility-matrix.md
-      - docs/compatibility/runtime-surface-matrix.yaml
-  - pack: pairslash-devops
-    version: "0.2.0"
-    runtime: codex_cli
-    surface_id: canonical-picker
-    invocation: /skills -> select pairslash-devops
-    status: unverified
-    evidence_refs:
-      - docs/compatibility/compatibility-matrix.md
-      - docs/compatibility/runtime-surface-matrix.yaml
-  - pack: pairslash-devops
-    version: "0.2.0"
-    runtime: codex_cli
-    surface_id: direct-invocation
-    invocation: $pairslash-devops
-    status: unverified
-    evidence_refs:
-      - docs/compatibility/compatibility-matrix.md
-      - docs/compatibility/runtime-surface-matrix.yaml
-  - pack: pairslash-devops
-    version: "0.2.0"
-    runtime: copilot_cli
-    surface_id: canonical-picker
-    invocation: /skills -> select pairslash-devops
-    status: unverified
-    evidence_refs:
-      - docs/compatibility/compatibility-matrix.md
-      - docs/compatibility/runtime-surface-matrix.yaml
-  - pack: pairslash-devops
-    version: "0.2.0"
-    runtime: copilot_cli
-    surface_id: direct-invocation
-    invocation: /pairslash-devops
-    status: unverified
-    evidence_refs:
-      - docs/compatibility/compatibility-matrix.md
-      - docs/compatibility/runtime-surface-matrix.yaml
-  - pack: pairslash-release
-    version: "0.2.0"
-    runtime: codex_cli
-    surface_id: canonical-picker
-    invocation: /skills -> select pairslash-release
-    status: unverified
-    evidence_refs:
-      - docs/compatibility/compatibility-matrix.md
-      - docs/compatibility/runtime-surface-matrix.yaml
-  - pack: pairslash-release
-    version: "0.2.0"
-    runtime: codex_cli
-    surface_id: direct-invocation
-    invocation: $pairslash-release
-    status: unverified
-    evidence_refs:
-      - docs/compatibility/compatibility-matrix.md
-      - docs/compatibility/runtime-surface-matrix.yaml
-  - pack: pairslash-release
-    version: "0.2.0"
-    runtime: copilot_cli
-    surface_id: canonical-picker
-    invocation: /skills -> select pairslash-release
-    status: unverified
-    evidence_refs:
-      - docs/compatibility/compatibility-matrix.md
-      - docs/compatibility/runtime-surface-matrix.yaml
-  - pack: pairslash-release
-    version: "0.2.0"
-    runtime: copilot_cli
-    surface_id: direct-invocation
-    invocation: /pairslash-release
-    status: unverified
-    evidence_refs:
-      - docs/compatibility/compatibility-matrix.md
-      - docs/compatibility/runtime-surface-matrix.yaml
+fixture_catalog:
+  - id: repo-basic-readonly
+    modeled_risks:
+      - docs-drift
+      - preview-regression
+      - readonly-install-surface
+    primary_pack_id: pairslash-plan
+    repo_archetype: baseline-readonly
+    supported_workflows:
+      - pairslash-plan
+      - pairslash-review
+  - id: repo-write-authority-memory
+    modeled_risks:
+      - hidden-write
+      - preview-regression
+      - no-silent-fallback
+    primary_pack_id: pairslash-memory-write-global
+    repo_archetype: write-authority-memory
+    supported_workflows:
+      - pairslash-memory-write-global
+  - id: repo-backend-mcp
+    modeled_risks:
+      - mcp-config-drift
+      - tooling-gap
+      - degraded-runtime-surface
+    primary_pack_id: pairslash-backend
+    repo_archetype: node-service
+    supported_workflows:
+      - pairslash-backend
+  - id: repo-monorepo-workspaces
+    modeled_risks:
+      - workspace-root-resolution
+      - install-path-drift
+      - multi-pack-selection
+    primary_pack_id: pairslash-plan
+    repo_archetype: monorepo
+    supported_workflows:
+      - pairslash-plan
+      - pairslash-frontend
+  - id: repo-conflict-existing-runtime
+    modeled_risks:
+      - unmanaged-runtime-footprint
+      - orphaned-state
+      - blocked-install
+    primary_pack_id: pairslash-plan
+    repo_archetype: runtime-conflict
+    supported_workflows:
+      - pairslash-plan
+  - id: repo-node-service
+    modeled_risks:
+      - service-config-drift
+      - workflow-selection
+      - generated-asset-noise
+    primary_pack_id: pairslash-backend
+    repo_archetype: node-service
+    supported_workflows:
+      - pairslash-backend
+      - pairslash-devops
+  - id: repo-python-service
+    modeled_risks:
+      - polyglot-repo-coverage
+      - config-fragment-placement
+      - service-onboarding-regression
+    primary_pack_id: pairslash-backend
+    repo_archetype: python-service
+    supported_workflows:
+      - pairslash-backend
+      - pairslash-devops
+  - id: repo-docs-heavy
+    modeled_risks:
+      - docs-surface-regression
+      - preview-boundary
+      - release-doc-drift
+    primary_pack_id: pairslash-plan
+    repo_archetype: docs-heavy
+    supported_workflows:
+      - pairslash-plan
+      - pairslash-review
+  - id: repo-infra-repo
+    modeled_risks:
+      - config-fragment-placement
+      - release-gating-drift
+      - high-blast-radius-changes
+    primary_pack_id: pairslash-devops
+    repo_archetype: infra-repo
+    supported_workflows:
+      - pairslash-devops
+      - pairslash-release
+  - id: repo-unsafe-repo
+    modeled_risks:
+      - destructive-commands
+      - hidden-write
+      - silent-fallback
+      - approval-boundary
+    primary_pack_id: pairslash-devops
+    repo_archetype: unsafe-repo
+    supported_workflows:
+      - pairslash-devops
+      - pairslash-memory-write-global
+generated_from:
+  acceptance_lanes:
+    - macos.codex.repo
+    - linux.copilot.user
+    - windows.prep
+  evals:
+    - workflow-selection.node-service.codex
+    - policy-gates.write-authority.hidden-write
+    - compatibility-errors.conflict-existing-runtime.copilot
+    - preview-behavior.docs-heavy.codex
+    - degraded-lane.windows-prep.codex
+    - no-silent-fallback.unsafe-repo.codex
+  fixtures:
+    - repo-basic-readonly
+    - repo-write-authority-memory
+    - repo-backend-mcp
+    - repo-monorepo-workspaces
+    - repo-conflict-existing-runtime
+    - repo-node-service
+    - repo-python-service
+    - repo-docs-heavy
+    - repo-infra-repo
+    - repo-unsafe-repo
+  smoke_lanes:
+    - compile.node-service.codex
+    - compile.python-service.copilot
+    - install.docs-heavy.codex.repo
+    - install.infra-repo.copilot.user
+    - doctor.backend-mcp.codex.windows-prep
+    - install.conflict.copilot.repo
+known_issues:
+  - affected_lanes: GitHub Copilot CLI
+    details: Use /skills as the canonical entrypoint. Prompt-mode direct invocation remains blocked.
+    id: K1
+    status: known-broken
+    surface: Copilot direct invocation with -p/--prompt
+  - affected_lanes: Codex CLI repo, GitHub Copilot CLI user
+    details: Compat-lab covers doctor and preview; stable-tested claims require manual live install evidence.
+    id: K2
+    status: prep
+    surface: Windows live install evidence
+  - affected_lanes: Codex CLI
+    details: Prefer simple single-statement PowerShell commands in verification and troubleshooting steps.
+    id: K3
+    status: degraded
+    surface: Codex read-only sandbox complex PowerShell
+release_gates:
+  - checks:
+      - lint
+      - unit
+      - compat goldens
+      - matrix sync
+    id: quick-pr
+    notes: Fast deterministic gate that blocks obvious compiler/installer/docs regressions.
+    required_for_release: true
+    trigger: pull_request and push
+  - checks:
+      - macOS Codex acceptance
+      - Linux Copilot acceptance
+      - Windows prep acceptance
+    id: cross-os-acceptance
+    notes: Cross-OS installability and doctor coverage with fake runtimes and deterministic lanes.
+    required_for_release: true
+    trigger: pull_request and push
+  - checks:
+      - fixture smoke matrix
+      - behavior evals
+      - artifact regeneration check
+    id: nightly-smoke
+    notes: Deeper regression control without forcing the full cost into every PR.
+    required_for_release: true
+    trigger: nightly schedule or workflow_dispatch
+  - checks:
+      - full JS suite
+      - compat-lab suite
+      - public docs present
+      - generated artifacts up to date
+    id: release-readiness
+    notes: Release promotion must not proceed unless this gate is green.
+    required_for_release: true
+    trigger: manual pre-release gate
+runtime_lanes:
+  - deterministic_lab_baseline: 0.116.0
+    live_tested_range: 0.116.0
+    os_lane: macOS
+    recommended_version: 0.116.0
+    release_gate: required
+    runtime: Codex CLI
+    runtime_id: codex_cli
+    support_level: stable-tested
+    support_semantics: Canonical release lane. Use this lane when you need the strongest PairSlash support claim.
+    target: repo
+  - deterministic_lab_baseline: 2.50.0
+    live_tested_range: none recorded
+    os_lane: Linux
+    recommended_version: 2.50.x
+    release_gate: required
+    runtime: GitHub Copilot CLI
+    runtime_id: copilot_cli
+    support_level: degraded
+    support_semantics: Deterministically covered in compat-lab, but live runtime evidence is not yet bounded enough for stable-tested claims.
+    target: user
+  - deterministic_lab_baseline: 0.116.0
+    live_tested_range: none recorded
+    os_lane: Windows
+    recommended_version: 0.116.0
+    release_gate: nightly-only
+    runtime: Codex CLI
+    runtime_id: codex_cli
+    support_level: prep
+    support_semantics: Doctor and preview are expected; install evidence remains prep-only until manual live verification is recorded.
+    target: repo
+  - deterministic_lab_baseline: 2.50.0
+    live_tested_range: none recorded
+    os_lane: Windows
+    recommended_version: 2.50.x
+    release_gate: nightly-only
+    runtime: GitHub Copilot CLI
+    runtime_id: copilot_cli
+    support_level: prep
+    support_semantics: Doctor and preview are expected; install evidence remains prep-only until manual live verification is recorded.
+    target: user
+support_policy:
+  degraded: Deterministic compat-lab gates are green, but support is reduced by missing or partial live evidence or by documented caveats.
+  known_broken: PairSlash has an explicit known issue or blocked surface. No silent fallback is allowed.
+  prep: Doctor and preview are expected to work, but install claims are not yet recorded as live evidence.
+  stable_tested: Deterministic compat-lab gates are green and a matching live runtime lane has recorded evidence.
+version: 0.4.0

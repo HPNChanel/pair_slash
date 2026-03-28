@@ -1,0 +1,177 @@
+{
+  "fixture_id": "repo-backend-mcp",
+  "important_assets": {
+    "codex_cli": [
+      {
+        "bundle_kind": "codex-skill-bundle",
+        "direct_invocation": "$pairslash-backend",
+        "files": [
+          {
+            "asset_id": "codex-metadata",
+            "asset_kind": "runtime_manifest",
+            "generated": true,
+            "generator": "codex_metadata",
+            "install_surface": "metadata",
+            "override_eligible": false,
+            "owner": "pairslash",
+            "relative_path": "agents/openai.yaml",
+            "required": true,
+            "runtime_selector": "codex_cli",
+            "sha256": "d2c34746fbd6fcf8abd94c0cd6cb478353925932d206fcd89b968ba0b4aa5ad8",
+            "uninstall_behavior": "detach_if_modified",
+            "write_authority_guarded": false
+          },
+          {
+            "asset_id": "codex-config",
+            "asset_kind": "config_fragment",
+            "generated": true,
+            "generator": "codex_config",
+            "install_surface": "config",
+            "override_eligible": false,
+            "owner": "pairslash",
+            "relative_path": "fragments/config/pack-config.yaml",
+            "required": true,
+            "runtime_selector": "codex_cli",
+            "sha256": "4319f6981ea210a92ebf6c6a944f56608f5c34a1be543e48adf1f5becb3fc67e",
+            "uninstall_behavior": "detach_if_modified",
+            "write_authority_guarded": false
+          },
+          {
+            "asset_id": "codex-context",
+            "asset_kind": "context_fragment",
+            "generated": true,
+            "generator": "codex_context",
+            "install_surface": "context",
+            "override_eligible": false,
+            "owner": "pairslash",
+            "relative_path": "fragments/context/runtime-context.md",
+            "required": true,
+            "runtime_selector": "codex_cli",
+            "sha256": "bd41be2ec32756b104605d6deb20798f480a05db26d47b60dcdb517fe3e596b5",
+            "uninstall_behavior": "detach_if_modified",
+            "write_authority_guarded": false
+          },
+          {
+            "asset_id": "codex-mcp",
+            "asset_kind": "mcp_config",
+            "generated": true,
+            "generator": "codex_mcp",
+            "install_surface": "mcp",
+            "override_eligible": false,
+            "owner": "pairslash",
+            "relative_path": "fragments/mcp/servers.yaml",
+            "required": true,
+            "runtime_selector": "codex_cli",
+            "sha256": "90a3d1c55178153c8cf2811f68f7ad8c665f5d48b287b1cf877e2ef8e9b49c66",
+            "uninstall_behavior": "detach_if_modified",
+            "write_authority_guarded": false
+          },
+          {
+            "asset_id": "ownership-receipt",
+            "asset_kind": "ownership_manifest",
+            "generated": true,
+            "generator": "pairslash_ownership_receipt",
+            "install_surface": "metadata",
+            "override_eligible": false,
+            "owner": "pairslash",
+            "relative_path": "pairslash.install.json",
+            "required": true,
+            "runtime_selector": "shared",
+            "sha256": "f4896fdee1f05e4fdf40e74a9cdb714193c30f31222a68652b91d4daa7bfb9a8",
+            "uninstall_behavior": "remove_if_unmodified",
+            "write_authority_guarded": false
+          }
+        ],
+        "pack_id": "pairslash-backend",
+        "runtime": "codex_cli"
+      }
+    ],
+    "copilot_cli": [
+      {
+        "bundle_kind": "copilot-package-bundle",
+        "direct_invocation": "/pairslash-backend",
+        "files": [
+          {
+            "asset_id": "copilot-agent-context",
+            "asset_kind": "agent_fragment",
+            "generated": true,
+            "generator": "copilot_agent",
+            "install_surface": "agent",
+            "override_eligible": false,
+            "owner": "pairslash",
+            "relative_path": "agents/runtime-context.md",
+            "required": true,
+            "runtime_selector": "copilot_cli",
+            "sha256": "65b855bb5f9a42311865000b246323e4664c5fdad85124f35715a71174f8d0bc",
+            "uninstall_behavior": "detach_if_modified",
+            "write_authority_guarded": false
+          },
+          {
+            "asset_id": "copilot-preflight",
+            "asset_kind": "hook_script",
+            "generated": true,
+            "generator": "copilot_preflight",
+            "install_surface": "hook",
+            "override_eligible": false,
+            "owner": "pairslash",
+            "relative_path": "hooks/preflight.yaml",
+            "required": true,
+            "runtime_selector": "copilot_cli",
+            "sha256": "cc49ee12287661d03f5f5eced2c63cde22bb77158c29332065423660932b2c16",
+            "uninstall_behavior": "detach_if_modified",
+            "write_authority_guarded": false
+          },
+          {
+            "asset_id": "copilot-mcp",
+            "asset_kind": "mcp_config",
+            "generated": true,
+            "generator": "copilot_mcp",
+            "install_surface": "mcp",
+            "override_eligible": false,
+            "owner": "pairslash",
+            "relative_path": "mcp/servers.yaml",
+            "required": true,
+            "runtime_selector": "copilot_cli",
+            "sha256": "baa1df4124083fd4c20320503f5b45243ece3a689fafd461b1a23f3c9fd3d8a2",
+            "uninstall_behavior": "detach_if_modified",
+            "write_authority_guarded": false
+          },
+          {
+            "asset_id": "copilot-package",
+            "asset_kind": "runtime_manifest",
+            "generated": true,
+            "generator": "copilot_package",
+            "install_surface": "metadata",
+            "override_eligible": false,
+            "owner": "pairslash",
+            "relative_path": "package/pairslash-bundle.json",
+            "required": true,
+            "runtime_selector": "copilot_cli",
+            "sha256": "96f375f7173cb42a659cb80ce64331b581148cd77eed7d3048a5d7bdbb5b01ef",
+            "uninstall_behavior": "detach_if_modified",
+            "write_authority_guarded": false
+          },
+          {
+            "asset_id": "ownership-receipt",
+            "asset_kind": "ownership_manifest",
+            "generated": true,
+            "generator": "pairslash_ownership_receipt",
+            "install_surface": "metadata",
+            "override_eligible": false,
+            "owner": "pairslash",
+            "relative_path": "pairslash.install.json",
+            "required": true,
+            "runtime_selector": "shared",
+            "sha256": "e4b8a42a823ad7351dc66c83a2f78b3bd4064145e12f4b93765c6a7a2f761b94",
+            "uninstall_behavior": "remove_if_unmodified",
+            "write_authority_guarded": false
+          }
+        ],
+        "pack_id": "pairslash-backend",
+        "runtime": "copilot_cli"
+      }
+    ]
+  },
+  "kind": "compat-generated-assets-golden",
+  "repo_archetype": "node-service"
+}

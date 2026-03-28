@@ -89,6 +89,55 @@ function findExistingParentPath(path) {
   return current;
 }
 
+function parseSimpleCommand(command) {
+  if (typeof command !== "string" || command.trim() === "") {
+    return null;
+  }
+  if (/[\"'`|&;<>$()]/.test(command)) {
+    return null;
+  }
+  const tokens = command.trim().split(/\s+/);
+  if (tokens.length === 0) {
+    return null;
+  }
+  return {
+    file: tokens[0],
+    args: tokens.slice(1),
+  };
+}
+
+function isCurrentNodeVersionCheck(parsed) {
+  if (!parsed) {
+    return false;
+  }
+  const file = parsed.file.toLowerCase();
+  if (file !== "node" && file !== "node.exe") {
+    return false;
+  }
+  return parsed.args.length === 1 && ["--version", "-v"].includes(parsed.args[0]);
+}
+
+function runCheckCommand(command) {
+  const parsed = parseSimpleCommand(command);
+  if (isCurrentNodeVersionCheck(parsed)) {
+    return {
+      status: 0,
+      stdout: `${process.version}\n`,
+      stderr: "",
+      error: null,
+    };
+  }
+  if (parsed) {
+    return spawnSync(parsed.file, parsed.args, {
+      encoding: "utf8",
+    });
+  }
+  return spawnSync(command, {
+    shell: true,
+    encoding: "utf8",
+  });
+}
+
 function detectShellName(shellOverride = null) {
   const raw = shellOverride ?? process.env.SHELL ?? process.env.ComSpec ?? process.env.TERM_PROGRAM ?? "unknown";
   return raw.toLowerCase();
@@ -640,7 +689,7 @@ function runSupportLane(context) {
           ? "Use the lane for local validation, but collect live pilot evidence before claiming support."
           : lane.lane_status === "prep"
             ? "Use doctor and preview on Windows, but keep install support claims in prep status until live runtime evidence is recorded."
-            : "Run PairSlash from Windows, Linux, or macOS within a documented Phase 4 support lane.",
+            : "Run PairSlash from Windows, Linux, or macOS within a documented compatibility lane.",
     evidence: {
       lane_status: lane.lane_status,
       tested_range_status: lane.tested_range_status,
@@ -1338,10 +1387,7 @@ function runRequiredTools(context) {
       if (![...requiredFor].some((phase) => ["doctor", "install", "run"].includes(phase))) {
         continue;
       }
-      const result = spawnSync(tool.check_command, {
-        shell: true,
-        encoding: "utf8",
-      });
+      const result = runCheckCommand(tool.check_command);
       if (result.status === 0) {
         continue;
       }
@@ -1932,7 +1978,7 @@ function buildNextActions(issues) {
   }
   return deduped.length > 0
     ? deduped
-    : ["No action required. Environment is ready for PairSlash Phase 4 diagnostics."];
+    : ["No action required. Environment is ready for PairSlash compatibility diagnostics."];
 }
 
 function aggregateVerdict(checks) {

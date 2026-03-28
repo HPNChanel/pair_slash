@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: compat-lab
+spec:
+  selector:
+    app: compat-lab
+  ports:
+    - port: 80
+      targetPort: 3000

@@ -1,19 +1,42 @@
 # Compat-Lab Fixtures
 
-Phase 4 fixtures are environment models for compiler, install, and doctor regression coverage.
+Phase 6 fixtures are checked-in repo templates plus deterministic overlays used
+to exercise compiler, installer, doctor, preview, policy, and regression
+behavior before merge or release.
 
-- `repo-basic-readonly`: baseline read-only installability
-- `repo-write-authority-memory`: write-authority and Global Memory layout
-- `repo-backend-mcp`: MCP/tool declaration and degraded doctor coverage
-- `repo-monorepo-workspaces`: nested workspace path resolution
-- `repo-conflict-existing-runtime`: unmanaged runtime footprint and orphaned state
+Every fixture carries explicit metadata:
 
-These fixtures are materialized into temp repos during tests. Source packs are copied from the main `packs/core/` tree and selectively mutated per fixture to keep one-spec-two-runtimes coverage while avoiding duplicate pack sources inside the lab.
+- why it exists
+- which workflows it exercises
+- what risks it models
+- which runtime lanes it is intended to cover
+- which capabilities must remain available
 
-## Acceptance slice
+Required archetypes in the checked-in corpus:
 
-Phase 4 acceptance uses `repo-basic-readonly` as the pilot repo fixture for
-time-to-first-success, fresh install, update override preservation, and safe
-uninstall. Negative doctor coverage reuses `repo-conflict-existing-runtime`
-instead of creating a second pilot repo so the acceptance slice stays small and
-deterministic.
+- `repo-monorepo-workspaces`
+- `repo-node-service`
+- `repo-python-service`
+- `repo-docs-heavy`
+- `repo-infra-repo`
+- `repo-unsafe-repo`
+
+Support fixtures retained for regression control:
+
+- `repo-basic-readonly`
+- `repo-write-authority-memory`
+- `repo-backend-mcp`
+- `repo-conflict-existing-runtime`
+
+Fixtures are materialized into temp repos during tests. Canonical pack source
+still comes from `packs/core/`; compat-lab never forks PairSlash runtime logic
+into fixture-specific pack copies.
+
+## Design Rules
+
+- Fixture repos should feel like small real repos, not toy folders.
+- Ordering and generated metadata must stay deterministic.
+- Multi-language corpus is allowed inside compat-lab even though PairSlash
+  implementation remains Node-only.
+- Runtime differences stay in adapters and lane expectations, not in duplicated
+  source specs.

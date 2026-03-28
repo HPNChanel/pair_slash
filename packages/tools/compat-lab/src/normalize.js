@@ -30,8 +30,10 @@ export function buildPathMarkers({
   runtimeBinRoot = null,
 } = {}) {
   const hostHome = process.env.USERPROFILE || process.env.HOME || null;
+  const currentWorkingDir = process.cwd();
   return [
     [workspaceRoot, "<workspace>"],
+    [currentWorkingDir, "<workspace>"],
     [repoRoot, "<repo>"],
     [homeRoot, "<home>"],
     [hostHome, "<host-home>"],

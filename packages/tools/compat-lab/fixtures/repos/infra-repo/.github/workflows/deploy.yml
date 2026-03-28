@@ -1,0 +1,10 @@
+name: deploy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "compat infra plan"

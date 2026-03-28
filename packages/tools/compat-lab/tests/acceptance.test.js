@@ -3,27 +3,27 @@ import assert from "node:assert/strict";
 
 import {
   DEFAULT_ACCEPTANCE_LANES,
-  formatPhase4AcceptanceText,
-  runPhase4Acceptance,
+  formatCompatAcceptanceText,
+  runCompatAcceptance,
 } from "@pairslash/compat-lab";
 
-import { repoRoot } from "../../../../tests/phase4-helpers.js";
+import { repoRoot } from "../../../../tests/compat-lab-helpers.js";
 
 const serial = { concurrency: false };
 
-test("phase4 acceptance registers macos linux and windows-prep lanes", () => {
+test("compat-lab acceptance registers macos linux and windows-prep lanes", () => {
   assert.deepEqual(
     DEFAULT_ACCEPTANCE_LANES.map((lane) => lane.key),
     ["macos", "linux", "windows-prep"],
   );
 });
 
-test("phase4 acceptance macos lane reaches first workflow and keeps uninstall safe", serial, () => {
-  const report = runPhase4Acceptance({
+test("compat-lab acceptance macos lane reaches first workflow and keeps uninstall safe", serial, () => {
+  const report = runCompatAcceptance({
     repoRoot,
     lane: "macos",
   });
-  assert.equal(report.kind, "phase4-acceptance-report");
+  assert.equal(report.kind, "compat-lab-acceptance-report");
   assert.equal(report.lane_id, "macos.codex.repo");
   assert.equal(report.status, "pass");
   assert.equal(report.install_success, true);
@@ -44,12 +44,12 @@ test("phase4 acceptance macos lane reaches first workflow and keeps uninstall sa
   assert.equal(report.scenarios[3].doctor_success, true);
 });
 
-test("phase4 acceptance linux lane stays usable despite copilot tested-range warning", serial, () => {
-  const report = runPhase4Acceptance({
+test("compat-lab acceptance linux lane stays usable despite copilot tested-range warning", serial, () => {
+  const report = runCompatAcceptance({
     repoRoot,
     lane: "linux",
   });
-  assert.equal(report.kind, "phase4-acceptance-report");
+  assert.equal(report.kind, "compat-lab-acceptance-report");
   assert.equal(report.lane_id, "linux.copilot.user");
   assert.equal(report.status, "pass");
   assert.equal(report.install_success, true);
@@ -61,12 +61,12 @@ test("phase4 acceptance linux lane stays usable despite copilot tested-range war
   assert.ok(report.issue_codes.length > 0);
 });
 
-test("phase4 acceptance windows prep lane stays non-mutating and catches broken setup", serial, () => {
-  const report = runPhase4Acceptance({
+test("compat-lab acceptance windows prep lane stays non-mutating and catches broken setup", serial, () => {
+  const report = runCompatAcceptance({
     repoRoot,
     lane: "windows-prep",
   });
-  assert.equal(report.kind, "phase4-acceptance-report");
+  assert.equal(report.kind, "compat-lab-acceptance-report");
   assert.equal(report.lane_id, "windows.prep");
   assert.equal(report.status, "pass");
   assert.equal(report.install_success, null);
@@ -84,16 +84,16 @@ test("phase4 acceptance windows prep lane stays non-mutating and catches broken 
   assert.ok(report.commands.some((command) => command.includes("preview install")));
 });
 
-test("phase4 acceptance suite aggregates lane reports and formats text", serial, () => {
-  const report = runPhase4Acceptance({
+test("compat-lab acceptance suite aggregates lane reports and formats text", serial, () => {
+  const report = runCompatAcceptance({
     repoRoot,
   });
-  assert.equal(report.kind, "phase4-acceptance-suite");
+  assert.equal(report.kind, "compat-lab-acceptance-suite");
   assert.equal(report.status, "pass");
   assert.equal(report.summary.total_lanes, 3);
   assert.equal(report.summary.failed_lanes, 0);
-  const text = formatPhase4AcceptanceText(report);
-  assert.match(text, /Phase 4 acceptance suite/);
+  const text = formatCompatAcceptanceText(report);
+  assert.match(text, /Compat lab acceptance suite/);
   assert.match(text, /macos\.codex\.repo/);
   assert.match(text, /linux\.copilot\.user/);
   assert.match(text, /windows\.prep/);

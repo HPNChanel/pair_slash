@@ -1,15 +1,15 @@
-# Fixture Repos
+# Compat Fixture Repos
 
-These directories are the Phase 4 bootstrap layout for compat-lab fixtures.
+These directories are the checked-in repo roots used by Phase 6 compat-lab.
 
-The current bootstrap keeps fixture source lightweight: test runs materialize temp repos from the fixture registry in `src/fixtures.js` plus selected source packs from `packs/core/`.
+Each template exists to model a real PairSlash pain point:
 
-Reserved fixture ids:
+- `monorepo/`: workspace root resolution and multi-pack selection
+- `node-service/`: backend workflow and generated runtime assets
+- `python-service/`: non-Node service repos that still consume PairSlash
+- `docs-heavy/`: planning/review surfaces with high doc churn
+- `infra-repo/`: config-heavy repo with release and devops workflows
+- `unsafe-repo/`: destructive/script-heavy repo for policy and fallback checks
 
-- `repo-basic-readonly`
-- `repo-write-authority-memory`
-- `repo-backend-mcp`
-- `repo-monorepo-workspaces`
-- `repo-conflict-existing-runtime`
-
-If Phase 6 later needs fully checked-in fixture repos, expand these directories instead of changing the Phase 4 smoke API.
+Templates are copied into temp directories and then combined with canonical
+packs from `packs/core/` plus deterministic overlays and setup hooks.
