@@ -15,6 +15,7 @@ const testFiles = [
   "packages/runtimes/codex/compiler/tests/compiler-codex.test.js",
   "packages/runtimes/copilot/compiler/tests/compiler-copilot.test.js",
   "packages/tools/installer/tests/installer.test.js",
+  "packages/tools/trace/tests/trace.test.js",
   "packages/tools/doctor/tests/doctor.test.js",
   "packages/tools/cli/tests/cli.test.js",
   "tests/repo-normalization.test.js",

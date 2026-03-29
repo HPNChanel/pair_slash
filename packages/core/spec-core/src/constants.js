@@ -14,6 +14,12 @@ export const MEMORY_WRITE_REQUEST_SCHEMA_VERSION = "1.0.0";
 export const MEMORY_WRITE_PREVIEW_SCHEMA_VERSION = "1.0.0";
 export const MEMORY_WRITE_RESULT_SCHEMA_VERSION = "1.0.0";
 export const MEMORY_WRITE_STAGING_SCHEMA_VERSION = "1.0.0";
+export const TRACE_EVENT_SCHEMA_VERSION = "1.0.0";
+export const TRACE_EXPORT_SCHEMA_VERSION = "1.0.0";
+export const SUPPORT_BUNDLE_SCHEMA_VERSION = "1.0.0";
+export const CONTEXT_EXPLANATION_SCHEMA_VERSION = "1.0.0";
+export const POLICY_EXPLANATION_SCHEMA_VERSION = "1.0.0";
+export const DEBUG_REPORT_SCHEMA_VERSION = "1.0.0";
 
 export const SUPPORTED_RUNTIMES = ["codex_cli", "copilot_cli"];
 export const SUPPORTED_TARGETS = ["repo", "user"];
@@ -174,6 +180,56 @@ export const MEMORY_RECORD_LAYERS = [
   "session",
   "staging",
 ];
+export const TRACE_SEVERITIES = ["debug", "info", "warn", "error", "fatal"];
+export const TRACE_FAILURE_DOMAINS = [
+  "none",
+  "spec",
+  "compiler",
+  "policy",
+  "runtime_adapter",
+  "runtime_host",
+  "memory",
+  "filesystem",
+  "config",
+  "unknown",
+];
+export const TRACE_OUTCOMES = [
+  "started",
+  "ok",
+  "pass",
+  "allow",
+  "warn",
+  "degraded",
+  "blocked",
+  "denied",
+  "failed",
+  "finished",
+  "exported",
+];
+export const TRACE_EVENT_TYPES = [
+  "session.started",
+  "session.finished",
+  "workflow.started",
+  "workflow.finished",
+  "command.started",
+  "command.finished",
+  "spec.validated",
+  "compiler.started",
+  "compiler.finished",
+  "policy.evaluated",
+  "runtime.enforced",
+  "runtime.host_probed",
+  "memory.previewed",
+  "memory.apply_attempted",
+  "memory.committed",
+  "memory.rejected",
+  "doctor.check_completed",
+  "compat.fixture_run",
+  "trace.exported",
+  "support.bundle_created",
+  "error.raised",
+];
+export const TELEMETRY_MODES = ["off", "local", "minimal-opt-in"];
 
 export const BUNDLE_KINDS = ["codex-skill-bundle", "copilot-package-bundle"];
 export const RUNTIME_SELECTORS = ["shared", ...SUPPORTED_RUNTIMES];

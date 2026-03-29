@@ -4,6 +4,8 @@ import {
   CAPABILITY_FLAGS,
   COMPILED_PACK_SCHEMA_VERSION,
   COMPATIBILITY_STATUSES,
+  CONTEXT_EXPLANATION_SCHEMA_VERSION,
+  DEBUG_REPORT_SCHEMA_VERSION,
   DOCTOR_REPORT_SCHEMA_VERSION,
   LINT_REPORT_SCHEMA_VERSION,
   DOCTOR_CHECK_GROUPS,
@@ -23,6 +25,7 @@ import {
   OVERRIDE_MARKER_FILE,
   PACK_STATUSES,
   POLICY_DECISIONS,
+  POLICY_EXPLANATION_SCHEMA_VERSION,
   PREVIEW_OPERATION_KINDS,
   PREVIEW_PLAN_SCHEMA_VERSION,
   RELEASE_CHANNELS,
@@ -31,11 +34,19 @@ import {
   RUNTIME_METADATA_MODES,
   RUNTIME_SELECTORS,
   SESSION_ARTIFACT_LEVELS,
+  SUPPORT_BUNDLE_SCHEMA_VERSION,
   SUPPORT_VERDICTS,
   SUPPORTED_RUNTIMES,
   SUPPORTED_TARGETS,
+  TELEMETRY_MODES,
   TOOL_KINDS,
   TOOL_PHASES,
+  TRACE_EVENT_SCHEMA_VERSION,
+  TRACE_EVENT_TYPES,
+  TRACE_EXPORT_SCHEMA_VERSION,
+  TRACE_FAILURE_DOMAINS,
+  TRACE_OUTCOMES,
+  TRACE_SEVERITIES,
   UNINSTALL_BEHAVIORS,
   UNINSTALL_STRATEGY_MODES,
   UPDATE_NON_OVERRIDE_POLICIES,
@@ -1450,6 +1461,63 @@ export function validateDoctorReport(record) {
       errors.push("runtime_compatibility.incompatible_pack_ids must be a list");
     }
   }
+  if ("recent_trace_summary" in record) {
+    if (!isObject(record?.recent_trace_summary)) {
+      errors.push("recent_trace_summary must be an object");
+    } else {
+      if (!TELEMETRY_MODES.includes(record.recent_trace_summary?.telemetry_mode)) {
+        errors.push(`unsupported recent_trace_summary.telemetry_mode: ${record.recent_trace_summary?.telemetry_mode}`);
+      }
+      if (!Number.isInteger(record.recent_trace_summary?.session_count)) {
+        errors.push("recent_trace_summary.session_count must be an integer");
+      }
+      for (const field of ["latest_session_id", "latest_outcome", "latest_failure_domain", "retention_last_pruned_at"]) {
+        if (field in record.recent_trace_summary && record.recent_trace_summary?.[field] !== null && typeof record.recent_trace_summary?.[field] !== "string") {
+          errors.push(`recent_trace_summary.${field} must be string or null`);
+        }
+      }
+    }
+  }
+  if ("observability_health" in record) {
+    if (!isObject(record?.observability_health)) {
+      errors.push("observability_health must be an object");
+    } else {
+      for (const field of ["trace_root_exists", "trace_root_writable", "index_event_consistent"]) {
+        if (typeof record.observability_health?.[field] !== "boolean") {
+          errors.push(`observability_health.${field} must be boolean`);
+        }
+      }
+      if (!Number.isInteger(record.observability_health?.missing_event_files)) {
+        errors.push("observability_health.missing_event_files must be an integer");
+      }
+      if (
+        "retention_last_pruned_at" in record.observability_health &&
+        record.observability_health?.retention_last_pruned_at !== null &&
+        typeof record.observability_health?.retention_last_pruned_at !== "string"
+      ) {
+        errors.push("observability_health.retention_last_pruned_at must be string or null");
+      }
+      if ("retention_policy" in record.observability_health) {
+        const policy = record.observability_health?.retention_policy;
+        if (!isObject(policy)) {
+          errors.push("observability_health.retention_policy must be an object");
+        } else {
+          if (!Number.isInteger(policy?.max_days)) {
+            errors.push("observability_health.retention_policy.max_days must be an integer");
+          }
+          if (!Number.isInteger(policy?.max_sessions)) {
+            errors.push("observability_health.retention_policy.max_sessions must be an integer");
+          }
+          if (typeof policy?.preserve_exports !== "boolean") {
+            errors.push("observability_health.retention_policy.preserve_exports must be boolean");
+          }
+          if (typeof policy?.preserve_bundles !== "boolean") {
+            errors.push("observability_health.retention_policy.preserve_bundles must be boolean");
+          }
+        }
+      }
+    }
+  }
   if (!Array.isArray(record?.checks)) {
     errors.push("checks must be a list");
   } else {
@@ -1698,6 +1766,441 @@ export function validateLintReport(record) {
       if (typeof action !== "string" || action.trim() === "") {
         errors.push("next_actions entries must be non-empty strings");
       }
+    }
+  }
+  return errors;
+}
+
+export function validateTraceEvent(record) {
+  const errors = [];
+  if (record?.kind !== "pairslash-trace-event") {
+    errors.push("kind must be pairslash-trace-event");
+  }
+  if (record?.schema_version !== TRACE_EVENT_SCHEMA_VERSION) {
+    errors.push(`schema_version must be ${TRACE_EVENT_SCHEMA_VERSION}`);
+  }
+  for (const field of [
+    "event_id",
+    "event_type",
+    "timestamp",
+    "session_id",
+    "workflow_id",
+    "correlation_id",
+    "severity",
+    "failure_domain",
+    "command_name",
+    "actor",
+    "source_package",
+    "source_module",
+    "outcome",
+  ]) {
+    validateNonEmptyString(record?.[field], field, errors, "TRC001");
+  }
+  if (record?.runtime !== null && !SUPPORTED_RUNTIMES.includes(record?.runtime)) {
+    errors.push(`unsupported runtime: ${record?.runtime}`);
+  }
+  if (record?.target !== null && !SUPPORTED_TARGETS.includes(record?.target)) {
+    errors.push(`unsupported target: ${record?.target}`);
+  }
+  if (!TRACE_EVENT_TYPES.includes(record?.event_type)) {
+    errors.push(`unsupported event_type: ${record?.event_type}`);
+  }
+  if (!TRACE_SEVERITIES.includes(record?.severity)) {
+    errors.push(`unsupported severity: ${record?.severity}`);
+  }
+  if (!TRACE_FAILURE_DOMAINS.includes(record?.failure_domain)) {
+    errors.push(`unsupported failure_domain: ${record?.failure_domain}`);
+  }
+  if (!TRACE_OUTCOMES.includes(record?.outcome)) {
+    errors.push(`unsupported outcome: ${record?.outcome}`);
+  }
+  if (!Array.isArray(record?.redaction_tags)) {
+    errors.push("redaction_tags must be a list");
+  } else {
+    for (const tag of record.redaction_tags) {
+      validateNonEmptyString(tag, "redaction_tags[]", errors, "TRC001");
+    }
+  }
+  if (typeof record?.telemetry_eligible !== "boolean") {
+    errors.push("telemetry_eligible must be boolean");
+  }
+  if (!isObject(record?.payload)) {
+    errors.push("payload must be an object");
+  }
+  if ("pack_id" in record && record?.pack_id !== null && typeof record?.pack_id !== "string") {
+    errors.push("pack_id must be string or null");
+  }
+  if ("contract_id" in record && record?.contract_id !== null && typeof record?.contract_id !== "string") {
+    errors.push("contract_id must be string or null");
+  }
+  if ("error_code" in record && record?.error_code !== null && typeof record?.error_code !== "string") {
+    errors.push("error_code must be string or null");
+  }
+  if ("summary" in record && record?.summary !== null && typeof record?.summary !== "string") {
+    errors.push("summary must be string or null");
+  }
+  if ("artifact_paths" in record) {
+    if (!Array.isArray(record.artifact_paths)) {
+      errors.push("artifact_paths must be a list");
+    } else {
+      for (const path of record.artifact_paths) {
+        validateNonEmptyString(path, "artifact_paths[]", errors, "TRC001");
+      }
+    }
+  }
+  return errors;
+}
+
+export function validateTraceExport(record) {
+  const errors = [];
+  if (record?.kind !== "trace-export") {
+    errors.push("kind must be trace-export");
+  }
+  if (record?.schema_version !== TRACE_EXPORT_SCHEMA_VERSION) {
+    errors.push(`schema_version must be ${TRACE_EXPORT_SCHEMA_VERSION}`);
+  }
+  validateNonEmptyString(record?.generated_at, "generated_at", errors, "TRE001");
+  validateNonEmptyString(record?.output_dir, "output_dir", errors, "TRE001");
+  if (!Number.isInteger(record?.session_count)) {
+    errors.push("session_count must be an integer");
+  }
+  if (!Number.isInteger(record?.event_count)) {
+    errors.push("event_count must be an integer");
+  }
+  if (!isObject(record?.selector)) {
+    errors.push("selector must be an object");
+  }
+  if (!isObject(record?.redaction_report)) {
+    errors.push("redaction_report must be an object");
+  } else {
+    if (!Number.isInteger(record.redaction_report?.redacted_fields)) {
+      errors.push("redaction_report.redacted_fields must be an integer");
+    }
+    if (!Number.isInteger(record.redaction_report?.redacted_events)) {
+      errors.push("redaction_report.redacted_events must be an integer");
+    }
+    if ("unknown_sensitive_hits" in record.redaction_report && !Number.isInteger(record.redaction_report?.unknown_sensitive_hits)) {
+      errors.push("redaction_report.unknown_sensitive_hits must be an integer");
+    }
+    if ("rules_triggered" in record.redaction_report) {
+      if (!Array.isArray(record.redaction_report?.rules_triggered)) {
+        errors.push("redaction_report.rules_triggered must be a list");
+      } else {
+        for (const rule of record.redaction_report.rules_triggered) {
+          validateNonEmptyString(rule, "redaction_report.rules_triggered[]", errors, "TRE001");
+        }
+      }
+    }
+  }
+  if (!Array.isArray(record?.files)) {
+    errors.push("files must be a list");
+  } else {
+    for (const file of record.files) {
+      validateNonEmptyString(file?.id, "files[].id", errors, "TRE001");
+      validateNonEmptyString(file?.path, "files[].path", errors, "TRE001");
+      if (!Number.isInteger(file?.size_bytes)) {
+        errors.push("files[].size_bytes must be an integer");
+      }
+    }
+  }
+  if ("summary" in record && !isObject(record?.summary)) {
+    errors.push("summary must be an object");
+  }
+  return errors;
+}
+
+export function validateSupportBundle(record) {
+  const errors = [];
+  if (record?.kind !== "support-bundle") {
+    errors.push("kind must be support-bundle");
+  }
+  if (record?.schema_version !== SUPPORT_BUNDLE_SCHEMA_VERSION) {
+    errors.push(`schema_version must be ${SUPPORT_BUNDLE_SCHEMA_VERSION}`);
+  }
+  validateNonEmptyString(record?.generated_at, "generated_at", errors, "SUP001");
+  validateNonEmptyString(record?.bundle_id, "bundle_id", errors, "SUP001");
+  validateNonEmptyString(record?.output_dir, "output_dir", errors, "SUP001");
+  if (typeof record?.safe_to_share !== "boolean") {
+    errors.push("safe_to_share must be boolean");
+  }
+  if (!isObject(record?.trace_export)) {
+    errors.push("trace_export must be an object");
+  } else {
+    validateNonEmptyString(record.trace_export?.path, "trace_export.path", errors, "SUP001");
+    if (!Number.isInteger(record.trace_export?.session_count)) {
+      errors.push("trace_export.session_count must be an integer");
+    }
+    if (!Number.isInteger(record.trace_export?.event_count)) {
+      errors.push("trace_export.event_count must be an integer");
+    }
+  }
+  if (!isObject(record?.redaction_report)) {
+    errors.push("redaction_report must be an object");
+  } else {
+    if (!Number.isInteger(record.redaction_report?.redacted_fields)) {
+      errors.push("redaction_report.redacted_fields must be an integer");
+    }
+    if (!Number.isInteger(record.redaction_report?.redacted_events)) {
+      errors.push("redaction_report.redacted_events must be an integer");
+    }
+    if ("unknown_sensitive_hits" in record.redaction_report && !Number.isInteger(record.redaction_report?.unknown_sensitive_hits)) {
+      errors.push("redaction_report.unknown_sensitive_hits must be an integer");
+    }
+    if ("rules_triggered" in record.redaction_report) {
+      if (!Array.isArray(record.redaction_report?.rules_triggered)) {
+        errors.push("redaction_report.rules_triggered must be a list");
+      } else {
+        for (const rule of record.redaction_report.rules_triggered) {
+          validateNonEmptyString(rule, "redaction_report.rules_triggered[]", errors, "SUP001");
+        }
+      }
+    }
+  }
+  if (!Array.isArray(record?.files)) {
+    errors.push("files must be a list");
+  } else {
+    for (const file of record.files) {
+      validateNonEmptyString(file?.id, "files[].id", errors, "SUP001");
+      validateNonEmptyString(file?.path, "files[].path", errors, "SUP001");
+      if (!Number.isInteger(file?.size_bytes)) {
+        errors.push("files[].size_bytes must be an integer");
+      }
+    }
+  }
+  for (const field of [
+    "doctor_report_path",
+    "context_explanation_path",
+    "policy_explanation_path",
+    "readme_path",
+  ]) {
+    if (field in record && record?.[field] !== null && typeof record?.[field] !== "string") {
+      errors.push(`${field} must be string or null`);
+    }
+  }
+  if ("share_safety_reasons" in record) {
+    if (!Array.isArray(record.share_safety_reasons)) {
+      errors.push("share_safety_reasons must be a list");
+    } else {
+      for (const reason of record.share_safety_reasons) {
+        validateNonEmptyString(reason, "share_safety_reasons[]", errors, "SUP001");
+      }
+    }
+  }
+  return errors;
+}
+
+export function validateContextExplanation(record) {
+  const errors = [];
+  if (record?.kind !== "context-explanation") {
+    errors.push("kind must be context-explanation");
+  }
+  if (record?.schema_version !== CONTEXT_EXPLANATION_SCHEMA_VERSION) {
+    errors.push(`schema_version must be ${CONTEXT_EXPLANATION_SCHEMA_VERSION}`);
+  }
+  validateNonEmptyString(record?.generated_at, "generated_at", errors, "CTX001");
+  if (!SUPPORTED_RUNTIMES.includes(record?.runtime)) {
+    errors.push(`unsupported runtime: ${record?.runtime}`);
+  }
+  if (!SUPPORTED_TARGETS.includes(record?.target)) {
+    errors.push(`unsupported target: ${record?.target}`);
+  }
+  for (const field of [
+    "canonical_entrypoint",
+    "config_home",
+    "install_root",
+    "state_path",
+    "trace_root",
+    "cwd",
+    "repo_root",
+    "os",
+    "shell",
+  ]) {
+    validateNonEmptyString(record?.[field], field, errors, "CTX001");
+  }
+  if (record?.direct_invocation !== null && typeof record?.direct_invocation !== "string") {
+    errors.push("direct_invocation must be string or null");
+  }
+  if (record?.manifest_path !== null && typeof record?.manifest_path !== "string") {
+    errors.push("manifest_path must be string or null");
+  }
+  if (record?.pack_id !== null && typeof record?.pack_id !== "string") {
+    errors.push("pack_id must be string or null");
+  }
+  if (record?.runtime_executable !== null && typeof record?.runtime_executable !== "string") {
+    errors.push("runtime_executable must be string or null");
+  }
+  if (record?.runtime_version !== null && typeof record?.runtime_version !== "string") {
+    errors.push("runtime_version must be string or null");
+  }
+  if (typeof record?.runtime_available !== "boolean") {
+    errors.push("runtime_available must be boolean");
+  }
+  if (!Array.isArray(record?.supported_trigger_surfaces)) {
+    errors.push("supported_trigger_surfaces must be a list");
+  } else {
+    for (const item of record.supported_trigger_surfaces) {
+      validateNonEmptyString(item, "supported_trigger_surfaces[]", errors, "CTX001");
+    }
+  }
+  if (!TELEMETRY_MODES.includes(record?.telemetry_mode)) {
+    errors.push(`unsupported telemetry_mode: ${record?.telemetry_mode}`);
+  }
+  if ("tool_availability" in record) {
+    if (!Array.isArray(record.tool_availability)) {
+      errors.push("tool_availability must be a list");
+    } else {
+      for (const tool of record.tool_availability) {
+        if (!isObject(tool)) {
+          errors.push("tool_availability[] must be an object");
+          continue;
+        }
+        validateNonEmptyString(tool?.id, "tool_availability[].id", errors, "CTX001");
+        if (typeof tool?.available !== "boolean") {
+          errors.push("tool_availability[].available must be boolean");
+        }
+      }
+    }
+  }
+  if (!isObject(record?.memory_reads)) {
+    errors.push("memory_reads must be an object");
+  } else {
+    for (const field of ["global_project_memory", "task_memory", "session_artifacts"]) {
+      if (!Array.isArray(record.memory_reads?.[field])) {
+        errors.push(`memory_reads.${field} must be a list`);
+        continue;
+      }
+      for (const item of record.memory_reads[field]) {
+        validateNonEmptyString(item, `memory_reads.${field}[]`, errors, "CTX001");
+      }
+    }
+  }
+  return errors;
+}
+
+export function validatePolicyExplanation(record) {
+  const errors = [];
+  if (record?.kind !== "policy-explanation") {
+    errors.push("kind must be policy-explanation");
+  }
+  if (record?.schema_version !== POLICY_EXPLANATION_SCHEMA_VERSION) {
+    errors.push(`schema_version must be ${POLICY_EXPLANATION_SCHEMA_VERSION}`);
+  }
+  validateNonEmptyString(record?.generated_at, "generated_at", errors, "POLX001");
+  if (!SUPPORTED_RUNTIMES.includes(record?.runtime)) {
+    errors.push(`unsupported runtime: ${record?.runtime}`);
+  }
+  if (!SUPPORTED_TARGETS.includes(record?.target)) {
+    errors.push(`unsupported target: ${record?.target}`);
+  }
+  validateNonEmptyString(record?.action, "action", errors, "POLX001");
+  validateNonEmptyString(record?.overall_verdict, "overall_verdict", errors, "POLX001");
+  if (!POLICY_DECISIONS.includes(record?.overall_verdict)) {
+    errors.push(`unsupported overall_verdict: ${record?.overall_verdict}`);
+  }
+  if (record?.contract_id !== null && typeof record?.contract_id !== "string") {
+    errors.push("contract_id must be string or null");
+  }
+  validateNonEmptyString(record?.summary, "summary", errors, "POLX001");
+  for (const field of [
+    "decisive_reason_codes",
+    "decisive_contract_fields",
+    "decisive_runtime_factors",
+    "allowed_operations",
+    "blocked_operations",
+  ]) {
+    if (!Array.isArray(record?.[field])) {
+      errors.push(`${field} must be a list`);
+      continue;
+    }
+    for (const item of record[field]) {
+      validateNonEmptyString(item, `${field}[]`, errors, "POLX001");
+    }
+  }
+  if (typeof record?.preview_required !== "boolean") {
+    errors.push("preview_required must be boolean");
+  }
+  if (typeof record?.approval_required !== "boolean") {
+    errors.push("approval_required must be boolean");
+  }
+  if (typeof record?.no_silent_fallback !== "boolean") {
+    errors.push("no_silent_fallback must be boolean");
+  }
+  if (!Array.isArray(record?.reasons)) {
+    errors.push("reasons must be a list");
+  }
+  if (!Array.isArray(record?.capability_negotiation)) {
+    errors.push("capability_negotiation must be a list");
+  }
+  return errors;
+}
+
+export function validateDebugReport(record) {
+  const errors = [];
+  if (record?.kind !== "debug-report") {
+    errors.push("kind must be debug-report");
+  }
+  if (record?.schema_version !== DEBUG_REPORT_SCHEMA_VERSION) {
+    errors.push(`schema_version must be ${DEBUG_REPORT_SCHEMA_VERSION}`);
+  }
+  validateNonEmptyString(record?.generated_at, "generated_at", errors, "DBG001");
+  if (!isObject(record?.selector)) {
+    errors.push("selector must be an object");
+  }
+  validateNonEmptyString(record?.session_id, "session_id", errors, "DBG001");
+  if (record?.workflow_id !== null && typeof record?.workflow_id !== "string") {
+    errors.push("workflow_id must be string or null");
+  }
+  if (record?.correlation_id !== null && typeof record?.correlation_id !== "string") {
+    errors.push("correlation_id must be string or null");
+  }
+  if (record?.runtime !== null && !SUPPORTED_RUNTIMES.includes(record?.runtime)) {
+    errors.push(`unsupported runtime: ${record?.runtime}`);
+  }
+  if (record?.target !== null && !SUPPORTED_TARGETS.includes(record?.target)) {
+    errors.push(`unsupported target: ${record?.target}`);
+  }
+  validateNonEmptyString(record?.command_name, "command_name", errors, "DBG001");
+  validateNonEmptyString(record?.outcome, "outcome", errors, "DBG001");
+  if (!TRACE_OUTCOMES.includes(record?.outcome)) {
+    errors.push(`unsupported outcome: ${record?.outcome}`);
+  }
+  if (!TRACE_FAILURE_DOMAINS.includes(record?.decisive_failure_domain)) {
+    errors.push(`unsupported decisive_failure_domain: ${record?.decisive_failure_domain}`);
+  }
+  validateNonEmptyString(record?.decisive_reason, "decisive_reason", errors, "DBG001");
+  if (!Array.isArray(record?.timeline)) {
+    errors.push("timeline must be a list");
+  } else {
+    for (const event of record.timeline) {
+      if (!isObject(event)) {
+        errors.push("timeline[] must be an object");
+        continue;
+      }
+      validateNonEmptyString(event?.timestamp, "timeline[].timestamp", errors, "DBG001");
+      validateNonEmptyString(event?.event_type, "timeline[].event_type", errors, "DBG001");
+      if (!TRACE_EVENT_TYPES.includes(event?.event_type)) {
+        errors.push(`unsupported timeline[].event_type: ${event?.event_type}`);
+      }
+      if (!TRACE_SEVERITIES.includes(event?.severity)) {
+        errors.push(`unsupported timeline[].severity: ${event?.severity}`);
+      }
+      if (!TRACE_FAILURE_DOMAINS.includes(event?.failure_domain)) {
+        errors.push(`unsupported timeline[].failure_domain: ${event?.failure_domain}`);
+      }
+      validateNonEmptyString(event?.outcome, "timeline[].outcome", errors, "DBG001");
+      if (!TRACE_OUTCOMES.includes(event?.outcome)) {
+        errors.push(`unsupported timeline[].outcome: ${event?.outcome}`);
+      }
+      validateNonEmptyString(event?.summary, "timeline[].summary", errors, "DBG001");
+    }
+  }
+  for (const field of ["related_artifacts", "repro_steps"]) {
+    if (!Array.isArray(record?.[field])) {
+      errors.push(`${field} must be a list`);
+      continue;
+    }
+    for (const item of record[field]) {
+      validateNonEmptyString(item, `${field}[]`, errors, "DBG001");
     }
   }
   return errors;

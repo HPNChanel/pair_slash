@@ -8,6 +8,7 @@
     "@pairslash/installer": "file:../installer",
     "@pairslash/spec-core": "file:../../core/spec-core",
     "@pairslash/runtime-codex-adapter": "file:../../runtimes/codex/adapter",
-    "@pairslash/runtime-copilot-adapter": "file:../../runtimes/copilot/adapter"
+    "@pairslash/runtime-copilot-adapter": "file:../../runtimes/copilot/adapter",
+    "@pairslash/trace": "file:../trace"
   }
 }

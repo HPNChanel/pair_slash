@@ -84,6 +84,7 @@ logs/
 .pairslash/task-memory/*
 !.pairslash/task-memory/.gitkeep
 .pairslash/install-state/
+.pairslash/observability/
 .pairslash/tmp/
 
 # ─── Runtime skill install paths (derived from packs/core/) ──────────────────

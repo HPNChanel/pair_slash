@@ -1,0 +1,46 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://pairslash.dev/schemas/trace-export/1.0.0"
+title: PairSlash Trace Export
+type: object
+required:
+  - kind
+  - schema_version
+  - generated_at
+  - selector
+  - output_dir
+  - session_count
+  - event_count
+  - redaction_report
+  - files
+properties:
+  kind:
+    const: trace-export
+  schema_version:
+    const: "1.0.0"
+  generated_at:
+    type: string
+  selector:
+    type: object
+  output_dir:
+    type: string
+  session_count:
+    type: integer
+  event_count:
+    type: integer
+  redaction_report:
+    type: object
+    properties:
+      redacted_fields:
+        type: integer
+      redacted_events:
+        type: integer
+      unknown_sensitive_hits:
+        type: integer
+      rules_triggered:
+        type: array
+        items:
+          type: string
+  files:
+    type: array
+    items:
+      type: object

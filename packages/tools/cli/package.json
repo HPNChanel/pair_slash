@@ -7,12 +7,17 @@
     "pairslash": "src/bin/pairslash.js"
   },
   "dependencies": {
+    "@pairslash/contract-engine": "file:../../core/contract-engine",
+    "@pairslash/policy-engine": "file:../../core/policy-engine",
     "@pairslash/spec-core": "file:../../core/spec-core",
     "@pairslash/compiler-codex": "file:../../runtimes/codex/compiler",
     "@pairslash/compiler-copilot": "file:../../runtimes/copilot/compiler",
+    "@pairslash/runtime-codex-adapter": "file:../../runtimes/codex/adapter",
+    "@pairslash/runtime-copilot-adapter": "file:../../runtimes/copilot/adapter",
     "@pairslash/lint-bridge": "file:../lint-bridge",
     "@pairslash/installer": "file:../installer",
     "@pairslash/doctor": "file:../doctor",
-    "@pairslash/memory-engine": "file:../../core/memory-engine"
+    "@pairslash/memory-engine": "file:../../core/memory-engine",
+    "@pairslash/trace": "file:../trace"
   }
 }

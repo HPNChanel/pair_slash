@@ -1,0 +1,57 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://pairslash.dev/schemas/support-bundle/1.0.0"
+title: PairSlash Support Bundle
+type: object
+required:
+  - kind
+  - schema_version
+  - generated_at
+  - bundle_id
+  - output_dir
+  - safe_to_share
+  - trace_export
+  - redaction_report
+  - files
+properties:
+  kind:
+    const: support-bundle
+  schema_version:
+    const: "1.0.0"
+  generated_at:
+    type: string
+  bundle_id:
+    type: string
+  output_dir:
+    type: string
+  safe_to_share:
+    type: boolean
+  trace_export:
+    type: object
+    properties:
+      path:
+        type: string
+      session_count:
+        type: integer
+      event_count:
+        type: integer
+  redaction_report:
+    type: object
+    properties:
+      redacted_fields:
+        type: integer
+      redacted_events:
+        type: integer
+      unknown_sensitive_hits:
+        type: integer
+      rules_triggered:
+        type: array
+        items:
+          type: string
+  share_safety_reasons:
+    type: array
+    items:
+      type: string
+  files:
+    type: array
+    items:
+      type: object

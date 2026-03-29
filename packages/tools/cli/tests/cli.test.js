@@ -5,6 +5,7 @@ import { join } from "node:path";
 import YAML from "yaml";
 
 import { runCli } from "../src/bin/pairslash.js";
+import { listTraceIndexes, loadTraceEvents } from "@pairslash/trace";
 
 import {
   createTempRepo,
@@ -522,6 +523,7 @@ test("pairslash doctor text output includes immediate next action", serial, asyn
     });
     assert.equal(exitCode, 0);
     assert.match(output, /Immediate next action:/);
+    assert.match(output, /Recent traces:/);
     assert.match(output, /Codex present:/);
     assert.match(output, /Copilot present:/);
   } finally {
@@ -752,6 +754,184 @@ test("pairslash memory write-global commits with --apply --yes after preview", s
       true,
     );
   } finally {
+    fixture.cleanup();
+  }
+});
+
+test("pairslash explain-context emits structured json report", serial, async () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  let output = "";
+  try {
+    mkdirSync(join(fixture.tempRoot, ".pairslash", "project-memory"), { recursive: true });
+    mkdirSync(join(fixture.tempRoot, ".pairslash", "task-memory"), { recursive: true });
+    mkdirSync(join(fixture.tempRoot, ".pairslash", "sessions"), { recursive: true });
+    writeFileSync(
+      join(fixture.tempRoot, ".pairslash", "project-memory", "50-constraints.yaml"),
+      "kind: constraint\ntitle: preview-contract\n",
+    );
+    writeFileSync(
+      join(fixture.tempRoot, ".pairslash", "task-memory", "task.yaml"),
+      "kind: decision\ntitle: task\n",
+    );
+    writeFileSync(
+      join(fixture.tempRoot, ".pairslash", "sessions", "session-note.yaml"),
+      "kind: note\ntitle: session\n",
+    );
+    const exitCode = await runCli({
+      argv: ["explain-context", "pairslash-plan", "--runtime", "codex", "--format", "json"],
+      cwd: fixture.tempRoot,
+      stdout: {
+        write(chunk) {
+          output += chunk;
+        },
+      },
+    });
+    assert.equal(exitCode, 0);
+    const payload = JSON.parse(output);
+    assert.equal(payload.kind, "context-explanation");
+    assert.equal(payload.runtime, "codex_cli");
+    assert.equal(payload.pack_id, "pairslash-plan");
+    assert.equal(payload.telemetry_mode, "off");
+    assert.ok(payload.memory_reads.global_project_memory.includes(".pairslash/project-memory/50-constraints.yaml"));
+    assert.ok(payload.memory_reads.task_memory.includes(".pairslash/task-memory/task.yaml"));
+    assert.ok(payload.memory_reads.session_artifacts.includes(".pairslash/sessions/session-note.yaml"));
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("pairslash explain-context emits runtime host probe event", serial, async () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  try {
+    await runCli({
+      argv: ["explain-context", "pairslash-plan", "--runtime", "codex", "--format", "json"],
+      cwd: fixture.tempRoot,
+      stdout: {
+        write() {},
+      },
+    });
+    const session = listTraceIndexes(fixture.tempRoot)
+      .filter((index) => index.command_name === "explain-context")
+      .sort((left, right) => (right.started_at ?? "").localeCompare(left.started_at ?? ""))[0];
+    assert.ok(session);
+    const events = loadTraceEvents({
+      repoRoot: fixture.tempRoot,
+      sessionId: session.session_id,
+    });
+    assert.ok(events.some((event) => event.event_type === "runtime.host_probed"));
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("pairslash explain-policy emits preview requirement for memory write apply", serial, async () => {
+  const fixture = createTempRepo({ packs: ["pairslash-memory-write-global"] });
+  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  let output = "";
+  try {
+    const exitCode = await runCli({
+      argv: [
+        "explain-policy",
+        "pairslash-memory-write-global",
+        "--runtime",
+        "codex",
+        "--apply",
+        "--format",
+        "json",
+      ],
+      cwd: fixture.tempRoot,
+      stdout: {
+        write(chunk) {
+          output += chunk;
+        },
+      },
+    });
+    assert.equal(exitCode, 0);
+    const payload = JSON.parse(output);
+    assert.equal(payload.kind, "policy-explanation");
+    assert.equal(payload.runtime, "codex_cli");
+    assert.equal(payload.preview_required, true);
+    assert.equal(payload.overall_verdict, "require-preview");
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("pairslash debug emits latest prior session report", serial, async () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  let output = "";
+  try {
+    await runCli({
+      argv: ["doctor", "--runtime", "codex", "--format", "json"],
+      cwd: fixture.tempRoot,
+      stdout: { write() {} },
+    });
+    const exitCode = await runCli({
+      argv: ["debug", "--latest", "--runtime", "codex", "--format", "json"],
+      cwd: fixture.tempRoot,
+      stdout: {
+        write(chunk) {
+          output += chunk;
+        },
+      },
+    });
+    assert.equal(exitCode, 0);
+    const payload = JSON.parse(output);
+    assert.equal(payload.kind, "debug-report");
+    assert.equal(payload.command_name, "doctor");
+    assert.ok(Array.isArray(payload.timeline));
+    assert.ok(payload.timeline.length > 0);
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("pairslash trace export can emit support bundle", serial, async () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  let output = "";
+  try {
+    await runCli({
+      argv: ["doctor", "--runtime", "codex", "--format", "json"],
+      cwd: fixture.tempRoot,
+      stdout: { write() {} },
+    });
+    const exitCode = await runCli({
+      argv: [
+        "trace",
+        "export",
+        "--latest",
+        "--runtime",
+        "codex",
+        "--support-bundle",
+        "--include-doctor",
+        "--format",
+        "json",
+      ],
+      cwd: fixture.tempRoot,
+      stdout: {
+        write(chunk) {
+          output += chunk;
+        },
+      },
+    });
+    assert.equal(exitCode, 0);
+    const payload = JSON.parse(output);
+    assert.equal(payload.trace_export.kind, "trace-export");
+    assert.equal(payload.support_bundle.kind, "support-bundle");
+    assert.ok(existsSync(join(payload.trace_export.output_dir, "manifest.json")));
+    assert.ok(existsSync(join(payload.support_bundle.output_dir, "bundle-manifest.json")));
+    assert.ok(payload.support_bundle.doctor_report_path);
+    assert.ok(existsSync(payload.support_bundle.doctor_report_path));
+  } finally {
+    runtime.cleanup();
     fixture.cleanup();
   }
 });

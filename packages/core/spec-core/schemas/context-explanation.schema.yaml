@@ -1,0 +1,59 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://pairslash.dev/schemas/context-explanation/1.0.0"
+title: PairSlash Context Explanation
+type: object
+required:
+  - kind
+  - schema_version
+  - generated_at
+  - runtime
+  - target
+  - canonical_entrypoint
+  - config_home
+  - install_root
+  - state_path
+  - trace_root
+  - telemetry_mode
+  - memory_reads
+properties:
+  kind:
+    const: context-explanation
+  schema_version:
+    const: "1.0.0"
+  generated_at:
+    type: string
+  runtime:
+    type: string
+  target:
+    type: string
+  canonical_entrypoint:
+    type: string
+  config_home:
+    type: string
+  install_root:
+    type: string
+  state_path:
+    type: string
+  trace_root:
+    type: string
+  telemetry_mode:
+    type: string
+  memory_reads:
+    type: object
+    required:
+      - global_project_memory
+      - task_memory
+      - session_artifacts
+    properties:
+      global_project_memory:
+        type: array
+        items:
+          type: string
+      task_memory:
+        type: array
+        items:
+          type: string
+      session_artifacts:
+        type: array
+        items:
+          type: string

@@ -1,4 +1,4 @@
-import { readdirSync, statSync } from "node:fs";
+import { accessSync, constants as fsConstants, readdirSync, statSync } from "node:fs";
 import process from "node:process";
 import { basename, dirname, join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
@@ -27,6 +27,13 @@ import {
 } from "@pairslash/spec-core";
 import * as codexAdapter from "@pairslash/runtime-codex-adapter";
 import * as copilotAdapter from "@pairslash/runtime-copilot-adapter";
+import {
+  listTraceIndexes,
+  loadRetentionState,
+  resolveRetentionPolicy,
+  resolveTelemetryMode,
+  resolveTraceRoot,
+} from "@pairslash/trace";
 import { resolveSupportLane } from "./support-lane.js";
 
 const ISSUE_STATUSES = new Set(["warn", "degraded", "fail", "unsupported"]);
@@ -171,6 +178,15 @@ function safeStat(path) {
     return { ok: true, stat: statSync(path) };
   } catch (error) {
     return { ok: false, error: error.message };
+  }
+}
+
+function isWritablePath(path) {
+  try {
+    accessSync(path, fsConstants.W_OK);
+    return true;
+  } catch {
+    return false;
   }
 }
 
@@ -2024,6 +2040,41 @@ function buildScopeProbes(context) {
   );
 }
 
+function buildObservabilityHealth(repoRoot, runtime, target) {
+  const traceRoot = resolveTraceRoot(repoRoot);
+  const indexes = listTraceIndexes(repoRoot)
+    .filter((entry) => (runtime ? entry.runtime === runtime : true))
+    .filter((entry) => (target ? entry.target === target : true));
+  const missingEventFiles = indexes.filter((entry) => !exists(entry.event_file)).length;
+  const retentionState = loadRetentionState(repoRoot);
+  const retentionPolicy = resolveRetentionPolicy(repoRoot);
+  const writableProbePath = exists(traceRoot) ? traceRoot : dirname(traceRoot);
+  return {
+    trace_root_exists: exists(traceRoot),
+    trace_root_writable: isWritablePath(writableProbePath),
+    index_event_consistent: missingEventFiles === 0,
+    missing_event_files: missingEventFiles,
+    retention_last_pruned_at: retentionState?.last_pruned_at ?? null,
+    retention_policy: retentionPolicy,
+  };
+}
+
+function buildRecentTraceSummary(repoRoot, runtime, target) {
+  const indexes = listTraceIndexes(repoRoot)
+    .filter((entry) => (runtime ? entry.runtime === runtime : true))
+    .filter((entry) => (target ? entry.target === target : true))
+    .sort((left, right) => (right.started_at ?? "").localeCompare(left.started_at ?? ""))
+    .slice(0, 5);
+  return {
+    telemetry_mode: resolveTelemetryMode(repoRoot),
+    session_count: indexes.length,
+    latest_session_id: indexes[0]?.session_id ?? null,
+    latest_outcome: indexes[0]?.last_outcome ?? null,
+    latest_failure_domain: indexes[0]?.decisive_failure_domain ?? null,
+    retention_last_pruned_at: loadRetentionState(repoRoot)?.last_pruned_at ?? null,
+  };
+}
+
 function preferredPackId(context) {
   const selectedPackIds = context.selectedManifests.map((record) => record.packId);
   if (selectedPackIds.includes("pairslash-plan")) {
@@ -2137,6 +2188,8 @@ export function runDoctor({
     scope_probes: buildScopeProbes(context),
     support_lane: { ...context.supportLane },
     runtime_compatibility: buildRuntimeCompatibility(context, checks),
+    recent_trace_summary: buildRecentTraceSummary(context.repoRoot, context.runtime, context.target),
+    observability_health: buildObservabilityHealth(context.repoRoot, context.runtime, context.target),
     checks,
     issues,
     next_actions: buildNextActions(issues),

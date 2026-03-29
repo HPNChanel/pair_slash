@@ -1,0 +1,41 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://pairslash.dev/schemas/policy-explanation/1.0.0"
+title: PairSlash Policy Explanation
+type: object
+required:
+  - kind
+  - schema_version
+  - generated_at
+  - runtime
+  - target
+  - action
+  - overall_verdict
+  - summary
+  - decisive_reason_codes
+  - decisive_contract_fields
+  - decisive_runtime_factors
+  - preview_required
+  - approval_required
+  - no_silent_fallback
+  - allowed_operations
+  - blocked_operations
+  - reasons
+  - capability_negotiation
+properties:
+  kind:
+    const: policy-explanation
+  schema_version:
+    const: "1.0.0"
+  generated_at:
+    type: string
+  runtime:
+    type: string
+  target:
+    type: string
+  action:
+    type: string
+  overall_verdict:
+    type: string
+  summary:
+    type: string
+

@@ -1,0 +1,48 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://pairslash.dev/schemas/debug-report/1.0.0"
+title: PairSlash Debug Report
+type: object
+required:
+  - kind
+  - schema_version
+  - generated_at
+  - selector
+  - session_id
+  - command_name
+  - outcome
+  - decisive_failure_domain
+  - decisive_reason
+  - timeline
+  - related_artifacts
+  - repro_steps
+properties:
+  kind:
+    const: debug-report
+  schema_version:
+    const: "1.0.0"
+  generated_at:
+    type: string
+  selector:
+    type: object
+  session_id:
+    type: string
+  command_name:
+    type: string
+  outcome:
+    type: string
+  decisive_failure_domain:
+    type: string
+  decisive_reason:
+    type: string
+  timeline:
+    type: array
+    items:
+      type: object
+  related_artifacts:
+    type: array
+    items:
+      type: string
+  repro_steps:
+    type: array
+    items:
+      type: string

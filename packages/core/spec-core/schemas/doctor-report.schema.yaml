@@ -171,6 +171,55 @@ properties:
         type: array
         items:
           type: string
+  recent_trace_summary:
+    type: object
+    properties:
+      telemetry_mode:
+        type: string
+      session_count:
+        type: integer
+      latest_session_id:
+        type:
+          - string
+          - "null"
+      latest_outcome:
+        type:
+          - string
+          - "null"
+      latest_failure_domain:
+        type:
+          - string
+          - "null"
+      retention_last_pruned_at:
+        type:
+          - string
+          - "null"
+  observability_health:
+    type: object
+    properties:
+      trace_root_exists:
+        type: boolean
+      trace_root_writable:
+        type: boolean
+      index_event_consistent:
+        type: boolean
+      missing_event_files:
+        type: integer
+      retention_last_pruned_at:
+        type:
+          - string
+          - "null"
+      retention_policy:
+        type: object
+        properties:
+          max_days:
+            type: integer
+          max_sessions:
+            type: integer
+          preserve_exports:
+            type: boolean
+          preserve_bundles:
+            type: boolean
   checks:
     type: array
     items:

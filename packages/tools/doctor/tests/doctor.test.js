@@ -89,6 +89,13 @@ test("doctor reports structured environment summary for codex repo lane", () => 
     assert.equal(report.scope_probes.user.selected, false);
     assert.equal(report.support_lane.lane_status, "prep");
     assert.equal(report.support_lane.tested_range_status, "prep_lane");
+    assert.equal(report.recent_trace_summary.telemetry_mode, "off");
+    assert.equal(report.recent_trace_summary.session_count, 0);
+    assert.equal(typeof report.observability_health.trace_root_exists, "boolean");
+    assert.equal(typeof report.observability_health.trace_root_writable, "boolean");
+    assert.equal(typeof report.observability_health.index_event_consistent, "boolean");
+    assert.equal(typeof report.observability_health.missing_event_files, "number");
+    assert.equal(typeof report.observability_health.retention_policy.max_days, "number");
     assert.equal(report.first_workflow_guidance.recommended_pack_id, "pairslash-plan");
     assert.ok(report.checks.some((check) => check.id === "platform.shell_profile_candidates"));
     assert.ok(report.checks.some((check) => check.id === "runtime.presence_matrix"));

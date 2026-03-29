@@ -175,6 +175,31 @@ export function formatDoctorText(report) {
     "",
     `Immediate next action: ${immediateNextAction}`,
     "",
+  );
+  if (report.recent_trace_summary) {
+    lines.push(
+      "Recent traces:",
+      `- Telemetry mode: ${report.recent_trace_summary.telemetry_mode}`,
+      `- Sessions: ${report.recent_trace_summary.session_count}`,
+      `- Latest session: ${report.recent_trace_summary.latest_session_id ?? "none"}`,
+      `- Latest outcome: ${report.recent_trace_summary.latest_outcome ?? "none"}`,
+      `- Latest failure domain: ${report.recent_trace_summary.latest_failure_domain ?? "none"}`,
+      `- Last retention prune: ${report.recent_trace_summary.retention_last_pruned_at ?? "never"}`,
+      "",
+    );
+  }
+  if (report.observability_health) {
+    lines.push(
+      "Observability health:",
+      `- Trace root exists: ${report.observability_health.trace_root_exists ? "yes" : "no"}`,
+      `- Trace root writable: ${report.observability_health.trace_root_writable ? "yes" : "no"}`,
+      `- Index/event consistent: ${report.observability_health.index_event_consistent ? "yes" : "no"}`,
+      `- Missing event files: ${report.observability_health.missing_event_files}`,
+      `- Retention policy: ${report.observability_health.retention_policy.max_days}d, ${report.observability_health.retention_policy.max_sessions} sessions`,
+      "",
+    );
+  }
+  lines.push(
     "Support lane:",
     `- Lane status: ${report.support_lane.lane_status}`,
     `- Tested range status: ${report.support_lane.tested_range_status}`,
@@ -466,6 +491,186 @@ export function formatMemoryWritePreviewBlockedText(blocked) {
     for (const note of blocked.notes) {
       lines.push(`- ${note}`);
     }
+  }
+  return `${lines.join("\n")}\n`;
+}
+
+export function formatContextExplanationText(explanation) {
+  const lines = [
+    `Runtime: ${explanation.runtime}`,
+    `Target: ${explanation.target}`,
+    `Pack: ${explanation.pack_id ?? "none"}`,
+    `Manifest: ${explanation.manifest_path ?? "none"}`,
+    `Canonical entrypoint: ${explanation.canonical_entrypoint}`,
+    `Direct invocation: ${explanation.direct_invocation ?? "none"}`,
+    `Supported trigger surfaces: ${explanation.supported_trigger_surfaces.join(", ") || "none"}`,
+    `Telemetry mode: ${explanation.telemetry_mode}`,
+    `Trace root: ${explanation.trace_root}`,
+    "",
+    "Environment:",
+    `- OS: ${explanation.os}`,
+    `- Shell: ${explanation.shell}`,
+    `- CWD: ${explanation.cwd}`,
+    `- Repo root: ${explanation.repo_root}`,
+    `- Config home: ${explanation.config_home}`,
+    `- Install root: ${explanation.install_root}`,
+    `- State path: ${explanation.state_path}`,
+    `- Runtime executable: ${explanation.runtime_executable ?? "none"}`,
+    `- Runtime version: ${explanation.runtime_version ?? "unknown"}`,
+    `- Runtime available: ${explanation.runtime_available ? "yes" : "no"}`,
+    "",
+    "Tools:",
+  ];
+  if ((explanation.tool_availability ?? []).length === 0) {
+    lines.push("- none");
+  } else {
+    for (const tool of explanation.tool_availability) {
+      lines.push(`- ${tool.id}: ${tool.available ? "available" : "missing"}`);
+    }
+  }
+  if (explanation.memory_reads) {
+    lines.push("", "Memory artifacts read:");
+    lines.push(`- Global Project Memory: ${(explanation.memory_reads.global_project_memory ?? []).length}`);
+    if ((explanation.memory_reads.global_project_memory ?? []).length === 0) {
+      lines.push("  none");
+    } else {
+      for (const path of explanation.memory_reads.global_project_memory) {
+        lines.push(`  ${path}`);
+      }
+    }
+    lines.push(`- Task memory: ${(explanation.memory_reads.task_memory ?? []).length}`);
+    if ((explanation.memory_reads.task_memory ?? []).length === 0) {
+      lines.push("  none");
+    } else {
+      for (const path of explanation.memory_reads.task_memory) {
+        lines.push(`  ${path}`);
+      }
+    }
+    lines.push(`- Session artifacts: ${(explanation.memory_reads.session_artifacts ?? []).length}`);
+    if ((explanation.memory_reads.session_artifacts ?? []).length === 0) {
+      lines.push("  none");
+    } else {
+      for (const path of explanation.memory_reads.session_artifacts) {
+        lines.push(`  ${path}`);
+      }
+    }
+  }
+  return `${lines.join("\n")}\n`;
+}
+
+export function formatPolicyExplanationText(explanation) {
+  const lines = [
+    `Runtime: ${explanation.runtime}`,
+    `Target: ${explanation.target}`,
+    `Action: ${explanation.action}`,
+    `Contract: ${explanation.contract_id ?? "none"}`,
+    `Verdict: ${explanation.overall_verdict}`,
+    `Summary: ${explanation.summary}`,
+    `Preview required: ${explanation.preview_required ? "yes" : "no"}`,
+    `Approval required: ${explanation.approval_required ? "yes" : "no"}`,
+    `No-silent-fallback: ${explanation.no_silent_fallback ? "yes" : "no"}`,
+    "",
+    "Decisive reasons:",
+  ];
+  if (explanation.decisive_reason_codes.length === 0) {
+    lines.push("- none");
+  } else {
+    for (const code of explanation.decisive_reason_codes) {
+      lines.push(`- ${code}`);
+    }
+  }
+  lines.push("", "Allowed operations:");
+  if (explanation.allowed_operations.length === 0) {
+    lines.push("- none");
+  } else {
+    for (const operation of explanation.allowed_operations) {
+      lines.push(`- ${operation}`);
+    }
+  }
+  lines.push("", "Blocked operations:");
+  if (explanation.blocked_operations.length === 0) {
+    lines.push("- none");
+  } else {
+    for (const operation of explanation.blocked_operations) {
+      lines.push(`- ${operation}`);
+    }
+  }
+  if (explanation.reasons.length > 0) {
+    lines.push("", "Reasons:");
+    for (const reason of explanation.reasons) {
+      lines.push(`- ${reason.code}: ${reason.message}`);
+    }
+  }
+  return `${lines.join("\n")}\n`;
+}
+
+export function formatDebugReportText(report) {
+  const lines = [
+    `Session: ${report.session_id}`,
+    `Runtime: ${report.runtime ?? "unknown"}`,
+    `Target: ${report.target ?? "unknown"}`,
+    `Command: ${report.command_name}`,
+    `Outcome: ${report.outcome}`,
+    `Decisive failure domain: ${report.decisive_failure_domain}`,
+    `Reason: ${report.decisive_reason}`,
+    "",
+    "Timeline:",
+  ];
+  if (report.timeline.length === 0) {
+    lines.push("- none");
+  } else {
+    for (const event of report.timeline) {
+      lines.push(`- ${event.timestamp} ${event.event_type} ${event.outcome} [${event.failure_domain}] ${event.summary}`);
+    }
+  }
+  lines.push("", "Related artifacts:");
+  if (report.related_artifacts.length === 0) {
+    lines.push("- none");
+  } else {
+    for (const artifact of report.related_artifacts) {
+      lines.push(`- ${artifact}`);
+    }
+  }
+  lines.push("", "Repro steps:");
+  for (const step of report.repro_steps) {
+    lines.push(`- ${step}`);
+  }
+  return `${lines.join("\n")}\n`;
+}
+
+export function formatTraceExportText(traceExport) {
+  const lines = [
+    `Output dir: ${traceExport.output_dir}`,
+    `Sessions: ${traceExport.session_count}`,
+    `Events: ${traceExport.event_count}`,
+    `Redacted events: ${traceExport.redaction_report.redacted_events}`,
+    `Redacted fields: ${traceExport.redaction_report.redacted_fields}`,
+    `Unknown sensitive hits: ${traceExport.redaction_report.unknown_sensitive_hits ?? 0}`,
+    `Redaction rules: ${(traceExport.redaction_report.rules_triggered ?? []).join(", ") || "none"}`,
+    "",
+    "Files:",
+  ];
+  for (const file of traceExport.files) {
+    lines.push(`- ${file.id}: ${file.path} (${file.size_bytes} bytes)`);
+  }
+  return `${lines.join("\n")}\n`;
+}
+
+export function formatSupportBundleText(bundle) {
+  const lines = [
+    `Bundle ID: ${bundle.bundle_id}`,
+    `Output dir: ${bundle.output_dir}`,
+    `Safe to share: ${bundle.safe_to_share ? "yes" : "no"}`,
+    `Share safety reasons: ${(bundle.share_safety_reasons ?? []).length > 0 ? bundle.share_safety_reasons.join(", ") : "none"}`,
+    `Trace export: ${bundle.trace_export.path}`,
+    `Doctor report: ${bundle.doctor_report_path ?? "none"}`,
+    `Context explanation: ${bundle.context_explanation_path ?? "none"}`,
+    `Policy explanation: ${bundle.policy_explanation_path ?? "none"}`,
+    "",
+    "Files:",
+  ];
+  for (const file of bundle.files) {
+    lines.push(`- ${file.id}: ${file.path} (${file.size_bytes} bytes)`);
   }
   return `${lines.join("\n")}\n`;
 }
