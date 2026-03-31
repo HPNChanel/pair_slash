@@ -2,6 +2,10 @@
 
 Use `pairslash doctor` before install, after install, and before update. Phase 4 doctor is the adoption/support entrypoint, not just a version check.
 
+When doctor surfaces a failure you cannot explain from the report alone, move
+to the support flow in `docs/support/phase-7-support-ops.md` and capture a
+debug report or support bundle instead of pasting raw logs.
+
 ## Verdicts
 
 - `pass`: runtime lane is compatible and no blocking issue was found
@@ -63,3 +67,14 @@ If the verdict is `degraded`, review the non-blocking issues before install. If 
 
 Pilot-lane evidence and OS-specific expectations live in
 `docs/runtime-mapping/pilot-acceptance.md`.
+
+## Escalate to support bundle
+
+Use these when doctor points at the failure domain but does not explain the full
+repro:
+
+```bash
+node packages/tools/cli/src/bin/pairslash.js debug --latest --runtime codex --format text
+node packages/tools/cli/src/bin/pairslash.js debug --latest --runtime codex --bundle --format text
+node packages/tools/cli/src/bin/pairslash.js telemetry summary --format text
+```

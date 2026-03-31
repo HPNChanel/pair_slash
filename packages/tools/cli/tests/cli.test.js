@@ -928,8 +928,59 @@ test("pairslash trace export can emit support bundle", serial, async () => {
     assert.equal(payload.support_bundle.kind, "support-bundle");
     assert.ok(existsSync(join(payload.trace_export.output_dir, "manifest.json")));
     assert.ok(existsSync(join(payload.support_bundle.output_dir, "bundle-manifest.json")));
+    assert.ok(payload.support_bundle.debug_report_path);
+    assert.ok(existsSync(payload.support_bundle.debug_report_path));
     assert.ok(payload.support_bundle.doctor_report_path);
     assert.ok(existsSync(payload.support_bundle.doctor_report_path));
+    assert.ok(payload.support_bundle.issue_template_path);
+    assert.ok(existsSync(payload.support_bundle.issue_template_path));
+    assert.equal(payload.support_bundle.privacy_descriptor.local_only_by_default, true);
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("pairslash telemetry summary derives local metrics from trace sessions", serial, async () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  let output = "";
+  try {
+    await runCli({
+      argv: ["doctor", "--runtime", "codex", "--format", "json"],
+      cwd: fixture.tempRoot,
+      stdout: { write() {} },
+    });
+    await runCli({
+      argv: [
+        "trace",
+        "export",
+        "--latest",
+        "--runtime",
+        "codex",
+        "--support-bundle",
+        "--include-doctor",
+        "--format",
+        "json",
+      ],
+      cwd: fixture.tempRoot,
+      stdout: { write() {} },
+    });
+    const exitCode = await runCli({
+      argv: ["telemetry", "summary", "--runtime", "codex", "--format", "json"],
+      cwd: fixture.tempRoot,
+      stdout: {
+        write(chunk) {
+          output += chunk;
+        },
+      },
+    });
+    assert.equal(exitCode, 0);
+    const payload = JSON.parse(output);
+    assert.equal(payload.kind, "telemetry-summary");
+    assert.ok(payload.totals.sessions >= 2);
+    assert.ok(payload.totals.support_bundle_exports >= 1);
+    assert.ok(payload.workflows.some((workflow) => workflow.workflow_key === "doctor"));
   } finally {
     runtime.cleanup();
     fixture.cleanup();

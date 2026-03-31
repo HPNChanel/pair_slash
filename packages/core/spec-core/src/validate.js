@@ -39,6 +39,7 @@ import {
   SUPPORTED_RUNTIMES,
   SUPPORTED_TARGETS,
   TELEMETRY_MODES,
+  TELEMETRY_SUMMARY_SCHEMA_VERSION,
   TOOL_KINDS,
   TOOL_PHASES,
   TRACE_EVENT_SCHEMA_VERSION,
@@ -1851,6 +1852,35 @@ export function validateTraceEvent(record) {
   return errors;
 }
 
+function validateRedactionReport(report, errors, prefix) {
+  if (!isObject(report)) {
+    errors.push(`${prefix} must be an object`);
+    return;
+  }
+  if (!Number.isInteger(report.redacted_fields)) {
+    errors.push(`${prefix}.redacted_fields must be an integer`);
+  }
+  if (!Number.isInteger(report.redacted_events)) {
+    errors.push(`${prefix}.redacted_events must be an integer`);
+  }
+  if (!Number.isInteger(report.unknown_sensitive_hits)) {
+    errors.push(`${prefix}.unknown_sensitive_hits must be an integer`);
+  }
+  if (!Array.isArray(report.rules_triggered)) {
+    errors.push(`${prefix}.rules_triggered must be a list`);
+  } else {
+    for (const rule of report.rules_triggered) {
+      validateNonEmptyString(rule, `${prefix}.rules_triggered[]`, errors, "TRE001");
+    }
+  }
+  validateNonEmptyString(report.redaction_state, `${prefix}.redaction_state`, errors, "TRE001");
+  for (const field of ["secrets_removed", "hashed_values", "config_fingerprints", "normalized_paths"]) {
+    if (!Number.isInteger(report?.[field])) {
+      errors.push(`${prefix}.${field} must be an integer`);
+    }
+  }
+}
+
 export function validateTraceExport(record) {
   const errors = [];
   if (record?.kind !== "trace-export") {
@@ -1870,28 +1900,7 @@ export function validateTraceExport(record) {
   if (!isObject(record?.selector)) {
     errors.push("selector must be an object");
   }
-  if (!isObject(record?.redaction_report)) {
-    errors.push("redaction_report must be an object");
-  } else {
-    if (!Number.isInteger(record.redaction_report?.redacted_fields)) {
-      errors.push("redaction_report.redacted_fields must be an integer");
-    }
-    if (!Number.isInteger(record.redaction_report?.redacted_events)) {
-      errors.push("redaction_report.redacted_events must be an integer");
-    }
-    if ("unknown_sensitive_hits" in record.redaction_report && !Number.isInteger(record.redaction_report?.unknown_sensitive_hits)) {
-      errors.push("redaction_report.unknown_sensitive_hits must be an integer");
-    }
-    if ("rules_triggered" in record.redaction_report) {
-      if (!Array.isArray(record.redaction_report?.rules_triggered)) {
-        errors.push("redaction_report.rules_triggered must be a list");
-      } else {
-        for (const rule of record.redaction_report.rules_triggered) {
-          validateNonEmptyString(rule, "redaction_report.rules_triggered[]", errors, "TRE001");
-        }
-      }
-    }
-  }
+  validateRedactionReport(record?.redaction_report, errors, "redaction_report");
   if (!Array.isArray(record?.files)) {
     errors.push("files must be a list");
   } else {
@@ -1923,6 +1932,53 @@ export function validateSupportBundle(record) {
   if (typeof record?.safe_to_share !== "boolean") {
     errors.push("safe_to_share must be boolean");
   }
+  if (!isObject(record?.trace_locator)) {
+    errors.push("trace_locator must be an object");
+  } else {
+    validateNonEmptyString(record.trace_locator?.session_id, "trace_locator.session_id", errors, "SUP001");
+    validateNonEmptyString(record.trace_locator?.command_name, "trace_locator.command_name", errors, "SUP001");
+    if (record.trace_locator?.workflow_id !== null && typeof record.trace_locator?.workflow_id !== "string") {
+      errors.push("trace_locator.workflow_id must be string or null");
+    }
+    if (!TRACE_FAILURE_DOMAINS.includes(record.trace_locator?.decisive_failure_domain)) {
+      errors.push(`unsupported trace_locator.decisive_failure_domain: ${record.trace_locator?.decisive_failure_domain}`);
+    }
+    if ("decisive_reason" in record.trace_locator && record.trace_locator?.decisive_reason !== null && typeof record.trace_locator?.decisive_reason !== "string") {
+      errors.push("trace_locator.decisive_reason must be string or null");
+    }
+  }
+  if (!isObject(record?.runtime_descriptor)) {
+    errors.push("runtime_descriptor must be an object");
+  } else {
+    if (record.runtime_descriptor?.runtime !== null && !SUPPORTED_RUNTIMES.includes(record.runtime_descriptor?.runtime)) {
+      errors.push(`unsupported runtime_descriptor.runtime: ${record.runtime_descriptor?.runtime}`);
+    }
+    if (record.runtime_descriptor?.target !== null && !SUPPORTED_TARGETS.includes(record.runtime_descriptor?.target)) {
+      errors.push(`unsupported runtime_descriptor.target: ${record.runtime_descriptor?.target}`);
+    }
+    validateNonEmptyString(record.runtime_descriptor?.os, "runtime_descriptor.os", errors, "SUP001");
+    validateNonEmptyString(record.runtime_descriptor?.shell, "runtime_descriptor.shell", errors, "SUP001");
+    if (record.runtime_descriptor?.runtime_version !== null && typeof record.runtime_descriptor?.runtime_version !== "string") {
+      errors.push("runtime_descriptor.runtime_version must be string or null");
+    }
+  }
+  if (!isObject(record?.privacy_descriptor)) {
+    errors.push("privacy_descriptor must be an object");
+  } else {
+    validateNonEmptyString(record.privacy_descriptor?.redaction_state, "privacy_descriptor.redaction_state", errors, "SUP001");
+    if (typeof record.privacy_descriptor?.consent_required !== "boolean") {
+      errors.push("privacy_descriptor.consent_required must be boolean");
+    }
+    if (typeof record.privacy_descriptor?.local_only_by_default !== "boolean") {
+      errors.push("privacy_descriptor.local_only_by_default must be boolean");
+    }
+    validateNonEmptyString(
+      record.privacy_descriptor?.remote_collection_default,
+      "privacy_descriptor.remote_collection_default",
+      errors,
+      "SUP001",
+    );
+  }
   if (!isObject(record?.trace_export)) {
     errors.push("trace_export must be an object");
   } else {
@@ -1934,28 +1990,7 @@ export function validateSupportBundle(record) {
       errors.push("trace_export.event_count must be an integer");
     }
   }
-  if (!isObject(record?.redaction_report)) {
-    errors.push("redaction_report must be an object");
-  } else {
-    if (!Number.isInteger(record.redaction_report?.redacted_fields)) {
-      errors.push("redaction_report.redacted_fields must be an integer");
-    }
-    if (!Number.isInteger(record.redaction_report?.redacted_events)) {
-      errors.push("redaction_report.redacted_events must be an integer");
-    }
-    if ("unknown_sensitive_hits" in record.redaction_report && !Number.isInteger(record.redaction_report?.unknown_sensitive_hits)) {
-      errors.push("redaction_report.unknown_sensitive_hits must be an integer");
-    }
-    if ("rules_triggered" in record.redaction_report) {
-      if (!Array.isArray(record.redaction_report?.rules_triggered)) {
-        errors.push("redaction_report.rules_triggered must be a list");
-      } else {
-        for (const rule of record.redaction_report.rules_triggered) {
-          validateNonEmptyString(rule, "redaction_report.rules_triggered[]", errors, "SUP001");
-        }
-      }
-    }
-  }
+  validateRedactionReport(record?.redaction_report, errors, "redaction_report");
   if (!Array.isArray(record?.files)) {
     errors.push("files must be a list");
   } else {
@@ -1968,9 +2003,14 @@ export function validateSupportBundle(record) {
     }
   }
   for (const field of [
+    "debug_report_path",
     "doctor_report_path",
     "context_explanation_path",
     "policy_explanation_path",
+    "issue_template_path",
+    "privacy_note_path",
+    "reproducibility_template_path",
+    "triage_template_path",
     "readme_path",
   ]) {
     if (field in record && record?.[field] !== null && typeof record?.[field] !== "string") {
@@ -2202,6 +2242,84 @@ export function validateDebugReport(record) {
     for (const item of record[field]) {
       validateNonEmptyString(item, `${field}[]`, errors, "DBG001");
     }
+  }
+  return errors;
+}
+
+export function validateTelemetrySummary(record) {
+  const errors = [];
+  if (record?.kind !== "telemetry-summary") {
+    errors.push("kind must be telemetry-summary");
+  }
+  if (record?.schema_version !== TELEMETRY_SUMMARY_SCHEMA_VERSION) {
+    errors.push(`schema_version must be ${TELEMETRY_SUMMARY_SCHEMA_VERSION}`);
+  }
+  validateNonEmptyString(record?.generated_at, "generated_at", errors, "TEL001");
+  if (!TELEMETRY_MODES.includes(record?.mode)) {
+    errors.push(`unsupported mode: ${record?.mode}`);
+  }
+  if (!isObject(record?.selector)) {
+    errors.push("selector must be an object");
+  }
+  if (!isObject(record?.privacy)) {
+    errors.push("privacy must be an object");
+  } else {
+    if (typeof record.privacy?.local_only !== "boolean") {
+      errors.push("privacy.local_only must be boolean");
+    }
+    if (typeof record.privacy?.export_requires_explicit_action !== "boolean") {
+      errors.push("privacy.export_requires_explicit_action must be boolean");
+    }
+    validateNonEmptyString(record.privacy?.source, "privacy.source", errors, "TEL001");
+  }
+  if (!isObject(record?.totals)) {
+    errors.push("totals must be an object");
+  } else {
+    for (const field of ["sessions", "successful_sessions", "failed_sessions", "support_bundle_exports"]) {
+      if (!Number.isInteger(record.totals?.[field])) {
+        errors.push(`totals.${field} must be an integer`);
+      }
+    }
+  }
+  if (!isObject(record?.metrics)) {
+    errors.push("metrics must be an object");
+  } else {
+    for (const field of ["workflow_runs_started", "workflow_runs_succeeded", "weekly_reuse_days"]) {
+      if (!Number.isInteger(record.metrics?.[field])) {
+        errors.push(`metrics.${field} must be an integer`);
+      }
+    }
+    if (record.metrics?.median_ttfs_seconds !== null && typeof record.metrics?.median_ttfs_seconds !== "number") {
+      errors.push("metrics.median_ttfs_seconds must be number or null");
+    }
+  }
+  if (!Array.isArray(record?.workflows)) {
+    errors.push("workflows must be a list");
+  } else {
+    for (const workflow of record.workflows) {
+      if (!isObject(workflow)) {
+        errors.push("workflows[] must be an object");
+        continue;
+      }
+      validateNonEmptyString(workflow?.workflow_key, "workflows[].workflow_key", errors, "TEL001");
+      if (!SUPPORTED_RUNTIMES.includes(workflow?.runtime)) {
+        errors.push(`unsupported workflows[].runtime: ${workflow?.runtime}`);
+      }
+      if (!SUPPORTED_TARGETS.includes(workflow?.target)) {
+        errors.push(`unsupported workflows[].target: ${workflow?.target}`);
+      }
+      for (const field of ["sessions", "successful_sessions", "failed_sessions", "weekly_reuse_days", "support_bundle_exports"]) {
+        if (!Number.isInteger(workflow?.[field])) {
+          errors.push(`workflows[].${field} must be an integer`);
+        }
+      }
+      if (workflow?.median_ttfs_seconds !== null && typeof workflow?.median_ttfs_seconds !== "number") {
+        errors.push("workflows[].median_ttfs_seconds must be number or null");
+      }
+    }
+  }
+  if ("output_path" in record && record?.output_path !== null && typeof record?.output_path !== "string") {
+    errors.push("output_path must be string or null");
   }
   return errors;
 }

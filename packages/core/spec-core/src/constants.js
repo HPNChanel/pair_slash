@@ -20,6 +20,7 @@ export const SUPPORT_BUNDLE_SCHEMA_VERSION = "1.0.0";
 export const CONTEXT_EXPLANATION_SCHEMA_VERSION = "1.0.0";
 export const POLICY_EXPLANATION_SCHEMA_VERSION = "1.0.0";
 export const DEBUG_REPORT_SCHEMA_VERSION = "1.0.0";
+export const TELEMETRY_SUMMARY_SCHEMA_VERSION = "1.0.0";
 
 export const SUPPORTED_RUNTIMES = ["codex_cli", "copilot_cli"];
 export const SUPPORTED_TARGETS = ["repo", "user"];

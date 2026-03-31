@@ -1,5 +1,15 @@
 # PairSlash Phase 3.5 Exit Review
 
+Historical note:
+
+This report reflects the 2026-03-25 `B1-B5` benchmark framing. It is kept for
+provenance, not as the current source of truth for product-validation
+decisions. Use `docs/validation/phase-3-5/benchmark-tasks.md`,
+`docs/validation/phase-3-5/scoring-rubric.md`,
+`docs/validation/phase-3-5/evidence-log.md`, and
+`docs/phase-3.5/phase-exit/adoption-scorecard.md` for the active benchmark
+system.
+
 Date: 2026-03-25
 Status: phase-exit review
 Recommended verdict: `NO-GO`

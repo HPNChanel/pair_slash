@@ -1,11 +1,13 @@
-# PairSlash Phase 3.5 Problem-Solution Validation Gate
+# PairSlash Product-Validation Gate
 
-This gate exists between architecture confidence and any claim that PairSlash
-deserves broader Phase 4 distribution work.
+This folder tracks the current product-validation benchmark system for
+PairSlash. The directory path is legacy. The benchmark logic here is current.
 
-Do not treat installability, runtime packaging, or internal test pass rates as
-proof of problem-solution fit. Phase 4 is blocked until this gate produces a
-written `GO` verdict with mixed evidence.
+Important distinction:
+
+- these benchmark docs answer the business-validation question
+- `verdict.md` in this folder remains a scoped release/installability verdict
+- a release-facing `GO` does not satisfy the product-validation gate by itself
 
 ## Fixed boundary
 
@@ -19,69 +21,58 @@ written `GO` verdict with mixed evidence.
 
 ## Primary question
 
-Would the target user come back next week?
+Would the target user come back next week for one of the must-win jobs because
+PairSlash solved the pain and kept the trust boundary obvious?
 
-Every benchmark run, message draft, and Phase 4 claim must answer that
-question directly. If the evidence does not support a credible "yes", the gate
-stays closed.
+If the evidence does not support a credible `yes`, the product-validation gate
+stays closed even if release/installability surfaces look mature.
 
-## Locked validation target
+## Official wedge workflows
 
-- ICP: solo builders using Codex CLI or GitHub Copilot CLI in a terminal on a
-  real repository with recurring project context.
-- JTBD: when working across terminal-native AI sessions on a real repo, the
-  user wants project truth updates to be explicit, previewable, and auditable
-  so they can trust what becomes durable memory and resume work later.
-- Primary painpoint: distrust of durable AI writes into project context.
-- Secondary pain: context drift between sessions.
-- Secondary pain: uncertainty about which workflow to use first.
-- Secondary pain: fear that a convenience feature hides unsafe side effects.
+The current product-validation gate measures only these workflows:
 
-## Wedge workflows
-
-The gate validates only these workflows. Any new feature idea must map back to
-one of them or it is out of scope.
-
-1. Plan from authoritative truth without mutating memory.
-2. Extract a memory candidate from real repo evidence and reconcile it against
-   authoritative memory.
-3. Promote a validated candidate through an explicit preview and acceptance
-   path with audit semantics.
+1. `pairslash-onboard-repo`
+2. `pairslash-memory-candidate -> pairslash-memory-write-global`
+3. `review/fix loop` using `pairslash-review` plus an explicit fix handoff
 
 ## Required artifacts
 
-- `problem-statement.md`
 - `benchmark-tasks.md`
 - `scoring-rubric.md`
 - `runbook.md`
 - `evidence-log.md`
-- `messaging-narrative.md`
-- `verdict.md`
+- `docs/phase-3.5/phase-exit/north-star-metric.md`
+- `docs/phase-3.5/phase-exit/adoption-scorecard.md`
+- `verdict.md` for scoped release/installability only
 
 ## Evidence standard
 
 This gate uses mixed evidence. No single signal is enough.
 
-- Benchmark evidence: reproducible tasks on real repo work.
+- Benchmark evidence: paired runs on real repo work against a raw CLI baseline
 - Qualitative evidence: direct notes or quotes about pain, trust, and repeat
-  intent.
-- Runtime evidence: record which runtime was used for each run and do not
-  generalize beyond validated lanes.
+  intent
+- Runtime evidence: claims stay scoped to the runtime lanes actually benchmarked
+- Technical evidence: installability and doctor runs remain supporting proof,
+  not wedge proof
 
 ## Exit criteria
 
-The gate may flip to `GO` only when all are true:
+The product-validation gate remains closed unless all are true:
 
-- All benchmark tasks are executed and scored with the rubric.
-- The primary safe-memory-write wedge has at least one end-to-end successful run
-  on Codex CLI and one on GitHub Copilot CLI.
-- The rubric thresholds in `scoring-rubric.md` are met.
-- The narrative in `messaging-narrative.md` stays traceable to the validated
-  painpoint and does not overclaim runtime scope.
-- `verdict.md` is updated to `Gate status: GO` with evidence notes and claimed
-  runtime scope.
+- official onboarding, memory, and review/fix runs are logged using the
+  current schema
+- `Trusted Weekly Reuse Rate >= 60%` overall
+- onboarding and memory each reach at least a `50%` trusted weekly reuse floor
+- task success without manual rescue is `>= 70%`
+- memory trust-boundary integrity is `100%`
+- preview-to-write fidelity is `100%`
+- evidence completeness is `100%`
+- `review/fix loop` is not the only workflow showing a win
 
 ## Current state
 
-Default status is `NO-GO`. Keep it that way until the evidence is strong enough
-to justify broader Phase 4 claims.
+Default status: product-validation gate closed.
+
+The current benchmark method deliberately excludes the historical
+installability-only runs that were previously logged as `B3/B4 scoped`.

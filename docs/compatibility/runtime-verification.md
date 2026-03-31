@@ -7,6 +7,10 @@ but it does not replace live `/skills` verification.
 Do not use this page as the install guide. Start with
 `docs/workflows/install-guide.md`.
 
+If a live verification step fails and you need maintainer support, switch to the
+support flow in `docs/support/phase-7-support-ops.md` and capture a local
+support bundle before sharing anything externally.
+
 ## Before you start
 
 - Complete managed install for the target lane.
@@ -57,3 +61,15 @@ When evidence changes, update:
 
 Keep manual evidence separate from deterministic compat-lab output. The matrix
 must tell users what is truly supported today.
+
+## Support capture
+
+When live verification fails in a way that doctor output alone cannot explain:
+
+```bash
+node packages/tools/cli/src/bin/pairslash.js debug --latest --runtime codex --bundle --format text
+node packages/tools/cli/src/bin/pairslash.js trace export --session <session-id> --runtime codex --support-bundle --include-doctor --format text
+```
+
+Review `privacy-note.txt` and `bundle-manifest.json` before attaching the
+bundle outside the machine.

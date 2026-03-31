@@ -1,122 +1,266 @@
-# PairSlash Phase 3.5 Benchmark Tasks
+# PairSlash Product-Validation Benchmark Tasks
 
-Use real repositories, real prompts, and real user work. Do not use polished
-green-path demos as product evidence.
+This file defines the current product-validation benchmark system for
+PairSlash. The directory path is legacy. The benchmark method in this file is
+the active source of truth for the current business-validation phase.
 
-For each run, capture:
+## Benchmark doctrine
 
+- Measure painpoint win, not implementation breadth.
+- Use the same runtime, repo snapshot, evaluator, and success criteria on both
+  the baseline arm and the PairSlash arm.
+- Baseline means the raw terminal AI workflow the user would otherwise use on
+  the same runtime, plus any manual repo work needed to finish the job.
+- Official benchmark evidence excludes installability-only, doctor-only, and
+  preview-only technical acceptance runs.
+- Negative runs, weak runs, and mixed runs must be logged immediately. No
+  cherry-picking.
+
+## Required evidence for every official run
+
+Every official paired run must capture:
+
+- `paired_group_id`
+- workflow and scenario
 - runtime (`codex-cli` or `github-copilot-cli`)
-- repository and task context
-- exact user prompt
-- transcript or structured notes
-- elapsed time to first useful output
-- final score from `scoring-rubric.md`
-- explicit answer to: "Would you come back to this next week? Why?"
+- repo snapshot reference
+- exact task statement
+- frozen success criteria
+- exact baseline prompt or method
+- exact PairSlash prompt or path
+- time-to-first-success
+- task success
+- manual rescue count
+- reprompt count after first answer
+- weekly reuse answer and reason
+- required artifacts for that workflow
 
-## B1. Fresh-session planning from authoritative truth
+## Official benchmark set
 
-**Purpose:** validate that PairSlash can start from durable project truth and
-reduce context-rebuild cost without mutating memory.
+There are three required wedge benchmarks. The memory wedge has two required
+scenarios. The next-week retention question is measured through reuse answers
+and delayed follow-up notes, not as a separate primary benchmark.
 
-**User prompt shape:** "I am starting cold on this repo. Build me a plan from
-authoritative project truth and tell me what matters first."
+## W1. Repo onboarding and re-orientation
 
-**Success signals:**
+**Workflow:** `pairslash-onboard-repo`
 
-- Reads authoritative memory before guessing.
-- Separates facts from assumptions.
-- Produces a useful plan without writing memory.
-- Helps the user orient faster than manual file spelunking.
+**Pain this must solve:** the user returns to a repo cold, does not trust a
+generic summary, and wastes time rebuilding context by hand.
 
-**Failure signals:**
+**Task setup:**
 
-- Ignores authoritative memory.
-- Hallucinates repo truth.
-- Suggests or performs memory writes during planning.
-- Produces a plan the user would not reuse.
+- Use a real repo snapshot with enough ambiguity to punish shallow summaries.
+- Freeze the success criteria before either arm runs.
+- Good default repo shapes are docs-heavy repos, monorepos, or real repos with
+  stale doc noise and active constraints.
 
-## B2. Candidate extraction from repo reality
+**Baseline method:**
 
-**Purpose:** validate that PairSlash can identify what may deserve durable
-memory from real repo evidence, not intuition.
+- Use the same runtime and model in raw CLI mode.
+- Ask for repo orientation without PairSlash workflows.
+- Allow the same filesystem visibility PairSlash gets.
 
-**User prompt shape:** "Given this change, review, or repo state, what should
-this project remember? Keep only evidence-backed candidates."
+**PairSlash method:**
 
-**Success signals:**
+- Start from `/skills`.
+- Run `pairslash-onboard-repo`.
+- Allow follow-up only if it still stays inside the onboarding job.
 
-- Candidates are grounded in repo evidence.
-- Existing authoritative memory is checked before promoting claims.
-- Weak or speculative claims are downgraded or rejected.
-- Output is concise enough to be practically reviewable.
+**Primary metrics:**
 
-**Failure signals:**
+- time-to-first-success delta vs raw CLI
+- task success without manual rescue
+- orientation accuracy against frozen success criteria
+- weekly reuse answer
 
-- Invents memories not supported by evidence.
-- Misses obvious duplicates or conflicts.
-- Treats convenience as a reason to store durable truth.
+**Required artifacts:**
 
-## B3. Explicit memory write preview
+- baseline transcript or notes
+- PairSlash transcript or notes
+- repo snapshot reference
+- evaluator notes on false assumptions or missed constraints
 
-**Purpose:** validate the core wedge: safe durable memory updates.
+**Pass signals:**
 
-**User prompt shape:** "Promote this validated decision or constraint into
-Global Project Memory."
-
-**Success signals:**
-
-- Shows a previewable patch before any write.
-- Requests explicit acceptance before any durable mutation.
-- Preserves the audit-trail posture in the user-facing output.
-- Leaves the user feeling safer than a freeform AI write.
-
-**Failure signals:**
-
-- Any hidden or implicit write behavior.
-- Missing preview or missing acceptance step.
-- Weak evidence allowed through because the workflow sounds helpful.
-
-## B4. Guardrail rejection under weak or conflicting evidence
-
-**Purpose:** validate that PairSlash says "no" when the evidence is weak.
-
-**User prompt shape:** provide a memory request with conflicting source refs,
-thin evidence, or claims that already contradict authoritative memory.
-
-**Success signals:**
-
-- Stops, downgrades, or rejects the request.
-- Explains the blocking issue plainly.
-- Keeps the user inside the trust boundary.
+- PairSlash beats the raw CLI baseline on speed or matches speed with clearly
+  better correctness.
+- The onboarding result points to the right files, risks, and next workflow.
+- The user gives a credible `likely_yes` or `default_path` reuse answer.
 
 **Failure signals:**
 
-- Accepts the request anyway.
-- Hides the conflict or ambiguity.
-- Frames guardrails as optional friction rather than the product value.
+- The output is mostly a polished repo summary with no trust advantage.
+- PairSlash needs manual rescue to find the real constraints.
+- The raw CLI arm is faster and just as actionable.
 
-## B5. Resume next week from durable project truth
+## W2. Trust-memory flow
 
-**Purpose:** validate the retention question directly.
+**Workflow:** `pairslash-memory-candidate -> pairslash-memory-write-global`
 
-**User prompt shape:** "Catch me up from authoritative project truth, tell me
-what changed, and tell me what to do next."
+**Pain this must solve:** project truth gets lost in chat debris, private notes,
+or weak memory writes the user cannot trust later.
 
-**Success signals:**
+This wedge has two required scenarios. Both are mandatory before any memory
+claim can move the product phase.
 
-- Reconstructs enough context for productive continuation.
-- Saves real setup time versus re-reading the repo manually.
-- Makes the user say they would likely use it again next week for the same job.
+### W2a. Memory happy path
+
+**Task setup:**
+
+- Use a repo state with one evidence-backed durable fact worth saving.
+- Freeze the required record fields before the run.
+- Use real or realistic existing project memory so reconciliation is not fake.
+
+**Baseline method:**
+
+- Use raw CLI to identify the durable fact.
+- Have the user manually draft or update the memory record and verify conflicts
+  by hand.
+
+**PairSlash method:**
+
+- Start from `/skills`.
+- Run `pairslash-memory-candidate`.
+- Promote the accepted candidate through `pairslash-memory-write-global`.
+
+**Primary metrics:**
+
+- trust-boundary integrity
+- preview-to-write fidelity
+- task success without manual rescue
+- weekly reuse answer
+
+**Required artifacts:**
+
+- candidate output
+- preview artifact
+- written record or commit result
+- audit-log reference
+- memory-index reference
+
+**Pass signals:**
+
+- Candidate extraction stays evidence-first and reconciles against authoritative
+  memory.
+- Preview appears before any write.
+- Explicit acceptance is required.
+- Written record matches the staged preview exactly.
 
 **Failure signals:**
 
-- Produces generic summaries with no trust advantage.
-- Cannot recover the project-specific truth that matters.
-- Leaves the user unconvinced that PairSlash should become part of their habit.
+- Any hidden or implicit durable write.
+- Candidate promotion happens without strong evidence.
+- Preview and written output drift.
+
+### W2b. Guardrail rejection and fidelity path
+
+**Task setup:**
+
+- Use conflicting evidence, duplicate evidence, or thin evidence on purpose.
+- Freeze what a correct rejection or downgrade looks like before the run.
+
+**Baseline method:**
+
+- Use raw CLI to assess the same evidence and decide whether to write.
+- Manual conflict checking is allowed, but it must be logged.
+
+**PairSlash method:**
+
+- Start from `/skills`.
+- Run `pairslash-memory-candidate` and `pairslash-memory-write-global` against
+  the weak or conflicting case.
+
+**Primary metrics:**
+
+- rejection correctness
+- trust-boundary integrity
+- clarity of blocking explanation
+- weekly reuse answer
+
+**Required artifacts:**
+
+- conflicting or weak evidence source refs
+- candidate output
+- preview or rejection artifact
+- any policy or audit artifact produced
+
+**Pass signals:**
+
+- The workflow stops, downgrades, or rejects the write correctly.
+- The user stays inside the trust boundary.
+- The explanation is plain enough that the user knows what blocked the write.
+
+**Failure signals:**
+
+- The workflow accepts the write anyway.
+- Conflicts or ambiguity are hidden.
+- Guardrails are framed as optional friction rather than the product value.
+
+## W3. Review/fix loop
+
+**Workflow:** `pairslash-review` plus an explicit user-approved fix handoff
+
+**Pain this must solve:** repeated review churn, almost-right AI output, and
+cleanup loops that feel fast at first but cost time later.
+
+**Task setup:**
+
+- Use a pinned diff or working tree snapshot with at least one real issue, one
+  missing-test implication, and one possible red herring.
+- Freeze the exact issue and success criteria before the run.
+
+**Baseline method:**
+
+- Use the same runtime and model in raw CLI mode.
+- Run the review and fix loop without PairSlash workflows.
+
+**PairSlash method:**
+
+- Start from `/skills`.
+- Run `pairslash-review`.
+- Only allow an explicit fix handoff after the review step is inspected.
+
+**Primary metrics:**
+
+- issue reproducibility rate
+- rework reduction vs raw CLI
+- task success without manual rescue
+- weekly reuse answer
+
+**Required artifacts:**
+
+- diff or working tree snapshot
+- review report
+- fix attempt notes
+- test or verification output
+
+**Pass signals:**
+
+- PairSlash reproduces the real issue before proposing the fix.
+- Cleanup burden is lower than the raw CLI baseline.
+- The workflow stays explicit and does not drift into hidden autonomous fixing.
+
+**Failure signals:**
+
+- PairSlash reads like a generic code review with no repo-grounded trust gain.
+- The fix path jumps ahead of the evidence path.
+- Review/fix wins only because the task is too easy to expose workflow value.
+
+## Longitudinal follow-up rule
+
+At least two official runs in each 30-day cycle should include a delayed
+follow-up note after five to ten days, or a disciplined delayed replay, to test
+whether the workflow result was still useful later. This is supporting evidence
+for the north-star metric, not a fourth wedge benchmark.
 
 ## Runtime coverage rule
 
-- Run B1-B4 on both supported runtimes before claiming the safe-memory-write
-  wedge is validated across PairSlash.
-- Run B5 on the primary runtime first, then spot-check it on the second runtime
-  before broadening any retention claim.
+- `W1` needs at least one official paired run on each supported runtime before
+  broader onboarding claims are allowed.
+- `W2a` and `W2b` must both pass on Codex CLI and GitHub Copilot CLI before the
+  trust-memory wedge counts as validated.
+- `W3` can begin on the primary runtime, but it needs a second-runtime spot
+  check before any broad review/fix utility claim.
+- No installability-only or doctor-only run may be relabeled as `W1`, `W2`, or
+  `W3`.

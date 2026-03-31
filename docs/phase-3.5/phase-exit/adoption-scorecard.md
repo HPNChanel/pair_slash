@@ -1,24 +1,39 @@
-# PairSlash Phase 3.5 Adoption Scorecard
+# PairSlash 30-Day Adoption Scorecard
 
-Date: 2026-03-25
-Status: pre-benchmark baseline
+Date: 2026-03-31
+Status: active scorecard for the current product-validation phase
 
-This scorecard is for deciding whether PairSlash is earning habit, not whether
-the docs or architecture look mature.
+This scorecard decides whether PairSlash is earning repeated use on real wedge
+jobs. It does not reward breadth, package count, installability polish, or
+architecture maturity by themselves.
 
-| Metric | Target | Current confidence | Measurement source | Owner | Next action |
+## KPI table
+
+| KPI | Threshold | Current state | Measurement source | Owner | Why it matters |
 |---|---|---|---|---|---|
-| Trusted Weekly Reuse Rate | `>= 60%` overall on valid winning-wedge PairSlash runs; `>= 65%` on must-win tasks | None: no scored runs yet | Official benchmark log, weekly-return answer, and rubric-based scoring | product + validation | Run and score real wedge benchmarks, then compute by workflow |
-| Safe-memory-write pass rate (`B3` and `B4`) | `100%` of required runs pass with `0` trust-boundary violations across both runtimes | None: no `B3` or `B4` runs logged | `docs/validation/phase-3-5/evidence-log.md`, `verdict.md`, and gate rubric | validation + runtime | Execute `B3` and `B4` once on Codex CLI and once on GitHub Copilot CLI |
-| Task success without manual rescue on must-win tasks | `>= 75%` on must-win tasks and `>= 70%` overall | None: rescue tracking not started | Benchmark run logs using the Phase 3.5 benchmark rubric | workflow + validation | Log rescue count and outcome on every paired benchmark run |
-| Rework reduction vs raw CLI on review/fix loop | `>= 30%` reduction in rework burden versus paired raw CLI runs | None: no paired review/fix runs | Paired benchmark runs and benchmark rubric from `docs/archive/research/phase-3.5/benchmarks/` | workflow + product | Run paired review/fix comparisons on the same repo snapshot |
-| Repo re-orientation win against manual cold start | Positive time-to-first-success delta with no correctness regression on paired onboarding runs | Low: thesis is strong, proof is absent | `B1` paired runs, observer notes, and weekly-return answer | product + workflow | Run `B1` AB/BA comparisons on real return-to-repo tasks |
-| Evidence coverage completeness | All `B1-B5` logged; `B3` and `B4` covered on both runtimes before verdict changes | None: official log is empty | `docs/validation/phase-3-5/evidence-log.md` and `verdict.md` scorecard | validation | Fill the log immediately after each run and refuse verdict upgrades without it |
-| P1 ICP clarity | At least 3 strong P1 incidents or 2 segments with quote-level repeated pain evidence | Low: P1 is clear as a hypothesis only | Interview ingest, evidence table, and painpoint synthesis | product research | Ingest real interviews and populate the Phase 3.5 synthesis tables |
+| Trusted Weekly Reuse Rate | `>= 60%` overall; onboarding and memory each `>= 50%` | Unmeasured: no official runs logged under the current benchmark system | `docs/validation/phase-3-5/evidence-log.md`, `north-star-metric.md` | product + validation | This is the north-star for habit plus trust |
+| Task success without manual rescue | `>= 70%` overall | Unmeasured | official evidence log | validation | A workflow that needs rescue is not a repeatable wedge |
+| Median time-to-first-success delta vs raw CLI | `> 0%` overall; onboarding strong signal at `>= 20%` | Unmeasured | paired benchmark runs | product | PairSlash must reduce cold-start or cleanup cost in a visible way |
+| Memory trust-boundary pass rate | `100%` on `W2a` and `W2b` across both runtimes | Unmeasured | memory artifacts plus official evidence log | validation + runtime | The trust-memory moat breaks if the boundary leaks even once |
+| Preview-to-write fidelity rate | `100%` on memory happy-path runs | Unmeasured | preview artifact, written record, audit ref, index ref | validation | Preview is not enough if the write diverges from what was previewed |
+| Review/fix issue reproducibility rate | `>= 70%` on `W3` | Unmeasured | official evidence log | workflow owner | Review/fix only matters if it reproduces the real issue before fixing |
+| Review/fix rework reduction vs raw CLI | `>= 20%`; strong at `>= 30%` | Unmeasured | paired review/fix runs | workflow owner + product | This measures whether PairSlash removes almost-right cleanup burden |
+| Evidence completeness | `100%` of official runs logged within 24 hours | Unmeasured | run roster vs evidence log | validation ops | Prevents selective logging and phase inflation |
 
-## Read This Scorecard Strictly
+## Decision rules
 
-- `None` means there is no meaningful measured confidence yet.
-- `Low` means the hypothesis is coherent but not validated.
-- A better-looking README, message pack, or release checklist does not raise
-  these confidence levels on its own.
+- Do not move phase on a strong overall number if onboarding or memory misses
+  its workflow floor.
+- Do not move phase if memory trust-boundary pass rate or preview-to-write
+  fidelity is below `100%`.
+- Do not move phase if `review/fix loop` is the only clear win.
+- Do not move phase if evidence completeness is below `100%`.
+
+## Current read
+
+- `Trusted Weekly Reuse Rate` remains the correct north-star, but it is still
+  unmeasured under the current benchmark method.
+- The two historical installability acceptance runs are excluded from this
+  scorecard because they are technical evidence, not wedge evidence.
+- The next 30 days should focus on official onboarding, memory, and review/fix
+  runs before any broader claim is expanded.

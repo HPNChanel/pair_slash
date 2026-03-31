@@ -6,8 +6,8 @@ import {
   TRACE_EXPORT_SCHEMA_VERSION,
   ensureDir,
   stableJson,
-  validateTraceExport,
   validateSupportBundle,
+  validateTraceExport,
   writeTextFile,
 } from "@pairslash/spec-core";
 
@@ -18,9 +18,14 @@ import { listTraceIndexes, loadTraceEvents, loadTraceIndex, resolveTracePaths } 
 const TERMINAL_OUTCOMES = new Set(["blocked", "denied", "failed"]);
 const TRACE_EXPORT_FILE_ORDER = ["events", "sessions", "redaction-report", "manifest"];
 const SUPPORT_BUNDLE_FILE_ORDER = [
+  "debug-report",
   "doctor-report",
   "context-explanation",
   "policy-explanation",
+  "privacy-note",
+  "issue-template",
+  "reproducibility-template",
+  "triage-template",
   "readme",
   "bundle-manifest",
 ];
@@ -67,6 +72,9 @@ function assessSupportShareSafety(report) {
   if (!report || typeof report !== "object") {
     reasons.push("redaction-report-missing");
   } else {
+    if (report.redaction_state !== "shareable") {
+      reasons.push(`redaction-state:${report.redaction_state ?? "unknown"}`);
+    }
     if (report.unknown_sensitive_hits > 0) {
       reasons.push("unknown-sensitive-hits");
     }
@@ -75,6 +83,126 @@ function assessSupportShareSafety(report) {
     safe_to_share: reasons.length === 0,
     reasons,
   };
+}
+
+function buildRuntimeDescriptor({ contextExplanation, debugReport }) {
+  return {
+    runtime: contextExplanation?.runtime ?? debugReport?.runtime ?? null,
+    target: contextExplanation?.target ?? debugReport?.target ?? null,
+    os: contextExplanation?.os ?? "unknown",
+    shell: contextExplanation?.shell ?? "unknown",
+    runtime_version: contextExplanation?.runtime_version ?? null,
+  };
+}
+
+function buildPrivacyDescriptor(traceExport, shareSafety) {
+  return {
+    redaction_state: traceExport.redaction_report?.redaction_state ?? "review-required",
+    consent_required: true,
+    local_only_by_default: true,
+    remote_collection_default: "off",
+    safe_to_share: shareSafety.safe_to_share,
+  };
+}
+
+function buildIssueTemplateText({ supportBundle, debugReport, contextExplanation }) {
+  const runtime = contextExplanation?.runtime ?? debugReport?.runtime ?? "unknown";
+  const target = contextExplanation?.target ?? debugReport?.target ?? "unknown";
+  const pack = contextExplanation?.pack_id ?? "unknown";
+  const lines = [
+    `Title: [support] ${debugReport.command_name} | ${runtime} | ${debugReport.decisive_failure_domain}`,
+    "",
+    "Summary",
+    "- Expected:",
+    "- Actual:",
+    "- First visible symptom:",
+    "",
+    "Environment",
+    `- Runtime: ${runtime}`,
+    `- Runtime version: ${contextExplanation?.runtime_version ?? "unknown"}`,
+    `- Target: ${target}`,
+    `- OS / shell: ${contextExplanation?.os ?? "unknown"} / ${contextExplanation?.shell ?? "unknown"}`,
+    "- PairSlash version: 0.4.0",
+    `- Workflow / pack: ${pack}`,
+    `- Command: ${debugReport.command_name}`,
+    `- Session ID: ${debugReport.session_id}`,
+    `- Bundle ID: ${supportBundle.bundle_id}`,
+    "",
+    "Bundle status",
+    `- safe_to_share: ${supportBundle.safe_to_share ? "yes" : "no"}`,
+    `- redaction_state: ${supportBundle.privacy_descriptor.redaction_state}`,
+    `- share_safety_reasons: ${(supportBundle.share_safety_reasons ?? []).join(", ") || "none"}`,
+    `- Attached files: ${supportBundle.files.length > 0 ? supportBundle.files.map((file) => file.id).join(", ") : "see bundle-manifest.json"}`,
+    "",
+    "Consent",
+    "- I reviewed the privacy note before attaching any support artifact: yes / no",
+    "",
+    "Repro notes",
+    "- Happens again on rerun: yes / no / unknown",
+    "- Live runtime or compat-lab:",
+    "- Extra steps needed:",
+  ];
+  return `${lines.join("\n")}\n`;
+}
+
+function buildPrivacyNoteText(bundle) {
+  const lines = [
+    "Privacy note",
+    "",
+    "This export stays local unless you choose to share it.",
+    "PairSlash removes known secrets, hashes config fingerprints, and marks unsafe bundles.",
+    "It may still contain runtime versions, pack ids, failure summaries, normalized paths, and redaction metadata.",
+    `Current redaction state: ${bundle.privacy_descriptor.redaction_state}.`,
+    `Safe to share: ${bundle.safe_to_share ? "yes" : "no"}.`,
+  ];
+  if ((bundle.share_safety_reasons ?? []).length > 0) {
+    lines.push(`Share safety reasons: ${bundle.share_safety_reasons.join(", ")}.`);
+  }
+  lines.push(
+    "If safe_to_share is false or unknown_sensitive_hits is greater than zero, do not attach this bundle outside your machine.",
+    "Continue only if you understand and accept this boundary.",
+  );
+  return `${lines.join("\n")}\n`;
+}
+
+function buildReproducibilityTemplateText(bundle) {
+  const lines = [
+    "Reproducibility Summary",
+    "",
+    `- Bundle ID: ${bundle.bundle_id}`,
+    `- Session ID: ${bundle.trace_locator.session_id}`,
+    "- Maintainer:",
+    `- Runtime lane: ${bundle.runtime_descriptor.runtime ?? "unknown"} / ${bundle.runtime_descriptor.target ?? "unknown"}`,
+    `- Workflow: ${bundle.trace_locator.command_name}`,
+    `- Failure domain: ${bundle.trace_locator.decisive_failure_domain}`,
+    "- Live repro: yes / no",
+    "- Compat-lab repro: yes / no",
+    "- Closest fixture:",
+    "- Root cause:",
+    "- Fix path:",
+    "- Evidence refs:",
+    "- Decision: fixed / docs-only / known issue / not reproducible",
+  ];
+  return `${lines.join("\n")}\n`;
+}
+
+function buildTriageTemplateText(bundle) {
+  const lines = [
+    "Maintainer Triage Note",
+    "",
+    "- Intake date:",
+    "- Owner:",
+    "- Severity:",
+    `- Failure domain: ${bundle.trace_locator.decisive_failure_domain}`,
+    `- Share safety: ${bundle.safe_to_share ? "safe" : "local-only"}`,
+    "- Primary artifact reviewed:",
+    "- Missing artifact:",
+    "- Next action:",
+    `- Target lane: ${bundle.runtime_descriptor.runtime ?? "unknown"} / ${bundle.runtime_descriptor.target ?? "unknown"}`,
+    "- Repro path: live / compat-lab / both",
+    "- Due date:",
+  ];
+  return `${lines.join("\n")}\n`;
 }
 
 export function buildDebugReport({ repoRoot, sessionId, selector = {} }) {
@@ -113,6 +241,7 @@ export function buildDebugReport({ repoRoot, sessionId, selector = {} }) {
     repro_steps: [
       `pairslash debug --session ${latest.session_id}`,
       `pairslash trace export --session ${latest.session_id}`,
+      `pairslash trace export --session ${latest.session_id} --support-bundle`,
     ],
   };
 }
@@ -128,7 +257,7 @@ export function exportTrace({
     throw new Error("trace-not-found: no matching trace session");
   }
   const events = loadTraceEvents({ repoRoot, sessionId: latest.session_id });
-  const { events: redactedEvents, report } = redactTraceEvents(events);
+  const { events: redactedEvents, report } = redactTraceEvents(events, { repoRoot });
   const { exportsRoot } = resolveTracePaths(repoRoot);
   const exportRoot = outDir ? resolve(repoRoot, outDir) : join(exportsRoot, `${new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-")}-${latest.session_id}`);
   ensureDir(exportRoot);
@@ -176,6 +305,7 @@ export function exportTrace({
 export function createSupportBundle({
   repoRoot,
   traceExport,
+  debugReport = null,
   doctorReport = null,
   contextExplanation = null,
   policyExplanation = null,
@@ -185,10 +315,25 @@ export function createSupportBundle({
   const bundleId = createBundleId();
   const outputDir = outDir ? resolve(repoRoot, outDir) : join(bundlesRoot, `${new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-")}-${bundleId}`);
   ensureDir(outputDir);
+  const effectiveDebugReport =
+    debugReport ??
+    buildDebugReport({
+      repoRoot,
+      sessionId: traceExport.selector?.session_id ?? null,
+      selector: traceExport.selector ?? {},
+    });
+  const traceLocator = {
+    session_id: effectiveDebugReport.session_id,
+    workflow_id: effectiveDebugReport.workflow_id ?? null,
+    command_name: effectiveDebugReport.command_name,
+    decisive_failure_domain: effectiveDebugReport.decisive_failure_domain,
+    decisive_reason: effectiveDebugReport.decisive_reason ?? null,
+  };
+  const shareSafety = assessSupportShareSafety(traceExport.redaction_report);
   const files = [];
-  function writeArtifact(id, fileName, payload) {
+  function writeArtifact(id, fileName, payload, { asText = false } = {}) {
     const path = join(outputDir, fileName);
-    writeTextFile(path, stableJson(payload));
+    writeTextFile(path, asText ? payload : stableJson(payload));
     files.push({
       id,
       path,
@@ -196,25 +341,14 @@ export function createSupportBundle({
     });
     return path;
   }
+  const debugPath = writeArtifact("debug-report", "debug-report.json", effectiveDebugReport);
   const doctorPath = doctorReport ? writeArtifact("doctor-report", "doctor-report.json", doctorReport) : null;
   const contextPath = contextExplanation ? writeArtifact("context-explanation", "context-explanation.json", contextExplanation) : null;
   const policyPath = policyExplanation ? writeArtifact("policy-explanation", "policy-explanation.json", policyExplanation) : null;
-  const readmePath = join(outputDir, "README.txt");
-  writeTextFile(
-    readmePath,
-    [
-      "PairSlash support bundle",
-      "",
-      "This bundle is redacted by design.",
-      "Review the redaction-report and manifest before sharing outside the repo.",
-    ].join("\n"),
-  );
-  files.push({
-    id: "readme",
-    path: readmePath,
-    size_bytes: statSync(readmePath).size,
+  const runtimeDescriptor = buildRuntimeDescriptor({
+    contextExplanation,
+    debugReport: effectiveDebugReport,
   });
-  const shareSafety = assessSupportShareSafety(traceExport.redaction_report);
   const bundle = {
     kind: "support-bundle",
     schema_version: "1.0.0",
@@ -222,19 +356,65 @@ export function createSupportBundle({
     bundle_id: bundleId,
     output_dir: outputDir,
     safe_to_share: shareSafety.safe_to_share,
+    trace_locator: traceLocator,
+    runtime_descriptor: runtimeDescriptor,
+    privacy_descriptor: buildPrivacyDescriptor(traceExport, shareSafety),
     share_safety_reasons: shareSafety.reasons,
     trace_export: {
       path: join(traceExport.output_dir, "manifest.json"),
       session_count: traceExport.session_count,
       event_count: traceExport.event_count,
     },
+    debug_report_path: debugPath,
     doctor_report_path: doctorPath,
     context_explanation_path: contextPath,
     policy_explanation_path: policyPath,
-    readme_path: readmePath,
     redaction_report: traceExport.redaction_report,
-    files: sortFilesByKnownOrder(files, SUPPORT_BUNDLE_FILE_ORDER),
+    files: [],
   };
+  const privacyNotePath = writeArtifact("privacy-note", "privacy-note.txt", buildPrivacyNoteText(bundle), {
+    asText: true,
+  });
+  const issueTemplatePath = writeArtifact(
+    "issue-template",
+    "issue-template.md",
+    buildIssueTemplateText({
+      supportBundle: bundle,
+      debugReport: effectiveDebugReport,
+      contextExplanation,
+    }),
+    { asText: true },
+  );
+  const reproducibilityTemplatePath = writeArtifact(
+    "reproducibility-template",
+    "reproducibility-summary.template.md",
+    buildReproducibilityTemplateText(bundle),
+    { asText: true },
+  );
+  const triageTemplatePath = writeArtifact(
+    "triage-template",
+    "maintainer-triage-note.template.md",
+    buildTriageTemplateText(bundle),
+    { asText: true },
+  );
+  const readmePath = writeArtifact(
+    "readme",
+    "README.txt",
+    [
+      "PairSlash support bundle",
+      "",
+      "This bundle is local-first and redacted by design.",
+      "Read privacy-note.txt before sharing anything outside your machine.",
+      "Use issue-template.md for intake and the maintainer templates after triage.",
+    ].join("\n"),
+    { asText: true },
+  );
+  bundle.issue_template_path = issueTemplatePath;
+  bundle.privacy_note_path = privacyNotePath;
+  bundle.reproducibility_template_path = reproducibilityTemplatePath;
+  bundle.triage_template_path = triageTemplatePath;
+  bundle.readme_path = readmePath;
+  bundle.files = sortFilesByKnownOrder(files, SUPPORT_BUNDLE_FILE_ORDER);
   const validationErrors = validateSupportBundle(bundle);
   if (validationErrors.length > 0) {
     throw new Error(`invalid support bundle :: ${validationErrors.join("; ")}`);

@@ -1,86 +1,109 @@
-# PairSlash Phase 3.5 Evidence Log
+# PairSlash Product-Validation Evidence Log
 
-Use this file as the working log for benchmark and pilot evidence.
+This log is the authoritative record for official product-validation benchmark
+runs. It does not accept installability-only, doctor-only, or preview-only
+technical acceptance evidence as if that evidence proved a winning wedge.
 
-## Run summary
+## Official run summary
 
-| Run ID | Date | Runtime | Benchmark | Repo | Total | Weekly return | Status |
-|---|---|---|---|---|---|---|---|
-| 20260326-codex-phase4-acceptance | 2026-03-26 | codex-cli | B3/B4 scoped | pair_slash | 13/15 | yes | pass |
-| 20260326-copilot-phase4-acceptance | 2026-03-26 | github-copilot-cli | B3/B4 scoped | pair_slash | 12/15 | yes | pass |
+No official product-validation benchmark runs are recorded yet under the
+current benchmark system.
 
-## Recorded runs
+## Excluded legacy evidence
 
-### Recorded Run ID: 20260326-codex-phase4-acceptance
+These historical entries are preserved for provenance but are excluded from the
+current product scorecard.
 
-- Date: 2026-03-26
-- Runtime: codex-cli
-- Benchmark: B3/B4 scoped
-- Repo: pair_slash
-- User goal: install managed workflow and run first `/skills` path safely
-- Manual alternative: copy folders manually and troubleshoot runtime drift by hand
-- Prompt used: `Create a repo plan from the current repo state.`
+| Run ID | Date | Runtime | What it actually tested | Include in rollup | Exclusion reason |
+|---|---|---|---|---|---|
+| `20260326-codex-phase4-acceptance` | 2026-03-26 | `codex-cli` | Managed installability and doctor acceptance slice | `false` | Technical installability evidence mislabeled as `B3/B4 scoped` |
+| `20260326-copilot-phase4-acceptance` | 2026-03-26 | `github-copilot-cli` | Managed installability and doctor acceptance slice | `false` | Technical installability evidence mislabeled as `B3/B4 scoped` |
 
-#### What happened
+## Required schema
 
-- Outcome: managed install/doctor flow completed on Codex lane in acceptance harness.
-- What reduced pain: preview plan, explicit apply, deterministic ownership receipts.
-- What increased trust: rollback and uninstall safety behavior remained bounded to owned files.
-- What reduced trust: none observed in this scoped run.
-- Where the workflow felt like friction: explicit runtime/target flags on first setup.
+| Field | Required | Purpose |
+|---|---|---|
+| `run_id` | yes | Unique identifier for one recorded run |
+| `paired_group_id` | yes | Joins the baseline arm and PairSlash arm for the same benchmark |
+| `run_date` | yes | Supports weekly and 30-day rollups |
+| `workflow` | yes | `onboard-repo`, `memory-flow`, or `review-fix-loop` |
+| `scenario` | yes | `baseline`, `pairslash`, `memory-happy-path`, `memory-rejection`, or `review-fix` |
+| `runtime` | yes | `codex-cli` or `github-copilot-cli` |
+| `repo_snapshot_ref` | yes | Commit SHA, snapshot label, or fixture identifier |
+| `arm_order` | yes | `AB`, `BA`, or `single` |
+| `task_statement` | yes | The user job being benchmarked |
+| `success_criteria` | yes | Frozen pass criteria written before the run |
+| `baseline_method` | yes | Raw CLI or manual baseline used for comparison |
+| `pairslash_method` | yes | Exact PairSlash workflow path used |
+| `ttfs_seconds` | yes | Time-to-first-success in seconds |
+| `task_success` | yes | Whether frozen success criteria were met |
+| `manual_rescue_count` | yes | How often the evaluator had to step in to rescue the run |
+| `reprompt_count_after_first_answer` | yes | Cleanup burden after the first useful output |
+| `issue_reproduced` | conditional | Required for `review-fix-loop` runs |
+| `rework_units` | yes | Input for rework reduction calculations |
+| `trust_boundary_result` | yes | `pass`, `fail`, or `not_applicable` |
+| `preview_fidelity_result` | conditional | Required for memory happy-path runs |
+| `artifact_refs` | yes | Transcript, trace, preview, audit, and verification artifact refs |
+| `weekly_reuse_answer` | yes | `no`, `maybe`, `likely_yes`, or `default_path` |
+| `weekly_reuse_reason` | yes | Short explanation or quote-level note |
+| `score_summary` | yes | Rollup-ready metric values for the run |
+| `include_in_rollup` | yes | Defaults to `true`; prevents silent exclusion |
+| `exclude_reason` | conditional | Required if `include_in_rollup = false` |
+| `negative_evidence_note` | yes | Records what did not work, even on mixed or failed runs |
 
-#### Score
+## Official entry template
 
-- Problem relevance: 3
-- Trust delta: 3
-- Correctness and safety: 3
-- Effort and time-to-value: 2
-- Repeat intent: 2
-- Total: 13
+```yaml
+run_id: 2026-04-xx-onboard-codex-01
+paired_group_id: grp-2026-04-xx-onboard-01
+run_date: 2026-04-xx
+workflow: onboard-repo
+scenario: pairslash
+runtime: codex-cli
+repo_snapshot_ref: <commit-or-snapshot-id>
+arm_order: AB
+task_statement: "Return cold to this repo and identify what matters first."
+success_criteria:
+  - "State the canonical entrypoint correctly"
+  - "Identify the supported runtimes correctly"
+  - "Recommend the right next workflow"
+baseline_method: "Raw CLI repo summary prompt with manual grep follow-up"
+pairslash_method: "/skills -> pairslash-onboard-repo"
+ttfs_seconds: 420
+task_success: true
+manual_rescue_count: 0
+reprompt_count_after_first_answer: 1
+issue_reproduced: null
+rework_units: 1
+trust_boundary_result: pass
+preview_fidelity_result: not_applicable
+artifact_refs:
+  - <baseline-transcript-path>
+  - <pairslash-transcript-path>
+  - <trace-export-path>
+weekly_reuse_answer: likely_yes
+weekly_reuse_reason: "Gets me to the right files and constraints faster than raw summary prompts."
+score_summary:
+  trusted_weekly_reuse_eligible: true
+  ttfs_delta_vs_baseline: 0.24
+  task_success_without_rescue: true
+include_in_rollup: true
+exclude_reason: null
+negative_evidence_note: "None"
+```
 
-#### Weekly return answer
+## Legacy entry notes
 
-- Answer: yes
-- Exact quote or close paraphrase: would reuse this flow because setup and rollback are explicit and predictable.
+### Legacy Run ID: `20260326-codex-phase4-acceptance`
 
-#### Decision note
+- Kept for provenance only.
+- Actual scope: managed installability and doctor acceptance on Codex lane.
+- Excluded because it does not benchmark repo onboarding, trust-memory flow, or
+  review/fix utility against the required raw CLI baseline.
 
-- Keep as positive evidence, negative evidence, or inconclusive: positive evidence
-- Why: managed installability path beat manual copy baseline for trust and predictability.
+### Legacy Run ID: `20260326-copilot-phase4-acceptance`
 
-### Recorded Run ID: 20260326-copilot-phase4-acceptance
-
-- Date: 2026-03-26
-- Runtime: github-copilot-cli
-- Benchmark: B3/B4 scoped
-- Repo: pair_slash
-- User goal: install managed workflow in user scope and run first `/skills` path safely
-- Manual alternative: copy folders manually and debug path/config mismatch
-- Prompt used: `Create a repo plan from the current repo state.`
-
-#### What happened
-
-- Outcome: managed install/doctor flow completed on Copilot lane in acceptance harness.
-- What reduced pain: explicit lane targeting and preview plan before mutation.
-- What increased trust: doctor surfaced lane state and actionable next commands.
-- What reduced trust: none observed in this scoped run.
-- Where the workflow felt like friction: user-scope path setup requires clear docs.
-
-#### Score
-
-- Problem relevance: 3
-- Trust delta: 3
-- Correctness and safety: 3
-- Effort and time-to-value: 2
-- Repeat intent: 1
-- Total: 12
-
-#### Weekly return answer
-
-- Answer: yes
-- Exact quote or close paraphrase: would return because install and diagnostics are scriptable and reproducible.
-
-#### Decision note
-
-- Keep as positive evidence, negative evidence, or inconclusive: positive evidence
-- Why: scoped run demonstrates repeatable installability path with support diagnostics.
+- Kept for provenance only.
+- Actual scope: managed installability and doctor acceptance on Copilot lane.
+- Excluded because it does not benchmark repo onboarding, trust-memory flow, or
+  review/fix utility against the required raw CLI baseline.

@@ -1,57 +1,82 @@
-# PairSlash Phase 3.5 Validation Runbook
+# PairSlash Product-Validation Runbook
 
-Use this runbook to execute the gate without inventing process during the run.
+Use this runbook to execute official benchmark runs without inventing process
+mid-stream.
 
-## Before each run
+## Before each paired group
 
-- Pick one benchmark from `benchmark-tasks.md`.
+- Pick one official workflow from `benchmark-tasks.md`.
 - Pick one supported runtime only: `codex-cli` or `github-copilot-cli`.
-- Use a real repository and a real user task.
+- Freeze the repo snapshot, task statement, and success criteria before either
+  arm starts.
+- Decide the arm order: `AB` or `BA`.
 - Open `scoring-rubric.md` and `evidence-log.md`.
+
+## Baseline discipline
+
+- Baseline means the raw terminal AI workflow on the same runtime.
+- Do not give PairSlash extra repo access or extra hints the baseline arm does
+  not get.
+- Do not substitute install commands, doctor flows, or technical acceptance
+  checks for the required wedge baseline.
 
 ## Run loop
 
 1. Capture the starting situation.
-   - repo
    - runtime
-   - user goal
-   - manual alternative the user would otherwise use
-2. Run the benchmark task with an actual prompt.
-3. Record what PairSlash did.
-   - what helped
-   - what broke trust
-   - where the user hesitated
-4. Score the run immediately using the rubric.
-5. Ask the weekly-return question:
+   - repo snapshot
+   - task statement
+   - frozen success criteria
+   - chosen arm order
+2. Run the baseline arm and record:
+   - exact prompt or method
+   - time-to-first-success
+   - task success
+   - rescue count
+   - reprompt count
+   - rework notes
+3. Run the PairSlash arm and record:
+   - exact workflow path
+   - time-to-first-success
+   - task success
+   - rescue count
+   - reprompt count
+   - required workflow artifacts
+4. Ask the weekly-return question:
    - "Would you come back to this next week for the same job? Why or why not?"
-6. Append the run to `evidence-log.md`.
+5. Score the run immediately using the current rubric.
+6. Append the entry to `evidence-log.md` within 24 hours.
 
-## Coverage order
+## Required execution order
 
-Run the benchmarks in this order:
+Run the official product-validation benchmarks in this order:
 
-1. `B3` explicit memory write preview
-2. `B4` guardrail rejection under weak or conflicting evidence
-3. `B2` candidate extraction from repo reality
-4. `B1` fresh-session planning from authoritative truth
-5. `B5` resume next week from durable project truth
+1. `W1` paired onboarding benchmark
+2. `W2a` memory happy path
+3. `W2b` memory rejection path
+4. `W3` paired review/fix benchmark
+5. delayed follow-up on at least two official runs
 
-This order forces the primary wedge to prove itself before broader workflow
-stories get airtime.
+This keeps acquisition and trust proof ahead of broad utility claims.
 
-## Minimum evidence set
+## Minimum evidence set before any broader claim
 
-Do not update `verdict.md` toward `GO` until you have at least:
+Do not treat the product-validation gate as passed until you have at least:
 
-- one successful `B3` run on Codex CLI
-- one successful `B3` run on GitHub Copilot CLI
-- one successful `B4` rejection run on each runtime
-- at least two runs with a credible positive weekly-return answer
-- no automatic `NO-GO` condition triggered
+- one official `W1` paired run on Codex CLI
+- one official `W1` paired run on GitHub Copilot CLI
+- one successful `W2a` run on each runtime
+- one successful `W2b` run on each runtime
+- at least one official `W3` paired run on the primary runtime
+- at least two onboarding or memory runs with a credible `likely_yes` or
+  `default_path` answer
+- no hard fail condition triggered
 
 ## After the run set
 
-- Update the scorecard in `verdict.md`.
-- Summarize what pain was actually observed.
-- State whether the winning workflow was really the safe-memory-write wedge.
-- If the answer is still weak, keep `Gate status: NO-GO`.
+- Update the product evidence log, not just narrative notes.
+- Recompute the 30-day scorecard from `docs/phase-3.5/phase-exit/adoption-scorecard.md`.
+- State whether onboarding and memory each crossed their floor.
+- State whether `review/fix loop` is helping or trying to become the lead
+  thesis.
+- If the evidence is weak or mixed, keep the product-validation gate closed.

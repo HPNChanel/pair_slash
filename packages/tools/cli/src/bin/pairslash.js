@@ -40,10 +40,12 @@ import * as copilotAdapter from "@pairslash/runtime-copilot-adapter";
 import { runDoctor } from "@pairslash/doctor";
 import {
   buildDebugReport,
+  buildTelemetrySummary,
   createSupportBundle,
   createTraceContext,
   emitFailureEvent,
   emitTraceEvent,
+  exportTelemetrySummary,
   exportTrace,
   resolveTelemetryMode,
   resolveTraceRoot,
@@ -61,6 +63,7 @@ import {
   formatPolicyExplanationText,
   formatPreviewPlanText,
   formatSupportBundleText,
+  formatTelemetrySummaryText,
   formatTraceExportText,
 } from "../formatters.js";
 
@@ -86,6 +89,7 @@ function printUsage(stdout) {
       "  pairslash explain-policy [pack-id] [--runtime <codex|copilot|auto>] [--target repo|user] [--apply] [--preview] [--surface <canonical_skill|direct_invocation|hook>] [--format text|json]",
       "  pairslash debug [--latest] [--session <id>] [--runtime <codex|copilot>] [--target repo|user] [--bundle] [--out path] [--format text|json]",
       "  pairslash trace export [--latest] [--session <id>] [--runtime <codex|copilot>] [--target repo|user] [--support-bundle] [--include-doctor] [--out path] [--format text|json]",
+      "  pairslash telemetry summary [--runtime <codex|copilot>] [--target repo|user] [--out path] [--format text|json]",
       "",
       "Defaults:",
       "  install/update/uninstall preview by default; add --apply to mutate.",
@@ -611,7 +615,7 @@ function collectArtifactPaths(value) {
     return [];
   }
   const paths = [];
-  for (const key of ["plan_path", "target_file", "audit_log_path", "output_dir", "context_explanation_path", "policy_explanation_path", "doctor_report_path", "readme_path"]) {
+  for (const key of ["plan_path", "target_file", "audit_log_path", "output_dir", "output_path", "debug_report_path", "context_explanation_path", "policy_explanation_path", "doctor_report_path", "issue_template_path", "privacy_note_path", "reproducibility_template_path", "triage_template_path", "readme_path"]) {
     if (typeof value[key] === "string" && value[key].trim() !== "") {
       paths.push(value[key]);
     }
@@ -1074,10 +1078,10 @@ export async function runCli({
   }
   const repoRoot = resolve(cwd);
   const command = argv[0];
-  const subcommand = command === "preview" || command === "memory" || command === "trace" ? argv[1] : null;
+  const subcommand = command === "preview" || command === "memory" || command === "trace" || command === "telemetry" ? argv[1] : null;
   const observedCommand = subcommand ? `${command} ${subcommand}` : command;
   const options = parseOptions(
-    argv.slice(command === "preview" || command === "memory" || command === "trace" ? 2 : 1),
+    argv.slice(command === "preview" || command === "memory" || command === "trace" || command === "telemetry" ? 2 : 1),
   );
   const traceContext = createTraceContext({
     repoRoot,
@@ -1254,6 +1258,7 @@ export async function runCli({
         const supportBundle = createSupportBundle({
           repoRoot,
           traceExport,
+          debugReport,
           doctorReport,
           contextExplanation,
           policyExplanation: policyExplanationRecord?.artifact ?? null,
@@ -1326,6 +1331,11 @@ export async function runCli({
         artifactPaths: collectArtifactPaths(traceExport),
       });
       if (options.supportBundle) {
+        const debugReport = buildDebugReport({
+          repoRoot,
+          sessionId: traceExport.selector.session_id,
+          selector: selectorFromOptions(options, traceContext),
+        });
         const contextExplanation = buildContextExplanationArtifact({ repoRoot, options });
         emitRuntimeHostProbed(traceContext, {
           runtime: contextExplanation.runtime,
@@ -1346,6 +1356,7 @@ export async function runCli({
         const supportBundle = createSupportBundle({
           repoRoot,
           traceExport,
+          debugReport,
           doctorReport,
           contextExplanation,
           policyExplanation: policyExplanationRecord?.artifact ?? null,
@@ -1393,6 +1404,34 @@ export async function runCli({
           summary: `trace export created`,
         };
       }
+    } else if (command === "telemetry") {
+      if (argv[1] !== "summary") {
+        throw new Error(`unknown telemetry command: ${argv[1] ?? "(missing)"}`);
+      }
+      const summary = options.out
+        ? exportTelemetrySummary({
+            repoRoot,
+            runtime: options.runtime && options.runtime !== "auto" && options.runtime !== "all" ? normalizeRuntime(options.runtime) : null,
+            target: options.target ?? null,
+            outPath: options.out,
+          })
+        : buildTelemetrySummary({
+            repoRoot,
+            runtime: options.runtime && options.runtime !== "auto" && options.runtime !== "all" ? normalizeRuntime(options.runtime) : null,
+            target: options.target ?? null,
+          });
+      emit(stdout, summary, {
+        format: options.format,
+        text: formatTelemetrySummaryText,
+      });
+        result = {
+          exitCode: 0,
+          artifact: summary,
+          runtime:
+            options.runtime === "auto" || options.runtime === "all" ? null : normalizeRuntime(options.runtime),
+          target: options.target,
+          summary: options.out ? "telemetry summary exported" : "telemetry summary created",
+        };
     } else {
       throw new Error(`unknown command: ${command}`);
     }

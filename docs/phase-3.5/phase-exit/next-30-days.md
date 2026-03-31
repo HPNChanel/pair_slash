@@ -1,94 +1,96 @@
 # PairSlash Next 30 Days
 
-Date: 2026-03-25
-Status: recommended validation-first action plan
+Date: 2026-03-31
+Status: benchmark-execution plan for the current product-validation phase
 
 ## Objective
 
-Answer the Phase 3.5 gate with evidence, not with more narrative or more
-architecture.
+Answer the product-validation gate with recorded wedge evidence, not with more
+installability proof, architecture polish, or breadth implementation.
 
 ## Sequence
 
-### Days 1-3: Freeze Claims and Lock the Benchmark Method
+### Days 1-3: Freeze the method
 
-1. Keep the official verdict at `NO-GO`.
-2. Freeze any broader Phase 4 product or runtime claims.
-3. Lock the exact benchmark prompts, repo snapshots, and paired raw CLI versus
-   PairSlash comparison method.
-4. Align the evidence log format with the benchmark rubric so every run records
-   rescue count, trust notes, and weekly-return answer.
+1. Freeze the current benchmark definitions in `benchmark-tasks.md`.
+2. Migrate the evidence log to the current schema.
+3. Pin repo snapshots, success criteria, and AB/BA order for the first paired
+   runs.
+4. Keep installability-only evidence out of the product scorecard.
 
 Dependencies:
 
-- real repos with repeatable snapshots
 - access to both supported runtimes
-- one observer or disciplined self-scoring method
+- at least one real repo snapshot for onboarding and one for memory
+- one disciplined evaluator or observer
 
-### Days 4-10: Run the Gate-Critical Memory Benchmarks
+### Days 4-10: Run acquisition plus trust on Codex
 
-1. Run `B3` on Codex CLI.
-2. Run `B4` on Codex CLI.
-3. Run `B3` on GitHub Copilot CLI.
-4. Run `B4` on GitHub Copilot CLI.
-5. Append every run immediately to `docs/validation/phase-3-5/evidence-log.md`.
-
-Dependencies:
-
-- live runtime access on both lanes
-- trust-boundary observation during preview, acceptance, and rejection
-
-### Days 11-17: Run the Acquisition and Utility Benchmarks
-
-1. Run paired `B1` onboarding comparisons against manual cold start.
-2. Run paired review/fix comparisons on the same repo snapshots.
-3. Capture time-to-first-success, rescue count, reprompt count, and exact
-   weekly-return language.
+1. Run one official `W1` paired onboarding benchmark on Codex CLI.
+2. Run one official `W2a` memory happy-path benchmark on Codex CLI.
+3. Run one official `W2b` memory rejection benchmark on Codex CLI.
+4. Log every run within 24 hours.
 
 Dependencies:
 
-- same task and repo snapshot on both arms
-- a real manual alternative for each task
+- live runtime access
+- authoritative memory available for the memory lane
+- frozen success criteria
 
-### Days 18-24: Run the Retention Benchmark
+### Days 11-17: Repeat the must-win set on Copilot
 
-1. Run `B5` next-week resume tasks on the primary runtime.
-2. Spot-check `B5` on the second runtime before broadening any retention claim.
-3. Verify whether durable truth was actually useful later, not just nicely
-   formatted at write time.
-
-Dependencies:
-
-- prior durable truth from earlier runs
-- enough time gap or simulation discipline to make the resume task realistic
-
-### Days 25-30: Synthesize and Re-decide
-
-1. Score every run using the official rubric.
-2. Compute the adoption scorecard and north-star value.
-3. Re-rank the wedge workflows using real repeat-intent evidence.
-4. Update the official verdict only if the gate criteria are actually met.
-5. If the answer is still weak, keep `NO-GO` and narrow the next round instead
-   of broadening the roadmap.
+1. Run one official `W1` paired onboarding benchmark on GitHub Copilot CLI.
+2. Run one official `W2a` memory happy-path benchmark on GitHub Copilot CLI.
+3. Run one official `W2b` memory rejection benchmark on GitHub Copilot CLI.
+4. Recompute interim workflow floors after logging.
 
 Dependencies:
 
-- complete and honest run logs
-- no silent exclusion of weak or negative runs
+- comparable repo snapshots
+- explicit trust-boundary observation during preview and rejection
 
-## What Not To Start Yet
+### Days 18-24: Measure recurring utility without drift
 
-Do not start these until the gate evidence exists:
+1. Run one official `W3` paired review/fix benchmark on the primary runtime.
+2. If `W3` looks strong, spot-check it on the second runtime.
+3. Add delayed follow-up notes on at least two official onboarding or memory
+   runs.
 
-- no third runtime
-- no broader enterprise or governance-first product push
-- no new pack proliferation justified by theory alone
-- no Phase 4 claim expansion based only on tests, installability, or docs
-- no memory-lane expansion just because the architecture is already there
-- no attempt to relabel `NO-GO` as `CONDITIONAL GO` without real mixed evidence
+Dependencies:
 
-## Success Condition For The 30-Day Plan
+- pinned diff snapshots
+- explicit fix handoff
+- test or verification output for the fix path
 
-The 30-day plan succeeds only if it produces a verdict change that is grounded
-in recorded benchmark evidence, or a much sharper `NO-GO` with concrete reasons
-why the wedge still does not win.
+### Days 25-30: Recompute and decide
+
+1. Recompute `Trusted Weekly Reuse Rate`.
+2. Check onboarding floor and memory floor separately.
+3. Check memory trust-boundary integrity, preview fidelity, and evidence
+   completeness.
+4. Keep the gate closed if `review/fix loop` is the only clear winner.
+5. Update broader claims only if the product scorecard thresholds are actually
+   met.
+
+Dependencies:
+
+- complete evidence log
+- no silent exclusion of mixed or failed runs
+
+## What not to start yet
+
+Do not use the next 30 days for:
+
+- third-runtime exploration
+- broader enterprise or governance-first claims
+- generic coding productivity benchmarks
+- installability benchmarking mixed into trust-memory benchmarking
+- review/fix expansion into an autonomous copilot thesis
+
+## Success condition
+
+The next 30 days succeed only if they produce either:
+
+- a real wedge win backed by the official scorecard, or
+- a sharper `NO-GO` with concrete evidence about which wedge still does not
+  win

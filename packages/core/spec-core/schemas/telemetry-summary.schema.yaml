@@ -1,0 +1,76 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://pairslash.dev/schemas/telemetry-summary/1.0.0"
+title: PairSlash Telemetry Summary
+type: object
+required:
+  - kind
+  - schema_version
+  - generated_at
+  - mode
+  - selector
+  - privacy
+  - totals
+  - metrics
+  - workflows
+properties:
+  kind:
+    const: telemetry-summary
+  schema_version:
+    const: "1.0.0"
+  generated_at:
+    type: string
+  mode:
+    type: string
+  selector:
+    type: object
+  privacy:
+    type: object
+    required:
+      - local_only
+      - export_requires_explicit_action
+      - source
+    properties:
+      local_only:
+        type: boolean
+      export_requires_explicit_action:
+        type: boolean
+      source:
+        type: string
+  totals:
+    type: object
+    required:
+      - sessions
+      - successful_sessions
+      - failed_sessions
+      - support_bundle_exports
+    properties:
+      sessions:
+        type: integer
+      successful_sessions:
+        type: integer
+      failed_sessions:
+        type: integer
+      support_bundle_exports:
+        type: integer
+  metrics:
+    type: object
+    required:
+      - workflow_runs_started
+      - workflow_runs_succeeded
+      - weekly_reuse_days
+      - median_ttfs_seconds
+    properties:
+      workflow_runs_started:
+        type: integer
+      workflow_runs_succeeded:
+        type: integer
+      weekly_reuse_days:
+        type: integer
+      median_ttfs_seconds:
+        type:
+          - number
+          - "null"
+  workflows:
+    type: array
+    items:
+      type: object

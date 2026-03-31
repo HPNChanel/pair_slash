@@ -3,6 +3,11 @@
 Use this playbook to turn a support issue or suspected regression into a
 deterministic compat-lab repro before widening a support claim.
 
+If you do not already have a local `debug-report` or `support-bundle`, start
+with `docs/support/phase-7-support-ops.md`. Compat-lab is for deterministic
+reproduction after intake, not for skipping privacy/redaction or live-runtime
+capture.
+
 ## Pick the closest fixture
 
 - Monorepo pathing or multi-pack install drift: `repo-monorepo-workspaces`
@@ -58,3 +63,7 @@ good. Promote support only when:
 1. deterministic compat-lab coverage is green,
 2. the repro is understood or fixed, and
 3. manual live evidence matches the new claim.
+
+Keep fake-runtime compat-lab evidence separate from live support evidence. A
+fake-runtime pass does not replace a real redacted support bundle from the live
+failure lane.

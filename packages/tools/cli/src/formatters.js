@@ -646,6 +646,11 @@ export function formatTraceExportText(traceExport) {
     `Redacted events: ${traceExport.redaction_report.redacted_events}`,
     `Redacted fields: ${traceExport.redaction_report.redacted_fields}`,
     `Unknown sensitive hits: ${traceExport.redaction_report.unknown_sensitive_hits ?? 0}`,
+    `Redaction state: ${traceExport.redaction_report.redaction_state ?? "unknown"}`,
+    `Secrets removed: ${traceExport.redaction_report.secrets_removed ?? 0}`,
+    `Hashed values: ${traceExport.redaction_report.hashed_values ?? 0}`,
+    `Config fingerprints: ${traceExport.redaction_report.config_fingerprints ?? 0}`,
+    `Normalized paths: ${traceExport.redaction_report.normalized_paths ?? 0}`,
     `Redaction rules: ${(traceExport.redaction_report.rules_triggered ?? []).join(", ") || "none"}`,
     "",
     "Files:",
@@ -661,16 +666,52 @@ export function formatSupportBundleText(bundle) {
     `Bundle ID: ${bundle.bundle_id}`,
     `Output dir: ${bundle.output_dir}`,
     `Safe to share: ${bundle.safe_to_share ? "yes" : "no"}`,
+    `Redaction state: ${bundle.privacy_descriptor?.redaction_state ?? "unknown"}`,
+    `Consent required: ${bundle.privacy_descriptor?.consent_required ? "yes" : "no"}`,
     `Share safety reasons: ${(bundle.share_safety_reasons ?? []).length > 0 ? bundle.share_safety_reasons.join(", ") : "none"}`,
     `Trace export: ${bundle.trace_export.path}`,
+    `Trace locator: ${bundle.trace_locator?.session_id ?? "unknown"} :: ${bundle.trace_locator?.command_name ?? "unknown"} :: ${bundle.trace_locator?.decisive_failure_domain ?? "unknown"}`,
+    `Runtime descriptor: ${(bundle.runtime_descriptor?.runtime ?? "unknown")}/${(bundle.runtime_descriptor?.target ?? "unknown")} on ${bundle.runtime_descriptor?.os ?? "unknown"} (${bundle.runtime_descriptor?.shell ?? "unknown"})`,
+    `Debug report: ${bundle.debug_report_path ?? "none"}`,
     `Doctor report: ${bundle.doctor_report_path ?? "none"}`,
     `Context explanation: ${bundle.context_explanation_path ?? "none"}`,
     `Policy explanation: ${bundle.policy_explanation_path ?? "none"}`,
+    `Issue template: ${bundle.issue_template_path ?? "none"}`,
+    `Privacy note: ${bundle.privacy_note_path ?? "none"}`,
     "",
     "Files:",
   ];
   for (const file of bundle.files) {
     lines.push(`- ${file.id}: ${file.path} (${file.size_bytes} bytes)`);
+  }
+  return `${lines.join("\n")}\n`;
+}
+
+export function formatTelemetrySummaryText(summary) {
+  const lines = [
+    `Telemetry mode: ${summary.mode}`,
+    `Local only: ${summary.privacy.local_only ? "yes" : "no"}`,
+    `Export requires explicit action: ${summary.privacy.export_requires_explicit_action ? "yes" : "no"}`,
+    `Source: ${summary.privacy.source}`,
+    `Sessions: ${summary.totals.sessions}`,
+    `Successful sessions: ${summary.totals.successful_sessions}`,
+    `Failed sessions: ${summary.totals.failed_sessions}`,
+    `Support bundle exports: ${summary.totals.support_bundle_exports}`,
+    `Weekly reuse days: ${summary.metrics.weekly_reuse_days}`,
+    `Median TTFS (s): ${summary.metrics.median_ttfs_seconds ?? "n/a"}`,
+  ];
+  if (summary.output_path) {
+    lines.push(`Output path: ${summary.output_path}`);
+  }
+  lines.push("", "Workflow breakdown:");
+  if (summary.workflows.length === 0) {
+    lines.push("- none");
+  } else {
+    for (const workflow of summary.workflows) {
+      lines.push(
+        `- ${workflow.workflow_key} :: ${workflow.runtime}/${workflow.target} :: sessions=${workflow.sessions}, success=${workflow.successful_sessions}, failed=${workflow.failed_sessions}, reuse_days=${workflow.weekly_reuse_days}, ttfs=${workflow.median_ttfs_seconds ?? "n/a"}, bundle_exports=${workflow.support_bundle_exports}`,
+      );
+    }
   }
   return `${lines.join("\n")}\n`;
 }

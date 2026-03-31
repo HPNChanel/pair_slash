@@ -1,68 +1,64 @@
-# PairSlash Phase 4 Entry Gates
+# PairSlash Product-Validation Entry Gates
 
-Date: 2026-03-25
-Status: recommended pre-entry gate for broader Phase 4 claims
-
-This document defines what must be true before PairSlash should be treated as
-ready to move beyond Phase 3.5 validation.
+Date: 2026-03-31
+Status: active gate for moving beyond the current product-validation phase
 
 Important distinction:
 
-- Phase 4 code already exists in the repo.
-- These gates are about whether broader Phase 4 product and distribution claims
-  are justified.
+- PairSlash already has broader technical surfaces in the repo.
+- These gates are about whether broader product claims are justified.
+- A scoped release/installability `GO` does not satisfy these gates by itself.
 
-## What Must Be True Before Phase 4 Starts
+## What must be true before broader claims
 
 All of the following must be true:
 
-1. `docs/validation/phase-3-5/verdict.md` no longer remains `Gate status: NO-GO`.
-2. `docs/validation/phase-3-5/evidence-log.md` contains recorded benchmark
-   runs, not just a template.
-3. All official benchmark tasks `B1-B5` are executed and scored.
-4. `B3` explicit memory write preview succeeds on Codex CLI and GitHub Copilot
-   CLI.
-5. `B4` guardrail rejection under weak or conflicting evidence succeeds on both
-   runtimes.
-6. The benchmark pass rule in `docs/validation/phase-3-5/scoring-rubric.md`
-   is met.
-7. At least two runs record a credible positive answer to "Would you come back
-   next week for the same job?"
-8. One winning wedge is clear enough to guide the next stage.
-9. Messaging remains scoped to validated pain, validated runtime lanes, and
-   the trust-layer thesis.
+1. `docs/validation/phase-3-5/evidence-log.md` contains official product
+   benchmark runs under the current schema.
+2. `W1` onboarding has at least one official paired run on Codex CLI and one on
+   GitHub Copilot CLI.
+3. `W2a` memory happy path passes on both runtimes.
+4. `W2b` memory rejection path passes on both runtimes.
+5. `W3` review/fix loop has at least one official paired run on the primary
+   runtime.
+6. `Trusted Weekly Reuse Rate >= 60%` overall.
+7. Onboarding and memory each maintain a `>= 50%` trusted reuse floor.
+8. Task success without manual rescue is `>= 70%`.
+9. Memory trust-boundary integrity is `100%`.
+10. Preview-to-write fidelity is `100%`.
+11. Evidence completeness is `100%`.
+12. `review/fix loop` is not the only workflow showing a win.
 
-## What Can Remain Imperfect
+## What can remain imperfect
 
 These do not need to be perfect before the gate flips:
 
-- P2 and P3 segment evidence can lag behind P1 if P1 is strongly validated.
-- Supporting workflows can remain unvalidated if the core wedge is proven.
-- Install and doctor polish can keep improving after the wedge is validated.
-- Demo scripting can keep evolving after the core evidence is in place.
-- Sample size can still be modest if the evidence is mixed, concrete, and
-  consistent.
+- review/fix can still be early as long as it is not driving the thesis
+- sample size can remain modest if the evidence is concrete and complete
+- install and doctor polish can continue improving after the product wedge is
+  proven
+- supporting workflows can remain unvalidated if the must-win workflows are
+  proven
 
-## What Is Dangerous To Ignore
+## What is dangerous to ignore
 
-These are phase-entry killers even if the docs look strong:
+These are gate killers even if the docs look stronger:
 
-- no manual baseline for comparison
-- no repeat-intent proof
-- empty or selective benchmark logging
+- no raw CLI baseline for comparison
+- installability evidence counted as wedge proof
+- selective logging or missing negative runs
 - memory preview or rejection flows that do not materially increase trust
 - architecture maturity mistaken for demand
-- runtime or release-readiness claims outrunning recorded evidence
-- any drift toward generic framework, autopilot, or third-runtime positioning
+- `review/fix loop` drifting toward a generic copilot story
 
-## Current Status
+## Current status
 
-Current status on 2026-03-25: gates not met.
+Current status on 2026-03-31: gates not met.
 
 Main blockers:
 
-- official verdict still `NO-GO`
-- official evidence log still empty
-- no scored benchmark set
-- no two-runtime proof for the safe-memory-write wedge
-- no credible repeated-weekly-use evidence
+- no official runs logged under the new benchmark system
+- no onboarding evidence on either runtime
+- no official memory happy-path or rejection-path evidence on either runtime
+- no measured north-star value
+- no workflow-floor evidence for onboarding or memory

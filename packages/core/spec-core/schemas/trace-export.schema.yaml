@@ -29,6 +29,16 @@ properties:
     type: integer
   redaction_report:
     type: object
+    required:
+      - redacted_fields
+      - redacted_events
+      - unknown_sensitive_hits
+      - rules_triggered
+      - redaction_state
+      - secrets_removed
+      - hashed_values
+      - config_fingerprints
+      - normalized_paths
     properties:
       redacted_fields:
         type: integer
@@ -40,6 +50,16 @@ properties:
         type: array
         items:
           type: string
+      redaction_state:
+        type: string
+      secrets_removed:
+        type: integer
+      hashed_values:
+        type: integer
+      config_fingerprints:
+        type: integer
+      normalized_paths:
+        type: integer
   files:
     type: array
     items:

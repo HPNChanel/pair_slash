@@ -9,6 +9,9 @@ required:
   - bundle_id
   - output_dir
   - safe_to_share
+  - trace_locator
+  - runtime_descriptor
+  - privacy_descriptor
   - trace_export
   - redaction_report
   - files
@@ -25,6 +28,68 @@ properties:
     type: string
   safe_to_share:
     type: boolean
+  trace_locator:
+    type: object
+    required:
+      - session_id
+      - command_name
+      - decisive_failure_domain
+    properties:
+      session_id:
+        type: string
+      workflow_id:
+        type:
+          - string
+          - "null"
+      command_name:
+        type: string
+      decisive_failure_domain:
+        type: string
+      decisive_reason:
+        type:
+          - string
+          - "null"
+  runtime_descriptor:
+    type: object
+    required:
+      - runtime
+      - target
+      - os
+      - shell
+      - runtime_version
+    properties:
+      runtime:
+        type:
+          - string
+          - "null"
+      target:
+        type:
+          - string
+          - "null"
+      os:
+        type: string
+      shell:
+        type: string
+      runtime_version:
+        type:
+          - string
+          - "null"
+  privacy_descriptor:
+    type: object
+    required:
+      - redaction_state
+      - consent_required
+      - local_only_by_default
+      - remote_collection_default
+    properties:
+      redaction_state:
+        type: string
+      consent_required:
+        type: boolean
+      local_only_by_default:
+        type: boolean
+      remote_collection_default:
+        type: string
   trace_export:
     type: object
     properties:
@@ -36,6 +101,16 @@ properties:
         type: integer
   redaction_report:
     type: object
+    required:
+      - redacted_fields
+      - redacted_events
+      - unknown_sensitive_hits
+      - rules_triggered
+      - redaction_state
+      - secrets_removed
+      - hashed_values
+      - config_fingerprints
+      - normalized_paths
     properties:
       redacted_fields:
         type: integer
@@ -47,10 +122,56 @@ properties:
         type: array
         items:
           type: string
+      redaction_state:
+        type: string
+      secrets_removed:
+        type: integer
+      hashed_values:
+        type: integer
+      config_fingerprints:
+        type: integer
+      normalized_paths:
+        type: integer
   share_safety_reasons:
     type: array
     items:
       type: string
+  debug_report_path:
+    type:
+      - string
+      - "null"
+  doctor_report_path:
+    type:
+      - string
+      - "null"
+  context_explanation_path:
+    type:
+      - string
+      - "null"
+  policy_explanation_path:
+    type:
+      - string
+      - "null"
+  issue_template_path:
+    type:
+      - string
+      - "null"
+  privacy_note_path:
+    type:
+      - string
+      - "null"
+  reproducibility_template_path:
+    type:
+      - string
+      - "null"
+  triage_template_path:
+    type:
+      - string
+      - "null"
+  readme_path:
+    type:
+      - string
+      - "null"
   files:
     type: array
     items:

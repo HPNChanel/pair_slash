@@ -1,9 +1,13 @@
-# PairSlash Phase 3.5 Validation Verdict
+# PairSlash Scoped Release Verdict
 
 Gate status: GO
 Last updated: 2026-03-26
 Claim scope: phase4-runtime-native-installability
 Validated runtimes: codex_cli, copilot_cli
+
+Benchmark lane: separate. Product-validation benchmark truth is defined by
+`benchmark-tasks.md`, `scoring-rubric.md`, `evidence-log.md`, and
+`docs/phase-3.5/phase-exit/adoption-scorecard.md`.
 
 This file is the release-facing answer to a single question:
 

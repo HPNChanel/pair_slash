@@ -85,8 +85,9 @@ test("trace export redacts sensitive fields and support bundle is shareable", ()
     });
     assert.equal(traceExport.kind, "trace-export");
     assert.ok(traceExport.redaction_report.redacted_fields > 0);
+    assert.equal(traceExport.redaction_report.redaction_state, "shareable");
     const eventsJsonl = readFileSync(join(traceExport.output_dir, "events.jsonl"), "utf8");
-    assert.match(eventsJsonl, /\[REDACTED\]/);
+    assert.match(eventsJsonl, /\[HASH:/);
 
     const supportBundle = createSupportBundle({
       repoRoot: fixture.tempRoot,
@@ -99,7 +100,13 @@ test("trace export redacts sensitive fields and support bundle is shareable", ()
     });
     assert.equal(supportBundle.kind, "support-bundle");
     assert.equal(supportBundle.safe_to_share, true);
+    assert.equal(supportBundle.privacy_descriptor.redaction_state, "shareable");
+    assert.ok(supportBundle.debug_report_path);
+    assert.ok(supportBundle.issue_template_path);
+    assert.ok(supportBundle.privacy_note_path);
     assert.ok(existsSync(join(supportBundle.output_dir, "bundle-manifest.json")));
+    assert.ok(existsSync(join(supportBundle.output_dir, "issue-template.md")));
+    assert.ok(existsSync(join(supportBundle.output_dir, "privacy-note.txt")));
   } finally {
     fixture.cleanup();
   }
@@ -158,6 +165,7 @@ test("support bundle is not shareable when unknown sensitive hits are present", 
     });
     assert.equal(supportBundle.safe_to_share, false);
     assert.ok(supportBundle.share_safety_reasons.includes("unknown-sensitive-hits"));
+    assert.equal(supportBundle.privacy_descriptor.redaction_state, "review-required");
   } finally {
     fixture.cleanup();
   }
