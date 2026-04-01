@@ -1,0 +1,108 @@
+<svg width="1200" height="560" viewBox="0 0 1200 560" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">PairSlash trust flow</title>
+  <desc id="desc">A conceptual diagram showing repo context and global memory entering PairSlash through /skills, flowing through preview, and ending in explicit approval, audit, and owned runtime outputs.</desc>
+  <defs>
+    <linearGradient id="bg" x1="80" y1="60" x2="1120" y2="500" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F8FAFC"/>
+      <stop offset="1" stop-color="#EEF2FF"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="288" y1="132" x2="732" y2="428" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0F766E"/>
+      <stop offset="1" stop-color="#1D4ED8"/>
+    </linearGradient>
+    <filter id="shadow" x="0" y="0" width="1200" height="560" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+      <feOffset dy="10"/>
+      <feGaussianBlur stdDeviation="18"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.0588235 0 0 0 0 0.0941176 0 0 0 0 0.164706 0 0 0 0.12 0"/>
+      <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_0_1"/>
+      <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_0_1" result="shape"/>
+    </filter>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M1 1L10 6L1 11" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <style>
+      .title { font: 700 32px 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; fill: #0F172A; }
+      .subtitle { font: 500 17px 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; fill: #334155; }
+      .label { font: 700 17px 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; fill: #0F172A; }
+      .body { font: 500 14px 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; fill: #334155; }
+      .pill { font: 700 12px 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; letter-spacing: 0.08em; text-transform: uppercase; }
+      .mini { font: 600 12px 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; fill: #475569; }
+    </style>
+  </defs>
+
+  <rect x="30" y="24" width="1140" height="512" rx="30" fill="url(#bg)"/>
+  <circle cx="102" cy="80" r="38" fill="#DBEAFE"/>
+  <circle cx="1106" cy="470" r="52" fill="#E0F2FE"/>
+  <circle cx="1060" cy="110" r="26" fill="#CCFBF1"/>
+
+  <text x="80" y="96" class="title">Explicit trust boundary for terminal-native workflows</text>
+  <text x="80" y="126" class="subtitle">One canonical workflow source, two runtime-native outputs, and preview-first mutation paths.</text>
+
+  <g filter="url(#shadow)">
+    <rect x="80" y="168" width="200" height="216" rx="24" fill="#FFFFFF"/>
+    <rect x="308" y="168" width="240" height="216" rx="24" fill="#FFFFFF"/>
+    <rect x="576" y="168" width="208" height="216" rx="24" fill="#FFFFFF"/>
+    <rect x="812" y="168" width="308" height="216" rx="24" fill="#FFFFFF"/>
+  </g>
+
+  <rect x="102" y="188" width="86" height="28" rx="14" fill="#E2E8F0"/>
+  <text x="117" y="207" class="pill" fill="#334155">Input</text>
+  <text x="102" y="248" class="label">Repo context</text>
+  <text x="102" y="272" class="body">Working tree, docs,</text>
+  <text x="102" y="292" class="body">fixtures, tests, and</text>
+  <text x="102" y="312" class="body">Global Project Memory.</text>
+  <text x="102" y="346" class="mini">Canonical truth stays on disk:</text>
+  <text x="102" y="366" class="mini">`.pairslash/project-memory/`</text>
+
+  <rect x="332" y="188" width="128" height="28" rx="14" fill="#DBEAFE"/>
+  <text x="350" y="207" class="pill" fill="#1D4ED8">Entrypoint</text>
+  <text x="332" y="248" class="label">`/skills` + workflow pack</text>
+  <text x="332" y="272" class="body">Pick a slash-first workflow</text>
+  <text x="332" y="292" class="body">from `packs/core/*`.</text>
+  <text x="332" y="322" class="body">Examples: plan, review,</text>
+  <text x="332" y="342" class="body">onboard, memory, release.</text>
+
+  <rect x="600" y="188" width="136" height="28" rx="14" fill="#CCFBF1"/>
+  <text x="619" y="207" class="pill" fill="#0F766E">Boundary</text>
+  <text x="600" y="248" class="label">Preview first</text>
+  <text x="600" y="272" class="body">Read workflows stop at</text>
+  <text x="600" y="292" class="body">analysis, plans, or</text>
+  <text x="600" y="312" class="body">candidate extraction.</text>
+  <text x="600" y="342" class="body">Mutation surfaces emit a</text>
+  <text x="600" y="362" class="body">preview before apply.</text>
+
+  <rect x="836" y="188" width="176" height="28" rx="14" fill="#EDE9FE"/>
+  <text x="854" y="207" class="pill" fill="#6D28D9">Explicit outputs</text>
+  <text x="836" y="248" class="label">Apply only when allowed</text>
+  <text x="836" y="272" class="body">Memory writes require</text>
+  <text x="836" y="292" class="body">explicit approval.</text>
+  <text x="836" y="322" class="body">Install/update/uninstall</text>
+  <text x="836" y="342" class="body">track ownership and keep</text>
+  <text x="836" y="362" class="body">rollback-safe state.</text>
+
+  <path d="M280 276H308" stroke="#475569" stroke-width="3" stroke-linecap="round" marker-end="url(#arrow)"/>
+  <path d="M548 276H576" stroke="#475569" stroke-width="3" stroke-linecap="round" marker-end="url(#arrow)"/>
+  <path d="M784 276H812" stroke="#475569" stroke-width="3" stroke-linecap="round" marker-end="url(#arrow)"/>
+
+  <rect x="146" y="432" width="910" height="58" rx="29" fill="url(#accent)"/>
+  <text x="176" y="467" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="700" fill="#F8FAFC">
+    PairSlash does not hide the write boundary: preview -&gt; explicit approval when required -&gt; owned, auditable output
+  </text>
+
+  <rect x="838" y="416" width="108" height="86" rx="18" fill="#FFFFFF" stroke="#C7D2FE"/>
+  <text x="856" y="443" class="mini">Audit</text>
+  <text x="856" y="464" class="body">`.pairslash/`</text>
+  <text x="856" y="484" class="body">audit-log</text>
+
+  <rect x="962" y="416" width="128" height="86" rx="18" fill="#FFFFFF" stroke="#BFDBFE"/>
+  <text x="980" y="443" class="mini">Runtime output</text>
+  <text x="980" y="464" class="body">`.agents/skills/`</text>
+  <text x="980" y="484" class="body">`.github/skills/`</text>
+
+  <rect x="700" y="416" width="120" height="86" rx="18" fill="#FFFFFF" stroke="#A7F3D0"/>
+  <text x="718" y="443" class="mini">Ownership</text>
+  <text x="718" y="464" class="body">install-state</text>
+  <text x="718" y="484" class="body">and receipts</text>
+</svg>
