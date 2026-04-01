@@ -256,7 +256,7 @@ No file written to `project-memory/`. No index change. Only audit log records th
 
 ---
 
-## Scenario E: Low-confidence redirect
+## Scenario E: Low-confidence explicit approval
 
 **User input:**
 
@@ -276,18 +276,12 @@ action: append
 
 > **Warning:** `confidence=low`. Low-confidence records should generally go to
 > `.pairslash/staging/` or `.pairslash/task-memory/`, not Global Project Memory.
->
-> Options:
-> 1. **Redirect to staging** -- write to `.pairslash/staging/` instead (recommended)
-> 2. **Proceed anyway** -- write to `project-memory/` with a low-confidence override logged
-> 3. **Cancel**
+> Stop after preview if you do not want an authoritative write.
 
-**If user chooses "redirect to staging":** The workflow writes to
-`.pairslash/staging/prefer-small-prs.yaml` instead of `project-memory/`.
-The audit log notes `result: redirected-to-staging`.
+**If the user stops after preview:** No authoritative write happens.
 
-**If user chooses "proceed anyway":** The pipeline continues. The audit log entry
-includes `notes: "Low-confidence override. User insisted on project-memory write."`
+**If the user proceeds anyway:** The pipeline continues after explicit approval.
+The audit log entry includes `notes: "low-confidence-authoritative-write"`
 
 ---
 

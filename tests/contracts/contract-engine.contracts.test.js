@@ -42,3 +42,90 @@ test("tests/fixtures/phase5/contracts invalid missing contract fixture fails par
       error.code === CONTRACT_ENGINE_ERROR_CODES.MISSING_CONTRACT_SECTION,
   );
 });
+
+test("Phase 8 read workflows expose workflow-specific input, output, and memory contracts", () => {
+  const expectations = {
+    "pairslash-onboard-repo": {
+      requiredFields: ["repo_root"],
+      optionalFields: ["focus", "include_memory_candidates"],
+      sections: [
+        "repository_snapshot",
+        "runtime_compatibility",
+        "memory_model_status",
+        "risks_and_gaps",
+        "recommended_next_workflows",
+      ],
+      readPaths: [".pairslash/project-memory/", ".pairslash/task-memory/"],
+    },
+    "pairslash-plan": {
+      requiredFields: ["goal"],
+      optionalFields: ["scope_hint", "constraints"],
+      sections: [
+        "goal",
+        "constraints",
+        "relevant_project_memory",
+        "proposed_steps",
+        "files_likely_affected",
+        "tests_and_checks",
+        "risks",
+        "rollback",
+        "open_questions",
+      ],
+      readPaths: [
+        ".pairslash/project-memory/00-project-charter.yaml",
+        ".pairslash/project-memory/10-stack-profile.yaml",
+        ".pairslash/project-memory/50-constraints.yaml",
+        ".pairslash/project-memory/90-memory-index.yaml",
+        ".pairslash/task-memory/",
+      ],
+    },
+    "pairslash-review": {
+      requiredFields: ["review_subject", "diff_source"],
+      optionalFields: ["scope_hint", "strictness"],
+      sections: ["summary", "findings", "missing_tests", "open_questions", "recommendation"],
+      readPaths: [".pairslash/project-memory/", ".pairslash/task-memory/"],
+    },
+    "pairslash-command-suggest": {
+      requiredFields: ["intent"],
+      optionalFields: ["scope_hint", "platform"],
+      sections: ["intent_summary", "suggested_commands", "safety_notes", "follow_up_workflow"],
+      readPaths: [
+        ".pairslash/project-memory/10-stack-profile.yaml",
+        ".pairslash/project-memory/20-commands.yaml",
+        ".pairslash/project-memory/50-constraints.yaml",
+      ],
+    },
+    "pairslash-memory-candidate": {
+      requiredFields: ["task_scope"],
+      optionalFields: ["evidence_sources", "strictness", "max_candidates"],
+      sections: ["plan", "candidates", "reconciliation", "next_action"],
+      readPaths: [
+        ".pairslash/project-memory/",
+        ".pairslash/project-memory/90-memory-index.yaml",
+        ".pairslash/task-memory/",
+        ".pairslash/sessions/",
+        ".pairslash/staging/",
+        ".pairslash/audit-log/",
+      ],
+    },
+  };
+
+  for (const [packId, expectation] of Object.entries(expectations)) {
+    const contract = buildContractEnvelope({
+      manifest: loadManifest(packId),
+      runtime: "codex_cli",
+      target: "repo",
+      action: "read",
+      sourceType: "workflow",
+    });
+    assert.deepEqual(contract.input_contract.required_fields, expectation.requiredFields);
+    assert.deepEqual(contract.input_contract.optional_fields, expectation.optionalFields);
+    assert.deepEqual(
+      contract.output_contract.structured_sections.map((section) => section.id).filter((id) => id !== "policy_verdict"),
+      expectation.sections,
+    );
+    assert.deepEqual(contract.memory_contract.read_paths, expectation.readPaths);
+    assert.equal(contract.memory_contract.authoritative_write_allowed, false);
+    assert.equal(contract.memory_contract.no_hidden_write, true);
+  }
+});

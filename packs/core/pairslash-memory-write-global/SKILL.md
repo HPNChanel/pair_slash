@@ -74,12 +74,12 @@ Check every required field. If ANY required field is missing or malformed:
 
 If `confidence` is `low`, warn the user:
 
-> "Low-confidence records should generally go to `.pairslash/staging/` or
-> `.pairslash/task-memory/`, not Global Project Memory. Do you want to
-> redirect this record to staging instead?"
+> "Low-confidence records should generally stay in `.pairslash/staging/` or
+> `.pairslash/task-memory/`, not Global Project Memory. Stop after preview if
+> you do not want an authoritative write."
 
-If the user insists on writing low-confidence to project-memory, proceed
-but note the override in the audit entry.
+If the user still confirms an authoritative write after preview, proceed
+and note the low-confidence write in the audit entry.
 
 ### Step 3: Load existing records
 

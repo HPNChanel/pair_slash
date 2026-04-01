@@ -11,6 +11,7 @@ import {
   relativeFrom,
   selectPackManifestRecords,
   stableJson,
+  SUPPORTED_RUNTIMES,
   validateContextExplanation,
   validatePolicyExplanation,
   walkFiles,
@@ -22,6 +23,7 @@ import {
   applyInstall,
   applyUninstall,
   applyUpdate,
+  detectRuntimeSelection,
   planInstall,
   planUninstall,
   planUpdate,
@@ -582,6 +584,39 @@ function selectorFromOptions(options, traceContext = null) {
   };
 }
 
+function resolveExecutionRuntime(repoRoot, requestedRuntime, target) {
+  if (requestedRuntime === "all") {
+    throw new Error("runtime-selection-failed: --runtime all is not supported for this command");
+  }
+  if (requestedRuntime && requestedRuntime !== "auto") {
+    return normalizeRuntime(requestedRuntime);
+  }
+  const normalizedTarget = normalizeTarget(target);
+  const stateCandidates = SUPPORTED_RUNTIMES.filter((runtime) =>
+    exists(resolveStatePath({ repoRoot, runtime, target: normalizedTarget })),
+  );
+  if (stateCandidates.length === 1) {
+    return stateCandidates[0];
+  }
+  if (stateCandidates.length > 1) {
+    throw new Error(
+      `runtime-selection-ambiguous: install state exists for ${stateCandidates.join(", ")}; rerun with explicit --runtime`,
+    );
+  }
+  const detection = detectRuntimeSelection("auto");
+  if (detection.runtime) {
+    return detection.runtime;
+  }
+  if (detection.ambiguous) {
+    throw new Error(
+      detection.candidates.length === 0
+        ? "runtime-selection-failed: no runtime resolved; rerun with explicit --runtime"
+        : `runtime-selection-ambiguous: detected ${detection.candidates.join(", ")}; rerun with explicit --runtime`,
+    );
+  }
+  throw new Error("runtime-selection-failed: no runtime resolved; rerun with explicit --runtime");
+}
+
 function emitRuntimeHostProbed(traceContext, probe) {
   emitTraceEvent(traceContext, {
     eventType: "runtime.host_probed",
@@ -951,7 +986,7 @@ async function handleApply(action, repoRoot, options, stdout, stdin) {
 
 async function handleMemoryWrite(repoRoot, options, stdout, stdin, { forcePreview = false } = {}) {
   const request = buildMemoryRequest(repoRoot, options);
-  const runtime = options.runtime === "auto" ? "codex_cli" : options.runtime;
+  const runtime = resolveExecutionRuntime(repoRoot, options.runtime, options.target);
   const target = options.target;
   if (!options.apply || options.preview || forcePreview) {
     try {

@@ -6,7 +6,7 @@ import { join } from "node:path";
 import YAML from "yaml";
 
 import { runCli } from "../../packages/tools/cli/src/bin/pairslash.js";
-import { previewMemoryWrite } from "../../packages/core/memory-engine/src/index.js";
+import { applyMemoryWrite, previewMemoryWrite } from "../../packages/core/memory-engine/src/index.js";
 import { evaluatePolicy } from "../../packages/core/policy-engine/src/index.js";
 import {
   buildContractEnvelope,
@@ -14,7 +14,7 @@ import {
   ContractEngineError,
   CONTRACT_ENGINE_ERROR_CODES,
 } from "../../packages/core/contract-engine/src/index.js";
-import { loadPackManifest } from "../../packages/core/spec-core/src/index.js";
+import { loadPackManifest, validateAuditLogEntry } from "../../packages/core/spec-core/src/index.js";
 import {
   createTempRepo,
   installFakeRuntime,
@@ -25,6 +25,7 @@ const serial = { concurrency: false };
 const memoryFixtureDir = join(repoRoot, "packages", "core", "memory-engine", "tests", "fixtures");
 const policyFixtureDir = join(repoRoot, "tests", "fixtures", "phase5", "policy");
 const contractFixtureDir = join(repoRoot, "tests", "fixtures", "phase5", "contracts");
+const goldenDir = join(repoRoot, "tests", "golden");
 
 function loadYaml(path) {
   return YAML.parse(readFileSync(path, "utf8"));
@@ -299,4 +300,47 @@ test("phase5 regression fixture: runtime capability mismatch is blocked at contr
       error instanceof ContractEngineError &&
       error.code === CONTRACT_ENGINE_ERROR_CODES.CAPABILITY_RUNTIME_MISMATCH,
   );
+});
+
+test("phase5 golden fixtures stay aligned for preview patch, audit entry, and index update", serial, () => {
+  const fixture = createTempRepo({ packs: ["pairslash-memory-write-global"] });
+  try {
+    seedMemoryRoot(fixture.tempRoot);
+    const request = loadYaml(join(goldenDir, "sample-record.yaml"));
+    const preview = previewMemoryWrite({
+      repoRoot: fixture.tempRoot,
+      request,
+      runtime: "codex_cli",
+      target: "repo",
+    });
+    assert.equal(
+      preview.preview_patch.text.trimEnd(),
+      readFileSync(join(goldenDir, "preview-patch.txt"), "utf8").trimEnd(),
+    );
+
+    const result = applyMemoryWrite({
+      repoRoot: fixture.tempRoot,
+      request,
+      runtime: "codex_cli",
+      target: "repo",
+    });
+    assert.equal(result.status, "committed");
+
+    const auditEntry = YAML.parse(readFileSync(result.audit_log_path, "utf8"));
+    assert.deepEqual(validateAuditLogEntry(auditEntry), []);
+    assert.equal(
+      YAML.stringify(auditEntry, { lineWidth: 0, simpleKeys: true }),
+      readFileSync(join(goldenDir, "audit-entry.yaml"), "utf8"),
+    );
+
+    const index = loadYaml(join(fixture.tempRoot, ".pairslash", "project-memory", "90-memory-index.yaml"));
+    const indexEntry = index.records.find((entry) => entry.title === request.title);
+    assert.ok(indexEntry);
+    assert.equal(
+      YAML.stringify(indexEntry, { lineWidth: 0, simpleKeys: true }),
+      readFileSync(join(goldenDir, "index-entry.yaml"), "utf8"),
+    );
+  } finally {
+    fixture.cleanup();
+  }
 });

@@ -5,6 +5,7 @@ import { dirname, extname, join, relative, resolve } from "node:path";
 import YAML from "yaml";
 
 import {
+  AUDIT_LOG_ENTRY_SCHEMA_VERSION,
   MEMORY_WRITE_PREVIEW_SCHEMA_VERSION,
   MEMORY_WRITE_REQUEST_SCHEMA_VERSION,
   MEMORY_WRITE_RESULT_SCHEMA_VERSION,
@@ -17,6 +18,7 @@ import {
   validateMemoryWritePreview,
   validateMemoryWriteRequest,
   validateMemoryWriteResult,
+  validateAuditLogEntry,
   validateMemoryWriteStagingArtifact,
   validatePackManifestV2,
   walkFiles,
@@ -44,7 +46,7 @@ const SYSTEM_RECORD_FILES = new Set([
   "90-memory-index.yaml",
 ]);
 
-const AUTHORITATIVE_LAYERS = new Set(["global-project-memory", "staging"]);
+const AUTHORITATIVE_LAYERS = new Set(["global-project-memory"]);
 const CANDIDATE_LAYERS = new Set(["task-memory", "session", "staging"]);
 const ALLOWED_RECORD_FIELDS = new Set([
   "kind",
@@ -547,6 +549,7 @@ function buildAuditEntry({
     resolve(auditDir, `${baseTimestamp}-${record.kind}-${record.action}.yaml`),
   );
   const payload = {
+    schema_version: AUDIT_LOG_ENTRY_SCHEMA_VERSION,
     timestamp: record.timestamp,
     action: record.action,
     kind: record.kind,
@@ -562,8 +565,18 @@ function buildAuditEntry({
       left.localeCompare(right),
     ),
     ...(stagingArtifact?.path ? { preview_artifact: stagingArtifact.path } : {}),
-    ...(notes ? { notes } : {}),
+    notes:
+      [
+        notes,
+        record.confidence === "low" ? "low-confidence-authoritative-write" : null,
+      ]
+        .filter(Boolean)
+        .join("; "),
   };
+  const validationErrors = validateAuditLogEntry(payload);
+  if (validationErrors.length > 0) {
+    throw new Error(`invalid audit log entry :: ${validationErrors.join("; ")}`);
+  }
   writeTextFile(auditPath, stableYaml(payload));
   return auditPath;
 }

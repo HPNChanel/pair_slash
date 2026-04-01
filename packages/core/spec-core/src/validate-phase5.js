@@ -1,4 +1,5 @@
 import {
+  AUDIT_LOG_ENTRY_SCHEMA_VERSION,
   CAPABILITY_FLAGS,
   CAPABILITY_NEGOTIATION_RESULTS,
   CONTRACT_ENVELOPE_SCHEMA_VERSION,
@@ -80,6 +81,12 @@ function validateStringArray(value, field, errors, { allowEmpty = true } = {}) {
     entries.push(item);
   }
   return entries;
+}
+
+function validateNonNegativeInteger(value, field, errors) {
+  if (!Number.isInteger(value) || value < 0) {
+    errors.push(`${field} must be a non-negative integer`);
+  }
 }
 
 function validateRecordShape(record, errors, field = "record") {
@@ -979,5 +986,53 @@ export function validateMemoryWriteStagingArtifact(record) {
   }
   validateStringArray(record?.warnings ?? [], "warnings", errors);
   validateStringArray(record?.errors ?? [], "errors", errors);
+  return errors;
+}
+
+export function validateAuditLogEntry(record) {
+  const errors = [];
+  if (record?.schema_version !== AUDIT_LOG_ENTRY_SCHEMA_VERSION) {
+    errors.push(`schema_version must be ${AUDIT_LOG_ENTRY_SCHEMA_VERSION}`);
+  }
+  validateNonEmptyString(record?.timestamp, "timestamp", errors);
+  if (!MEMORY_RECORD_ACTIONS.includes(record?.action)) {
+    errors.push(`action must be one of ${MEMORY_RECORD_ACTIONS.join(", ")}`);
+  }
+  if (!MEMORY_RECORD_KINDS.includes(record?.kind)) {
+    errors.push(`kind must be one of ${MEMORY_RECORD_KINDS.join(", ")}`);
+  }
+  validateNonEmptyString(record?.title, "title", errors);
+  validateStringLength(record?.title, "title", errors, { min: 3, max: 200 });
+  validateNonEmptyString(record?.target_file, "target_file", errors);
+  validateNonEmptyString(record?.updated_by, "updated_by", errors);
+  if (!MEMORY_RECORD_CONFIDENCE.includes(record?.confidence)) {
+    errors.push(`confidence must be one of ${MEMORY_RECORD_CONFIDENCE.join(", ")}`);
+  }
+  if (!["success", "rejected", "conflict", "failed"].includes(record?.result)) {
+    errors.push("result must be one of success, rejected, conflict, failed");
+  }
+  if ("approval" in (record ?? {}) && !MEMORY_APPROVAL_STATES.includes(record?.approval)) {
+    errors.push(`approval must be one of ${MEMORY_APPROVAL_STATES.join(", ")}`);
+  }
+  if ("duplicate_count" in (record ?? {})) {
+    validateNonNegativeInteger(record?.duplicate_count, "duplicate_count", errors);
+  }
+  if ("conflict_count" in (record ?? {})) {
+    validateNonNegativeInteger(record?.conflict_count, "conflict_count", errors);
+  }
+  if ("related_layers" in (record ?? {})) {
+    const layers = validateStringArray(record?.related_layers, "related_layers", errors);
+    for (const layer of layers) {
+      if (!MEMORY_RECORD_LAYERS.includes(layer)) {
+        errors.push(`related_layers contains unsupported layer ${layer}`);
+      }
+    }
+  }
+  if ("preview_artifact" in (record ?? {})) {
+    validateNonEmptyString(record?.preview_artifact, "preview_artifact", errors);
+  }
+  if ("notes" in (record ?? {}) && typeof record?.notes !== "string") {
+    errors.push("notes must be string");
+  }
   return errors;
 }

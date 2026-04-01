@@ -114,7 +114,7 @@ Record pass/fail and evidence for each.
 
 - [ ] When incomplete input is provided, the skill rejects immediately and
   lists all missing fields (not one at a time)
-- [ ] When `confidence=low`, the skill warns and offers to redirect to staging
+- [ ] When `confidence=low`, the skill warns clearly and logs explicit low-confidence approval in the audit trail
 - [ ] When `action=supersede` and target does not exist, the skill halts
   and asks the user
 - [ ] The preview patch uses the documented format (delimited by

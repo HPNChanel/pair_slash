@@ -9,6 +9,7 @@ description: >-
 
 type: object
 required:
+  - schema_version
   - timestamp
   - action
   - kind
@@ -19,6 +20,9 @@ required:
   - result
 
 properties:
+  schema_version:
+    type: string
+    const: "0.1.0"
   timestamp:
     type: string
     format: date-time
@@ -53,8 +57,33 @@ properties:
       - rejected
       - conflict
       - failed
+  approval:
+    type: string
+    enum:
+      - pending
+      - explicit
+      - rejected
+      - not-required
+  duplicate_count:
+    type: integer
+    minimum: 0
+  conflict_count:
+    type: integer
+    minimum: 0
+  related_layers:
+    type: array
+    items:
+      type: string
+      enum:
+        - global-project-memory
+        - task-memory
+        - session
+        - staging
+    uniqueItems: true
+  preview_artifact:
+    type: string
+    minLength: 1
   notes:
     type: string
 
 additionalProperties: false
-

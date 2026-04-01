@@ -1,7 +1,6 @@
 file: 70-known-good-patterns/preview-patch-is-mandatory-before-write.yaml
 kind: pattern
-title: Preview patch is mandatory before write
+record_family: mutable
 scope: whole-project
 status: active
-record_family: mutable
-
+title: Preview patch is mandatory before write

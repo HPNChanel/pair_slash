@@ -2,17 +2,38 @@ function sortStrings(values) {
   return [...new Set(values)].sort((left, right) => left.localeCompare(right));
 }
 
+function uniqueStrings(values) {
+  const seen = new Set();
+  const output = [];
+  for (const value of values ?? []) {
+    if (typeof value !== "string" || seen.has(value)) {
+      continue;
+    }
+    seen.add(value);
+    output.push(value);
+  }
+  return output;
+}
+
 function normalizeArtifacts(artifacts) {
+  const seen = new Set();
   return artifacts
     .map((artifact) => ({
       id: artifact.id,
       when: artifact.when,
       ...(typeof artifact.required === "boolean" ? { required: artifact.required } : {}),
     }))
-    .sort((left, right) => left.id.localeCompare(right.id));
+    .filter((artifact) => {
+      if (seen.has(artifact.id)) {
+        return false;
+      }
+      seen.add(artifact.id);
+      return true;
+    });
 }
 
 function normalizeSections(sections) {
+  const seen = new Set();
   return sections
     .map((section) => ({
       id: section.id,
@@ -20,7 +41,13 @@ function normalizeSections(sections) {
       required: Boolean(section.required),
       machine_readable: Boolean(section.machine_readable),
     }))
-    .sort((left, right) => left.id.localeCompare(right.id));
+    .filter((section) => {
+      if (seen.has(section.id)) {
+        return false;
+      }
+      seen.add(section.id);
+      return true;
+    });
 }
 
 function normalizeNegotiation(negotiation) {
@@ -64,8 +91,8 @@ export function normalizeContractEnvelopeShape(contract) {
     ...contract,
     input_contract: {
       ...contract.input_contract,
-      required_fields: sortStrings(contract.input_contract.required_fields ?? []),
-      optional_fields: sortStrings(contract.input_contract.optional_fields ?? []),
+      required_fields: uniqueStrings(contract.input_contract.required_fields ?? []),
+      optional_fields: uniqueStrings(contract.input_contract.optional_fields ?? []),
       accepted_sources: sortStrings(contract.input_contract.accepted_sources ?? []),
       accepted_modes: sortStrings(contract.input_contract.accepted_modes ?? []),
       schema_refs: sortStrings(
@@ -102,9 +129,9 @@ export function normalizeContractEnvelopeShape(contract) {
     },
     memory_contract: {
       ...contract.memory_contract,
-      read_paths: sortStrings(contract.memory_contract.read_paths ?? []),
-      write_paths: sortStrings(contract.memory_contract.write_paths ?? []),
-      promote_paths: sortStrings(contract.memory_contract.promote_paths ?? []),
+      read_paths: uniqueStrings(contract.memory_contract.read_paths ?? []),
+      write_paths: uniqueStrings(contract.memory_contract.write_paths ?? []),
+      promote_paths: uniqueStrings(contract.memory_contract.promote_paths ?? []),
     },
     tool_contract: {
       ...contract.tool_contract,

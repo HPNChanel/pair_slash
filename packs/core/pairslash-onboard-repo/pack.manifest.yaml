@@ -9,7 +9,7 @@ workflow_class: read-oriented
 phase: 2
 status: active
 canonical_entrypoint: /skills
-release_channel: stable
+release_channel: canary
 supported_runtimes:
   - codex_cli
   - copilot_cli

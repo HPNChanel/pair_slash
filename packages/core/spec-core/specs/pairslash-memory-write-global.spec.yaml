@@ -142,8 +142,9 @@ contracts:
 
     on_low_confidence: >-
       WARN the user that low-confidence records should generally go to
-      staging/ or task-memory/, not project-memory/. Offer to redirect.
-      Do not block if user insists, but log the override in the audit entry.
+      staging/ or task-memory/, not project-memory/. Do not silently
+      redirect. If the user still proceeds after preview and approval,
+      log the low-confidence authoritative write in the audit entry.
 
     on_duplicate_detected: >-
       HALT the write. Show the existing record alongside the proposed record.

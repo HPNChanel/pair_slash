@@ -1,22 +1,20 @@
 --- preview patch ---
-target_file: .pairslash/project-memory/70-known-good-patterns/preview-patch-is-mandatory-before-write.yaml
 action: append
 content:
-  kind: pattern
-  title: Preview patch is mandatory before write
-  statement: Write-authority workflow must present a preview patch before any authoritative
-    mutation.
-  evidence: CLAUDE.md section 11.5 and memory-write-global contract.
-  scope: whole-project
-  confidence: high
   action: append
-  tags:
-  - write-authority
-  - preview-patch
+  confidence: high
+  evidence: CLAUDE.md section 11.5 and memory-write-global contract.
+  kind: pattern
+  scope: whole-project
   source_refs:
-  - CLAUDE.md
-  - packs/core/pairslash-memory-write-global/contract.md
+    - CLAUDE.md
+    - packs/core/pairslash-memory-write-global/contract.md
+  statement: Write-authority workflow must present a preview patch before any authoritative mutation.
+  tags:
+    - preview-patch
+    - write-authority
+  timestamp: 2026-03-22T00:00:00Z
+  title: Preview patch is mandatory before write
   updated_by: phase2-check
-  timestamp: '2026-03-22T00:00:00Z'
+target_file: .pairslash/project-memory/70-known-good-patterns/preview-patch-is-mandatory-before-write.yaml
 --- end preview ---
-

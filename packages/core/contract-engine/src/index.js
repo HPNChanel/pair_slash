@@ -46,6 +46,139 @@ const MEMORY_WRITE_OPTIONAL_FIELDS = [
 const SOURCE_TYPES = ["manifest", "workflow", "api", "lint", "preview"];
 const READ_REQUIRED_FIELDS = ["runtime", "target"];
 const READ_OPTIONAL_FIELDS = ["packs", "format", "strict", "source"];
+const READ_WORKFLOW_PROFILES = {
+  "pairslash-onboard-repo": {
+    required_fields: ["repo_root"],
+    optional_fields: ["focus", "include_memory_candidates"],
+    sections: [
+      ["repository_snapshot", "Repository snapshot"],
+      ["runtime_compatibility", "Runtime compatibility"],
+      ["memory_model_status", "Memory model status"],
+      ["risks_and_gaps", "Risks and gaps"],
+      ["recommended_next_workflows", "Recommended next workflows"],
+    ],
+    read_paths: [".pairslash/project-memory/", ".pairslash/task-memory/"],
+    failure_categories: [
+      {
+        code: "CONTRACT-REPO-MISSING",
+        type: "validation-failure",
+        retryable: true,
+        description: "Repository root must resolve before onboarding can proceed.",
+      },
+    ],
+  },
+  "pairslash-plan": {
+    required_fields: ["goal"],
+    optional_fields: ["scope_hint", "constraints"],
+    sections: [
+      ["goal", "Goal"],
+      ["constraints", "Constraints"],
+      ["relevant_project_memory", "Relevant project memory"],
+      ["proposed_steps", "Proposed steps"],
+      ["files_likely_affected", "Files likely affected"],
+      ["tests_and_checks", "Tests and checks"],
+      ["risks", "Risks"],
+      ["rollback", "Rollback"],
+      ["open_questions", "Open questions"],
+    ],
+    read_paths: [
+      ".pairslash/project-memory/00-project-charter.yaml",
+      ".pairslash/project-memory/10-stack-profile.yaml",
+      ".pairslash/project-memory/50-constraints.yaml",
+      ".pairslash/project-memory/90-memory-index.yaml",
+      ".pairslash/task-memory/",
+    ],
+    failure_categories: [
+      {
+        code: "CONTRACT-GOAL-INCOMPLETE",
+        type: "validation-failure",
+        retryable: true,
+        description: "Plan generation requires a concrete goal before actionable steps can be emitted.",
+      },
+      {
+        code: "CONTRACT-PROJECT-MEMORY-GAP",
+        type: "tool-unavailable",
+        retryable: true,
+        description: "Project memory gaps must be surfaced explicitly instead of silently omitted.",
+      },
+    ],
+  },
+  "pairslash-review": {
+    required_fields: ["review_subject", "diff_source"],
+    optional_fields: ["scope_hint", "strictness"],
+    sections: [
+      ["summary", "Summary"],
+      ["findings", "Findings"],
+      ["missing_tests", "Missing tests"],
+      ["open_questions", "Open questions"],
+      ["recommendation", "Recommendation"],
+    ],
+    read_paths: [".pairslash/project-memory/", ".pairslash/task-memory/"],
+    failure_categories: [
+      {
+        code: "CONTRACT-DIFF-MISSING",
+        type: "validation-failure",
+        retryable: true,
+        description: "Review workflow requires an explicit diff or patch source.",
+      },
+    ],
+  },
+  "pairslash-command-suggest": {
+    required_fields: ["intent"],
+    optional_fields: ["scope_hint", "platform"],
+    sections: [
+      ["intent_summary", "Intent summary"],
+      ["suggested_commands", "Suggested commands"],
+      ["safety_notes", "Safety notes"],
+      ["follow_up_workflow", "Follow-up workflow"],
+    ],
+    read_paths: [
+      ".pairslash/project-memory/10-stack-profile.yaml",
+      ".pairslash/project-memory/20-commands.yaml",
+      ".pairslash/project-memory/50-constraints.yaml",
+    ],
+    failure_categories: [
+      {
+        code: "CONTRACT-INTENT-MISSING",
+        type: "validation-failure",
+        retryable: true,
+        description: "Command suggestion requires a concrete user intent.",
+      },
+    ],
+  },
+  "pairslash-memory-candidate": {
+    required_fields: ["task_scope"],
+    optional_fields: ["evidence_sources", "strictness", "max_candidates"],
+    sections: [
+      ["plan", "PLAN"],
+      ["candidates", "CANDIDATES"],
+      ["reconciliation", "RECONCILIATION"],
+      ["next_action", "NEXT_ACTION"],
+    ],
+    read_paths: [
+      ".pairslash/project-memory/",
+      ".pairslash/project-memory/90-memory-index.yaml",
+      ".pairslash/task-memory/",
+      ".pairslash/sessions/",
+      ".pairslash/staging/",
+      ".pairslash/audit-log/",
+    ],
+    failure_categories: [
+      {
+        code: "CONTRACT-TASK-SCOPE-MISSING",
+        type: "validation-failure",
+        retryable: true,
+        description: "Candidate extraction requires an explicit task scope.",
+      },
+      {
+        code: "CONTRACT-RECONCILIATION-REQUIRED",
+        type: "policy-blocked",
+        retryable: true,
+        description: "Candidate extraction cannot claim durable novelty without authoritative reconciliation.",
+      },
+    ],
+  },
+};
 const RUNTIME_BOUNDARY_DESCRIPTORS = {
   codex_cli: {
     runtime: "codex_cli",
@@ -77,6 +210,10 @@ function isWriteAuthority(manifest) {
   return manifest.memory_permissions?.global_project_memory === "write";
 }
 
+function getReadWorkflowProfile(manifest) {
+  return READ_WORKFLOW_PROFILES[manifest.pack_name] ?? null;
+}
+
 function getRuntimeBoundaryDescriptor(runtime) {
   return RUNTIME_BOUNDARY_DESCRIPTORS[normalizeRuntime(runtime)];
 }
@@ -94,8 +231,9 @@ function getRuntimeScope(manifest) {
 
 function buildMemoryPaths(manifest) {
   if (!isWriteAuthority(manifest)) {
+    const profile = getReadWorkflowProfile(manifest);
     return {
-      read_paths: [".pairslash/project-memory/"],
+      read_paths: profile?.read_paths ?? [".pairslash/project-memory/"],
       write_paths: [],
       promote_paths: [],
     };
@@ -119,6 +257,7 @@ function buildMemoryPaths(manifest) {
 
 function buildOutputContract(manifest, memoryPaths) {
   const writeAuthority = isWriteAuthority(manifest);
+  const profile = writeAuthority ? null : getReadWorkflowProfile(manifest);
   const artifacts = writeAuthority
       ? [
         { id: "preview_patch", when: "before any write", required: true },
@@ -168,18 +307,15 @@ function buildOutputContract(manifest, memoryPaths) {
           },
         ]
       : [
-          {
-            id: "summary",
-            label: "Summary",
+          ...(profile?.sections ?? [
+            ["summary", "Summary"],
+            ["details", "Details"],
+          ]).map(([id, label]) => ({
+            id,
+            label,
             required: true,
             machine_readable: false,
-          },
-          {
-            id: "details",
-            label: "Details",
-            required: true,
-            machine_readable: false,
-          },
+          })),
           {
             id: "policy_verdict",
             label: "Policy Verdict",
@@ -257,6 +393,9 @@ function buildFailureContract(manifest) {
         description: "Duplicate or conflicting record blocks authoritative write.",
       },
     );
+  }
+  if (!writeAuthority) {
+    categories.push(...(getReadWorkflowProfile(manifest)?.failure_categories ?? []));
   }
 
   return {
@@ -374,9 +513,10 @@ function buildInputContract(manifest) {
       },
     };
   }
+  const profile = getReadWorkflowProfile(manifest);
   return {
-    required_fields: READ_REQUIRED_FIELDS,
-    optional_fields: READ_OPTIONAL_FIELDS,
+    required_fields: profile?.required_fields ?? READ_REQUIRED_FIELDS,
+    optional_fields: profile?.optional_fields ?? READ_OPTIONAL_FIELDS,
     accepted_sources: ["cli", "workflow"],
     accepted_modes: CONTRACT_INPUT_MODES.filter((mode) => mode !== "apply"),
     schema_refs: ["packages/core/spec-core/schemas/pack-manifest-v2.schema.yaml@2.1.0"],

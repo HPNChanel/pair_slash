@@ -631,6 +631,98 @@ test("pairslash preview memory-write-global emits preview without mutating memor
   }
 });
 
+test("pairslash preview memory-write-global resolves --runtime auto from the detected runtime", serial, async () => {
+  const fixture = createTempRepo({ packs: ["pairslash-memory-write-global"] });
+  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  let output = "";
+  try {
+    seedMemoryIndex(fixture.tempRoot);
+    const exitCode = await runCli({
+      argv: [
+        "preview",
+        "memory-write-global",
+        "--runtime",
+        "auto",
+        "--target",
+        "repo",
+        "--kind",
+        "constraint",
+        "--title",
+        "Auto runtime detection for memory write",
+        "--statement",
+        "Memory write preview should resolve the detected runtime instead of assuming codex.",
+        "--evidence",
+        "packages/tools/cli/tests/cli.test.js",
+        "--scope",
+        "whole-project",
+        "--confidence",
+        "high",
+        "--action",
+        "append",
+        "--format",
+        "json",
+      ],
+      cwd: fixture.tempRoot,
+      stdout: {
+        write(chunk) {
+          output += chunk;
+        },
+      },
+    });
+    assert.equal(exitCode, 0);
+    const payload = JSON.parse(output);
+    assert.equal(payload.runtime, "codex_cli");
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("pairslash preview memory-write-global fails --runtime auto when multiple runtimes are detected", serial, async () => {
+  const fixture = createTempRepo({ packs: ["pairslash-memory-write-global"] });
+  const runtime = installFakeRuntime({ codexVersion: "0.116.0", copilotVersion: "1.2.3" });
+  try {
+    seedMemoryIndex(fixture.tempRoot);
+    await assert.rejects(
+      () =>
+        runCli({
+          argv: [
+            "preview",
+            "memory-write-global",
+            "--runtime",
+            "auto",
+            "--target",
+            "repo",
+            "--kind",
+            "constraint",
+            "--title",
+            "Ambiguous runtime detection for memory write",
+            "--statement",
+            "Memory write preview must refuse ambiguous runtime auto-selection.",
+            "--evidence",
+            "packages/tools/cli/tests/cli.test.js",
+            "--scope",
+            "whole-project",
+            "--confidence",
+            "high",
+            "--action",
+            "append",
+            "--format",
+            "json",
+          ],
+          cwd: fixture.tempRoot,
+          stdout: {
+            write() {},
+          },
+        }),
+      /runtime-selection-ambiguous/,
+    );
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
 test("pairslash lint --strict fails on warnings", serial, async () => {
   const fixture = createTempRepo({ packs: ["pairslash-plan"] });
   let output = "";

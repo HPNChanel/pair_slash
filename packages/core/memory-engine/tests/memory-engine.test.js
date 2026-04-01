@@ -5,6 +5,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import YAML from "yaml";
+import { validateAuditLogEntry } from "@pairslash/spec-core";
 
 import {
   applyMemoryWrite,
@@ -287,6 +288,62 @@ test("authoritative memory write is blocked when invoked from a read-only workfl
     });
     assert.equal(preview.policy_verdict.overall_verdict, "deny");
     assert.ok(preview.errors.some((entry) => entry === "authority:read-only-workflow"));
+  } finally {
+    fixture.cleanup();
+  }
+});
+
+test("stale staging artifacts do not become authoritative duplicates for later previews", serial, () => {
+  const { fixture, appendRequest } = setupMemoryRepo();
+  try {
+    const initialPreview = previewMemoryWrite({
+      repoRoot: fixture.tempRoot,
+      request: appendRequest,
+      runtime: "codex_cli",
+      target: "repo",
+    });
+    assert.equal(initialPreview.ready_for_apply, true);
+    const refreshedPreview = previewMemoryWrite({
+      repoRoot: fixture.tempRoot,
+      request: {
+        ...appendRequest,
+        timestamp: "2026-03-26T00:20:00.000Z",
+      },
+      runtime: "codex_cli",
+      target: "repo",
+    });
+    assert.equal(refreshedPreview.ready_for_apply, true);
+    assert.equal(refreshedPreview.errors.some((entry) => entry.startsWith("duplicate:")), false);
+    assert.equal(refreshedPreview.errors.some((entry) => entry.startsWith("conflict:")), false);
+  } finally {
+    fixture.cleanup();
+  }
+});
+
+test("audit entries validate against schema and log low-confidence authoritative writes", serial, () => {
+  const { fixture, appendRequest } = setupMemoryRepo();
+  try {
+    previewMemoryWrite({
+      repoRoot: fixture.tempRoot,
+      request: {
+        ...appendRequest,
+        confidence: "low",
+      },
+      runtime: "codex_cli",
+      target: "repo",
+    });
+    const result = applyMemoryWrite({
+      repoRoot: fixture.tempRoot,
+      request: {
+        ...appendRequest,
+        confidence: "low",
+      },
+      runtime: "codex_cli",
+      target: "repo",
+    });
+    const auditEntry = YAML.parse(readFileSync(result.audit_log_path, "utf8"));
+    assert.deepEqual(validateAuditLogEntry(auditEntry), []);
+    assert.match(auditEntry.notes, /low-confidence-authoritative-write/);
   } finally {
     fixture.cleanup();
   }

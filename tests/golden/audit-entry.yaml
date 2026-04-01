@@ -1,10 +1,15 @@
-timestamp: '2026-03-22T00:00:00Z'
 action: append
-kind: pattern
-title: Preview patch is mandatory before write
-target_file: .pairslash/project-memory/70-known-good-patterns/preview-patch-is-mandatory-before-write.yaml
-updated_by: phase2-check
+approval: explicit
 confidence: high
+conflict_count: 0
+duplicate_count: 0
+kind: pattern
+notes: ""
+preview_artifact: .pairslash/staging/memory-write-013bfc3f42a2c2ba-preview-patch-is-mandatory-before-write.yaml
+related_layers: []
 result: success
-notes: ''
-
+schema_version: 0.1.0
+target_file: .pairslash/project-memory/70-known-good-patterns/preview-patch-is-mandatory-before-write.yaml
+timestamp: 2026-03-22T00:00:00Z
+title: Preview patch is mandatory before write
+updated_by: phase2-check
