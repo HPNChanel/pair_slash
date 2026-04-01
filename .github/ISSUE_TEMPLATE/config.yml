@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: PairSlash Support Triage Playbook
+    url: https://github.com/HPNChanel/pair_slash/blob/main/docs/support/triage-playbook.md
+    about: Maintainer-facing routing model for support, bug, docs drift, and evidence-gap classification.
+  - name: PairSlash Repro Asset Requirements
+    url: https://github.com/HPNChanel/pair_slash/blob/main/docs/support/repro-assets.md
+    about: Minimum evidence requirements by install, runtime mismatch, workflow, memory, pack request, and docs report surfaces.
+  - name: PairSlash Compatibility Matrix
+    url: https://github.com/HPNChanel/pair_slash/blob/main/docs/compatibility/compatibility-matrix.md
+    about: Public support truth for lane labels and known-broken/prep caveats.

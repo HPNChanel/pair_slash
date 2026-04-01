@@ -1,0 +1,55 @@
+name: Pack request
+description: Request a new pack or widened pack scope for a real terminal-native workflow
+title: "[pack-request] "
+body:
+  - type: textarea
+    id: job_to_be_done
+    attributes:
+      label: Job to be done
+      description: Describe the real task you need to complete.
+      placeholder: I need to...
+    validations:
+      required: true
+  - type: input
+    id: runtime_lane
+    attributes:
+      label: Runtime lane
+      description: Runtime plus target lane you expect (`codex/repo`, `copilot/user`, etc.).
+      placeholder: codex/repo
+    validations:
+      required: true
+  - type: input
+    id: repo_archetype
+    attributes:
+      label: Repo archetype
+      description: Example archetype (node monorepo, python service, docs-only repo, etc.).
+      placeholder: Node monorepo
+    validations:
+      required: true
+  - type: textarea
+    id: desired_first_workflow
+    attributes:
+      label: Desired first workflow
+      description: What first-run workflow should this pack enable?
+      placeholder: pairslash-onboard-repo for...
+    validations:
+      required: true
+  - type: textarea
+    id: existing_gap
+    attributes:
+      label: Why existing packs are insufficient
+      description: Mention packs or workflows you tried and what gap remained.
+    validations:
+      required: true
+  - type: textarea
+    id: tools_or_constraints
+    attributes:
+      label: Tools or constraints (optional)
+      description: MCP, CLI, policy, or environment constraints if already known.
+    validations:
+      required: false
+  - type: markdown
+    attributes:
+      value: |
+        Do not attach support bundles for pack requests.
+        If this is an install/runtime/workflow/memory failure, use the matching bug template instead.

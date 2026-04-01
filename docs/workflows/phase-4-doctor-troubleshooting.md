@@ -2,6 +2,9 @@
 
 Use `pairslash doctor` before install, after install, and before update. Phase 4 doctor is the adoption/support entrypoint, not just a version check.
 
+This page shows direct CLI invocation (`node packages/tools/cli/src/bin/pairslash.js ...`) for runtime-neutral docs.
+In this repo, use the equivalent shorthand `npm run pairslash -- <args>`.
+
 When doctor surfaces a failure you cannot explain from the report alone, move
 to the support flow in `docs/support/phase-7-support-ops.md` and capture a
 debug report or support bundle instead of pasting raw logs.

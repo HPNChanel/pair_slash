@@ -5,6 +5,9 @@ managed Phase 4 command surface.
 
 `/skills` is the canonical entrypoint after install on both runtimes.
 
+This page shows direct CLI invocation (`node packages/tools/cli/src/bin/pairslash.js ...`) for runtime-neutral docs.
+In this repo, use the equivalent shorthand `npm run pairslash -- <args>`.
+
 ## Fast path (time-to-first-success)
 
 Use:
@@ -17,6 +20,12 @@ Use:
 For the shortest onboarding path, use `docs/workflows/phase-4-quickstart.md`.
 For the broader operations flow, use `docs/workflows/phase-2-operations.md`.
 For runtime evidence and guardrails, use `docs/compatibility/runtime-verification.md`.
+For Phase 9 proof assets and evidence placeholders, use:
+
+- `examples/README.md`
+- `docs/benchmarks/README.md`
+- `docs/case-studies/README.md`
+- `docs/case-studies/onboard-repo-before-after.md`
 
 ## Managed lifecycle commands
 

@@ -1,0 +1,58 @@
+name: Docs/problem report
+description: Report docs drift, stale commands, or support wording mismatch
+title: "[docs] "
+body:
+  - type: input
+    id: doc_path
+    attributes:
+      label: Doc path
+      description: File path of the docs page with the problem.
+      placeholder: docs/phase-9/onboarding-path.md
+    validations:
+      required: true
+  - type: dropdown
+    id: problem_type
+    attributes:
+      label: Problem type
+      options:
+        - Stale command
+        - Support wording overclaim
+        - Runtime lane mismatch
+        - Broken navigation/link
+        - Other docs drift
+    validations:
+      required: true
+  - type: textarea
+    id: broken_text
+    attributes:
+      label: Current text or command
+      description: Paste the exact text that is wrong.
+    validations:
+      required: true
+  - type: textarea
+    id: expected_text
+    attributes:
+      label: Suggested correction
+      description: Provide corrected wording grounded in repo truth.
+    validations:
+      required: true
+  - type: input
+    id: source_of_truth
+    attributes:
+      label: Source-of-truth path
+      description: Repo file that should win.
+      placeholder: docs/compatibility/compatibility-matrix.md
+    validations:
+      required: true
+  - type: textarea
+    id: optional_output
+    attributes:
+      label: Optional command output
+      description: Include output only if command behavior is part of the docs drift.
+    validations:
+      required: false
+  - type: markdown
+    attributes:
+      value: |
+        Do not attach support bundles for docs-only reports.
+        If the issue is a runtime failure, use an issue template under install/runtime/workflow/memory.

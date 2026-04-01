@@ -3,6 +3,9 @@
 This page is the operational source of truth for PairSlash support bundles,
 privacy boundaries, local-first telemetry summaries, and maintainer triage.
 
+This page shows direct CLI invocation (`node packages/tools/cli/src/bin/pairslash.js ...`) for runtime-neutral docs.
+In this repo, use the equivalent shorthand `npm run pairslash -- <args>`.
+
 PairSlash support remains local-first:
 
 - traces stay under `.pairslash/observability/`
