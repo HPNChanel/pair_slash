@@ -180,6 +180,7 @@ release_gates:
     trigger: manual pre-release gate
 runtime_lanes:
   - deterministic_lab_baseline: 0.116.0
+    evidence_source: docs/compatibility/compatibility-matrix.md; docs/compatibility/runtime-verification.md; docs/runtime-mapping/pilot-acceptance.md
     live_tested_range: 0.116.0
     os_lane: macOS
     recommended_version: 0.116.0
@@ -190,6 +191,7 @@ runtime_lanes:
     support_semantics: Canonical release lane. Use this lane when you need the strongest PairSlash support claim.
     target: repo
   - deterministic_lab_baseline: 2.50.0
+    evidence_source: docs/compatibility/compatibility-matrix.md; docs/compatibility/runtime-verification.md; docs/runtime-mapping/pilot-acceptance.md
     live_tested_range: none recorded
     os_lane: Linux
     recommended_version: 2.50.x
@@ -200,6 +202,7 @@ runtime_lanes:
     support_semantics: Deterministically covered in compat-lab, but live runtime evidence is not yet bounded enough for stable-tested claims.
     target: user
   - deterministic_lab_baseline: 0.116.0
+    evidence_source: docs/compatibility/compatibility-matrix.md; docs/compatibility/runtime-verification.md; docs/runtime-mapping/pilot-acceptance.md
     live_tested_range: none recorded
     os_lane: Windows
     recommended_version: 0.116.0
@@ -210,6 +213,7 @@ runtime_lanes:
     support_semantics: Doctor and preview are expected; install evidence remains prep-only until manual live verification is recorded.
     target: repo
   - deterministic_lab_baseline: 2.50.0
+    evidence_source: docs/compatibility/compatibility-matrix.md; docs/compatibility/runtime-verification.md; docs/runtime-mapping/pilot-acceptance.md
     live_tested_range: none recorded
     os_lane: Windows
     recommended_version: 2.50.x

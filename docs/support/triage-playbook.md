@@ -7,7 +7,8 @@ This playbook operationalizes Phase 9 support using repository truth:
 - Public support claims: `docs/compatibility/compatibility-matrix.md`
 - Live support evidence: `docs/compatibility/runtime-verification.md`
 - Shipped scope cap: `docs/releases/phase-5-shipped-scope.md`
-- Claim cap: `docs/validation/phase-3-5/verdict.md`
+- Product-validation truth: `docs/validation/phase-3-5/verdict.md`
+- Claim cap: `docs/releases/public-claim-policy.md`
 
 PairSlash support remains local-first and evidence-aware.
 
@@ -98,4 +99,3 @@ Route to `type:evidence-gap` when:
 - Add automation to apply baseline labels on issue creation.
 - Add a saved maintainer query view keyed by `status:*` and `severity:*`.
 - Add a periodic docs-claim audit against compatibility and runtime verification files.
-

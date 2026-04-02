@@ -11,6 +11,11 @@ baseline_source: docs/phase-9/phase-9-baseline-reality-lock.md
 This page is the public first-run flow for PairSlash.
 It answers three questions fast: why install, where to start, and what to do when it fails.
 
+Official stage statement: PairSlash is currently at Phase 3.5 business
+validation on top of a technically shipped Phase 4 installability substrate
+with additional Phase 5/6 hardening in the repo. Source of truth:
+[../phase-12/authoritative-program-charter.md](../phase-12/authoritative-program-charter.md).
+
 ## Runtime scope
 
 PairSlash supports exactly two runtimes:
@@ -94,8 +99,11 @@ Then file with:
 
 Keep onboarding wording aligned to:
 
+- [Authoritative Program Charter](../phase-12/authoritative-program-charter.md)
 - [Compatibility Matrix](../compatibility/compatibility-matrix.md)
-- [Scoped Release Verdict](../validation/phase-3-5/verdict.md)
+- [Product-Validation Verdict](../validation/phase-3-5/verdict.md)
+- [Scoped Release Verdict](../releases/scoped-release-verdict.md)
+- [Public Claim Policy](../releases/public-claim-policy.md)
 - [Phase 5 Shipped Scope](../releases/phase-5-shipped-scope.md)
 - [Install Guide](../workflows/install-guide.md)
 - [Phase 4 Quickstart](../workflows/phase-4-quickstart.md)

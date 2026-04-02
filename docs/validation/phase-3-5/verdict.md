@@ -1,55 +1,55 @@
-# PairSlash Scoped Release Verdict
+# PairSlash Product-Validation Verdict
 
-Gate status: GO
-Last updated: 2026-03-26
-Claim scope: phase4-runtime-native-installability
-Validated runtimes: codex_cli, copilot_cli
+Gate status: NO-GO
+Last updated: 2026-04-02
+Truth class: product-validation
+Claim scope: phase3_5_business_validation
+Validated runtimes: none recorded
 
-Benchmark lane: separate. Product-validation benchmark truth is defined by
-`benchmark-tasks.md`, `scoring-rubric.md`, `evidence-log.md`, and
-`docs/phase-3.5/phase-exit/adoption-scorecard.md`.
+This file owns product-validation truth only.
+It does not own the scoped release/installability verdict, and it does not own
+the official phase statement.
 
-This file is the release-facing answer to a single question:
+Release/installability truth is separate. Use
+`docs/releases/scoped-release-verdict.md` for the scoped release-facing verdict.
+Use `docs/phase-12/authoritative-program-charter.md` for the program phase
+statement and truth hierarchy.
 
-Can PairSlash enter scoped Phase 4 release readiness without violating trust
-boundaries?
+This file answers one question only:
+
+Has PairSlash validated a must-win workflow strongly enough to claim product
+progress beyond Phase 3.5 business validation?
 
 ## Current decision
 
-Yes, for a scoped claim.
+No.
 
-The claim is limited to Phase 4 runtime-native distribution/installability for
-Codex CLI and GitHub Copilot CLI through managed commands (`doctor`, `preview`,
-`install`, `update`, `uninstall`) with `/skills` as canonical entrypoint.
+PairSlash remains in Phase 3.5 business validation because the current
+benchmark system still has no official recorded runs under
+`docs/validation/phase-3-5/evidence-log.md`.
 
-## Why this is GO
+## Why this remains NO-GO
 
-- Managed lifecycle path is implemented and test-covered.
-- Preview-first mutation path, ownership tracking, and rollback-safe behavior are
-  present in install/update/uninstall.
-- Doctor provides actionable setup diagnostics across runtime detection,
-  version range checks, path/config checks, writability probes, and conflicts.
-- Acceptance slice recorded pilot evidence for:
-  - macOS + Codex CLI repo scope
-  - Linux + Copilot CLI user scope
-  - Windows prep lane (doctor/preview/path checks only)
-- Release readiness checks pass only when this verdict remains GO and evidence
-  log includes recorded runs.
+- No official product-validation benchmark runs are recorded under the current
+  benchmark method.
+- No benchmark-backed weekly-return or must-win workflow evidence is logged.
+- Deterministic release checks, doctor coverage, and acceptance slices are
+  technical evidence only; they do not prove product pull.
+- Compatibility and release docs can justify a scoped installability story, but
+  they cannot justify product-validation exit by themselves.
 
-## Guardrails preserved
+## What can still be said publicly
 
-- Supported runtimes remain exactly: Codex CLI and GitHub Copilot CLI.
-- `/skills` remains canonical entrypoint.
-- No hidden memory writes or background daemon introduced.
-- No third runtime or undocumented custom slash surface is part of release path.
+- PairSlash has a technically shipped installability substrate for its two core
+  runtimes.
+- PairSlash is still in Phase 3.5 business validation.
+- Public phase wording must reuse the official sentence in
+  `docs/phase-12/authoritative-program-charter.md`.
+- Product claims must stay narrow until benchmark evidence exists.
 
-## Open scope limits
+## What would change this verdict
 
-- Windows remains a prep lane in Phase 4.
-- Full compat-lab expansion remains deferred to Phase 6.
-- Full contract/policy engine enforcement remains deferred to Phase 5.
-
-## Update rule
-
-Change this file back to `Gate status: NO-GO` if any release blocker appears in
-managed lifecycle behavior, doctor coverage, or runtime evidence integrity.
+Change this file only if the current benchmark system records official runs
+with evidence strong enough to satisfy the exit criteria in `README.md`,
+`scoring-rubric.md`, `runbook.md`, `evidence-log.md`, and
+`docs/phase-3.5/phase-exit/adoption-scorecard.md`.

@@ -54,7 +54,9 @@ debug report or support bundle instead of pasting raw logs.
 - `install_state.asset_placement`
   A managed file is present, but not where the runtime-native adapter expects it. Reinstall or fix compiler/runtime drift before trusting update or uninstall.
 - `conflict.unmanaged_install_root`
-  Move or remove the unmanaged runtime folder that blocks PairSlash ownership.
+    Use `preview install` as the source of truth. If preview reports a blocked
+    conflict, move or remove the unmanaged runtime folder; if preview stays
+    non-blocking, treat the unmanaged files as preserved local overrides.
 - `platform.os_shell_support`
   Use PowerShell, cmd, bash, zsh, or sh on a supported OS before filing a runtime bug.
 

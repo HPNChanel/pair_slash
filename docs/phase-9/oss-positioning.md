@@ -335,7 +335,9 @@ Maintainer surfaces should own:
 - `README.md` already positions PairSlash as a trust layer and keeps `/skills` canonical.
 - `docs/compatibility/compatibility-matrix.md` limits the strongest support claim to lane-specific evidence and marks Windows as `prep`.
 - `docs/releases/phase-5-shipped-scope.md` preserves preview-before-write, no hidden write, and no silent fallback.
-- `docs/validation/phase-3-5/verdict.md` is a scoped release-installability verdict, not product-validation proof.
+- `docs/releases/scoped-release-verdict.md` is the scoped release-installability verdict.
+- `docs/validation/phase-3-5/verdict.md` is the product-validation verdict.
+- `docs/releases/public-claim-policy.md` is the public-claim boundary.
 - `docs/phase-3.5/wedge-workflows-decision.md` keeps onboarding, memory, then review/fix as the wedge order.
 - `docs/workflows/install-guide.md` and `docs/workflows/phase-4-quickstart.md` make `pairslash-plan` the current first installed workflow.
 

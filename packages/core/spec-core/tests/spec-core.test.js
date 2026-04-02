@@ -36,6 +36,29 @@ test("discoverPackManifestPaths finds phase 4 manifests", () => {
   assert.ok(manifestPaths.every((path) => path.endsWith("pack.manifest.yaml")));
 });
 
+test("derived pack registry stays aligned with canonical core manifests", () => {
+  const registry = YAML.parse(
+    readFileSync(join(repoRoot, "packages", "core", "spec-core", "registry", "packs.yaml"), "utf8"),
+  );
+  const manifestPackIds = loadPackManifestRecords(repoRoot)
+    .filter((record) => !record.error && record.manifestPath.startsWith(join(repoRoot, "packs", "core")))
+    .map((record) => record.packId)
+    .sort((left, right) => left.localeCompare(right));
+  const registryPackIds = registry.packs
+    .map((entry) => entry.id)
+    .sort((left, right) => left.localeCompare(right));
+
+  assert.deepEqual(registryPackIds, manifestPackIds);
+  assert.ok(
+    registry.packs.every(
+      (entry) =>
+        entry.metadata_file === `packs/core/${entry.id}/pack.manifest.yaml` &&
+        entry.skill_file === `packs/core/${entry.id}/SKILL.md` &&
+        entry.contract_file === `packs/core/${entry.id}/contract.md`,
+    ),
+  );
+});
+
 test("pairslash-plan manifest v2 validates", () => {
   const manifest = loadPackManifest(join(repoRoot, "packs", "core", "pairslash-plan", "pack.manifest.yaml"));
   assert.deepEqual(validatePackManifestV2(manifest), []);

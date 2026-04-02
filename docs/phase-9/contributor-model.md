@@ -35,6 +35,8 @@ Keep contributions aligned with:
 
 - `docs/compatibility/compatibility-matrix.md`
 - `docs/compatibility/runtime-verification.md`
+- `docs/releases/public-claim-policy.md`
+- `docs/releases/scoped-release-verdict.md`
 - `docs/validation/phase-3-5/verdict.md`
 - `docs/releases/phase-5-shipped-scope.md`
 - `docs/workflows/`
@@ -45,4 +47,3 @@ Keep contributions aligned with:
 - `packages/tools/lint-bridge/`
 - `packages/core/memory-engine/`
 - `packages/tools/trace/`
-

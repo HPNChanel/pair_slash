@@ -11,6 +11,11 @@ baseline_source: docs/phase-9/phase-9-baseline-reality-lock.md
 This directory defines the public Phase 9 narrative for PairSlash as a trust layer for terminal-native AI workflows.
 Scope stays narrow: exactly two runtimes, `/skills` as canonical front door, and explicit-write-only Global Project Memory.
 
+Official stage statement: PairSlash is currently at Phase 3.5 business
+validation on top of a technically shipped Phase 4 installability substrate
+with additional Phase 5/6 hardening in the repo. Source of truth:
+[../phase-12/authoritative-program-charter.md](../phase-12/authoritative-program-charter.md).
+
 ## Start Here
 
 - [Onboarding Path](onboarding-path.md)
@@ -69,8 +74,11 @@ Current support labels must be preserved exactly: `stable-tested`, `degraded`, `
 
 Keep public wording aligned with:
 
+- [Authoritative Program Charter](../phase-12/authoritative-program-charter.md)
 - [Phase 9 Baseline Reality Lock](phase-9-baseline-reality-lock.md)
-- [Scoped Release Verdict](../validation/phase-3-5/verdict.md)
+- [Product-Validation Verdict](../validation/phase-3-5/verdict.md)
+- [Scoped Release Verdict](../releases/scoped-release-verdict.md)
+- [Public Claim Policy](../releases/public-claim-policy.md)
 - [Phase 5 Shipped Scope](../releases/phase-5-shipped-scope.md)
 - [Compatibility Matrix](../compatibility/compatibility-matrix.md)
 

@@ -1,29 +1,14 @@
-import { satisfiesRuntimeRange } from "@pairslash/spec-core";
-
-const PILOT_LANES = [
-  {
-    runtime: "codex_cli",
-    target: "repo",
-    os: "darwin",
-    lane_status: "supported",
-    tested_version_range: "0.116.0",
-    evidence_source:
-      "docs/compatibility/compatibility-matrix.md; docs/runtime-mapping/pilot-acceptance.md; .pairslash/project-memory/60-architecture-decisions/phase-0-codex-cli-verification-on-v0-116-0.yaml",
-    summary: "macOS Codex repo scope is the primary stable-tested compatibility lane.",
-  },
-  {
-    runtime: "copilot_cli",
-    target: "user",
-    os: "linux",
-    lane_status: "supported",
-    tested_version_range: null,
-    evidence_source: "docs/compatibility/compatibility-matrix.md; docs/runtime-mapping/pilot-acceptance.md",
-    summary: "Linux Copilot user scope is the secondary compatibility lane and remains degraded until live runtime evidence is tightened.",
-  },
-];
+import {
+  findPublicCompatibilityLane,
+  hasRecordedLiveTestedRange,
+  publicSupportLevelToDoctorLaneStatus,
+  satisfiesRuntimeRange,
+} from "@pairslash/spec-core";
 
 export function resolveSupportLane({ runtime, target, os, runtimeVersion = null, runtimeAvailable = false }) {
-  if (!["win32", "linux", "darwin"].includes(os)) {
+  const publicLane = findPublicCompatibilityLane({ runtime, target, os });
+
+  if (!publicLane && !["win32", "linux", "darwin"].includes(os)) {
     return {
       os,
       runtime,
@@ -37,25 +22,7 @@ export function resolveSupportLane({ runtime, target, os, runtimeVersion = null,
     };
   }
 
-  if (os === "win32") {
-    return {
-      os,
-      runtime,
-      target,
-      lane_status: "prep",
-      tested_range_status: "prep_lane",
-      tested_version_range: null,
-      evidence_source: "docs/compatibility/compatibility-matrix.md; docs/runtime-mapping/pilot-acceptance.md",
-      blocking_for_install: false,
-      summary: "Windows is a prep lane: doctor and preview are expected, but live install evidence is still pending.",
-    };
-  }
-
-  const matchedLane = PILOT_LANES.find(
-    (lane) => lane.runtime === runtime && lane.target === target && lane.os === os,
-  );
-
-  if (!matchedLane) {
+  if (!publicLane) {
     return {
       os,
       runtime,
@@ -71,23 +38,26 @@ export function resolveSupportLane({ runtime, target, os, runtimeVersion = null,
   }
 
   let testedRangeStatus = "unrecorded";
-  if (matchedLane.tested_version_range) {
+  const testedVersionRange = hasRecordedLiveTestedRange(publicLane) ? publicLane.live_tested_range : null;
+  if (testedVersionRange) {
     if (runtimeAvailable && runtimeVersion && runtimeVersion !== "unknown") {
-      testedRangeStatus = satisfiesRuntimeRange(runtimeVersion, matchedLane.tested_version_range)
+      testedRangeStatus = satisfiesRuntimeRange(runtimeVersion, testedVersionRange)
         ? "recorded"
         : "outside_recorded";
     }
+  } else if (publicLane.support_level === "prep") {
+    testedRangeStatus = "prep_lane";
   }
 
   return {
     os,
     runtime,
     target,
-    lane_status: matchedLane.lane_status,
+    lane_status: publicSupportLevelToDoctorLaneStatus(publicLane.support_level),
     tested_range_status: testedRangeStatus,
-    tested_version_range: matchedLane.tested_version_range,
-    evidence_source: matchedLane.evidence_source,
-    blocking_for_install: false,
-    summary: matchedLane.summary,
+    tested_version_range: testedVersionRange,
+    evidence_source: publicLane.evidence_source,
+    blocking_for_install: publicLane.support_level === "known-broken",
+    summary: publicLane.support_semantics,
   };
 }

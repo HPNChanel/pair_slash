@@ -42,7 +42,8 @@ const SYSTEM_RECORD_REQUIRED_FIELDS = {
     "runtimes",
     "canonical_entrypoint",
     "core_principles",
-    "phase_2_goal",
+    "stage_statement",
+    "truth_sources",
     "provenance",
   ],
   "stack-profile": [
@@ -116,8 +117,18 @@ export function validateSystemRecord(record) {
     if ("core_principles" in record && !Array.isArray(record.core_principles)) {
       errors.push("core_principles must be a list");
     }
-    if ("phase" in record && !Number.isInteger(record.phase)) {
-      errors.push("phase must be an integer");
+    if (
+      "phase" in record &&
+      !Number.isInteger(record.phase) &&
+      !(typeof record.phase === "string" && record.phase.trim() !== "")
+    ) {
+      errors.push("phase must be an integer or non-empty string");
+    }
+    if ("stage_statement" in record && typeof record.stage_statement !== "string") {
+      errors.push("stage_statement must be a string");
+    }
+    if ("truth_sources" in record && (typeof record.truth_sources !== "object" || record.truth_sources === null || Array.isArray(record.truth_sources))) {
+      errors.push("truth_sources must be an object");
     }
   }
   if (record.kind === "stack-profile" && "build_tooling" in record && !Array.isArray(record.build_tooling)) {

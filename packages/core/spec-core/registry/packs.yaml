@@ -1,59 +1,128 @@
-version: "0.2.0"
-model: phase-3-team-pack
-last_updated: "2026-03-23"
+# Derived index of canonical core pack manifests.
+# Canonical pack semantics live in packs/core/*/pack.manifest.yaml.
+
+version: "0.4.0"
+model: pack-manifest-derived-index
+last_updated: "2026-04-02"
 packs:
-  - id: pairslash-plan
-    version: "0.2.0"
-    phase: 2
-    status: active
-    category: planning
-    metadata_file: packs/core/pairslash-plan/pack.yaml
-    skill_file: packs/core/pairslash-plan/SKILL.md
-    contract_file: packs/core/pairslash-plan/contract.md
-    spec_file: packages/core/spec-core/specs/pairslash-plan.spec.yaml
-    compatibility_matrix: docs/compatibility/runtime-surface-matrix.yaml
-    validation_checklist: packs/core/pairslash-plan/validation-checklist.md
   - id: pairslash-backend
     version: "0.2.0"
     phase: 3
     status: active
     category: backend
-    metadata_file: packs/core/pairslash-backend/pack.yaml
+    metadata_file: packs/core/pairslash-backend/pack.manifest.yaml
     skill_file: packs/core/pairslash-backend/SKILL.md
     contract_file: packs/core/pairslash-backend/contract.md
     spec_file: packages/core/spec-core/specs/pairslash-backend.spec.yaml
     compatibility_matrix: docs/compatibility/runtime-surface-matrix.yaml
     validation_checklist: packs/core/pairslash-backend/validation-checklist.md
-  - id: pairslash-frontend
+  - id: pairslash-command-suggest
     version: "0.2.0"
-    phase: 3
+    phase: 2
     status: active
-    category: frontend
-    metadata_file: packs/core/pairslash-frontend/pack.yaml
-    skill_file: packs/core/pairslash-frontend/SKILL.md
-    contract_file: packs/core/pairslash-frontend/contract.md
-    spec_file: packages/core/spec-core/specs/pairslash-frontend.spec.yaml
+    category: workflow
+    metadata_file: packs/core/pairslash-command-suggest/pack.manifest.yaml
+    skill_file: packs/core/pairslash-command-suggest/SKILL.md
+    contract_file: packs/core/pairslash-command-suggest/contract.md
+    spec_file: packages/core/spec-core/specs/pairslash-command-suggest.spec.yaml
     compatibility_matrix: docs/compatibility/runtime-surface-matrix.yaml
-    validation_checklist: packs/core/pairslash-frontend/validation-checklist.md
+    validation_checklist: packs/core/pairslash-command-suggest/validation-checklist.md
   - id: pairslash-devops
     version: "0.2.0"
     phase: 3
     status: active
     category: devops
-    metadata_file: packs/core/pairslash-devops/pack.yaml
+    metadata_file: packs/core/pairslash-devops/pack.manifest.yaml
     skill_file: packs/core/pairslash-devops/SKILL.md
     contract_file: packs/core/pairslash-devops/contract.md
     spec_file: packages/core/spec-core/specs/pairslash-devops.spec.yaml
     compatibility_matrix: docs/compatibility/runtime-surface-matrix.yaml
     validation_checklist: packs/core/pairslash-devops/validation-checklist.md
+  - id: pairslash-frontend
+    version: "0.2.0"
+    phase: 3
+    status: active
+    category: frontend
+    metadata_file: packs/core/pairslash-frontend/pack.manifest.yaml
+    skill_file: packs/core/pairslash-frontend/SKILL.md
+    contract_file: packs/core/pairslash-frontend/contract.md
+    spec_file: packages/core/spec-core/specs/pairslash-frontend.spec.yaml
+    compatibility_matrix: docs/compatibility/runtime-surface-matrix.yaml
+    validation_checklist: packs/core/pairslash-frontend/validation-checklist.md
+  - id: pairslash-memory-audit
+    version: "0.2.0"
+    phase: 2
+    status: active
+    category: memory
+    metadata_file: packs/core/pairslash-memory-audit/pack.manifest.yaml
+    skill_file: packs/core/pairslash-memory-audit/SKILL.md
+    contract_file: packs/core/pairslash-memory-audit/contract.md
+    spec_file: packages/core/spec-core/specs/pairslash-memory-audit.spec.yaml
+    compatibility_matrix: docs/compatibility/runtime-surface-matrix.yaml
+    validation_checklist: packs/core/pairslash-memory-audit/validation-checklist.md
+  - id: pairslash-memory-candidate
+    version: "0.2.0"
+    phase: 2
+    status: active
+    category: memory
+    metadata_file: packs/core/pairslash-memory-candidate/pack.manifest.yaml
+    skill_file: packs/core/pairslash-memory-candidate/SKILL.md
+    contract_file: packs/core/pairslash-memory-candidate/contract.md
+    spec_file: packages/core/spec-core/specs/pairslash-memory-candidate.spec.yaml
+    compatibility_matrix: docs/compatibility/runtime-surface-matrix.yaml
+    validation_checklist: packs/core/pairslash-memory-candidate/validation-checklist.md
+  - id: pairslash-memory-write-global
+    version: "0.2.0"
+    phase: 2
+    status: active
+    category: memory
+    metadata_file: packs/core/pairslash-memory-write-global/pack.manifest.yaml
+    skill_file: packs/core/pairslash-memory-write-global/SKILL.md
+    contract_file: packs/core/pairslash-memory-write-global/contract.md
+    spec_file: packages/core/spec-core/specs/pairslash-memory-write-global.spec.yaml
+    compatibility_matrix: docs/compatibility/runtime-surface-matrix.yaml
+    validation_checklist: packs/core/pairslash-memory-write-global/validation-checklist.md
+  - id: pairslash-onboard-repo
+    version: "0.2.0"
+    phase: 2
+    status: active
+    category: onboarding
+    metadata_file: packs/core/pairslash-onboard-repo/pack.manifest.yaml
+    skill_file: packs/core/pairslash-onboard-repo/SKILL.md
+    contract_file: packs/core/pairslash-onboard-repo/contract.md
+    spec_file: packages/core/spec-core/specs/pairslash-onboard-repo.spec.yaml
+    compatibility_matrix: docs/compatibility/runtime-surface-matrix.yaml
+    validation_checklist: packs/core/pairslash-onboard-repo/validation-checklist.md
+  - id: pairslash-plan
+    version: "0.2.0"
+    phase: 2
+    status: active
+    category: planning
+    metadata_file: packs/core/pairslash-plan/pack.manifest.yaml
+    skill_file: packs/core/pairslash-plan/SKILL.md
+    contract_file: packs/core/pairslash-plan/contract.md
+    spec_file: packages/core/spec-core/specs/pairslash-plan.spec.yaml
+    compatibility_matrix: docs/compatibility/runtime-surface-matrix.yaml
+    validation_checklist: packs/core/pairslash-plan/validation-checklist.md
   - id: pairslash-release
     version: "0.2.0"
     phase: 3
     status: active
     category: release
-    metadata_file: packs/core/pairslash-release/pack.yaml
+    metadata_file: packs/core/pairslash-release/pack.manifest.yaml
     skill_file: packs/core/pairslash-release/SKILL.md
     contract_file: packs/core/pairslash-release/contract.md
     spec_file: packages/core/spec-core/specs/pairslash-release.spec.yaml
     compatibility_matrix: docs/compatibility/runtime-surface-matrix.yaml
     validation_checklist: packs/core/pairslash-release/validation-checklist.md
+  - id: pairslash-review
+    version: "0.2.0"
+    phase: 2
+    status: active
+    category: review
+    metadata_file: packs/core/pairslash-review/pack.manifest.yaml
+    skill_file: packs/core/pairslash-review/SKILL.md
+    contract_file: packs/core/pairslash-review/contract.md
+    spec_file: packages/core/spec-core/specs/pairslash-review.spec.yaml
+    compatibility_matrix: docs/compatibility/runtime-surface-matrix.yaml
+    validation_checklist: packs/core/pairslash-review/validation-checklist.md

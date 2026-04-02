@@ -13,7 +13,9 @@ It complements `docs/phase-9/maintainer-playbook.md` with operational links used
 ## Release Hygiene
 
 - Shipped scope guardrail: `docs/releases/phase-5-shipped-scope.md`
-- Validation guardrail: `docs/validation/phase-3-5/verdict.md`
+- Product-validation guardrail: `docs/validation/phase-3-5/verdict.md`
+- Scoped release guardrail: `docs/releases/scoped-release-verdict.md`
+- Public claim policy: `docs/releases/public-claim-policy.md`
 - Compatibility wording guardrail: `docs/compatibility/compatibility-matrix.md`
 - Runtime promotion evidence: `docs/compatibility/runtime-verification.md`
 
@@ -23,4 +25,3 @@ It complements `docs/phase-9/maintainer-playbook.md` with operational links used
 - Require deterministic regression coverage for lifecycle and memory trust issues.
 - Keep docs claims synchronized with compatibility and runtime-verification evidence.
 - Route docs overclaim to docs downgrade when code is operating as documented scope allows.
-

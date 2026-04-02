@@ -1,5 +1,8 @@
 # PairSlash 0.4.0 Release Checklist
 
+This checklist governs scoped release/installability truth. It does not reopen
+or close the Phase 3.5 product-validation gate.
+
 Status legend:
 
 - `[x]` automated gate exists and passes on the current branch
@@ -23,11 +26,13 @@ Status legend:
 ## Blockers
 
 - [ ] Block release if `npm run test:release` fails
-- [ ] Block release if `docs/validation/phase-3-5/verdict.md` is absent or remains `Gate status: NO-GO`
-- [ ] Block release if `docs/validation/phase-3-5/evidence-log.md` has no recorded benchmark evidence
+- [ ] Block release if `docs/phase-12/authoritative-program-charter.md` is absent
+- [ ] Block release if `docs/releases/scoped-release-verdict.md` is absent or remains `Gate status: NO-GO`
+- [ ] Block release if public docs imply product-validation exit while `docs/validation/phase-3-5/verdict.md` remains `Gate status: NO-GO`
+- [ ] Block release if `README.md`, `docs/phase-9/README.md`, or `docs/phase-9/onboarding-path.md` drift from the official phase sentence in `docs/phase-12/authoritative-program-charter.md`
 - [ ] Block release if docs claim live runtime compatibility beyond `docs/compatibility/runtime-verification.md` evidence
 - [ ] Block release if a new runtime is mentioned outside Codex CLI and GitHub Copilot CLI
-- [ ] Block release if messaging drifts beyond `docs/validation/phase-3-5/messaging-narrative.md`
+- [ ] Block release if messaging drifts beyond `docs/validation/phase-3-5/messaging-narrative.md` or `docs/releases/public-claim-policy.md`
 
 ## Shipped hardening after Phase 4 baseline
 
@@ -66,6 +71,9 @@ Status legend:
 - [x] `docs/validation/phase-3-5/evidence-log.md`
 - [x] `docs/validation/phase-3-5/messaging-narrative.md`
 - [x] `docs/validation/phase-3-5/verdict.md`
+- [x] `docs/phase-12/authoritative-program-charter.md`
+- [x] `docs/releases/scoped-release-verdict.md`
+- [x] `docs/releases/public-claim-policy.md`
 - [x] `docs/architecture/pack-manifest-v2-practical-spec.md`
 - [x] `docs/architecture/compiler-v2-implement-oriented.md`
 - [x] `docs/workflows/phase-4-install-commands.md`

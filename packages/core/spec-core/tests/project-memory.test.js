@@ -41,12 +41,34 @@ test("validateSystemRecord rejects missing charter fields", () => {
     kind: "charter",
     title: "Broken Charter",
     version: "0.1.0",
-    phase: 2,
+    phase: "phase-12-truth-sync",
     identity: {},
     runtimes: {},
     canonical_entrypoint: "/skills",
+    stage_statement: "PairSlash is currently at Phase 3.5 business validation.",
+    truth_sources: {},
     provenance: {},
   };
 
   assert.ok(validateSystemRecord(broken).includes("missing field: core_principles"));
+});
+
+test("validateSystemRecord accepts charter pointer records with string phase identifiers", () => {
+  const record = {
+    kind: "charter",
+    title: "PairSlash Project Charter",
+    version: "0.2.0",
+    phase: "phase-12-truth-sync",
+    identity: {},
+    runtimes: {},
+    canonical_entrypoint: "/skills",
+    core_principles: ["two-runtime discipline"],
+    stage_statement: "PairSlash is currently at Phase 3.5 business validation.",
+    truth_sources: {
+      program_charter: "docs/phase-12/authoritative-program-charter.md",
+    },
+    provenance: {},
+  };
+
+  assert.deepEqual(validateSystemRecord(record), []);
 });

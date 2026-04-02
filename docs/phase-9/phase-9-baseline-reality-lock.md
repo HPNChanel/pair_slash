@@ -2,7 +2,7 @@
 
 ## Executive Verdict
 
-As of April 1, 2026, PairSlash can credibly present a narrow Phase 9 public story:
+As of April 2, 2026, PairSlash can credibly present a narrow Phase 9 public story:
 
 - PairSlash is an OSS trust layer for terminal-native AI workflows.
 - It supports exactly two runtimes: Codex CLI and GitHub Copilot CLI.
@@ -23,9 +23,9 @@ Public adoption should lead with repo re-entry and trust, but the first defensib
 Evidence basis used for this lock:
 
 - required docs and code paths listed in the mission
-- live CLI checks run on April 1, 2026
+- live CLI checks run on April 2, 2026
 - `npm run test:acceptance` passed
-- `npm run test`, `npm run sync:compat-lab -- --check`, and `npm run test:release` failed because two compat fixture snapshots are out of date
+- targeted truth-layer tests and `npm run test:release` passed
 
 ## Phase 8 Outputs Safe To Surface Publicly vs Not Ready To Surface
 
@@ -38,13 +38,13 @@ Evidence basis used for this lock:
 | Local-first support path: `debug`, `trace export`, support bundle, privacy note, issue template | Safe to surface | `docs/support/phase-7-support-ops.md`, `.github/ISSUE_TEMPLATE/pairslash-support-bundle.md`, trace code, and CLI tests all back it. |
 | Compatibility semantics: `stable-tested`, `degraded`, `prep`, `known-broken` | Safe to surface with exact lane wording | Generated compatibility docs and matrix tests keep these labels synchronized and narrow. |
 | Visible wedge order: `pairslash-onboard-repo` -> memory flow -> review/fix | Safe to surface as narrative order only | Phase 3.5 wedge docs support this as adoption sequencing, not as proven market outcome. |
-| Full 11-pack catalog as one equally mature public surface | Not ready to surface | Release channels and risk levels vary, and the formal pack registry still lags the broader catalog. |
+| Full 11-pack catalog as one equally mature public surface | Not ready to surface | Release channels and risk levels still vary even though the formal pack registry now mirrors the canonical manifest catalog. |
 | `pairslash-onboard-repo` as the default first install target | Not ready to surface | It is still `canary` and is not the bootstrap install path. |
 | Review/fix as autonomous coding or auto-fix | Not ready to surface | Repo truth keeps review first and fix handoff explicit. |
 | Windows live install parity | Not ready to surface | Compatibility docs keep Windows in `prep`, and live local checks on April 1, 2026 reinforce that constraint. |
 | Copilot prompt-mode direct invocation | Not ready to surface | Compatibility matrix marks it `known-broken`. |
 | Product-validation win or weekly-reuse proof | Not ready to surface | Official benchmark evidence log is still empty under the current schema. |
-| Release-ready claim for the current branch | Not ready to surface | `npm run sync:compat-lab -- --check` and `npm run test:release` currently fail on out-of-date compat artifacts. |
+| Scoped release/installability claim for the current branch | Safe to surface with narrow wording | `docs/releases/scoped-release-verdict.md` is `GO` and `npm run test:release` passes on April 2, 2026; this is not product-validation proof. |
 
 # Decisions
 
@@ -120,20 +120,14 @@ Evidence basis used for this lock:
 
 ## Current Repo Bugs / Drift That Public Docs Must Respect
 
-- `npm run test:acceptance` passed on April 1, 2026 for `macos`, `linux`, and `windows-prep` lanes. That is deterministic installability coverage, not product-validation proof.
-- `npm run test` failed on April 1, 2026 because `packages/tools/compat-lab/tests/compat-lab.test.js` detected two out-of-date fixture snapshots:
-  - `packages/tools/compat-lab/goldens/fixture-snapshot.repo-monorepo-workspaces.json`
-  - `packages/tools/compat-lab/goldens/fixture-snapshot.repo-conflict-existing-runtime.json`
-- `npm run sync:compat-lab -- --check` failed on April 1, 2026 on the same two out-of-date artifacts.
-- `npm run test:release` failed on April 1, 2026 on the same out-of-date compat artifacts, so current branch release-readiness should not be implied in public copy.
+- `npm run test:acceptance` passes for `macos`, `linux`, and `windows-prep` lanes. That is deterministic installability coverage, not product-validation proof.
+- `npm run test:release` passes on April 2, 2026. That supports the scoped release/installability verdict, not product-validation exit.
 - Live `pairslash doctor --runtime codex --target repo --format json` on the current Windows machine showed two truths at once:
   - the lane is still `prep`
-  - install can still be blocked by unmanaged `.agents/skills` collisions in a real repo
+  - unmanaged `.agents/skills` entries now surface as warnings, while `preview install` remains the source of truth for whether install is actually blocked
+- Live `pairslash preview install pairslash-plan --runtime codex --target repo --format json` on the current Windows machine remained `can_apply: true` with preserved local overrides under the unmanaged Codex skill directory.
 - Live `pairslash preview install pairslash-plan --runtime copilot --target user --format json` on the current Windows machine was blocked because `gh` was unavailable locally. That reinforces that public Copilot claims must stay evidence-bound and lane-specific.
-- The public workflow catalog currently drifts from the formal registry:
-  - `README.md` and pack manifests expose 11 active workflows
-  - `packages/core/spec-core/registry/packs.yaml` still formalizes only 5 older registry-backed packs
-  - Phase 9 should not use the registry as the public catalog source until that drift is resolved
+- `packages/core/spec-core/registry/packs.yaml` now mirrors the 11 canonical core manifests, but public docs still must not flatten all packs into one equally mature surface.
 - `docs/examples/` is explicitly documentation-oriented and non-authoritative. `packages/tools/compat-lab/` remains regression truth, not user-facing proof.
 - Official product-validation evidence is still absent: `docs/validation/phase-3-5/evidence-log.md` records no official benchmark runs under the current method.
 

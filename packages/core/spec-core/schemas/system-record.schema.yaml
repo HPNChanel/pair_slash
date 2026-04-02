@@ -23,7 +23,8 @@ oneOf:
       - runtimes
       - canonical_entrypoint
       - core_principles
-      - phase_2_goal
+      - stage_statement
+      - truth_sources
       - provenance
     properties:
       kind:
@@ -36,7 +37,10 @@ oneOf:
         type: string
         minLength: 1
       phase:
-        type: integer
+        oneOf:
+          - type: integer
+          - type: string
+            minLength: 1
       identity:
         type: object
       runtimes:
@@ -48,9 +52,11 @@ oneOf:
         type: array
         items:
           type: string
-      phase_2_goal:
+      stage_statement:
         type: string
         minLength: 1
+      truth_sources:
+        type: object
       provenance:
         type: object
     additionalProperties: true

@@ -120,9 +120,9 @@ contracts:
     network_calls: none
 
   packaging:
-    metadata: packs/core/pairslash-plan/pack.yaml
+    metadata: packs/core/pairslash-plan/pack.manifest.yaml
     registry_entry: packages/core/spec-core/registry/packs.yaml
     compatibility_rules:
       - /skills remains the canonical invocation path.
       - Direct invocation claims must not exceed statuses recorded in the runtime matrix.
-      - Pack identity/version must stay aligned across spec, contract, registry, and pack metadata.
+      - Pack identity/version must stay aligned across spec, contract, registry, and canonical manifest metadata.

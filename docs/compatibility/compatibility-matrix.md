@@ -9,6 +9,9 @@ Generated from compat-lab metadata and deterministic release gates for PairSlash
 - `prep`: doctor and preview are expected, but install support is not yet claimed as live evidence.
 - `known-broken`: PairSlash has an explicit blocked or broken surface. No silent fallback is allowed.
 
+These labels are runtime-support truth only.
+They do not promote product-validation status, program phase, or release scope by themselves.
+
 ## Runtime lanes
 
 | Runtime | Target | OS lane | Support level | Recommended version | Live tested range | Deterministic baseline | Release gate |

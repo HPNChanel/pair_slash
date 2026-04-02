@@ -7,6 +7,14 @@ PairSlash is the OSS trust layer for terminal-native AI workflows.
 It supports exactly two runtimes: Codex CLI and GitHub Copilot CLI.
 `/skills` is the canonical front door on both supported runtimes.
 
+Current stage: PairSlash is currently at Phase 3.5 business validation on top
+of a technically shipped Phase 4 installability substrate with additional
+Phase 5/6 hardening in the repo. Public claims stay bounded by the
+[authoritative program charter](docs/phase-12/authoritative-program-charter.md),
+[product-validation verdict](docs/validation/phase-3-5/verdict.md),
+[scoped release verdict](docs/releases/scoped-release-verdict.md), and
+[public claim policy](docs/releases/public-claim-policy.md).
+
 ## Why install this
 
 - Re-enter repos with explicit, repeatable workflows instead of chat debris.
@@ -113,6 +121,7 @@ Canonical workflow source: [packs/core/](packs/core/).
 ## Start here docs and entry points
 
 - Start path: [docs/phase-9/onboarding-path.md](docs/phase-9/onboarding-path.md)
+- Authority root: [docs/phase-12/authoritative-program-charter.md](docs/phase-12/authoritative-program-charter.md)
 - Phase 9 docs index: [docs/phase-9/README.md](docs/phase-9/README.md)
 - Phase 9 proof plan: [docs/phase-9/examples-and-benchmarks.md](docs/phase-9/examples-and-benchmarks.md)
 - Phase 9 examples index: [docs/examples/README.md](docs/examples/README.md)

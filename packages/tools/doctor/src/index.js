@@ -6,6 +6,7 @@ import { spawnSync } from "node:child_process";
 import {
   detectRuntimeSelection,
   loadStateForDoctor,
+  planInstall,
   planUpdate,
   resolveStatePath,
   satisfiesRuntimeRange,
@@ -1816,20 +1817,82 @@ function runUnmanagedInstallRoot(context) {
 
   const collisions = unmanaged.filter((entry) => selectedNames.has(entry.name));
   if (collisions.length > 0) {
-    return createCheckResult({
-      id: "conflict.unmanaged_install_root",
-      group: "conflict",
-      status: "fail",
-      runtime: context.runtime,
-      target: context.target,
-      inputs: {},
-      summary: `${collisions.length} unmanaged install root entry matches a selected pack id`,
-      remediation: "Rename or remove conflicting unmanaged directories before installing or updating the pack.",
-      evidence: {
-        collisions: collisions.map((entry) => entry.absolutePath),
-      },
-      blockingForInstall: true,
-    });
+    const selectedPackIds = context.selectedManifests.map((record) => record.packId);
+    try {
+      const preview = planInstall({
+        repoRoot: context.repoRoot,
+        runtime: context.runtime,
+        target: context.target,
+        packs: selectedPackIds,
+      });
+      const unmanagedOperations = preview.plan.operations.filter(
+        (operation) => selectedNames.has(operation.pack_id) && operation.ownership === "unmanaged",
+      );
+      const blocked = unmanagedOperations.filter((operation) => operation.kind === "blocked_conflict");
+      if (blocked.length > 0) {
+        return createCheckResult({
+          id: "conflict.unmanaged_install_root",
+          group: "conflict",
+          status: "fail",
+          runtime: context.runtime,
+          target: context.target,
+          inputs: {},
+          summary: `${blocked.length} unmanaged install-root path(s) would block install preview`,
+          remediation:
+            "Run `pairslash preview install` and rename, remove, or reconcile the blocking unmanaged paths before install.",
+          evidence: {
+            collisions: collisions.map((entry) => entry.absolutePath),
+            blocked_conflicts: blocked.map((operation) => ({
+              pack_id: operation.pack_id,
+              relative_path: operation.relative_path,
+              reason: operation.reason,
+            })),
+          },
+          blockingForInstall: true,
+        });
+      }
+
+      const preserved = unmanagedOperations.filter((operation) =>
+        ["preserve_override", "skip_identical", "skip_unmanaged"].includes(operation.kind),
+      );
+      if (preserved.length > 0) {
+        return createCheckResult({
+          id: "conflict.unmanaged_install_root",
+          group: "conflict",
+          status: "warn",
+          runtime: context.runtime,
+          target: context.target,
+          inputs: {},
+          summary: `${collisions.length} unmanaged install-root entr${collisions.length === 1 ? "y" : "ies"} collide with selected pack ids but install preview stays non-blocking`,
+          remediation:
+            "Keep `pairslash preview install` as the source of truth before apply and review any preserved overrides carefully.",
+          evidence: {
+            collisions: collisions.map((entry) => entry.absolutePath),
+            preview_operations: preserved.map((operation) => ({
+              kind: operation.kind,
+              pack_id: operation.pack_id,
+              relative_path: operation.relative_path,
+              reason: operation.reason,
+            })),
+          },
+        });
+      }
+    } catch (error) {
+      return createCheckResult({
+        id: "conflict.unmanaged_install_root",
+        group: "conflict",
+        status: "warn",
+        runtime: context.runtime,
+        target: context.target,
+        inputs: {},
+        summary: "unmanaged install-root entries detected, but install preview could not classify whether they block apply",
+        remediation: "Run `pairslash preview install` directly to confirm whether unmanaged paths are blocking or preserved.",
+        evidence: {
+          collisions: collisions.map((entry) => entry.absolutePath),
+          preview_error: error.message,
+        },
+      });
+    }
   }
 
   return createCheckResult({

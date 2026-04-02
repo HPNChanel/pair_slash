@@ -1,18 +1,18 @@
 # PairSlash Project Charter
-# Authoritative project identity record.
-# Scope: whole-project | Phase: 2
+# Machine-readable identity and truth-source pointer record.
+# Scope: whole-project | Phase: phase-12-truth-sync
 
 kind: charter
 title: PairSlash Project Charter
-version: "0.1.0"
-phase: 2
+version: "0.2.0"
+phase: phase-12-truth-sync
 
 identity:
   name: PairSlash
   tagline: >-
-    OSS slash-triggered workflow kit for Codex CLI and GitHub Copilot CLI,
-    with Global Project Memory as the durable source of truth for project context.
-  license: TBD
+    OSS trust layer for terminal-native AI workflows on Codex CLI and
+    GitHub Copilot CLI.
+  license_status: unresolved-in-repo-metadata
 
 runtimes:
   supported:
@@ -32,13 +32,25 @@ core_principles:
   - two-runtime discipline
   - no hidden learning or background daemons
 
-phase_2_goal: >-
-  Harden Global Project Memory operations with explicit write authority,
-  schema-validated records, deterministic preview/audit/index behavior,
-  and local doctor/lint/test/golden gates.
+stage_statement: >-
+  PairSlash is currently at Phase 3.5 business validation on top of a
+  technically shipped Phase 4 installability substrate with additional
+  Phase 5/6 hardening in the repo.
+
+truth_sources:
+  program_charter: docs/phase-12/authoritative-program-charter.md
+  product_validation_verdict: docs/validation/phase-3-5/verdict.md
+  scoped_release_verdict: docs/releases/scoped-release-verdict.md
+  public_claim_policy: docs/releases/public-claim-policy.md
+  runtime_support_matrix: docs/compatibility/compatibility-matrix.md
+  runtime_support_evidence: docs/compatibility/runtime-verification.md
+  runtime_support_data: docs/compatibility/runtime-surface-matrix.yaml
+  pack_catalog_source: packs/core/*/pack.manifest.yaml
+  pack_catalog_index: packages/core/spec-core/registry/packs.yaml
+  legal_package_source: package.json
 
 provenance:
   created_by: phase-0-scaffold
-  updated_by: phase2-hardening
-  timestamp: "2026-03-22T13:20:00+07:00"
-  source: CLAUDE.md sections 3, 4, 7, 8, 11, 15, 19
+  updated_by: phase12-truth-sync-charter-reset
+  timestamp: "2026-04-02T23:44:43+07:00"
+  source: docs/phase-12/authoritative-program-charter.md

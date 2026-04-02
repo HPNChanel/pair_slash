@@ -6,9 +6,11 @@ This report reflects the 2026-03-25 `B1-B5` benchmark framing. It is kept for
 provenance, not as the current source of truth for product-validation
 decisions. Use `docs/validation/phase-3-5/benchmark-tasks.md`,
 `docs/validation/phase-3-5/scoring-rubric.md`,
-`docs/validation/phase-3-5/evidence-log.md`, and
+`docs/validation/phase-3-5/evidence-log.md`,
+`docs/validation/phase-3-5/verdict.md`, and
 `docs/phase-3.5/phase-exit/adoption-scorecard.md` for the active benchmark
-system.
+system. Use `docs/releases/scoped-release-verdict.md` for the separate scoped
+release/installability verdict.
 
 Date: 2026-03-25
 Status: phase-exit review
@@ -75,13 +77,14 @@ has been recorded.
   `docs/validation/phase-3-5/runbook.md` create a coherent benchmark method.
 - `docs/phase-3.5/wedge-workflows-decision.md` sharpens the adoption sequence
   and explicitly labels its scores as pre-benchmark working scores.
-- `docs/releases/release-checklist-0.4.0.md` correctly blocks release claims
-  while `docs/validation/phase-3-5/verdict.md` remains `NO-GO`.
+- `docs/releases/release-checklist-0.4.0.md` now keeps the scoped release
+  verdict separate from the product-validation verdict.
 
 ### Weak or missing evidence about customer truth
 
 - `docs/validation/phase-3-5/evidence-log.md` contains zero recorded runs.
-- `docs/validation/phase-3-5/verdict.md` still marks `B1-B5` as `not run`.
+- `docs/validation/phase-3-5/verdict.md` remains `NO-GO` because no official
+  product-validation runs are recorded.
 - `docs/phase-3.5/painpoint-map.md` labels frequency and severity as
   `[Hypothesis]`.
 - `docs/phase-3.5/icp.md` and `docs/phase-3.5/jtbd.md` are strong framing docs,

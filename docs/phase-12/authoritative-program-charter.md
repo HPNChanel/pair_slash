@@ -1,0 +1,151 @@
+---
+title: Authoritative Program Charter
+phase: 12
+status: active-charter
+owner_file: docs/phase-12/authoritative-program-charter.md
+---
+
+# PairSlash Authoritative Program Charter
+
+## 1. Charter Purpose
+
+This charter exists to stop phase-governance drift. It makes one file responsible for the official phase statement, the truth-layer split, the claim ladder, the support-boundary ladder, and the source-of-truth hierarchy so README, release docs, compatibility docs, and project memory do not keep competing with each other.
+
+## 2. Canonical Product Statement
+
+PairSlash is the OSS trust layer for terminal-native AI workflows on exactly two runtimes, Codex CLI and GitHub Copilot CLI, with `/skills` as the canonical front door, explicit preview-first workflows, and Global Project Memory as the authoritative project memory layer. Its current publicly claimable surface is the shipped installability and trust-boundary substrate evidenced in repo code, release gates, and lane-specific compatibility docs; it is not yet entitled to claim benchmark-backed product validation, broad runtime parity, or hidden-write behavior.
+
+## 3. Current Program Truth
+
+### Implementation Truth
+
+Implementation truth is what the repo actually ships today in code, manifests, and deterministic checks. The authoritative implementation surfaces are `packs/core/*/pack.manifest.yaml`, `packages/core/spec-core/registry/packs.yaml`, `packages/tools/installer/`, `packages/tools/doctor/`, `packages/core/memory-engine/`, and `packages/tools/compat-lab/`. This layer proves that PairSlash has a narrow two-runtime installability and trust substrate with `/skills`, preview-first lifecycle commands, explicit memory write authority, and no-silent-fallback discipline.
+
+### Product-Validation Truth
+
+Product-validation truth is governed only by `docs/validation/phase-3-5/verdict.md`, `docs/validation/phase-3-5/evidence-log.md`, `docs/validation/phase-3-5/benchmark-tasks.md`, `docs/validation/phase-3-5/scoring-rubric.md`, and `docs/validation/phase-3-5/runbook.md`. That layer is still `NO-GO`. No official benchmark runs are recorded under the current method, so PairSlash has not validated must-win workflow pull strongly enough to claim progress beyond Phase 3.5 business validation.
+
+### Public-Claim Truth
+
+Public-claim truth is narrower than implementation truth. A public sentence is allowed only when it maps back to evidence class and source, stays inside `docs/releases/public-claim-policy.md`, stays inside `docs/releases/scoped-release-verdict.md`, stays inside the runtime-support boundary in `docs/compatibility/compatibility-matrix.md`, and does not outrun current legal/package metadata. README wording, onboarding wording, release wording, and support wording are downstream only.
+
+### Runtime-Support Truth
+
+Runtime-support truth is lane-specific, not product-global. Public support labels come from `docs/compatibility/compatibility-matrix.md`. Promotion evidence is recorded through `docs/compatibility/runtime-verification.md` and `docs/compatibility/runtime-surface-matrix.yaml`. Current public support reality remains narrow: Codex CLI repo on macOS is `stable-tested`, GitHub Copilot CLI user on Linux is `degraded`, Windows lanes are `prep`, and Copilot prompt-mode direct invocation is `known-broken`.
+
+### Release-Trust Truth
+
+Release-trust truth answers whether PairSlash can make a scoped installability claim without pretending product validation is complete. The authoritative files are `docs/releases/scoped-release-verdict.md`, `docs/releases/phase-5-shipped-scope.md`, and `docs/releases/release-checklist-0.4.0.md`. That layer is currently `GO` for a narrow technically shipped installability substrate and still `NO-GO` for product-validation exit. Legal and package publicness remain capped by current metadata in `package.json`, package-level `package.json` files, and the absence or presence of `LICENSE` and `NOTICE`.
+
+## 4. Official Phase Statement
+
+PairSlash is currently at Phase 3.5 business validation on top of a technically shipped Phase 4 installability substrate with additional Phase 5/6 hardening in the repo.
+
+What has been implemented: a two-runtime trust layer with `/skills` as the canonical front door, preview-first managed lifecycle commands, explicit Global Project Memory write authority, deterministic compatibility artifacts, and release-gated installability support.
+
+What has been validated: technical implementation, deterministic regression coverage, a scoped release/installability verdict, and lane-specific runtime support wording.
+
+What is still scoped only: benchmark-backed product pull, weekly-reuse proof, live install parity beyond the exact documented lanes, and legal/package publicness beyond current repo metadata.
+
+What must not be overclaimed: that tests equal market validation, that preview or deterministic acceptance equals live runtime support, that Windows has live parity, that PairSlash supports a third runtime, or that read workflows or background processes can write authoritative project memory implicitly.
+
+## 5. Authority Hierarchy
+
+| Truth topic | Authoritative source | Role |
+| --- | --- | --- |
+| Phase truth | `docs/phase-12/authoritative-program-charter.md` | Owns the official stage sentence, truth-layer split, and authority hierarchy. |
+| Validation verdict | `docs/validation/phase-3-5/verdict.md` | Owns product-validation `GO/NO-GO` only. |
+| Public claim policy | `docs/releases/public-claim-policy.md` | Owns allowed and forbidden public wording rules, not the phase statement. |
+| Runtime support policy | `docs/compatibility/compatibility-matrix.md` | Owns public lane labels and their exact wording. |
+| Runtime promotion evidence | `docs/compatibility/runtime-verification.md` and `docs/compatibility/runtime-surface-matrix.yaml` | Own evidence class and promotion/demotion inputs for runtime labels. |
+| Pack catalog truth | `packs/core/*/pack.manifest.yaml` | Owns canonical core pack semantics. |
+| Pack catalog index | `packages/core/spec-core/registry/packs.yaml` | Derived index of the canonical pack manifests. |
+| Release checklist truth | `docs/releases/release-checklist-0.4.0.md` | Owns scoped release checklist and blockers. |
+| Legal/package truth | `package.json`, `packages/*/*/package.json`, `LICENSE`, `NOTICE` | Own legal/package publicness; absence is part of the truth. |
+| Machine-readable charter pointer | `.pairslash/project-memory/00-project-charter.yaml` | Downstream identity and pointer record only. |
+
+## 6. Claim Ladder
+
+| Level | Required evidence | Forbidden wording | Allowed wording |
+| --- | --- | --- | --- |
+| `implemented` | Source code, manifests, and generated assets exist in the repo. | "validated", "supported everywhere", "market-proven" | "implemented in the repo", "present in code/manifests" |
+| `repo-verified` | Current-branch command output or machine-readable report from the repo confirms the behavior. | "release-ready", "live runtime proven", "customer validated" | "verified on the current branch", "repo-verified" |
+| `deterministic-tested` | Repeatable automated tests or compat-lab gates pass for the surface. | "live evidence", "market validated", "broad runtime parity" | "deterministic tests pass", "covered by compat-lab or release gates" |
+| `live-evidence-backed` | Manual live runtime evidence is recorded in runtime verification artifacts with exact lane details. | "all lanes supported", "product validated", "phase advanced" | "live-evidence-backed for the documented lane", "supported at the documented lane level" |
+| `publicly claimable` | The statement is backed by the appropriate evidence above and is allowed by this charter, the public claim policy, the relevant verdict file, the compatibility boundary, and legal/package metadata. | Any broader wording than the governing evidence allows | "publicly claimable within the documented scope" |
+
+Rule: no claim may skip levels. Product-validation claims require the validation verdict. Runtime-support claims require the compatibility matrix. Release/installability claims require the scoped release verdict. Legal/package claims require legal/package metadata.
+
+## 7. Support Boundary Rules
+
+| Label | How to word it | What it means | Promotion / demotion rule |
+| --- | --- | --- | --- |
+| `stable-tested` | "stable-tested on the documented lane" | Deterministic coverage is green and matching live runtime evidence exists for that exact lane. | Runtime maintainer and release-truth owner update `runtime-surface-matrix.yaml`, `runtime-verification.md`, and `compatibility-matrix.md` together. |
+| `degraded` | "supported with documented caveats on the documented lane" | Deterministic coverage exists, but caveats or incomplete live evidence still cap confidence. | Same as `stable-tested`; caveat must be named explicitly. |
+| `prep` | "prep lane only" | Doctor, preview, or install-root expectations exist, but live install support is not yet claimable. | Same as `stable-tested`; doctor or preview alone cannot promote it. |
+| `known-broken` | "known-broken on the documented surface" | An explicit blocked surface exists; no silent fallback is allowed. | Same as `stable-tested`; demotion or recovery must update the same runtime sources. |
+| `unsupported` | "unsupported" | The lane or surface is outside the documented support boundary. | Runtime maintainer or release-truth owner may demote to `unsupported`; promotion requires a full runtime-support update set. |
+| `docs-only` | "docs-only" | The item is documentation guidance, not support evidence. | Docs owner may apply or remove this label if no runtime claim is widened. |
+| `internal/helper` | "internal/helper" | The item is a maintainer or helper surface, not a public support guarantee. | Subsystem maintainer may apply or remove this label if no public support claim changes. |
+
+Rule: only `stable-tested`, `degraded`, `prep`, and `known-broken` are public runtime-lane words. `unsupported`, `docs-only`, and `internal/helper` are boundary controls and must not be laundered into public support claims.
+
+## 8. Sync Policy
+
+The following files sync from this charter:
+
+- `README.md`
+- `docs/phase-9/README.md`
+- `docs/phase-9/onboarding-path.md`
+- `docs/releases/public-claim-policy.md`
+- `.pairslash/project-memory/00-project-charter.yaml`
+- `docs/releases/release-checklist-0.4.0.md`
+
+The following files must never become competing truth roots for phase/governance wording:
+
+- `README.md`
+- `docs/phase-9/README.md`
+- `docs/phase-9/onboarding-path.md`
+- `docs/releases/public-claim-policy.md`
+- `docs/releases/scoped-release-verdict.md`
+- `docs/validation/phase-3-5/verdict.md`
+- `docs/compatibility/compatibility-matrix.md`
+- `docs/phase-9/phase-9-baseline-reality-lock.md`
+- historical phase-exit and audit notes under `docs/phase-3.5/phase-exit/`
+
+Rule: downstream files may restate the official phase sentence, but they must point back to this charter and must not redefine the authority hierarchy.
+
+## 9. Anti-Drift Rules
+
+- README must not claim product-validation exit, broad runtime parity, finalized license status, or any runtime beyond Codex CLI and GitHub Copilot CLI.
+- Release checklist must not treat deterministic tests, preview output, or doctor output as product-validation proof or live runtime support by themselves.
+- Compatibility wording must stay lane-specific and must not imply that support labels promote program phase or product maturity.
+- Validation docs must not become release verdicts, and release docs must not become product-validation verdicts.
+- Pack catalog or pack count changes must not widen public support wording unless the canonical manifests, derived registry, compatibility evidence, and release docs all stay aligned.
+- `.pairslash/project-memory/00-project-charter.yaml` may summarize and point, but it must not carry a competing narrative root.
+
+## 10. Official Answer Bank
+
+| Question | Exact short answer |
+| --- | --- |
+| PairSlash la gi? | "PairSlash la OSS trust layer cho terminal-native AI workflows tren Codex CLI va GitHub Copilot CLI." |
+| PairSlash dang o phase nao? | "PairSlash is currently at Phase 3.5 business validation on top of a technically shipped Phase 4 installability substrate with additional Phase 5/6 hardening in the repo." |
+| Nhung gi da that su ship? | "Da ship mot installability va trust substrate hep cho hai runtime loi, voi `/skills`, doctor, preview-first lifecycle, va explicit Global Project Memory writes." |
+| Nhung gi chua duoc phep noi manh? | "Chua duoc noi rang PairSlash da benchmark-validated, co broad runtime parity, co Windows live parity, hoac co hidden-write memory behavior." |
+| PairSlash support runtime nao toi muc nao? | "Public support van la lane-specific: Codex repo macOS `stable-tested`, Copilot user Linux `degraded`, Windows `prep`, va Copilot prompt-mode direct invocation `known-broken`." |
+| Vi sao `/skills` van la front door chuan? | "Vi do la runtime-native browse surface duoc PairSlash support tren ca hai runtime, va no giu workflow discovery explicit thay vi prompt-mode drift." |
+
+## 11. Phase 12 Exit Gate
+
+- [ ] `docs/phase-12/authoritative-program-charter.md` exists and contains every required section in this charter.
+- [ ] `.pairslash/project-memory/00-project-charter.yaml` is reduced to an identity-and-pointer system record with the official stage sentence and `truth_sources`.
+- [ ] `README.md`, `docs/phase-9/README.md`, and `docs/phase-9/onboarding-path.md` reuse the exact official stage sentence and point back to this charter.
+- [ ] `docs/releases/public-claim-policy.md` no longer owns a competing stage root.
+- [ ] `docs/releases/scoped-release-verdict.md` and `docs/validation/phase-3-5/verdict.md` explicitly state their boundary and do not promote each other.
+- [ ] `docs/compatibility/compatibility-matrix.md` states that support labels are runtime-support truth only.
+- [ ] `docs/releases/release-checklist-0.4.0.md` treats this charter as a required release-truth input.
+- [ ] Truth-governance regression checks pass in `npm run test` and `npm run test:release`.
+
+## "Founder/Maintainer Single Answer"
+
+PairSlash is currently at Phase 3.5 business validation on top of a technically shipped Phase 4 installability substrate with additional Phase 5/6 hardening in the repo. What is shipped today is a narrow two-runtime trust layer for Codex CLI and GitHub Copilot CLI with `/skills` as the canonical front door, preview-first managed lifecycle commands, explicit Global Project Memory writes, and lane-specific support labels. What is not yet validated is benchmark-backed product pull, broad runtime parity, or any claim beyond the scoped release verdict, the compatibility matrix, the product-validation verdict, and current legal/package metadata.

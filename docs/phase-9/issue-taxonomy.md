@@ -16,7 +16,7 @@ PairSlash already ships the core Phase 9 support intake primitives:
 - `docs/compatibility/compatibility-matrix.md` owns the public support words: `stable-tested`, `degraded`, `prep`, `known-broken`.
 - `packages/tools/doctor` uses operational intake labels that are different from public support claims: `supported`, `unverified`, `prep`, `unsupported`, plus `pass`, `warn`, `degraded`, `fail`, `unsupported`.
 - `docs/troubleshooting/compat-lab-bug-repro.md` makes compat-lab a maintainer repro path after intake, not a first-contact requirement for casual users.
-- `docs/releases/phase-5-shipped-scope.md` and `docs/validation/phase-3-5/verdict.md` cap all intake language to two runtimes, `/skills` as the canonical front door, explicit-write-only memory, and no silent fallback.
+- `docs/releases/phase-5-shipped-scope.md`, `docs/releases/scoped-release-verdict.md`, `docs/releases/public-claim-policy.md`, and `docs/validation/phase-3-5/verdict.md` cap all intake language to two runtimes, `/skills` as the canonical front door, explicit-write-only memory, and no silent fallback.
 
 ## Support-language boundary
 
@@ -130,7 +130,9 @@ These paths own the Phase 9 issue model:
 - Live runtime promotion boundary: `docs/compatibility/runtime-verification.md`
 - Deterministic maintainer repro: `docs/troubleshooting/compat-lab-bug-repro.md`
 - Shipped scope boundary: `docs/releases/phase-5-shipped-scope.md`
-- Claim-scope boundary: `docs/validation/phase-3-5/verdict.md`
+- Scoped release boundary: `docs/releases/scoped-release-verdict.md`
+- Claim-scope boundary: `docs/releases/public-claim-policy.md`
+- Product-validation boundary: `docs/validation/phase-3-5/verdict.md`
 - Pack-specific truth: `packs/core/*/pack.manifest.yaml`
 
 # Risks / Bugs / Drift
@@ -160,7 +162,7 @@ Classify the issue as `type:docs-drift` and prefer docs downgrade when:
 - Public support claims come from `docs/compatibility/compatibility-matrix.md`, not from a single issue, local success, or doctor pass.
 - Live support promotion requires `docs/compatibility/runtime-verification.md` evidence. Compat-lab alone is not enough.
 - `pairslash doctor` is intake and diagnosis. It does not widen public support claims by itself.
-- `docs/releases/phase-5-shipped-scope.md` and `docs/validation/phase-3-5/verdict.md` cap what maintainers may say publicly while triaging issues.
+- `docs/releases/phase-5-shipped-scope.md`, `docs/releases/scoped-release-verdict.md`, `docs/releases/public-claim-policy.md`, and `docs/validation/phase-3-5/verdict.md` cap what maintainers may say publicly while triaging issues.
 - Pack-specific support wording must stay aligned with `packs/core/*/pack.manifest.yaml`, especially release channels and runtime compatibility notes.
 
 # Acceptance Checklist

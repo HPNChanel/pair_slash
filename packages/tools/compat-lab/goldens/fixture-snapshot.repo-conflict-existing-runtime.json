@@ -271,7 +271,7 @@
           {
             "blocking_for_install": false,
             "evidence": {
-              "evidence_source": "docs/compatibility/compatibility-matrix.md; docs/runtime-mapping/pilot-acceptance.md; .pairslash/project-memory/60-architecture-decisions/phase-0-codex-cli-verification-on-v0-116-0.yaml",
+              "evidence_source": "docs/compatibility/compatibility-matrix.md; docs/compatibility/runtime-verification.md; docs/runtime-mapping/pilot-acceptance.md",
               "lane_status": "supported",
               "tested_range_status": "recorded",
               "tested_version_range": "0.116.0"
@@ -281,7 +281,7 @@
             "remediation": null,
             "severity": "info",
             "status": "pass",
-            "summary": "macOS Codex repo scope is the primary stable-tested compatibility lane."
+            "summary": "Canonical release lane. Use this lane when you need the strongest PairSlash support claim."
           },
           {
             "blocking_for_install": false,
@@ -692,11 +692,11 @@
         },
         "support_lane": {
           "blocking_for_install": false,
-          "evidence_source": "docs/compatibility/compatibility-matrix.md; docs/runtime-mapping/pilot-acceptance.md; .pairslash/project-memory/60-architecture-decisions/phase-0-codex-cli-verification-on-v0-116-0.yaml",
+          "evidence_source": "docs/compatibility/compatibility-matrix.md; docs/compatibility/runtime-verification.md; docs/runtime-mapping/pilot-acceptance.md",
           "lane_status": "supported",
           "os": "darwin",
           "runtime": "codex_cli",
-          "summary": "macOS Codex repo scope is the primary stable-tested compatibility lane.",
+          "summary": "Canonical release lane. Use this lane when you need the strongest PairSlash support claim.",
           "target": "repo",
           "tested_range_status": "recorded",
           "tested_version_range": "0.116.0"
@@ -1299,7 +1299,7 @@
           {
             "blocking_for_install": false,
             "evidence": {
-              "evidence_source": "docs/compatibility/compatibility-matrix.md; docs/runtime-mapping/pilot-acceptance.md",
+              "evidence_source": "docs/compatibility/compatibility-matrix.md; docs/compatibility/runtime-verification.md; docs/runtime-mapping/pilot-acceptance.md",
               "lane_status": "supported",
               "tested_range_status": "unrecorded",
               "tested_version_range": null
@@ -1309,7 +1309,7 @@
             "remediation": null,
             "severity": "info",
             "status": "pass",
-            "summary": "Linux Copilot user scope is the secondary compatibility lane and remains degraded until live runtime evidence is tightened."
+            "summary": "Deterministically covered in compat-lab, but live runtime evidence is not yet bounded enough for stable-tested claims."
           },
           {
             "blocking_for_install": false,
@@ -1624,11 +1624,11 @@
         },
         "support_lane": {
           "blocking_for_install": false,
-          "evidence_source": "docs/compatibility/compatibility-matrix.md; docs/runtime-mapping/pilot-acceptance.md",
+          "evidence_source": "docs/compatibility/compatibility-matrix.md; docs/compatibility/runtime-verification.md; docs/runtime-mapping/pilot-acceptance.md",
           "lane_status": "supported",
           "os": "linux",
           "runtime": "copilot_cli",
-          "summary": "Linux Copilot user scope is the secondary compatibility lane and remains degraded until live runtime evidence is tightened.",
+          "summary": "Deterministically covered in compat-lab, but live runtime evidence is not yet bounded enough for stable-tested claims.",
           "target": "user",
           "tested_range_status": "unrecorded",
           "tested_version_range": null
@@ -1703,7 +1703,7 @@
           {
             "blocking_for_install": false,
             "evidence": {
-              "evidence_source": "docs/compatibility/compatibility-matrix.md; docs/runtime-mapping/pilot-acceptance.md",
+              "evidence_source": "docs/compatibility/compatibility-matrix.md; docs/compatibility/runtime-verification.md; docs/runtime-mapping/pilot-acceptance.md",
               "lane_status": "supported",
               "tested_range_status": "unrecorded",
               "tested_version_range": null
@@ -1713,7 +1713,7 @@
             "remediation": null,
             "severity": "info",
             "status": "pass",
-            "summary": "Linux Copilot user scope is the secondary compatibility lane and remains degraded until live runtime evidence is tightened."
+            "summary": "Deterministically covered in compat-lab, but live runtime evidence is not yet bounded enough for stable-tested claims."
           },
           {
             "blocking_for_install": false,
@@ -2016,11 +2016,11 @@
         },
         "support_lane": {
           "blocking_for_install": false,
-          "evidence_source": "docs/compatibility/compatibility-matrix.md; docs/runtime-mapping/pilot-acceptance.md",
+          "evidence_source": "docs/compatibility/compatibility-matrix.md; docs/compatibility/runtime-verification.md; docs/runtime-mapping/pilot-acceptance.md",
           "lane_status": "supported",
           "os": "linux",
           "runtime": "copilot_cli",
-          "summary": "Linux Copilot user scope is the secondary compatibility lane and remains degraded until live runtime evidence is tightened.",
+          "summary": "Deterministically covered in compat-lab, but live runtime evidence is not yet bounded enough for stable-tested claims.",
           "target": "user",
           "tested_range_status": "unrecorded",
           "tested_version_range": null

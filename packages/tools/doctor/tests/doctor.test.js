@@ -11,6 +11,7 @@ import {
   createTempRepo,
   installFakeRuntime,
   updatePackManifest,
+  writeManualInstallFile,
 } from "../../../../tests/phase4-helpers.js";
 
 function buildCodexTestAdapter({
@@ -198,6 +199,43 @@ test("doctor returns degraded when override-eligible file is edited after instal
     assert.equal(report.install_blocked, false);
     assert.ok(report.issues.some((issue) => issue.check_id === "install_state.owned_files_integrity"));
     assert.ok(report.issues.some((issue) => issue.check_id === "install_state.update_preview_risk"));
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("doctor mirrors install preview when unmanaged pack directories are non-blocking", () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  try {
+    const sourceSkillPath = join(
+      fixture.tempRoot,
+      "packs",
+      "core",
+      "pairslash-plan",
+      "SKILL.md",
+    );
+    writeManualInstallFile({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      packId: "pairslash-plan",
+      relativePath: "SKILL.md",
+      content: readFileSync(sourceSkillPath, "utf8"),
+    });
+
+    const report = runDoctor({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      target: "repo",
+    });
+    const unmanagedIssue = report.issues.find(
+      (issue) => issue.check_id === "conflict.unmanaged_install_root",
+    );
+
+    assert.equal(report.install_blocked, false);
+    assert.ok(unmanagedIssue);
+    assert.notEqual(unmanagedIssue.verdict, "fail");
   } finally {
     runtime.cleanup();
     fixture.cleanup();

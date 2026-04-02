@@ -6,7 +6,8 @@ PairSlash. The directory path is legacy. The benchmark logic here is current.
 Important distinction:
 
 - these benchmark docs answer the business-validation question
-- `verdict.md` in this folder remains a scoped release/installability verdict
+- `verdict.md` in this folder is the product-validation verdict
+- `docs/releases/scoped-release-verdict.md` is the separate release/installability verdict
 - a release-facing `GO` does not satisfy the product-validation gate by itself
 
 ## Fixed boundary
@@ -43,7 +44,8 @@ The current product-validation gate measures only these workflows:
 - `evidence-log.md`
 - `docs/phase-3.5/phase-exit/north-star-metric.md`
 - `docs/phase-3.5/phase-exit/adoption-scorecard.md`
-- `verdict.md` for scoped release/installability only
+- `verdict.md` for product-validation only
+- `docs/releases/scoped-release-verdict.md` for scoped release/installability only
 
 ## Evidence standard
 

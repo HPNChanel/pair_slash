@@ -14,7 +14,7 @@ Maintainer scaling in Phase 9 has to sit on top of the support and evidence surf
 - `pairslash debug --bundle` and `pairslash trace export --support-bundle --include-doctor` are the only shipped paths that package local evidence, share-safety metadata, and bundled triage templates.
 - `docs/support/phase-7-support-ops.md` already defines local-first support, privacy boundaries, and redaction rules.
 - `docs/troubleshooting/compat-lab-bug-repro.md` already makes compat-lab a post-intake deterministic repro path.
-- `docs/compatibility/compatibility-matrix.md`, `docs/compatibility/runtime-verification.md`, `docs/releases/phase-5-shipped-scope.md`, and `docs/validation/phase-3-5/verdict.md` already cap what PairSlash can claim publicly.
+- `docs/compatibility/compatibility-matrix.md`, `docs/compatibility/runtime-verification.md`, `docs/releases/phase-5-shipped-scope.md`, `docs/releases/scoped-release-verdict.md`, `docs/releases/public-claim-policy.md`, and `docs/validation/phase-3-5/verdict.md` cap what PairSlash can claim publicly.
 - Pack release channels and compatibility notes already live in `packs/core/*/pack.manifest.yaml`, so triage cannot treat all packs as equally mature.
 
 ## Triage Truth Stack
@@ -22,7 +22,9 @@ Maintainer scaling in Phase 9 has to sit on top of the support and evidence surf
 | Layer | Owner | What it answers |
 | --- | --- | --- |
 | Public support claim | `docs/compatibility/compatibility-matrix.md` | What PairSlash may say publicly about a runtime lane |
-| Shipped scope | `docs/releases/phase-5-shipped-scope.md` and `docs/validation/phase-3-5/verdict.md` | What behavior is actually in scope today |
+| Public claim policy | `docs/releases/public-claim-policy.md` | What PairSlash may say publicly across phase, release, and support wording |
+| Shipped scope | `docs/releases/phase-5-shipped-scope.md` and `docs/releases/scoped-release-verdict.md` | What installability behavior is actually in scope today |
+| Product-validation stage | `docs/validation/phase-3-5/verdict.md` | Whether PairSlash may claim product-validation progress beyond Phase 3.5 |
 | Local evidence | `doctor-report`, `debug-report`, `trace-export`, `support-bundle` | What happened on the reporter's machine |
 | Deterministic repro | compat-lab fixtures, goldens, acceptance, and evals | Whether maintainers can reproduce or guard the issue in automation |
 
@@ -124,7 +126,9 @@ These files and paths are the canonical homes maintainers should use during tria
 - Public support claim truth: `docs/compatibility/compatibility-matrix.md`
 - Live runtime evidence promotion: `docs/compatibility/runtime-verification.md`
 - Shipped scope boundary: `docs/releases/phase-5-shipped-scope.md`
-- Release-facing claim cap: `docs/validation/phase-3-5/verdict.md`
+- Scoped release verdict: `docs/releases/scoped-release-verdict.md`
+- Public claim policy: `docs/releases/public-claim-policy.md`
+- Product-validation verdict: `docs/validation/phase-3-5/verdict.md`
 - Support bundle behavior and privacy policy: `docs/support/phase-7-support-ops.md`
 - Deterministic repro playbook: `docs/troubleshooting/compat-lab-bug-repro.md`
 - Bootstrap support flow: `docs/workflows/install-guide.md` and `docs/workflows/phase-4-doctor-troubleshooting.md`
@@ -161,7 +165,7 @@ Prefer `type:docs-drift` and `resolution:docs-downgrade` when:
 2. Runtime verification owns live lane promotion and live downgrade evidence.
 3. Doctor owns machine-local diagnosis only. It is not a public support promotion mechanism.
 4. Compat-lab owns deterministic reproduction and regression control. It is not public proof of support breadth by itself.
-5. Shipped scope and the validation verdict cap what maintainers may promise while triaging.
+5. Shipped scope, the scoped release verdict, the public claim policy, and the product-validation verdict cap what maintainers may promise while triaging.
 6. Pack manifest release channels and runtime metadata limit how strongly maintainers may describe a pack in public responses.
 
 ## Maintainer Overload Traps
