@@ -62,6 +62,7 @@ coverage/
 *.tsbuildinfo
 .eslintcache
 .parcel-cache/
+docs/audits/
 
 # ─── Environment / secrets ────────────────────────────────────────────────────
 .env
