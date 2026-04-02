@@ -1,0 +1,6 @@
+kind: version-policy
+schema_version: "1.0.0"
+downgrade: deny
+allow_unparsed_versions: true
+stable_lane: same-major
+zero_major_lane: same-minor

@@ -44,7 +44,7 @@ Low-risk fixes were applied in this pass where correctness was unambiguous:
 
 | Severity | Status | Finding | Evidence | Impact | Decision |
 | --- | --- | --- | --- | --- | --- |
-| `s1` | Open | `examples/README.md` is a public entrypoint but mostly points outside `examples/` to docs placeholders. | `examples/README.md`, `docs/examples/README.md` | First-run users can hit an examples surface that does not feel runnable or owned, which weakens trust in adoption proof. | Keep open; requires canonical examples-home decision. |
+| `s1` | Open | `docs/examples/README.md` is a public entrypoint but still points to starter examples and proof placeholders rather than measured evidence. | `docs/examples/README.md` | First-run users can hit an examples surface that does not yet feel evidence-backed, which weakens trust in adoption proof. | Keep open; requires measured examples or clearer evidence boundaries. |
 | `s2` | Fixed | Public failure path pointed to one support-bundle template instead of issue-type lanes. | `README.md`, `docs/phase-9/onboarding-path.md`, `docs/phase-9/README.md` | Could misroute reports and make support feel inaccurate. | Patched to explicit template lanes plus artifact-heavy fallback. |
 | `s2` | Fixed | Phase 9 taxonomy still claimed only one issue template existed and treated forms as future state. | `docs/phase-9/issue-taxonomy.md` | Support model drifted from repo reality. | Patched to current template set and routing model. |
 | `s2` | Fixed | Maintainer playbook referenced a single bug intake template only. | `docs/phase-9/maintainer-playbook.md` | Triage handoff model looked narrower than implemented intake. | Patched to chooser + artifact-heavy template. |
@@ -61,7 +61,7 @@ Low-risk fixes were applied in this pass where correctness was unambiguous:
 | Taxonomy template model | Now reflects implemented templates | `.github/ISSUE_TEMPLATE/*` includes both markdown and form lanes | Fixed |
 | Runtime lane wording in README start table | Now anchored to lane labels (`stable-tested`, `degraded`) | Compatibility matrix is lane-specific | Fixed |
 | Command-surface guidance | Public and workflow/support docs now state equivalence for repo-local usage | CLI entrypoint exists both as `npm run pairslash --` and direct script path | Partially fixed |
-| Example home ownership | `examples/README.md` is still mostly an index to docs placeholders and case-study placeholders | `docs/examples/` holds starter examples; `examples/` has index only | Open |
+| Example home ownership | `docs/examples/README.md` is still mostly an index to starter examples and case-study placeholders | `docs/examples/` holds the canonical examples home | Open |
 | Planned future docs homes | Several Phase 9 planning docs reference paths not created | Current repo has `docs/phase-9`, `docs/benchmarks`, `docs/case-studies`, `examples` | Open |
 
 ## Drift List: Docs Vs Support-Evidence Truth
@@ -102,7 +102,7 @@ Patched in this review pass:
 
 Open path ownership decisions needed:
 
-- Canonical examples home: `examples/` vs `docs/examples/`.
+- Canonical examples home: `docs/examples/` is now canonical, but the proof story is still placeholder-heavy.
 - Public proof home path: whether to create `docs/evidence/*` now or remove from active wording.
 - Public-vs-internal Phase 9 split inside `docs/phase-9/`.
 
@@ -153,6 +153,6 @@ Reason: depends on long-lived docs host or policy for branch/fork behavior.
 
 Recommended next 3 actions:
 
-1. Decide and enforce one canonical examples home (`examples/` or `docs/examples/`) with explicit redirects/pointers.
+1. Keep `docs/examples/` as the canonical examples home and fill it with measured proof or clearer starter-only framing.
 2. Decide whether `docs/evidence/*` and `docs/site/getting-started` are being created now; if not, downgrade references from active docs to roadmap notes.
 3. Separate public Phase 9 pages from internal planning/status artifacts so outsider navigation does not mix product docs with execution logs.

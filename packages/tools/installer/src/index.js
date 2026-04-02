@@ -12,6 +12,8 @@ import {
   PREVIEW_OPERATION_KINDS,
   PREVIEW_PLAN_SCHEMA_VERSION,
   SUPPORTED_RUNTIMES,
+  assessPackTrust,
+  buildTrustDelta,
   ensureDir,
   exists,
   loadPackManifest,
@@ -261,12 +263,19 @@ function createPlan({
   operations,
   selectedPacks,
   lintReport = null,
+  trustDelta = null,
   warnings = [],
   errors = [],
 }) {
   const sortedOperations = sortOperations(operations);
   const sortedWarnings = warnings.slice().sort((a, b) => a.localeCompare(b));
-  const sortedErrors = errors.slice().sort((a, b) => a.localeCompare(b));
+  const trustDeltaErrors = (trustDelta?.pack_changes ?? [])
+    .filter((change) => change.blocking)
+    .flatMap((change) => {
+      const reasons = change.reasons?.length ? change.reasons : ["blocked-trust-change"];
+      return reasons.map((reason) => `trust-delta-blocked:${change.pack_id}:${reason}`);
+    });
+  const sortedErrors = [...errors, ...trustDeltaErrors].sort((a, b) => a.localeCompare(b));
   const requiresConfirmation = ["install", "update", "uninstall"].includes(action);
   const assetDiff = buildAssetDiff({ operations: sortedOperations, runtime });
   const policySummary = buildPolicySummary({
@@ -299,6 +308,7 @@ function createPlan({
     operations: sortedOperations,
     asset_diff: assetDiff,
     policy_summary: policySummary,
+    ...(trustDelta ? { trust_delta: trustDelta } : {}),
     commitability: commitability,
     preview_boundary: {
       preview_only: true,
@@ -375,6 +385,43 @@ function compileSelection({ repoRoot, runtime, selection, errors }) {
   return compiled.sort((left, right) => left.pack_id.localeCompare(right.pack_id));
 }
 
+function buildCandidateTrustReceipts({
+  repoRoot,
+  selection,
+  compiledPacks,
+  state,
+  warnings,
+  errors,
+}) {
+  const receipts = new Map();
+  for (const { manifestPath, manifest } of selection) {
+    const compiledPack = compiledPacks.find((entry) => entry.pack_id === manifest.pack.id);
+    if (!compiledPack) {
+      continue;
+    }
+    const currentStatePack = findStatePack(state, manifest.pack.id);
+    const receipt = assessPackTrust({
+      repoRoot,
+      manifestPath,
+      manifest,
+      compiledPack,
+      currentVersion: currentStatePack?.version ?? null,
+    });
+    receipts.set(manifest.pack.id, receipt);
+    if (receipt.policy_action === "deny") {
+      errors.push(`trust-denied:${manifest.pack.id}: ${receipt.summary}`);
+    } else if (receipt.policy_action === "ask") {
+      warnings.push(`trust-review:${manifest.pack.id}: ${receipt.summary}`);
+    }
+    if (receipt.version_policy?.blocking) {
+      errors.push(`version-policy-block:${manifest.pack.id}: ${receipt.version_policy.summary}`);
+    } else if (receipt.version_policy?.status === "warn") {
+      warnings.push(`version-policy-warn:${manifest.pack.id}: ${receipt.version_policy.summary}`);
+    }
+  }
+  return receipts;
+}
+
 function buildPackInstallDir(adapter, repoRoot, target, packId) {
   return adapter.resolvePackInstallDir({ repoRoot, target }, packId);
 }
@@ -388,7 +435,7 @@ function getPlannedOperation(operations, packId, relativePath) {
   );
 }
 
-function buildStatePack({ compiledPack, installDir, operations, previousStatePack }) {
+function buildStatePack({ compiledPack, installDir, operations, previousStatePack, trustReceipt = null }) {
   const timestamp = new Date().toISOString();
   const files = compiledPack.files.map((file) => {
     const absolutePath = join(installDir, file.relative_path);
@@ -432,6 +479,7 @@ function buildStatePack({ compiledPack, installDir, operations, previousStatePac
     install_dir: installDir,
     manifest_digest: compiledPack.manifest_digest,
     compiler_version: compiledPack.compiler_version,
+    trust_receipt: trustReceipt,
     updated_at: timestamp,
     files,
   };
@@ -475,6 +523,7 @@ function updateStateAfterWrite(envelope, transactionId = null) {
       installDir,
       operations: envelope.plan.operations,
       previousStatePack,
+      trustReceipt: envelope.candidateTrustReceipts?.get(compiledPack.pack_id) ?? null,
     });
     nextState.packs = nextState.packs.filter((pack) => pack.id !== compiledPack.pack_id);
     nextState.packs.push(nextPack);
@@ -1222,6 +1271,17 @@ export function planInstall({ repoRoot, runtime = "auto", target = "repo", packs
           errors,
         })
       : [];
+  const candidateTrustReceipts =
+    errors.length === 0
+      ? buildCandidateTrustReceipts({
+          repoRoot,
+          selection,
+          compiledPacks,
+          state,
+          warnings,
+          errors,
+        })
+      : new Map();
 
   const operations = buildInstallOperations({
     repoRoot,
@@ -1243,6 +1303,14 @@ export function planInstall({ repoRoot, runtime = "auto", target = "repo", packs
     operations,
     selectedPacks: compiledPacks.map((pack) => pack.pack_id),
     lintReport,
+    trustDelta:
+      candidateTrustReceipts.size > 0
+        ? buildTrustDelta({
+            state,
+            candidateReceipts: candidateTrustReceipts,
+            selectedPackIds: compiledPacks.map((pack) => pack.pack_id),
+          })
+        : null,
     warnings,
     errors,
   });
@@ -1257,6 +1325,7 @@ export function planInstall({ repoRoot, runtime = "auto", target = "repo", packs
     state,
     lintReport,
     compiledPacks,
+    candidateTrustReceipts,
     plan,
   };
 }
@@ -1824,6 +1893,17 @@ export function planUpdate({
           errors,
         })
       : [];
+  const candidateTrustReceipts =
+    errors.length === 0
+      ? buildCandidateTrustReceipts({
+          repoRoot,
+          selection,
+          compiledPacks,
+          state,
+          warnings,
+          errors,
+        })
+      : new Map();
 
   const operations = buildUpdateOperations({
     repoRoot,
@@ -1864,6 +1944,14 @@ export function planUpdate({
     operations,
     selectedPacks: selectedPackIds,
     lintReport,
+    trustDelta:
+      candidateTrustReceipts.size > 0
+        ? buildTrustDelta({
+            state,
+            candidateReceipts: candidateTrustReceipts,
+            selectedPackIds,
+          })
+        : null,
     warnings,
     errors,
   });
@@ -1877,6 +1965,7 @@ export function planUpdate({
     state,
     lintReport,
     compiledPacks,
+    candidateTrustReceipts,
     plan,
   };
 }

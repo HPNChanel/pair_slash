@@ -257,6 +257,8 @@ properties:
         type: string
       validation_checklist:
         type: string
+  trust_descriptor:
+    type: string
 
 $defs:
   runtimeBinding:

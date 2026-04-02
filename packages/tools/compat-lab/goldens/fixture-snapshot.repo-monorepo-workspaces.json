@@ -208,7 +208,7 @@
               ],
               "id": "pairslash-frontend",
               "install_dir": "<repo>\\.agents\\skills\\pairslash-frontend",
-              "manifest_digest": "cf69661256aeba74d12de6c9883f2699d9610b5a481721215d85083b8b00b508",
+              "manifest_digest": "9bdec5fe21c6f9d9ceeb9fdf3d54d91d6f3f796f6e0350add99cef5c080e66be",
               "previous_version": null,
               "version": "0.2.0"
             },
@@ -398,7 +398,7 @@
               ],
               "id": "pairslash-plan",
               "install_dir": "<repo>\\.agents\\skills\\pairslash-plan",
-              "manifest_digest": "bbe66a51623bcd68b2c8d8ab44f521d567c2f83dc1d7d301a96c170fec8b42aa",
+              "manifest_digest": "9496c1ca414f4cca95d6085dd0de89637e8e0fba947193a4dc0e096c196d43b6",
               "previous_version": null,
               "version": "0.2.0"
             }
@@ -424,7 +424,7 @@
         {
           "bundle_kind": "codex-skill-bundle",
           "canonical_entrypoint": "/skills",
-          "digest": "b130ffcbe11d80fad19d86e6ef7862662852137aea26099d9fdff21078a853e6",
+          "digest": "bf0f0afc90a1fe6e04fd0176fefd9318e5df2dbe94e6fe4551742976b91822c1",
           "direct_invocation": "$pairslash-frontend",
           "files": [
             {
@@ -543,7 +543,7 @@
               "relative_path": "pairslash.install.json",
               "required": true,
               "runtime_selector": "shared",
-              "sha256": "d11152e93f41dc3640a0882478bd606b4e2e23df4c6187184eb12c2360201003",
+              "sha256": "9a105eed469c7a50867c3dc2e4d6c7be9d77721b8ef3bdb6e2a142892ac336f6",
               "uninstall_behavior": "remove_if_unmodified",
               "write_authority_guarded": false
             },
@@ -578,7 +578,7 @@
               "write_authority_guarded": false
             }
           ],
-          "normalized_ir_digest": "fe0c34406acbb707c85c9280335baed743acdec316b6145b096e62c1ebfdbba7",
+          "normalized_ir_digest": "87de911b83fc301afa758f9c79456583cb3048673c0b9e7cb7ed5a2c35427288",
           "output_dir": "<repo>\\dist\\compiled\\codex\\pairslash-frontend",
           "pack_id": "pairslash-frontend",
           "runtime": "codex_cli",
@@ -587,7 +587,7 @@
         {
           "bundle_kind": "codex-skill-bundle",
           "canonical_entrypoint": "/skills",
-          "digest": "473e6eb2d332d27e0e12eafef2adb2a701ba0a4dd162bc70fbe6e93a80827d5e",
+          "digest": "ef89379d82d397ec43c5cf8d3f168814a9a8553f97c8817077876fdf92c79a95",
           "direct_invocation": "$pairslash-plan",
           "files": [
             {
@@ -601,7 +601,7 @@
               "relative_path": "agents/openai.yaml",
               "required": true,
               "runtime_selector": "codex_cli",
-              "sha256": "332eb4e1d36d516f56169f420dcae83956cda1dcfacf9d75ac0d66f470cf8a45",
+              "sha256": "2c677fd25484fcc0fcd2bc9161dbcb27c274f87765bad405b8004c0d25af0cb7",
               "uninstall_behavior": "detach_if_modified",
               "write_authority_guarded": false
             },
@@ -676,7 +676,7 @@
               "relative_path": "fragments/context/runtime-context.md",
               "required": true,
               "runtime_selector": "codex_cli",
-              "sha256": "feacb7742573eb30088d9b6efb15b4591cd0e50a5caada83aae8dc2fc55a4838",
+              "sha256": "4abc1ab8105021c6dd837c0b0bf082ab4a7ee346aadf48fc9d66cee8e2aabba5",
               "uninstall_behavior": "detach_if_modified",
               "write_authority_guarded": false
             },
@@ -706,7 +706,7 @@
               "relative_path": "pairslash.install.json",
               "required": true,
               "runtime_selector": "shared",
-              "sha256": "87b6bf1c5b36d96f84a1ab0f63faca71960561a52a42c208b44010e7b3bbca96",
+              "sha256": "b0eac283bacb4932f2faac9a3cc8ef9e48a4706d9a241c2fcf363607cf97eb87",
               "uninstall_behavior": "remove_if_unmodified",
               "write_authority_guarded": false
             },
@@ -741,7 +741,7 @@
               "write_authority_guarded": false
             }
           ],
-          "normalized_ir_digest": "20ec86abebd3a8a934aa7c13e49fa6814363848b677d72aca7bfd2b2107b4324",
+          "normalized_ir_digest": "51911531688bb69bac51ebba81c76a7bd4b37cb4dfdd528686621cb114edf6cd",
           "output_dir": "<repo>\\dist\\compiled\\codex\\pairslash-plan",
           "pack_id": "pairslash-plan",
           "runtime": "codex_cli",
@@ -960,6 +960,39 @@
           },
           {
             "blocking_for_install": false,
+            "evidence": {
+              "warnings": [
+                {
+                  "pack_id": "pairslash-frontend",
+                  "policy_action": "ask",
+                  "signature_status": "local-dev",
+                  "source_class": "local-source",
+                  "summary": "local-dev (local-dev; local-dev); initial install",
+                  "support_level": "local-dev",
+                  "trust_tier": "local-dev",
+                  "verification_status": "local"
+                },
+                {
+                  "pack_id": "pairslash-plan",
+                  "policy_action": "ask",
+                  "signature_status": "local-dev",
+                  "source_class": "local-source",
+                  "summary": "local-dev (local-dev; local-dev); initial install",
+                  "support_level": "local-dev",
+                  "trust_tier": "local-dev",
+                  "verification_status": "local"
+                }
+              ]
+            },
+            "group": "trust",
+            "id": "install_state.trust_posture",
+            "remediation": "Review `doctor --format json` to confirm which packs are local-dev, official-preview, or verified-external.",
+            "severity": "warn",
+            "status": "warn",
+            "summary": "2 installed pack(s) require trust review or carry non-core support posture"
+          },
+          {
+            "blocking_for_install": false,
             "evidence": {},
             "group": "install_state",
             "id": "install_state.owned_files_integrity",
@@ -1038,9 +1071,45 @@
             "version": "0.2.0"
           }
         ],
-        "issues": [],
+        "issues": [
+          {
+            "blocking_for_install": false,
+            "check_id": "install_state.trust_posture",
+            "code": "DOC-INSTALL_STATE-TRUST_POSTURE",
+            "evidence": {
+              "warnings": [
+                {
+                  "pack_id": "pairslash-frontend",
+                  "policy_action": "ask",
+                  "signature_status": "local-dev",
+                  "source_class": "local-source",
+                  "summary": "local-dev (local-dev; local-dev); initial install",
+                  "support_level": "local-dev",
+                  "trust_tier": "local-dev",
+                  "verification_status": "local"
+                },
+                {
+                  "pack_id": "pairslash-plan",
+                  "policy_action": "ask",
+                  "signature_status": "local-dev",
+                  "source_class": "local-source",
+                  "summary": "local-dev (local-dev; local-dev); initial install",
+                  "support_level": "local-dev",
+                  "trust_tier": "local-dev",
+                  "verification_status": "local"
+                }
+              ]
+            },
+            "message": "2 installed pack(s) require trust review or carry non-core support posture",
+            "remediation": "Review `doctor --format json` to confirm which packs are local-dev, official-preview, or verified-external.",
+            "severity": "warn",
+            "suggested_fix": "Review `doctor --format json` to confirm which packs are local-dev, official-preview, or verified-external.",
+            "summary": "2 installed pack(s) require trust review or carry non-core support posture",
+            "verdict": "warn"
+          }
+        ],
         "next_actions": [
-          "No action required. Environment is ready for PairSlash compatibility diagnostics."
+          "Review `doctor --format json` to confirm which packs are local-dev, official-preview, or verified-external."
         ],
         "runtime": "codex_cli",
         "runtime_compatibility": {
@@ -1090,7 +1159,7 @@
           "tested_range_status": "recorded",
           "tested_version_range": "0.116.0"
         },
-        "support_verdict": "pass",
+        "support_verdict": "warn",
         "target": "repo"
       },
       "doctor_before": {
@@ -1304,6 +1373,16 @@
             "severity": "info",
             "status": "pass",
             "summary": "required MCP server config assets are present"
+          },
+          {
+            "blocking_for_install": false,
+            "evidence": {},
+            "group": "trust",
+            "id": "install_state.trust_posture",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "no installed packs require trust posture verification yet"
           },
           {
             "blocking_for_install": false,
@@ -1752,7 +1831,9 @@
         "target": "repo",
         "warnings": [
           "lint-warning:LINT-RUNTIME-004:pairslash-frontend:shared: runtime support has degraded/unverified surfaces: codex_cli.canonical_picker=unverified, codex_cli.direct_invocation=unverified, copilot_cli.canonical_picker=unverified, copilot_cli.direct_invocation=unverified",
-          "lint-warning:LINT-RUNTIME-004:pairslash-plan:shared: runtime support has degraded/unverified surfaces: copilot_cli.direct_invocation=unverified"
+          "lint-warning:LINT-RUNTIME-004:pairslash-plan:shared: runtime support has degraded/unverified surfaces: copilot_cli.direct_invocation=unverified",
+          "trust-review:pairslash-frontend: local-dev (local-dev; local-dev); initial install",
+          "trust-review:pairslash-plan: local-dev (local-dev; local-dev); initial install"
         ]
       }
     },
@@ -1930,7 +2011,7 @@
               ],
               "id": "pairslash-frontend",
               "install_dir": "<repo>\\.compat-home\\.copilot\\skills\\pairslash-frontend",
-              "manifest_digest": "cf69661256aeba74d12de6c9883f2699d9610b5a481721215d85083b8b00b508",
+              "manifest_digest": "9bdec5fe21c6f9d9ceeb9fdf3d54d91d6f3f796f6e0350add99cef5c080e66be",
               "previous_version": null,
               "version": "0.2.0"
             },
@@ -2102,7 +2183,7 @@
               ],
               "id": "pairslash-plan",
               "install_dir": "<repo>\\.compat-home\\.copilot\\skills\\pairslash-plan",
-              "manifest_digest": "bbe66a51623bcd68b2c8d8ab44f521d567c2f83dc1d7d301a96c170fec8b42aa",
+              "manifest_digest": "9496c1ca414f4cca95d6085dd0de89637e8e0fba947193a4dc0e096c196d43b6",
               "previous_version": null,
               "version": "0.2.0"
             }
@@ -2128,7 +2209,7 @@
         {
           "bundle_kind": "copilot-package-bundle",
           "canonical_entrypoint": "/skills",
-          "digest": "a03ef4d5f5911a711a21f963bcb23e5e2fec08b06f561e694417f0872ad23f32",
+          "digest": "2a05704713261162f44a7719af90c73403ad428e60a963d38d156a425b15181f",
           "direct_invocation": "/pairslash-frontend",
           "files": [
             {
@@ -2232,7 +2313,7 @@
               "relative_path": "pairslash.install.json",
               "required": true,
               "runtime_selector": "shared",
-              "sha256": "ec6df35c947c32a9f5b8637d83b69fabf74daeb132274771af1ab207eb09fedb",
+              "sha256": "dbbc178e0b500216e0b5edd9d03dbbfc81ed93e6c50d49cfe8ced176d63c1a5c",
               "uninstall_behavior": "remove_if_unmodified",
               "write_authority_guarded": false
             },
@@ -2267,7 +2348,7 @@
               "write_authority_guarded": false
             }
           ],
-          "normalized_ir_digest": "fe0c34406acbb707c85c9280335baed743acdec316b6145b096e62c1ebfdbba7",
+          "normalized_ir_digest": "87de911b83fc301afa758f9c79456583cb3048673c0b9e7cb7ed5a2c35427288",
           "output_dir": "<repo>\\dist\\compiled\\copilot\\pairslash-frontend",
           "pack_id": "pairslash-frontend",
           "runtime": "copilot_cli",
@@ -2276,7 +2357,7 @@
         {
           "bundle_kind": "copilot-package-bundle",
           "canonical_entrypoint": "/skills",
-          "digest": "828a5a75d5773fccde5106aef89dbf55b0d8f07c647d6c68c4b6a8e5e9046688",
+          "digest": "c892f626cfee0551602ea65fc88476ed3971f70eae173b166448b70159b95e3f",
           "direct_invocation": "/pairslash-plan",
           "files": [
             {
@@ -2365,7 +2446,7 @@
               "relative_path": "package/pairslash-bundle.json",
               "required": true,
               "runtime_selector": "copilot_cli",
-              "sha256": "befde84c3f8de1f5202abda79c8ba95898809acc835518d6e6dbbe2ba20a02dd",
+              "sha256": "74a71973996fbe768e7392cf370150428aefbd5892f697850e788abded9ad894",
               "uninstall_behavior": "detach_if_modified",
               "write_authority_guarded": false
             },
@@ -2380,7 +2461,7 @@
               "relative_path": "pairslash.install.json",
               "required": true,
               "runtime_selector": "shared",
-              "sha256": "fe1a2ed71d9207e92cef57bd2388ce90ad25972ab3d39a10cb260cf6566d45df",
+              "sha256": "48e719041a78a96328a4f2e9f54f6844265b68007f0b90c897b4b9a5b0e7a494",
               "uninstall_behavior": "remove_if_unmodified",
               "write_authority_guarded": false
             },
@@ -2415,7 +2496,7 @@
               "write_authority_guarded": false
             }
           ],
-          "normalized_ir_digest": "20ec86abebd3a8a934aa7c13e49fa6814363848b677d72aca7bfd2b2107b4324",
+          "normalized_ir_digest": "51911531688bb69bac51ebba81c76a7bd4b37cb4dfdd528686621cb114edf6cd",
           "output_dir": "<repo>\\dist\\compiled\\copilot\\pairslash-plan",
           "pack_id": "pairslash-plan",
           "runtime": "copilot_cli",
@@ -2633,6 +2714,39 @@
           },
           {
             "blocking_for_install": false,
+            "evidence": {
+              "warnings": [
+                {
+                  "pack_id": "pairslash-frontend",
+                  "policy_action": "ask",
+                  "signature_status": "local-dev",
+                  "source_class": "local-source",
+                  "summary": "local-dev (local-dev; local-dev); initial install",
+                  "support_level": "local-dev",
+                  "trust_tier": "local-dev",
+                  "verification_status": "local"
+                },
+                {
+                  "pack_id": "pairslash-plan",
+                  "policy_action": "ask",
+                  "signature_status": "local-dev",
+                  "source_class": "local-source",
+                  "summary": "local-dev (local-dev; local-dev); initial install",
+                  "support_level": "local-dev",
+                  "trust_tier": "local-dev",
+                  "verification_status": "local"
+                }
+              ]
+            },
+            "group": "trust",
+            "id": "install_state.trust_posture",
+            "remediation": "Review `doctor --format json` to confirm which packs are local-dev, official-preview, or verified-external.",
+            "severity": "warn",
+            "status": "warn",
+            "summary": "2 installed pack(s) require trust review or carry non-core support posture"
+          },
+          {
+            "blocking_for_install": false,
             "evidence": {},
             "group": "install_state",
             "id": "install_state.owned_files_integrity",
@@ -2727,10 +2841,46 @@
             "suggested_fix": "Proceed with preview/doctor evidence, but treat the lane as unrecorded until live pilot evidence is captured.",
             "summary": "no recorded tested runtime version exists for this lane yet",
             "verdict": "warn"
+          },
+          {
+            "blocking_for_install": false,
+            "check_id": "install_state.trust_posture",
+            "code": "DOC-INSTALL_STATE-TRUST_POSTURE",
+            "evidence": {
+              "warnings": [
+                {
+                  "pack_id": "pairslash-frontend",
+                  "policy_action": "ask",
+                  "signature_status": "local-dev",
+                  "source_class": "local-source",
+                  "summary": "local-dev (local-dev; local-dev); initial install",
+                  "support_level": "local-dev",
+                  "trust_tier": "local-dev",
+                  "verification_status": "local"
+                },
+                {
+                  "pack_id": "pairslash-plan",
+                  "policy_action": "ask",
+                  "signature_status": "local-dev",
+                  "source_class": "local-source",
+                  "summary": "local-dev (local-dev; local-dev); initial install",
+                  "support_level": "local-dev",
+                  "trust_tier": "local-dev",
+                  "verification_status": "local"
+                }
+              ]
+            },
+            "message": "2 installed pack(s) require trust review or carry non-core support posture",
+            "remediation": "Review `doctor --format json` to confirm which packs are local-dev, official-preview, or verified-external.",
+            "severity": "warn",
+            "suggested_fix": "Review `doctor --format json` to confirm which packs are local-dev, official-preview, or verified-external.",
+            "summary": "2 installed pack(s) require trust review or carry non-core support posture",
+            "verdict": "warn"
           }
         ],
         "next_actions": [
-          "Proceed with preview/doctor evidence, but treat the lane as unrecorded until live pilot evidence is captured."
+          "Proceed with preview/doctor evidence, but treat the lane as unrecorded until live pilot evidence is captured.",
+          "Review `doctor --format json` to confirm which packs are local-dev, official-preview, or verified-external."
         ],
         "runtime": "copilot_cli",
         "runtime_compatibility": {
@@ -2993,6 +3143,16 @@
             "severity": "info",
             "status": "pass",
             "summary": "required MCP server config assets are present"
+          },
+          {
+            "blocking_for_install": false,
+            "evidence": {},
+            "group": "trust",
+            "id": "install_state.trust_posture",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "no installed packs require trust posture verification yet"
           },
           {
             "blocking_for_install": false,
@@ -3436,7 +3596,9 @@
         "target": "user",
         "warnings": [
           "lint-warning:LINT-RUNTIME-004:pairslash-frontend:shared: runtime support has degraded/unverified surfaces: codex_cli.canonical_picker=unverified, codex_cli.direct_invocation=unverified, copilot_cli.canonical_picker=unverified, copilot_cli.direct_invocation=unverified",
-          "lint-warning:LINT-RUNTIME-004:pairslash-plan:shared: runtime support has degraded/unverified surfaces: copilot_cli.direct_invocation=unverified"
+          "lint-warning:LINT-RUNTIME-004:pairslash-plan:shared: runtime support has degraded/unverified surfaces: copilot_cli.direct_invocation=unverified",
+          "trust-review:pairslash-frontend: local-dev (local-dev; local-dev); initial install",
+          "trust-review:pairslash-plan: local-dev (local-dev; local-dev); initial install"
         ]
       }
     }

@@ -143,7 +143,7 @@ Evidence counts as credible only when all of these are true:
 
 ## Implemented Entry Points
 
-- Public examples index: `examples/README.md`
+- Public examples index: `docs/examples/README.md`
 - Benchmark asset index: `docs/benchmarks/README.md`
 - Case-study taxonomy index: `docs/case-studies/README.md`
 - First-wave asset placeholders:

@@ -38,7 +38,7 @@ test("compat-lab acceptance macos lane reaches first workflow and keeps uninstal
       "doctor-broken-setup.macos.codex.repo",
     ],
   );
-  assert.equal(report.scenarios[0].support_verdict, "pass");
+  assert.equal(report.scenarios[0].support_verdict, "warn");
   assert.equal(report.scenarios[1].update_success, true);
   assert.equal(report.scenarios[2].uninstall_success, true);
   assert.equal(report.scenarios[3].doctor_success, true);

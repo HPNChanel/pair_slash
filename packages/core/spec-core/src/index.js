@@ -6,6 +6,7 @@ export * from "./manifest-resolver.js";
 export * from "./manifest-v2.normalize.js";
 export * from "./manifest-v2.schema.js";
 export * from "./project-memory.js";
+export * from "./release-trust.js";
 export * from "./runtime-range.js";
 export * from "./utils.js";
 export * from "./validate.js";

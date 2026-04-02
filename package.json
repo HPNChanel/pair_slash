@@ -23,6 +23,8 @@
     "test:compat:acceptance": "node scripts/run-compat-lab-acceptance.mjs",
     "test:compat:release": "node scripts/run-compat-lab-release-readiness.mjs",
     "sync:compat-lab": "node scripts/sync-compat-lab-artifacts.mjs",
+    "release:trust:build": "node scripts/build-release-trust.mjs",
+    "release:trust:verify": "node scripts/verify-release-trust.mjs",
     "lint:phase4": "npm run lint",
     "test:phase4": "npm run test:compat",
     "test:phase4:acceptance": "npm run test:compat:acceptance",

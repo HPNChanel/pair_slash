@@ -1,4 +1,4 @@
-import { chmodSync, cpSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, cpSync, existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { delimiter, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -99,6 +99,19 @@ export function createTempRepo({ packs = ["pairslash-plan"] } = {}) {
     cpSync(join(repoRoot, "packs", "core", packId), join(tempRoot, "packs", "core", packId), {
       recursive: true,
     });
+  }
+  if (existsSync(join(repoRoot, "docs", "compatibility"))) {
+    cpSync(join(repoRoot, "docs", "compatibility"), join(tempRoot, "docs", "compatibility"), {
+      recursive: true,
+    });
+  }
+  if (existsSync(join(repoRoot, "trust"))) {
+    cpSync(join(repoRoot, "trust"), join(tempRoot, "trust"), {
+      recursive: true,
+    });
+  }
+  if (existsSync(join(repoRoot, "SECURITY.md"))) {
+    cpSync(join(repoRoot, "SECURITY.md"), join(tempRoot, "SECURITY.md"));
   }
   return {
     tempRoot,

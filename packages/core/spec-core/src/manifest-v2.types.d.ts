@@ -120,6 +120,7 @@ export interface PackManifestV2 {
     example_output: string;
     validation_checklist: string;
   };
+  trust_descriptor?: string;
 }
 
 export interface PackManifestResolution {

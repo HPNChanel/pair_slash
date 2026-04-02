@@ -562,6 +562,7 @@ function toCanonicalManifest(record, { preferCanonicalOverride } = {}) {
     uninstall_strategy: uninstallStrategy,
     smoke_checks: buildSmokeChecks(record, supportedRuntimes, installTargets),
     docs_refs: docsRefs,
+    trust_descriptor: pickFirstString(record.trust_descriptor) ?? undefined,
   };
   return canonical;
 }

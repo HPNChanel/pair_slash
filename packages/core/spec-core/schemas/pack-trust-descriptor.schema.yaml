@@ -1,0 +1,111 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://pairslash.dev/schemas/pack-trust-descriptor/1.0.0"
+title: PairSlash Pack Trust Descriptor
+type: object
+required:
+  - kind
+  - schema_version
+  - pack_name
+  - pack_version
+  - publisher
+  - tier_claim
+  - support_level_claim
+  - signature
+  - runtime_support
+  - policy_requirements
+properties:
+  kind:
+    const: pack-trust-descriptor
+  schema_version:
+    const: "1.0.0"
+  pack_name:
+    type: string
+  pack_version:
+    type: string
+  publisher:
+    type: object
+    required:
+      - publisher_id
+      - display_name
+      - publisher_class
+      - contact
+    properties:
+      publisher_id:
+        type: string
+      display_name:
+        type: string
+      publisher_class:
+        type: string
+        enum:
+          - core-product
+          - first-party
+          - external
+      contact:
+        type: string
+  tier_claim:
+    type: string
+    enum:
+      - core-maintained
+      - first-party-official
+      - verified-external
+      - local-dev
+      - unverified-external
+  support_level_claim:
+    type: string
+    enum:
+      - core-supported
+      - official-preview
+      - publisher-verified
+      - local-dev
+      - unsupported
+  signature:
+    type: object
+    required:
+      - required
+      - allow_local_unsigned
+    properties:
+      required:
+        type: boolean
+      allow_local_unsigned:
+        type: boolean
+  runtime_support:
+    type: object
+    required:
+      - codex_cli
+      - copilot_cli
+    properties:
+      codex_cli:
+        $ref: "#/$defs/runtimeSupport"
+      copilot_cli:
+        $ref: "#/$defs/runtimeSupport"
+  policy_requirements:
+    type: object
+    required:
+      - no_silent_fallback
+      - preview_required_for_mutation
+      - explicit_write_only_memory
+    properties:
+      no_silent_fallback:
+        const: true
+      preview_required_for_mutation:
+        const: true
+      explicit_write_only_memory:
+        const: true
+$defs:
+  runtimeSupport:
+    type: object
+    required:
+      - status
+      - evidence_ref
+    properties:
+      status:
+        type: string
+        enum:
+          - supported
+          - partial
+          - unverified
+          - blocked
+      evidence_ref:
+        type:
+          - string
+          - "null"

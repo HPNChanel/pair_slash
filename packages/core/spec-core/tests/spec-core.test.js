@@ -16,6 +16,7 @@ import {
   validateDoctorReport,
   validateLintReport,
   validatePackManifestV2,
+  validatePackTrustDescriptor,
 } from "@pairslash/spec-core";
 
 import { createTempRepo, repoRoot, updatePackManifest } from "../../../../tests/phase4-helpers.js";
@@ -51,6 +52,16 @@ test("pairslash-memory-write-global manifest enforces write-authority contract",
   assert.equal(manifest.memory_permissions.global_project_memory, "write");
   assert.equal(manifest.risk_level, "critical");
   assert.ok(manifest.capabilities.includes("memory_write_global"));
+});
+
+test("pairslash-plan trust descriptor validates against manifest", () => {
+  const manifestPath = join(repoRoot, "packs", "core", "pairslash-plan", "pack.manifest.yaml");
+  const descriptorPath = join(repoRoot, "packs", "core", "pairslash-plan", "pack.trust.yaml");
+  const manifest = loadPackManifest(manifestPath);
+  const descriptor = YAML.parse(readFileSync(descriptorPath, "utf8"));
+  assert.deepEqual(validatePackTrustDescriptor(descriptor, { manifest }), []);
+  assert.equal(descriptor.tier_claim, "core-maintained");
+  assert.equal(descriptor.support_level_claim, "core-supported");
 });
 
 test("buildNormalizedIr produces deterministic canonical asset graph", () => {

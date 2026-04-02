@@ -108,6 +108,28 @@ test("doctor reports structured environment summary for codex repo lane", () => 
   }
 });
 
+test("doctor surfaces installed pack trust posture from install state", () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  try {
+    applyInstall(planInstall({ repoRoot: fixture.tempRoot, runtime: "codex", target: "repo" }));
+    const report = runDoctor({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      target: "repo",
+    });
+    assert.ok(report.checks.some((check) => check.id === "install_state.trust_posture"));
+    assert.equal(report.installed_packs[0].source_class, "local-source");
+    assert.equal(report.installed_packs[0].verification_status, "local");
+    assert.equal(report.installed_packs[0].trust_tier, "local-dev");
+    assert.equal(report.installed_packs[0].signature_status, "local-dev");
+    assert.equal(report.installed_packs[0].support_level, "local-dev");
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
 test("doctor marks unsupported operating systems with blocking verdict", () => {
   const fixture = createTempRepo();
   try {

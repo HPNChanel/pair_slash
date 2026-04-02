@@ -115,7 +115,7 @@ Canonical workflow source: [packs/core/](packs/core/).
 - Start path: [docs/phase-9/onboarding-path.md](docs/phase-9/onboarding-path.md)
 - Phase 9 docs index: [docs/phase-9/README.md](docs/phase-9/README.md)
 - Phase 9 proof plan: [docs/phase-9/examples-and-benchmarks.md](docs/phase-9/examples-and-benchmarks.md)
-- Phase 9 examples index: [examples/README.md](examples/README.md)
+- Phase 9 examples index: [docs/examples/README.md](docs/examples/README.md)
 - Benchmark asset index: [docs/benchmarks/README.md](docs/benchmarks/README.md)
 - Case-study index: [docs/case-studies/README.md](docs/case-studies/README.md)
 - Compatibility and runtime checks: [docs/compatibility/runtime-verification.md](docs/compatibility/runtime-verification.md)

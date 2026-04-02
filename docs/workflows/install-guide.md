@@ -22,7 +22,7 @@ For the broader operations flow, use `docs/workflows/phase-2-operations.md`.
 For runtime evidence and guardrails, use `docs/compatibility/runtime-verification.md`.
 For Phase 9 proof assets and evidence placeholders, use:
 
-- `examples/README.md`
+- `docs/examples/README.md`
 - `docs/benchmarks/README.md`
 - `docs/case-studies/README.md`
 - `docs/case-studies/onboard-repo-before-after.md`

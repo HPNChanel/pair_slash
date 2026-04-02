@@ -31,7 +31,7 @@ Verdict: `not ready`
 | Does the landing narrative clearly explain the pain solved? | `4.5/5` | Strong | `README.md` now leads with repo re-entry, trusted writes, exact runtime scope, and `/skills` as the front door. | `README.md`, `docs/phase-9/oss-positioning.md` |
 | Is the first command/workflow path obvious? | `4.0/5` | Strong | The README and onboarding page give a concrete path: `doctor -> preview install -> install -> /skills -> pairslash-plan`. The remaining drag is command-surface inconsistency between public pages and workflow docs. | `README.md`, `docs/phase-9/onboarding-path.md`, `docs/workflows/install-guide.md`, `docs/workflows/phase-4-quickstart.md` |
 | Does the support path feel real and bounded? | `3.0/5` | Mixed | The repro and triage docs are concrete, but the newcomer-facing support route still points both to a generic support-bundle template and to a template directory, while the taxonomy now defines multiple distinct issue lanes. | `README.md`, `docs/phase-9/onboarding-path.md`, `.github/ISSUE_TEMPLATE/`, `docs/support/triage-playbook.md`, `docs/support/repro-assets.md` |
-| Do the proof assets create trust instead of hype? | `2.5/5` | Weak | The proof layer is honest about being unmeasured, which helps, but it still does not prove value yet. A user looking for evidence finds taxonomy and placeholders, not before/after proof. | `examples/README.md`, `docs/benchmarks/README.md`, `docs/case-studies/README.md`, `docs/case-studies/*`, `docs/validation/phase-3-5/evidence-log.md` |
+| Do the proof assets create trust instead of hype? | `2.5/5` | Weak | The proof layer is honest about being unmeasured, which helps, but it still does not prove value yet. A user looking for evidence finds taxonomy and placeholders, not before/after proof. | `docs/examples/README.md`, `docs/benchmarks/README.md`, `docs/case-studies/README.md`, `docs/case-studies/*`, `docs/validation/phase-3-5/evidence-log.md` |
 | Are there sections that drift back into framework-speak? | `2.5/5` | Weak | Several Phase 9 pages still open with "Phase 9", "public narrative", "proof layer", or other internal planning language rather than user tasks. | `docs/phase-9/README.md`, `docs/phase-9/examples-and-benchmarks.md`, `docs/phase-9/contributor-model.md` |
 | Are there any public statements that outrun runtime evidence? | `4.0/5` | Mostly safe | The repo is mostly disciplined about two-runtime scope, `/skills`, explicit writes, and lane-specific caveats. Risk remains where prose compresses exact lane labels or promotes canary workflows without restating maturity. | `README.md`, `docs/compatibility/compatibility-matrix.md`, `packs/core/pairslash-onboard-repo/pack.manifest.yaml` |
 | Does the contributor path feel welcoming but still disciplined? | `3.5/5` | Good | `CONTRIBUTING.md` is concrete and bounded. The extra Phase 9 contributor page duplicates some of that material and still reads more like an internal alignment note than an inviting entrypoint. | `CONTRIBUTING.md`, `docs/phase-9/contributor-model.md` |
@@ -51,7 +51,7 @@ Verdict: `not ready`
 | `docs/phase-9/README.md` | Weak | `2.5/5` | Useful as an index, but it still looks like a phase-coordination page more than a public docs landing page. | `docs/phase-9/README.md` | `docs/phase-9/README.md` |
 | `docs/phase-9/contributor-model.md` | Weak | `2.5/5` | Accurate, but duplicative and internal in tone. It does not improve the contributor journey beyond `CONTRIBUTING.md`. | `docs/phase-9/contributor-model.md`, `CONTRIBUTING.md` | `docs/phase-9/contributor-model.md` |
 | `docs/benchmarks/README.md` + `docs/case-studies/*` | Weak | `2.5/5` | Honest placeholders, but still a proof architecture without proof. | `docs/benchmarks/README.md`, `docs/case-studies/*`, `docs/validation/phase-3-5/evidence-log.md` | `docs/benchmarks/README.md`, `docs/case-studies/` |
-| `examples/README.md` | Weak | `2.0/5` | Creates a visible examples surface without owning actual examples in that directory. It points outward to `docs/examples/` and case-study placeholders. | `examples/README.md`, `docs/examples/README.md` | `examples/README.md`, `docs/examples/README.md` |
+| `docs/examples/README.md` | Weak | `2.0/5` | Creates a visible examples surface without yet owning measured proof. It points to starter examples and case-study placeholders. | `docs/examples/README.md` | `docs/examples/README.md` |
 | Public support intake wording in `README.md` and onboarding docs | Misleading | `High` | These surfaces still emphasize one support-bundle template while the actual support model now has multiple issue types. | `README.md`, `docs/phase-9/onboarding-path.md`, `.github/ISSUE_TEMPLATE/`, `docs/phase-9/issue-taxonomy.md` | `README.md`, `docs/phase-9/onboarding-path.md`, `.github/ISSUE_TEMPLATE/config.yml` |
 | Public proof-story surfaces under `docs/phase-9/` | Misleading | `Medium` | They are mostly strategy and planning docs presented alongside user-facing pages. An outsider can mistake planning artifacts for finished public docs. | `docs/phase-9/README.md`, `docs/phase-9/examples-and-benchmarks.md`, `docs/phase-9/support-surfaces-summary.md` | `docs/phase-9/` |
 
@@ -65,7 +65,7 @@ Verdict: `not ready`
 | "GitHub Copilot CLI | user | Supported with caveats" | `README.md` start table | Medium | Directionally true, but weaker than the exact public label `degraded`. The prose compresses a specific compatibility state into softer marketing language. | `docs/compatibility/compatibility-matrix.md` | Replace with the exact lane label or show the label adjacent to the prose. |
 | "After first success, use `pairslash-onboard-repo` as the repo re-entry wedge workflow." | `README.md`, `docs/phase-9/onboarding-path.md` | Medium | Strategically correct, but the pack is still `release_channel: canary` and public proof is still unmeasured. | `docs/phase-3.5/wedge-workflows-decision.md`, `packs/core/pairslash-onboard-repo/pack.manifest.yaml`, `docs/validation/phase-3-5/evidence-log.md` | Keep it as "next workflow" and restate canary/proof limits anywhere it is promoted. |
 | "Issue template: pairslash support bundle" as the public support path | `README.md`, `docs/phase-9/onboarding-path.md` | High | The operational model now has install/runtime/workflow/memory/docs/pack intake lanes. A single template-first message misstates the actual support model. | `docs/phase-9/issue-taxonomy.md`, `.github/ISSUE_TEMPLATE/*` | Replace with "choose the matching issue template" and reserve the support bundle template for artifact-heavy cases. |
-| "Examples" as a visible public proof surface | `examples/README.md` | Medium | The page suggests a concrete examples layer, but the directory does not own runnable example assets. The real examples still live under `docs/examples/`. | `examples/README.md`, `docs/examples/README.md` | Declare which path is canonical or turn `examples/README.md` into a thin pointer page. |
+| "Examples" as a visible public proof surface | `docs/examples/README.md` | Medium | The page suggests a concrete examples layer, but the directory still does not own measured proof assets. The examples remain honest starter assets, not proof-backed outcomes. | `docs/examples/README.md` | Keep the page explicit about starter-only status until measured proof exists. |
 | "Benchmark asset index" and case studies as proof | `docs/benchmarks/README.md`, `docs/case-studies/*` | Medium | The pages are careful, but a public reader still finds a proof layer with zero filled evidence. | `docs/benchmarks/README.md`, `docs/case-studies/*`, `docs/validation/phase-3-5/evidence-log.md` | Fill at least one measured onboarding asset or downgrade the surface to "planned proof assets". |
 | "Failure and Support" feels like a finished public support lane | `docs/phase-9/README.md`, `README.md` | Medium | The underlying support docs are real, but the public entrypoint is still split between workflow docs, support docs, and templates. | `docs/support/phase-7-support-ops.md`, `docs/support/triage-playbook.md`, `.github/ISSUE_TEMPLATE/config.yml` | Create one explicit public support entry page or chooser. |
 
@@ -83,10 +83,10 @@ Verdict: `not ready`
    Correction direction: add explicit contact links or clearer chooser guidance for install bug, runtime mismatch, workflow bug, memory bug, pack request, and docs drift.
    Why it matters: support should feel operational, not like maintainers expect users to infer the taxonomy from filenames.
 
-3. `examples/README.md`, `docs/examples/README.md`
-   Problem: there are now two example surfaces with different ownership models and names that imply the same thing.
-   Correction direction: pick one canonical examples home and demote the other to a thin redirect/pointer.
-   Why it matters: first-run trust drops when a user clicks "examples" and lands in a directory that mostly points elsewhere.
+3. `docs/examples/README.md`
+   Problem: the canonical examples home is still mostly an index to starter assets and proof placeholders.
+   Correction direction: keep `docs/examples/` as the only examples home and make the page show one concrete runnable example or measured outcome first.
+   Why it matters: first-run trust still drops if a user clicks "examples" and lands on taxonomy before evidence.
 
 4. `docs/benchmarks/README.md`, `docs/case-studies/onboard-repo-before-after.md`, `docs/validation/phase-3-5/evidence-log.md`
    Problem: the proof layer is structurally honest but still empty.
@@ -131,12 +131,12 @@ Verdict: `not ready`
 - `docs/phase-9/examples-and-benchmarks.md` is strong product strategy, but it still reads like a proof-program design memo instead of a public proof entrypoint.
 - `docs/phase-9/contributor-model.md` is framed around alignment sources and surfaces rather than contributor outcomes.
 - Several pages keep "Phase 9", "active-draft", "baseline source", and similar program-management markers in view. That is useful internally, but public docs should not depend on a phase taxonomy to make sense.
-- `examples/README.md` and `docs/benchmarks/README.md` emphasize classification, registry, and measurement slots before they show a user anything runnable or demonstrable.
+- `docs/examples/README.md` and `docs/benchmarks/README.md` emphasize classification, registry, and measurement slots before they show a user anything runnable or demonstrable.
 
 ## Where User Confidence Will Still Collapse
 
 - A user who asks "show me proof" still lands on `not-measured` placeholders.
-- A user who clicks "examples" can hit ownership confusion between `examples/` and `docs/examples/`.
+- A user who clicks "examples" still hits starter assets rather than measured proof.
 - A user who copies commands from one page and then another can hit command-surface inconsistency between `npm run pairslash -- ...` and direct CLI-path commands.
 - A user who reaches the failure path still has to infer which issue template is correct unless they already understand the issue taxonomy.
 - A user who lands in `docs/phase-9/` encounters planning and coordination language mixed with user-facing material.
@@ -149,7 +149,7 @@ be treated as the final gate list:
 
 1. Fix the public support entrypoint.
 2. Make the GitHub issue chooser explicit.
-3. Resolve canonical examples-path ownership.
+3. Strengthen the canonical examples home.
 4. Land one measured onboarding proof asset.
 5. Land one filled failure-case proof asset.
 6. Normalize the public command surface.
@@ -187,4 +187,3 @@ Surfaces that should remain internal-only until evidence exists:
 - `docs/phase-9/phase-9-scaffold-summary.md`
 - `docs/phase-9/readme-diff-summary.md`
 - `docs/phase-9/proof-assets-implementation-summary.md`
-

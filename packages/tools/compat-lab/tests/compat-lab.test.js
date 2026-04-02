@@ -87,7 +87,7 @@ test("compat-lab smoke lanes cover Phase 6 compile/install/doctor gates", () => 
   assert.equal(byId.get("compile.python-service.copilot").pack_count, 2);
 
   assert.equal(byId.get("install.docs-heavy.codex.repo").can_apply, true);
-  assert.equal(byId.get("install.docs-heavy.codex.repo").support_verdict, "pass");
+  assert.equal(byId.get("install.docs-heavy.codex.repo").support_verdict, "warn");
   assert.equal(byId.get("install.docs-heavy.codex.repo").lane_status, "supported");
   assert.equal(byId.get("install.docs-heavy.codex.repo").policy_summary.no_silent_fallback, true);
 

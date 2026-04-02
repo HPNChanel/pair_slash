@@ -19,6 +19,7 @@ import {
   POLICY_VERDICT_SCHEMA_VERSION,
   SUPPORTED_RUNTIMES,
   SUPPORTED_TARGETS,
+  loadPackTrustDescriptorRecord,
   loadPackManifestRecords,
   normalizeRuntime,
   normalizeTarget,
@@ -698,6 +699,132 @@ function applyReferenceRule(repoRoot, entry, checks, target) {
       target,
       path: entry.manifestPath,
       message: "file and docs references resolve correctly",
+    }),
+  );
+}
+
+function deriveManifestRuntimeSupport(entry, runtime) {
+  const compatibility = entry.manifest.runtime_bindings?.[runtime]?.compatibility ?? {};
+  const canonicalStatus = compatibility.canonical_picker ?? "unverified";
+  const directStatus = compatibility.direct_invocation ?? "unverified";
+  if (canonicalStatus === "blocked") {
+    return "blocked";
+  }
+  if (canonicalStatus === "supported" && directStatus === "supported") {
+    return "supported";
+  }
+  if (canonicalStatus === "unverified" && directStatus === "unverified") {
+    return "unverified";
+  }
+  return "partial";
+}
+
+function applyTrustDescriptorRule(repoRoot, entry, checks, target) {
+  const descriptorRecord = loadPackTrustDescriptorRecord({
+    manifestPath: entry.manifestPath,
+    manifest: entry.manifest,
+  });
+  if (!descriptorRecord.descriptorPath) {
+    checks.push(
+      createCheck({
+        code: "LINT-TRUST-001",
+        result: "warning",
+        packId: entry.packId,
+        target,
+        path: entry.manifestPath,
+        message: "trust descriptor is missing; pack trust will downgrade to local-dev or verified-external only",
+        remediation: "Add pack.trust.yaml and reference it through trust_descriptor.",
+      }),
+    );
+    return;
+  }
+  if (descriptorRecord.errors.length > 0) {
+    checks.push(
+      createCheck({
+        code: "LINT-TRUST-001",
+        result: "error",
+        packId: entry.packId,
+        target,
+        path: descriptorRecord.descriptorPath,
+        message: `trust descriptor is invalid: ${descriptorRecord.errors.join("; ")}`,
+        remediation: "Fix pack.trust.yaml so publisher, tier, support claims, and manifest alignment are coherent.",
+      }),
+    );
+    return;
+  }
+
+  const descriptor = descriptorRecord.descriptor;
+  const issues = [];
+  const warnings = [];
+  if (
+    entry.manifest.memory_permissions?.global_project_memory === "write" &&
+    descriptor.tier_claim !== "core-maintained"
+  ) {
+    issues.push("global memory write requires tier_claim core-maintained");
+  }
+  if (
+    ["core-maintained", "first-party-official"].includes(descriptor.tier_claim) &&
+    descriptor.publisher?.publisher_id !== "pairslash"
+  ) {
+    issues.push("first-party tiers require publisher_id pairslash");
+  }
+  if (
+    descriptor.tier_claim === "verified-external" &&
+    descriptor.publisher?.publisher_id === "pairslash"
+  ) {
+    issues.push("verified-external tier must not be used by pairslash-published packs");
+  }
+
+  for (const runtime of SUPPORTED_RUNTIMES) {
+    const manifestStatus = deriveManifestRuntimeSupport(entry, runtime);
+    const declared = descriptor.runtime_support?.[runtime]?.status ?? "unverified";
+    const evidenceRef = descriptor.runtime_support?.[runtime]?.evidence_ref ?? null;
+    if (["supported", "partial"].includes(declared) && (!evidenceRef || evidenceRef.trim() === "")) {
+      issues.push(`${runtime} support claim ${declared} is missing evidence_ref`);
+    }
+    if (manifestStatus === "blocked" && declared !== "blocked") {
+      issues.push(`${runtime} trust claim exceeds blocked manifest runtime surface`);
+    } else if (manifestStatus === "unverified" && declared === "supported") {
+      warnings.push(`${runtime} support claim is stronger than manifest compatibility evidence`);
+    }
+  }
+
+  if (issues.length > 0) {
+    checks.push(
+      createCheck({
+        code: "LINT-TRUST-002",
+        result: "error",
+        packId: entry.packId,
+        target,
+        path: descriptorRecord.descriptorPath,
+        message: issues.join("; "),
+        remediation: "Lower the trust/support claim or add the missing evidence before shipping the pack.",
+      }),
+    );
+    return;
+  }
+  if (warnings.length > 0) {
+    checks.push(
+      createCheck({
+        code: "LINT-TRUST-003",
+        result: "warning",
+        packId: entry.packId,
+        target,
+        path: descriptorRecord.descriptorPath,
+        message: warnings.join("; "),
+        remediation: "Keep runtime support wording bounded by manifest compatibility and recorded evidence.",
+      }),
+    );
+  }
+
+  checks.push(
+    createCheck({
+      code: "LINT-TRUST-001",
+      result: "pass",
+      packId: entry.packId,
+      target,
+      path: descriptorRecord.descriptorPath,
+      message: "trust descriptor is present and coherent with manifest trust boundaries",
     }),
   );
 }
@@ -1437,6 +1564,7 @@ export function runLintBridge({
     applyRuntimeSupportRule(entry, checks, normalizedTarget);
     applyNamingRule(entry, checks, normalizedTarget);
     applyReferenceRule(repoRoot, entry, checks, normalizedTarget);
+    applyTrustDescriptorRule(repoRoot, entry, checks, normalizedTarget);
     applyToolsRule(entry, checks, normalizedTarget);
     applyMcpRule(entry, checks, normalizedTarget);
     applyMemoryRule(entry, checks, normalizedTarget);

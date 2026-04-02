@@ -67,6 +67,91 @@ properties:
           type:
             - string
             - "null"
+        trust_receipt:
+          type:
+            - object
+            - "null"
+          properties:
+            kind:
+              const: trust-receipt
+            pack_id:
+              type: string
+            version:
+              type: string
+            manifest_path:
+              type:
+                - string
+                - "null"
+            manifest_digest:
+              type: string
+            compiled_digest:
+              type:
+                - string
+                - "null"
+            source_class:
+              type: string
+            verification_status:
+              type: string
+            trust_tier:
+              type: string
+            tier_claim:
+              type:
+                - string
+                - "null"
+            policy_action:
+              type: string
+            publisher:
+              type:
+                - string
+                - "null"
+            publisher_class:
+              type:
+                - string
+                - "null"
+            release_id:
+              type:
+                - string
+                - "null"
+            key_id:
+              type:
+                - string
+                - "null"
+            trust_bundle_dir:
+              type:
+                - string
+                - "null"
+            signature_status:
+              type: string
+            support_level:
+              type: string
+            support_level_claim:
+              type:
+                - string
+                - "null"
+            descriptor_path:
+              type:
+                - string
+                - "null"
+            descriptor_digest:
+              type:
+                - string
+                - "null"
+            runtime_support:
+              type: object
+            capabilities:
+              type: array
+              items:
+                type: string
+            memory_authority:
+              type: object
+            reasons:
+              type: array
+              items:
+                type: string
+            summary:
+              type: string
+            version_policy:
+              type: object
         files:
           type: array
           items:

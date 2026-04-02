@@ -137,6 +137,74 @@ test("install targeted pack ignores unrelated invalid manifest in repo", serial,
   }
 });
 
+test("install preview emits local-source trust delta for repo manifests", serial, () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  try {
+    const envelope = planInstall({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      target: "repo",
+      packs: ["pairslash-plan"],
+    });
+    assert.equal(envelope.plan.trust_delta.overall_status, "changed");
+    assert.equal(envelope.plan.trust_delta.pack_changes[0].candidate.source_class, "local-source");
+    assert.equal(envelope.plan.trust_delta.pack_changes[0].candidate.trust_tier, "local-dev");
+    assert.equal(
+      envelope.plan.trust_delta.pack_changes[0].candidate.verification_status,
+      "local",
+    );
+    assert.equal(envelope.plan.trust_delta.pack_changes[0].candidate.signature_status, "local-dev");
+    assert.equal(envelope.plan.trust_delta.pack_changes[0].candidate.support_level, "local-dev");
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("update blocks capability expansion until pack trust is re-reviewed", serial, () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  try {
+    applyInstall(
+      planInstall({
+        repoRoot: fixture.tempRoot,
+        runtime: "codex_cli",
+        target: "repo",
+        packs: ["pairslash-plan"],
+      }),
+    );
+    updatePackManifest({
+      repoRoot: fixture.tempRoot,
+      packId: "pairslash-plan",
+      mutate(manifest) {
+        manifest.capabilities = [...new Set([...(manifest.capabilities ?? []), "repo_write"])];
+        manifest.risk_level = "high";
+        return manifest;
+      },
+    });
+
+    const envelope = planUpdate({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      target: "repo",
+      packs: ["pairslash-plan"],
+    });
+    assert.equal(envelope.plan.can_apply, false);
+    assert.equal(envelope.plan.trust_delta.overall_status, "blocked");
+    assert.deepEqual(
+      envelope.plan.trust_delta.pack_changes[0].capability_expansions,
+      ["repo_write"],
+    );
+    assert.ok(
+      envelope.plan.errors.some((error) => error === "trust-delta-blocked:pairslash-plan:capability-expanded:repo_write"),
+    );
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
 test("update preserves valid local overrides", serial, () => {
   const fixture = createTempRepo();
   const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
@@ -184,6 +252,49 @@ test("update preserves valid local overrides", serial, () => {
     );
   } finally {
     runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("update blocks external unverified manifest source by default", serial, () => {
+  const fixture = createTempRepo();
+  const externalFixture = createTempRepo();
+  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  try {
+    applyInstall(
+      planInstall({
+        repoRoot: fixture.tempRoot,
+        runtime: "codex_cli",
+        target: "repo",
+        packs: ["pairslash-plan"],
+      }),
+    );
+    const externalManifestPath = join(
+      externalFixture.tempRoot,
+      "pairslash-plan.external.manifest.yaml",
+    );
+    writeFileSync(
+      externalManifestPath,
+      readFileSync(
+        join(fixture.tempRoot, "packs", "core", "pairslash-plan", "pack.manifest.yaml"),
+        "utf8",
+      ),
+    );
+
+    const envelope = planUpdate({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      target: "repo",
+      packs: ["pairslash-plan"],
+      to: externalManifestPath,
+    });
+    assert.equal(envelope.plan.can_apply, false);
+    assert.ok(
+      envelope.plan.errors.some((error) => error.startsWith("trust-denied:pairslash-plan")),
+    );
+  } finally {
+    runtime.cleanup();
+    externalFixture.cleanup();
     fixture.cleanup();
   }
 });

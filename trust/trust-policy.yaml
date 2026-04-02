@@ -1,0 +1,11 @@
+kind: trust-policy
+schema_version: "1.0.0"
+defaults:
+  first-party-release: allow
+  local-source: allow
+  external-trusted: ask
+  external-unverified: deny
+publishers:
+  - id: pairslash
+    source_class: first-party-release
+    keyring_path: trust/first-party-keys.json

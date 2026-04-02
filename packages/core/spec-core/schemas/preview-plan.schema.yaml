@@ -209,6 +209,50 @@ properties:
         type: string
       note:
         type: string
+  trust_delta:
+    type: object
+    properties:
+      machine_readable:
+        type: boolean
+      overall_status:
+        type: string
+      blocking_count:
+        type: integer
+      changed_count:
+        type: integer
+      summary:
+        type: string
+      pack_changes:
+        type: array
+        items:
+          type: object
+          properties:
+            pack_id:
+              type: string
+            current:
+              type:
+                - object
+                - "null"
+            candidate:
+              type:
+                - object
+                - "null"
+            changed:
+              type: boolean
+            blocking:
+              type: boolean
+            reasons:
+              type: array
+              items:
+                type: string
+            capability_expansions:
+              type: array
+              items:
+                type: string
+            memory_escalated:
+              type: boolean
+            trust_downgrade:
+              type: boolean
   operations:
     type: array
     items:

@@ -24,6 +24,12 @@ import {
   OWNERSHIP_FILE,
   OVERRIDE_MARKER_FILE,
   PACK_STATUSES,
+  PACK_PUBLISHER_CLASSES,
+  PACK_RUNTIME_SUPPORT_STATUSES,
+  PACK_SIGNATURE_STATUSES,
+  PACK_SUPPORT_LEVELS,
+  PACK_TRUST_DESCRIPTOR_SCHEMA_VERSION,
+  PACK_TRUST_TIERS,
   POLICY_DECISIONS,
   POLICY_EXPLANATION_SCHEMA_VERSION,
   PREVIEW_OPERATION_KINDS,
@@ -40,6 +46,9 @@ import {
   SUPPORTED_TARGETS,
   TELEMETRY_MODES,
   TELEMETRY_SUMMARY_SCHEMA_VERSION,
+  TRUST_POLICY_ACTIONS,
+  TRUST_SOURCE_CLASSES,
+  TRUST_VERIFICATION_STATUSES,
   TOOL_KINDS,
   TOOL_PHASES,
   TRACE_EVENT_SCHEMA_VERSION,
@@ -800,6 +809,13 @@ function validateCanonicalSmokeChecks(canonical, errors) {
   }
 }
 
+function validateCanonicalTrustDescriptor(canonical, errors) {
+  if (!("trust_descriptor" in canonical) || canonical.trust_descriptor === undefined) {
+    return;
+  }
+  validateNonEmptyString(canonical.trust_descriptor, "trust_descriptor", errors, "PSM063");
+}
+
 export function validatePackManifestV2(record) {
   const errors = [];
   const shape = detectPackManifestShape(record);
@@ -904,6 +920,7 @@ export function validatePackManifestV2(record) {
   validateCanonicalOverridePolicy(canonical, assetIds, errors);
   validateCanonicalUpdateAndUninstall(canonical, errors);
   validateCanonicalSmokeChecks(canonical, errors);
+  validateCanonicalTrustDescriptor(canonical, errors);
 
   return errors;
 }
@@ -1046,6 +1063,290 @@ export function validateCompiledPack(record) {
   return errors;
 }
 
+function validateVersionPolicyDecision(value, field, errors) {
+  if (!isObject(value)) {
+    errors.push(`${field} must be an object`);
+    return;
+  }
+  if (
+    value?.status !== "install" &&
+    value?.status !== "allowed" &&
+    value?.status !== "warn" &&
+    value?.status !== "blocked" &&
+    value?.status !== "legacy"
+  ) {
+    errors.push(`${field}.status must be install, allowed, warn, blocked, or legacy`);
+  }
+  if (typeof value?.blocking !== "boolean") {
+    errors.push(`${field}.blocking must be boolean`);
+  }
+  if (typeof value?.summary !== "string") {
+    errors.push(`${field}.summary must be string`);
+  }
+  if (typeof value?.rule_id !== "string") {
+    errors.push(`${field}.rule_id must be string`);
+  }
+}
+
+function validateTrustReceipt(value, field, errors) {
+  if (!isObject(value)) {
+    errors.push(`${field} must be an object`);
+    return;
+  }
+  if (value?.kind !== "trust-receipt") {
+    errors.push(`${field}.kind must be trust-receipt`);
+  }
+  validateNonEmptyString(value?.pack_id, `${field}.pack_id`, errors, "TRU001");
+  validateNonEmptyString(value?.version, `${field}.version`, errors, "TRU001");
+  validateNonEmptyString(value?.manifest_digest, `${field}.manifest_digest`, errors, "TRU001");
+  if (value?.compiled_digest !== null && typeof value?.compiled_digest !== "string") {
+    errors.push(`${field}.compiled_digest must be string or null`);
+  }
+  if (!TRUST_SOURCE_CLASSES.includes(value?.source_class)) {
+    errors.push(`${field}.source_class must be one of ${TRUST_SOURCE_CLASSES.join(", ")}`);
+  }
+  if (!TRUST_VERIFICATION_STATUSES.includes(value?.verification_status)) {
+    errors.push(
+      `${field}.verification_status must be one of ${TRUST_VERIFICATION_STATUSES.join(", ")}`,
+    );
+  }
+  if (!TRUST_POLICY_ACTIONS.includes(value?.policy_action)) {
+    errors.push(`${field}.policy_action must be one of ${TRUST_POLICY_ACTIONS.join(", ")}`);
+  }
+  if ("trust_tier" in value && !PACK_TRUST_TIERS.includes(value?.trust_tier)) {
+    errors.push(`${field}.trust_tier must be one of ${PACK_TRUST_TIERS.join(", ")}`);
+  }
+  if ("tier_claim" in value && value?.tier_claim !== null && !PACK_TRUST_TIERS.includes(value?.tier_claim)) {
+    errors.push(`${field}.tier_claim must be one of ${PACK_TRUST_TIERS.join(", ")} or null`);
+  }
+  if (value?.publisher !== null && typeof value?.publisher !== "string") {
+    errors.push(`${field}.publisher must be string or null`);
+  }
+  if ("publisher_class" in value && value?.publisher_class !== null && !PACK_PUBLISHER_CLASSES.includes(value?.publisher_class)) {
+    errors.push(
+      `${field}.publisher_class must be one of ${PACK_PUBLISHER_CLASSES.join(", ")} or null`,
+    );
+  }
+  if (value?.release_id !== null && typeof value?.release_id !== "string") {
+    errors.push(`${field}.release_id must be string or null`);
+  }
+  if (value?.key_id !== null && typeof value?.key_id !== "string") {
+    errors.push(`${field}.key_id must be string or null`);
+  }
+  if (value?.trust_bundle_dir !== null && typeof value?.trust_bundle_dir !== "string") {
+    errors.push(`${field}.trust_bundle_dir must be string or null`);
+  }
+  if (value?.manifest_path !== null && typeof value?.manifest_path !== "string") {
+    errors.push(`${field}.manifest_path must be string or null`);
+  }
+  if ("signature_status" in value && !PACK_SIGNATURE_STATUSES.includes(value?.signature_status)) {
+    errors.push(
+      `${field}.signature_status must be one of ${PACK_SIGNATURE_STATUSES.join(", ")}`,
+    );
+  }
+  if ("support_level" in value && !PACK_SUPPORT_LEVELS.includes(value?.support_level)) {
+    errors.push(`${field}.support_level must be one of ${PACK_SUPPORT_LEVELS.join(", ")}`);
+  }
+  if (
+    "support_level_claim" in value &&
+    value?.support_level_claim !== null &&
+    !PACK_SUPPORT_LEVELS.includes(value?.support_level_claim)
+  ) {
+    errors.push(
+      `${field}.support_level_claim must be one of ${PACK_SUPPORT_LEVELS.join(", ")} or null`,
+    );
+  }
+  if ("descriptor_path" in value && value?.descriptor_path !== null && typeof value?.descriptor_path !== "string") {
+    errors.push(`${field}.descriptor_path must be string or null`);
+  }
+  if ("descriptor_digest" in value && value?.descriptor_digest !== null && typeof value?.descriptor_digest !== "string") {
+    errors.push(`${field}.descriptor_digest must be string or null`);
+  }
+  if ("runtime_support" in value) {
+    if (!isObject(value?.runtime_support)) {
+      errors.push(`${field}.runtime_support must be an object`);
+    } else {
+      if (value.runtime_support?.runtime !== null && typeof value.runtime_support?.runtime !== "string") {
+        errors.push(`${field}.runtime_support.runtime must be string or null`);
+      }
+      for (const supportField of ["manifest_status", "declared_status", "resolved_status"]) {
+        if (!PACK_RUNTIME_SUPPORT_STATUSES.includes(value.runtime_support?.[supportField])) {
+          errors.push(
+            `${field}.runtime_support.${supportField} must be one of ${PACK_RUNTIME_SUPPORT_STATUSES.join(", ")}`,
+          );
+        }
+      }
+      if (
+        value.runtime_support?.evidence_ref !== null &&
+        typeof value.runtime_support?.evidence_ref !== "string"
+      ) {
+        errors.push(`${field}.runtime_support.evidence_ref must be string or null`);
+      }
+      if (typeof value.runtime_support?.evidence_present !== "boolean") {
+        errors.push(`${field}.runtime_support.evidence_present must be boolean`);
+      }
+      if (!TRUST_POLICY_ACTIONS.includes(value.runtime_support?.policy_action)) {
+        errors.push(
+          `${field}.runtime_support.policy_action must be one of ${TRUST_POLICY_ACTIONS.join(", ")}`,
+        );
+      }
+      if (!Array.isArray(value.runtime_support?.reasons)) {
+        errors.push(`${field}.runtime_support.reasons must be a list`);
+      }
+    }
+  }
+  if ("capabilities" in value) {
+    if (!Array.isArray(value?.capabilities)) {
+      errors.push(`${field}.capabilities must be a list`);
+    } else {
+      for (const capability of value.capabilities) {
+        validateNonEmptyString(capability, `${field}.capabilities[]`, errors, "TRU001");
+      }
+    }
+  }
+  if ("memory_authority" in value) {
+    if (!isObject(value?.memory_authority)) {
+      errors.push(`${field}.memory_authority must be an object`);
+    } else {
+      if (!MEMORY_AUTHORITY_MODES.includes(value.memory_authority?.authority_mode)) {
+        errors.push(
+          `${field}.memory_authority.authority_mode must be one of ${MEMORY_AUTHORITY_MODES.join(", ")}`,
+        );
+      }
+      if (!MEMORY_ACCESS_LEVELS.includes(value.memory_authority?.global_project_memory)) {
+        errors.push(
+          `${field}.memory_authority.global_project_memory must be one of ${MEMORY_ACCESS_LEVELS.join(", ")}`,
+        );
+      }
+      if (typeof value.memory_authority?.explicit_write_only !== "boolean") {
+        errors.push(`${field}.memory_authority.explicit_write_only must be boolean`);
+      }
+    }
+  }
+  if (!Array.isArray(value?.reasons)) {
+    errors.push(`${field}.reasons must be a list`);
+  } else {
+    for (const reason of value.reasons) {
+      validateNonEmptyString(reason, `${field}.reasons[]`, errors, "TRU001");
+    }
+  }
+  validateNonEmptyString(value?.summary, `${field}.summary`, errors, "TRU001");
+  validateVersionPolicyDecision(value?.version_policy, `${field}.version_policy`, errors);
+}
+
+function validateDescriptorRuntimeSupport(value, field, errors) {
+  if (!validateObject(value, field, errors, "PTD001")) {
+    return;
+  }
+  if (!PACK_RUNTIME_SUPPORT_STATUSES.includes(value?.status)) {
+    errors.push(
+      `${field}.status must be one of ${PACK_RUNTIME_SUPPORT_STATUSES.join(", ")}`,
+    );
+  }
+  if (value?.evidence_ref !== null && typeof value?.evidence_ref !== "string") {
+    errors.push(`${field}.evidence_ref must be string or null`);
+  }
+}
+
+export function validatePackTrustDescriptor(record, { manifest = null } = {}) {
+  const errors = [];
+  if (record?.kind !== "pack-trust-descriptor") {
+    errors.push("kind must be pack-trust-descriptor");
+  }
+  if (record?.schema_version !== PACK_TRUST_DESCRIPTOR_SCHEMA_VERSION) {
+    errors.push(`schema_version must be ${PACK_TRUST_DESCRIPTOR_SCHEMA_VERSION}`);
+  }
+  validateNonEmptyString(record?.pack_name, "pack_name", errors, "PTD001");
+  validateNonEmptyString(record?.pack_version, "pack_version", errors, "PTD001");
+  if (!validateObject(record?.publisher, "publisher", errors, "PTD001")) {
+    return errors;
+  }
+  validateNonEmptyString(record.publisher?.publisher_id, "publisher.publisher_id", errors, "PTD001");
+  validateNonEmptyString(record.publisher?.display_name, "publisher.display_name", errors, "PTD001");
+  validateNonEmptyString(record.publisher?.contact, "publisher.contact", errors, "PTD001");
+  if (!PACK_PUBLISHER_CLASSES.includes(record.publisher?.publisher_class)) {
+    errors.push(
+      `publisher.publisher_class must be one of ${PACK_PUBLISHER_CLASSES.join(", ")}`,
+    );
+  }
+  if (!PACK_TRUST_TIERS.includes(record?.tier_claim)) {
+    errors.push(`tier_claim must be one of ${PACK_TRUST_TIERS.join(", ")}`);
+  }
+  if (!PACK_SUPPORT_LEVELS.includes(record?.support_level_claim)) {
+    errors.push(
+      `support_level_claim must be one of ${PACK_SUPPORT_LEVELS.join(", ")}`,
+    );
+  }
+  if (!validateObject(record?.signature, "signature", errors, "PTD001")) {
+    return errors;
+  }
+  if (typeof record.signature?.required !== "boolean") {
+    errors.push("signature.required must be boolean");
+  }
+  if (typeof record.signature?.allow_local_unsigned !== "boolean") {
+    errors.push("signature.allow_local_unsigned must be boolean");
+  }
+  if (!validateObject(record?.runtime_support, "runtime_support", errors, "PTD001")) {
+    return errors;
+  }
+  validateDescriptorRuntimeSupport(record.runtime_support?.codex_cli, "runtime_support.codex_cli", errors);
+  validateDescriptorRuntimeSupport(record.runtime_support?.copilot_cli, "runtime_support.copilot_cli", errors);
+  if (!validateObject(record?.policy_requirements, "policy_requirements", errors, "PTD001")) {
+    return errors;
+  }
+  for (const field of [
+    "no_silent_fallback",
+    "preview_required_for_mutation",
+    "explicit_write_only_memory",
+  ]) {
+    if (record.policy_requirements?.[field] !== true) {
+      errors.push(`policy_requirements.${field} must be true`);
+    }
+  }
+  if (manifest) {
+    if (record.pack_name !== manifest.pack?.id) {
+      errors.push(`pack_name must match manifest pack id ${manifest.pack?.id}`);
+    }
+    if (record.pack_version !== manifest.pack_version) {
+      errors.push(`pack_version must match manifest pack_version ${manifest.pack_version}`);
+    }
+    if (
+      manifest.memory_permissions?.global_project_memory === "write" &&
+      record.tier_claim !== "core-maintained"
+    ) {
+      errors.push("memory-write packs must claim tier core-maintained");
+    }
+    if (record.publisher?.publisher_id === "pairslash") {
+      if (record.tier_claim === "verified-external") {
+        errors.push("pairslash publisher must not claim verified-external tier");
+      }
+      if (
+        record.publisher?.publisher_class === "external" &&
+        ["core-maintained", "first-party-official"].includes(record.tier_claim)
+      ) {
+        errors.push("pairslash publisher cannot use external publisher_class for first-party tiers");
+      }
+    } else if (
+      ["core-maintained", "first-party-official"].includes(record.tier_claim)
+    ) {
+      errors.push("non-pairslash publishers cannot claim first-party tiers");
+    }
+    if (
+      record.support_level_claim === "core-supported" &&
+      record.tier_claim !== "core-maintained"
+    ) {
+      errors.push("core-supported support_level_claim requires tier_claim core-maintained");
+    }
+    if (
+      record.support_level_claim === "publisher-verified" &&
+      record.tier_claim !== "verified-external"
+    ) {
+      errors.push("publisher-verified support_level_claim requires tier_claim verified-external");
+    }
+  }
+  return errors;
+}
+
 export function validateInstallState(record) {
   const errors = [];
   if (record?.kind !== "install-state") {
@@ -1086,6 +1387,9 @@ export function validateInstallState(record) {
     if (!Array.isArray(pack?.files)) {
       errors.push("packs[].files must be a list");
       continue;
+    }
+    if ("trust_receipt" in pack && pack?.trust_receipt !== null) {
+      validateTrustReceipt(pack.trust_receipt, "packs[].trust_receipt", errors);
     }
     for (const file of pack.files) {
       if ("asset_id" in file) {
@@ -1170,6 +1474,50 @@ export function validatePreviewPlan(record) {
   }
   if (typeof record?.requires_confirmation !== "boolean") {
     errors.push("requires_confirmation must be boolean");
+  }
+  if ("trust_delta" in record && record?.trust_delta !== null) {
+    if (!isObject(record.trust_delta)) {
+      errors.push("trust_delta must be an object");
+    } else {
+      if (typeof record.trust_delta.machine_readable !== "boolean") {
+        errors.push("trust_delta.machine_readable must be boolean");
+      }
+      if (!["stable", "changed", "blocked"].includes(record.trust_delta.overall_status)) {
+        errors.push("trust_delta.overall_status must be stable, changed, or blocked");
+      }
+      if (!Number.isInteger(record.trust_delta.blocking_count)) {
+        errors.push("trust_delta.blocking_count must be an integer");
+      }
+      if (!Number.isInteger(record.trust_delta.changed_count)) {
+        errors.push("trust_delta.changed_count must be an integer");
+      }
+      validateNonEmptyString(record.trust_delta.summary, "trust_delta.summary", errors, "PPL001");
+      if (!Array.isArray(record.trust_delta.pack_changes)) {
+        errors.push("trust_delta.pack_changes must be a list");
+      } else {
+        for (const change of record.trust_delta.pack_changes) {
+          validateNonEmptyString(change?.pack_id, "trust_delta.pack_changes[].pack_id", errors, "PPL001");
+          if (typeof change?.changed !== "boolean") {
+            errors.push("trust_delta.pack_changes[].changed must be boolean");
+          }
+          if (typeof change?.blocking !== "boolean") {
+            errors.push("trust_delta.pack_changes[].blocking must be boolean");
+          }
+          if (!Array.isArray(change?.reasons)) {
+            errors.push("trust_delta.pack_changes[].reasons must be a list");
+          }
+          if ("capability_expansions" in change && !Array.isArray(change?.capability_expansions)) {
+            errors.push("trust_delta.pack_changes[].capability_expansions must be a list when present");
+          }
+          if ("memory_escalated" in change && typeof change?.memory_escalated !== "boolean") {
+            errors.push("trust_delta.pack_changes[].memory_escalated must be boolean when present");
+          }
+          if ("trust_downgrade" in change && typeof change?.trust_downgrade !== "boolean") {
+            errors.push("trust_delta.pack_changes[].trust_downgrade must be boolean when present");
+          }
+        }
+      }
+    }
   }
   if (!Array.isArray(record?.operations)) {
     errors.push("operations must be a list");
@@ -1602,6 +1950,26 @@ export function validateDoctorReport(record) {
       validateNonEmptyString(pack?.install_dir, "installed_packs[].install_dir", errors, "DCR004");
       if (!Number.isInteger(pack?.local_overrides)) {
         errors.push("installed_packs[].local_overrides must be an integer");
+      }
+      if ("source_class" in pack && !TRUST_SOURCE_CLASSES.includes(pack?.source_class)) {
+        errors.push(`unsupported installed_packs[].source_class: ${pack?.source_class}`);
+      }
+      if (
+        "verification_status" in pack &&
+        !TRUST_VERIFICATION_STATUSES.includes(pack?.verification_status)
+      ) {
+        errors.push(
+          `unsupported installed_packs[].verification_status: ${pack?.verification_status}`,
+        );
+      }
+      if ("trust_tier" in pack && !PACK_TRUST_TIERS.includes(pack?.trust_tier)) {
+        errors.push(`unsupported installed_packs[].trust_tier: ${pack?.trust_tier}`);
+      }
+      if ("signature_status" in pack && !PACK_SIGNATURE_STATUSES.includes(pack?.signature_status)) {
+        errors.push(`unsupported installed_packs[].signature_status: ${pack?.signature_status}`);
+      }
+      if ("support_level" in pack && !PACK_SUPPORT_LEVELS.includes(pack?.support_level)) {
+        errors.push(`unsupported installed_packs[].support_level: ${pack?.support_level}`);
       }
     }
   }

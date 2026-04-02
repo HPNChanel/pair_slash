@@ -250,6 +250,7 @@ properties:
             - install_state
             - conflict
             - platform
+            - trust
         severity:
           type: string
           enum:
@@ -357,6 +358,16 @@ properties:
           type: string
         local_overrides:
           type: integer
+        trust_tier:
+          type: string
+        signature_status:
+          type: string
+        support_level:
+          type: string
+        source_class:
+          type: string
+        verification_status:
+          type: string
   first_workflow_guidance:
     type: object
     required:

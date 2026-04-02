@@ -65,6 +65,39 @@ export function formatPreviewPlanText(plan) {
       }
     }
   }
+  if (plan.trust_delta) {
+    lines.push(
+      "",
+      "Trust Delta:",
+      `- overall status: ${plan.trust_delta.overall_status}`,
+      `- blocking changes: ${plan.trust_delta.blocking_count}`,
+      `- changed packs: ${plan.trust_delta.changed_count}`,
+      `- summary: ${plan.trust_delta.summary}`,
+    );
+    if (plan.trust_delta.pack_changes?.length > 0) {
+      lines.push("- per-pack:");
+      for (const change of plan.trust_delta.pack_changes) {
+        const current = change.current
+          ? `${change.current.trust_tier ?? change.current.source_class}/${change.current.signature_status ?? change.current.verification_status}/${change.current.support_level ?? "unknown"}`
+          : "not-installed";
+        const candidate = change.candidate
+          ? `${change.candidate.trust_tier ?? change.candidate.source_class}/${change.candidate.signature_status ?? change.candidate.verification_status}/${change.candidate.support_level ?? "unknown"}`
+          : "none";
+        lines.push(
+          `  ${change.pack_id} :: ${current} -> ${candidate}${change.blocking ? " [blocking]" : ""}`,
+        );
+        if (change.capability_expansions?.length > 0) {
+          lines.push(`    capability expansion: ${change.capability_expansions.join(", ")}`);
+        }
+        if (change.memory_escalated) {
+          lines.push("    memory authority escalated");
+        }
+        if (change.trust_downgrade) {
+          lines.push("    trust tier downgraded");
+        }
+      }
+    }
+  }
   if (plan.commitability) {
     lines.push(
       "",
@@ -269,7 +302,7 @@ export function formatDoctorText(report) {
   } else {
     for (const pack of report.installed_packs) {
       lines.push(
-        `- ${pack.id}: version=${pack.version}, local_overrides=${pack.local_overrides}, install_dir=${pack.install_dir}`,
+        `- ${pack.id}: version=${pack.version}, trust=${pack.trust_tier ?? pack.source_class ?? "unknown"}/${pack.signature_status ?? pack.verification_status ?? "unknown"}/${pack.support_level ?? "unknown"}, local_overrides=${pack.local_overrides}, install_dir=${pack.install_dir}`,
       );
     }
   }

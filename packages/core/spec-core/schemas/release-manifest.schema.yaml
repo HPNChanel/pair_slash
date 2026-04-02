@@ -1,0 +1,70 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://pairslash.dev/schemas/release-manifest/1.0.0"
+title: PairSlash Release Manifest
+type: object
+required:
+  - kind
+  - schema_version
+  - product
+  - publisher
+  - release_id
+  - pack_count
+  - packs
+properties:
+  kind:
+    const: release-manifest
+  schema_version:
+    const: "1.0.0"
+  product:
+    const: pairslash
+  publisher:
+    type: string
+  release_id:
+    type: string
+  source_commit:
+    type:
+      - string
+      - "null"
+  pack_count:
+    type: integer
+  packs:
+    type: array
+    items:
+      type: object
+      required:
+        - pack_id
+        - version
+        - manifest_digest
+        - metadata_path
+        - metadata_sha256
+        - runtimes
+      properties:
+        pack_id:
+          type: string
+        version:
+          type: string
+        manifest_digest:
+          type: string
+        metadata_path:
+          type: string
+        metadata_sha256:
+          type: string
+        signature_path:
+          type:
+            - string
+            - "null"
+        runtimes:
+          type: array
+          items:
+            type: object
+            required:
+              - runtime
+              - compiled_digest
+              - normalized_ir_digest
+            properties:
+              runtime:
+                type: string
+              compiled_digest:
+                type: string
+              normalized_ir_digest:
+                type: string

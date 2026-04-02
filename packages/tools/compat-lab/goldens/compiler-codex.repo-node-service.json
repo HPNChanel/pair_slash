@@ -3,7 +3,7 @@
     {
       "bundle_kind": "codex-skill-bundle",
       "canonical_entrypoint": "/skills",
-      "digest": "5fef97c117cb6bb57d5a9d8cf50e7577aec1d173e649886004a1724fcf368682",
+      "digest": "fc311c595d9d351d28bb5efd6038f587be85968c028a2a251c5278fa44d61a95",
       "direct_invocation": "$pairslash-backend",
       "files": [
         {
@@ -122,7 +122,7 @@
           "relative_path": "pairslash.install.json",
           "required": true,
           "runtime_selector": "shared",
-          "sha256": "83189cc1f2cd47cc319042ab5d4ef4bca35d14635afec0d42a6a5cba3c399840",
+          "sha256": "28ce4d9c193d8da2b51125004be5e5b0b856aff1a037dba1aafbd1efc2907f0c",
           "uninstall_behavior": "remove_if_unmodified",
           "write_authority_guarded": false
         },
@@ -157,7 +157,7 @@
           "write_authority_guarded": false
         }
       ],
-      "normalized_ir_digest": "424aa79101c03b5d001616a02c12e6e6dabc1ef9446ae23896013295ccac1055",
+      "normalized_ir_digest": "fa6971666083585d75d42385768b0ff98419685f1d1317455f4acacacccd6593",
       "output_dir": "<repo>\\dist\\compiled\\codex\\pairslash-backend",
       "pack_id": "pairslash-backend",
       "runtime": "codex_cli",
@@ -166,7 +166,7 @@
     {
       "bundle_kind": "codex-skill-bundle",
       "canonical_entrypoint": "/skills",
-      "digest": "d97c3ee067a18e9392ed4c4537c36a232613c16a1febc1ddec6777f3fd6e40c1",
+      "digest": "564badb960fffef5e891a16aa10f2cdc3b989fa60d3ef04263d045bf2d54f4f0",
       "direct_invocation": "$pairslash-devops",
       "files": [
         {
@@ -285,7 +285,7 @@
           "relative_path": "pairslash.install.json",
           "required": true,
           "runtime_selector": "shared",
-          "sha256": "e67f95708e222743a78bae7b4a8fe10caf4a9da8542b9ad2fe074561719d9d65",
+          "sha256": "d79715449c9f008bd622c9e96e577a73928d23da8ad23d179c625f218e539478",
           "uninstall_behavior": "remove_if_unmodified",
           "write_authority_guarded": false
         },
@@ -320,7 +320,7 @@
           "write_authority_guarded": false
         }
       ],
-      "normalized_ir_digest": "b15cfc07884bbfe888c1786a483ab43c8173dc5d50ec8a4b090864b9f73fa91d",
+      "normalized_ir_digest": "f1e44847acb5c1f535e3c89badd959e08c3b10b3403f0cf0623185b0f6f318ff",
       "output_dir": "<repo>\\dist\\compiled\\codex\\pairslash-devops",
       "pack_id": "pairslash-devops",
       "runtime": "codex_cli",

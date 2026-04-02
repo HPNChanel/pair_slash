@@ -104,7 +104,7 @@ Respect `stable-tested`, `degraded`, `prep`, and `known-broken` exactly.
 
 Use these when onboarding language needs evidence instead of narrative:
 
-- Examples index: [../../examples/README.md](../../examples/README.md)
+- Examples index: [../examples/README.md](../examples/README.md)
 - Benchmark index: [../benchmarks/README.md](../benchmarks/README.md)
 - Case-study index: [../case-studies/README.md](../case-studies/README.md)
 - Onboarding before/after placeholder: [../case-studies/onboard-repo-before-after.md](../case-studies/onboard-repo-before-after.md)

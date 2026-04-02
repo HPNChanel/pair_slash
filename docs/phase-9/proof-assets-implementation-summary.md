@@ -11,7 +11,7 @@ All first-wave case-study assets remain `evidence_status: not-measured`.
 
 ## Created files
 
-- `examples/README.md`
+- `docs/examples/README.md`
 - `docs/benchmarks/README.md`
 - `docs/case-studies/README.md`
 - `docs/case-studies/onboard-repo-before-after.md`
@@ -31,7 +31,7 @@ All first-wave case-study assets remain `evidence_status: not-measured`.
 
 - Root README entry links now include:
   - `docs/phase-9/examples-and-benchmarks.md`
-  - `examples/README.md`
+  - `docs/examples/README.md`
   - `docs/benchmarks/README.md`
   - `docs/case-studies/README.md`
 - Phase 9 proof plan now links to implemented scaffold paths.
@@ -70,7 +70,7 @@ slots for future measurement:
 
 - Duplicate examples surface now exists:
   - `docs/examples/` (existing documentation-oriented examples)
-  - `examples/README.md` (new Phase 9 public index)
+  - `docs/examples/README.md` (new Phase 9 public index)
 - This is intentional for first-wave discoverability but may become confusing if
   ownership rules are not kept explicit.
 - Benchmark and case-study placeholders can be misread as evidence if
@@ -78,7 +78,7 @@ slots for future measurement:
 
 # Acceptance Checklist
 
-- `examples/README.md` created.
+- `docs/examples/README.md` created.
 - `docs/benchmarks/README.md` created.
 - `docs/case-studies/README.md` created.
 - Three first-wave case-study placeholder files created.

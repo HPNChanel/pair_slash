@@ -1,7 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import YAML from "yaml";
 
 import { buildContractEnvelope } from "@pairslash/contract-engine";
 import { runLintBridge } from "../src/index.js";
@@ -18,6 +19,13 @@ function updatePackageJsonFile(repoRoot, relativePath, mutate) {
   const payload = JSON.parse(readFileSync(filePath, "utf8"));
   mutate(payload);
   writeFileSync(filePath, `${JSON.stringify(payload, null, 2)}\n`);
+}
+
+function updateTrustDescriptor(repoRoot, packId, mutate) {
+  const filePath = join(repoRoot, "packs", "core", packId, "pack.trust.yaml");
+  const payload = YAML.parse(readFileSync(filePath, "utf8"));
+  const updated = mutate(payload) ?? payload;
+  writeFileSync(filePath, YAML.stringify(updated, { lineWidth: 0, simpleKeys: true }));
 }
 
 test("lint bridge passes for a valid core pack", serial, () => {
@@ -90,6 +98,97 @@ test("lint bridge emits warning when shell_exec is declared without required_too
     assert.equal(report.summary.error_count, 0);
     assert.ok(
       report.issues.some((issue) => issue.code === "LINT-TOOLS-002" && issue.result === "warning"),
+    );
+  } finally {
+    fixture.cleanup();
+  }
+});
+
+test("lint bridge warns when pack trust descriptor is absent", serial, () => {
+  const fixture = createTempRepo({ packs: ["pairslash-plan"] });
+  try {
+    updatePackManifest({
+      repoRoot: fixture.tempRoot,
+      packId: "pairslash-plan",
+      mutate(manifest) {
+        delete manifest.trust_descriptor;
+        return manifest;
+      },
+    });
+    unlinkSync(join(fixture.tempRoot, "packs", "core", "pairslash-plan", "pack.trust.yaml"));
+
+    const report = runLintBridge({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex",
+      target: "repo",
+      packs: ["pairslash-plan"],
+    });
+    assert.equal(report.ok, true);
+    assert.ok(
+      report.issues.some((issue) => issue.code === "LINT-TRUST-001" && issue.result === "warning"),
+    );
+  } finally {
+    fixture.cleanup();
+  }
+});
+
+test("lint bridge errors when trust descriptor file is structurally invalid", serial, () => {
+  const fixture = createTempRepo({ packs: ["pairslash-plan"] });
+  try {
+    updateTrustDescriptor(fixture.tempRoot, "pairslash-plan", (descriptor) => {
+      delete descriptor.runtime_support.codex_cli.evidence_ref;
+      return descriptor;
+    });
+
+    const report = runLintBridge({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex",
+      target: "repo",
+      packs: ["pairslash-plan"],
+    });
+    assert.equal(report.ok, false);
+    assert.ok(
+      report.issues.some(
+        (issue) =>
+          issue.code === "LINT-TRUST-001" &&
+          issue.result === "error" &&
+          issue.message.includes("runtime_support.codex_cli.evidence_ref"),
+      ),
+    );
+  } finally {
+    fixture.cleanup();
+  }
+});
+
+test("lint bridge errors when trust claim exceeds blocked runtime surface", serial, () => {
+  const fixture = createTempRepo({ packs: ["pairslash-plan"] });
+  try {
+    updatePackManifest({
+      repoRoot: fixture.tempRoot,
+      packId: "pairslash-plan",
+      mutate(manifest) {
+        manifest.runtime_bindings.copilot_cli.compatibility.canonical_picker = "blocked";
+        manifest.runtime_bindings.copilot_cli.compatibility.direct_invocation = "blocked";
+        manifest.runtime_targets.copilot_cli.compatibility.canonical_picker = "blocked";
+        manifest.runtime_targets.copilot_cli.compatibility.direct_invocation = "blocked";
+        return manifest;
+      },
+    });
+
+    const report = runLintBridge({
+      repoRoot: fixture.tempRoot,
+      runtime: "all",
+      target: "repo",
+      packs: ["pairslash-plan"],
+    });
+    assert.equal(report.ok, false);
+    assert.ok(
+      report.issues.some(
+        (issue) =>
+          issue.code === "LINT-TRUST-002" &&
+          issue.result === "error" &&
+          issue.message.includes("copilot_cli trust claim exceeds blocked manifest runtime surface"),
+      ),
     );
   } finally {
     fixture.cleanup();

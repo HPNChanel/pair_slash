@@ -8,6 +8,13 @@ export const PREVIEW_PLAN_SCHEMA_VERSION = "1.0.0";
 export const DOCTOR_REPORT_SCHEMA_VERSION = "2.1.0";
 export const INSTALL_JOURNAL_SCHEMA_VERSION = "1.0.0";
 export const LINT_REPORT_SCHEMA_VERSION = "1.0.0";
+export const RELEASE_MANIFEST_SCHEMA_VERSION = "1.0.0";
+export const PACK_METADATA_ENVELOPE_SCHEMA_VERSION = "1.0.0";
+export const PACK_TRUST_DESCRIPTOR_SCHEMA_VERSION = "1.0.0";
+export const DETACHED_SIGNATURE_SCHEMA_VERSION = "1.0.0";
+export const TRUST_RECEIPT_SCHEMA_VERSION = "1.0.0";
+export const TRUST_POLICY_SCHEMA_VERSION = "1.0.0";
+export const VERSION_POLICY_SCHEMA_VERSION = "1.0.0";
 export const CONTRACT_ENVELOPE_SCHEMA_VERSION = "2.0.0";
 export const POLICY_VERDICT_SCHEMA_VERSION = "2.0.0";
 export const MEMORY_WRITE_REQUEST_SCHEMA_VERSION = "1.0.0";
@@ -150,6 +157,7 @@ export const DOCTOR_CHECK_GROUPS = [
   "install_state",
   "conflict",
   "platform",
+  "trust",
 ];
 export const DOCTOR_CHECK_STATUSES = ["pass", "warn", "degraded", "fail", "unsupported", "skip"];
 export const DOCTOR_CHECK_SEVERITIES = ["info", "warn", "fail"];
@@ -159,6 +167,7 @@ export const OVERRIDE_MARKER_FILE = ".pairslash.local-overrides.yaml";
 export const NORMALIZED_IR_FILE = "normalized-ir.json";
 export const COMPILED_PACK_FILE = "compiled-pack.json";
 export const INSTALL_JOURNAL_DIR = "install-journal";
+export const RELEASE_TRUST_DIR = "dist/release-trust";
 export const MEMORY_RECORD_KINDS = [
   "decision",
   "command",
@@ -256,3 +265,28 @@ export const INSTALL_SURFACES = [
   "hook",
   "mcp",
 ];
+export const TRUST_SOURCE_CLASSES = [
+  "first-party-release",
+  "local-source",
+  "external-trusted",
+  "external-unverified",
+];
+export const TRUST_VERIFICATION_STATUSES = ["verified", "local", "unverified", "legacy"];
+export const TRUST_POLICY_ACTIONS = ["allow", "ask", "deny"];
+export const PACK_TRUST_TIERS = [
+  "core-maintained",
+  "first-party-official",
+  "verified-external",
+  "local-dev",
+  "unverified-external",
+];
+export const PACK_SUPPORT_LEVELS = [
+  "core-supported",
+  "official-preview",
+  "publisher-verified",
+  "local-dev",
+  "unsupported",
+];
+export const PACK_RUNTIME_SUPPORT_STATUSES = ["supported", "partial", "unverified", "blocked"];
+export const PACK_PUBLISHER_CLASSES = ["core-product", "first-party", "external"];
+export const PACK_SIGNATURE_STATUSES = ["verified", "missing", "invalid", "local-dev"];

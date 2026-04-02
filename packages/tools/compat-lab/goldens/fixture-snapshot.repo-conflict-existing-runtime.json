@@ -16,205 +16,15 @@
   "runtimes": {
     "codex_cli": {
       "apply_result": {
-        "state": {
-          "config_home": "<repo>\\.agents",
-          "install_root": "<repo>\\.agents\\skills",
-          "packs": [
-            {
-              "compiler_version": "2.0.0",
-              "files": [
-                {
-                  "absolute_path": "<repo>\\.agents\\skills\\pairslash-plan\\agents\\openai.yaml",
-                  "asset_id": "codex-metadata",
-                  "asset_kind": "runtime_manifest",
-                  "declared_owner": "pairslash",
-                  "generated": true,
-                  "generator": "codex_metadata",
-                  "install_surface": "metadata",
-                  "last_operation": "create",
-                  "local_override": false,
-                  "override_eligible": false,
-                  "owned_by_pairslash": true,
-                  "relative_path": "agents/openai.yaml",
-                  "required": true,
-                  "runtime_selector": "codex_cli",
-                  "uninstall_behavior": "detach_if_modified",
-                  "write_authority_guarded": false
-                },
-                {
-                  "absolute_path": "<repo>\\.agents\\skills\\pairslash-plan\\contract.md",
-                  "asset_id": "contract-doc",
-                  "asset_kind": "support_doc",
-                  "declared_owner": "pairslash",
-                  "generated": false,
-                  "generator": "source_copy",
-                  "install_surface": "support_doc",
-                  "last_operation": "create",
-                  "local_override": false,
-                  "override_eligible": true,
-                  "owned_by_pairslash": true,
-                  "relative_path": "contract.md",
-                  "required": true,
-                  "runtime_selector": "shared",
-                  "uninstall_behavior": "detach_if_modified",
-                  "write_authority_guarded": false
-                },
-                {
-                  "absolute_path": "<repo>\\.agents\\skills\\pairslash-plan\\example-invocation.md",
-                  "asset_id": "example-invocation-doc",
-                  "asset_kind": "support_doc",
-                  "declared_owner": "pairslash",
-                  "generated": false,
-                  "generator": "source_copy",
-                  "install_surface": "support_doc",
-                  "last_operation": "create",
-                  "local_override": false,
-                  "override_eligible": true,
-                  "owned_by_pairslash": true,
-                  "relative_path": "example-invocation.md",
-                  "required": true,
-                  "runtime_selector": "shared",
-                  "uninstall_behavior": "detach_if_modified",
-                  "write_authority_guarded": false
-                },
-                {
-                  "absolute_path": "<repo>\\.agents\\skills\\pairslash-plan\\example-output.md",
-                  "asset_id": "example-output-doc",
-                  "asset_kind": "support_doc",
-                  "declared_owner": "pairslash",
-                  "generated": false,
-                  "generator": "source_copy",
-                  "install_surface": "support_doc",
-                  "last_operation": "create",
-                  "local_override": false,
-                  "override_eligible": true,
-                  "owned_by_pairslash": true,
-                  "relative_path": "example-output.md",
-                  "required": true,
-                  "runtime_selector": "shared",
-                  "uninstall_behavior": "detach_if_modified",
-                  "write_authority_guarded": false
-                },
-                {
-                  "absolute_path": "<repo>\\.agents\\skills\\pairslash-plan\\fragments\\config\\pack-config.yaml",
-                  "asset_id": "codex-config",
-                  "asset_kind": "config_fragment",
-                  "declared_owner": "pairslash",
-                  "generated": true,
-                  "generator": "codex_config",
-                  "install_surface": "config",
-                  "last_operation": "create",
-                  "local_override": false,
-                  "override_eligible": false,
-                  "owned_by_pairslash": true,
-                  "relative_path": "fragments/config/pack-config.yaml",
-                  "required": true,
-                  "runtime_selector": "codex_cli",
-                  "uninstall_behavior": "detach_if_modified",
-                  "write_authority_guarded": false
-                },
-                {
-                  "absolute_path": "<repo>\\.agents\\skills\\pairslash-plan\\fragments\\context\\runtime-context.md",
-                  "asset_id": "codex-context",
-                  "asset_kind": "context_fragment",
-                  "declared_owner": "pairslash",
-                  "generated": true,
-                  "generator": "codex_context",
-                  "install_surface": "context",
-                  "last_operation": "create",
-                  "local_override": false,
-                  "override_eligible": false,
-                  "owned_by_pairslash": true,
-                  "relative_path": "fragments/context/runtime-context.md",
-                  "required": true,
-                  "runtime_selector": "codex_cli",
-                  "uninstall_behavior": "detach_if_modified",
-                  "write_authority_guarded": false
-                },
-                {
-                  "absolute_path": "<repo>\\.agents\\skills\\pairslash-plan\\pack.yaml",
-                  "asset_id": "pack-yaml-doc",
-                  "asset_kind": "support_doc",
-                  "declared_owner": "pairslash",
-                  "generated": false,
-                  "generator": "source_copy",
-                  "install_surface": "support_doc",
-                  "last_operation": "create",
-                  "local_override": false,
-                  "override_eligible": true,
-                  "owned_by_pairslash": true,
-                  "relative_path": "pack.yaml",
-                  "required": true,
-                  "runtime_selector": "shared",
-                  "uninstall_behavior": "detach_if_modified",
-                  "write_authority_guarded": false
-                },
-                {
-                  "absolute_path": "<repo>\\.agents\\skills\\pairslash-plan\\pairslash.install.json",
-                  "asset_id": "ownership-receipt",
-                  "asset_kind": "ownership_manifest",
-                  "declared_owner": "pairslash",
-                  "generated": true,
-                  "generator": "pairslash_ownership_receipt",
-                  "install_surface": "metadata",
-                  "last_operation": "create",
-                  "local_override": false,
-                  "override_eligible": false,
-                  "owned_by_pairslash": true,
-                  "relative_path": "pairslash.install.json",
-                  "required": true,
-                  "runtime_selector": "shared",
-                  "uninstall_behavior": "remove_if_unmodified",
-                  "write_authority_guarded": false
-                },
-                {
-                  "absolute_path": "<repo>\\.agents\\skills\\pairslash-plan\\SKILL.md",
-                  "asset_id": "skill",
-                  "asset_kind": "skill_markdown",
-                  "declared_owner": "pairslash",
-                  "generated": false,
-                  "generator": "source_copy",
-                  "install_surface": "canonical_skill",
-                  "last_operation": "create",
-                  "local_override": false,
-                  "override_eligible": true,
-                  "owned_by_pairslash": true,
-                  "relative_path": "SKILL.md",
-                  "required": true,
-                  "runtime_selector": "shared",
-                  "uninstall_behavior": "detach_if_modified",
-                  "write_authority_guarded": false
-                },
-                {
-                  "absolute_path": "<repo>\\.agents\\skills\\pairslash-plan\\validation-checklist.md",
-                  "asset_id": "validation-checklist-doc",
-                  "asset_kind": "support_doc",
-                  "declared_owner": "pairslash",
-                  "generated": false,
-                  "generator": "source_copy",
-                  "install_surface": "support_doc",
-                  "last_operation": "create",
-                  "local_override": false,
-                  "override_eligible": true,
-                  "owned_by_pairslash": true,
-                  "relative_path": "validation-checklist.md",
-                  "required": true,
-                  "runtime_selector": "shared",
-                  "uninstall_behavior": "detach_if_modified",
-                  "write_authority_guarded": false
-                }
-              ],
-              "id": "pairslash-plan",
-              "install_dir": "<repo>\\.agents\\skills\\pairslash-plan",
-              "manifest_digest": "bbe66a51623bcd68b2c8d8ab44f521d567c2f83dc1d7d301a96c170fec8b42aa",
-              "previous_version": "0.2.0",
-              "version": "0.2.0"
-            }
-          ],
-          "runtime": "codex_cli",
-          "target": "repo"
-        },
-        "status": "applied",
+        "errors": [
+          "trust-delta-blocked:pairslash-plan:capability-expanded:memory_read",
+          "trust-delta-blocked:pairslash-plan:capability-expanded:plan_generation",
+          "trust-delta-blocked:pairslash-plan:capability-expanded:repo_read",
+          "trust-delta-blocked:pairslash-plan:local-source:manifest-under-current-repo",
+          "trust-delta-blocked:pairslash-plan:release-trust-bundle:not-found",
+          "trust-delta-blocked:pairslash-plan:runtime-evidence-missing:codex_cli"
+        ],
+        "status": "blocked",
         "summary": {
           "blocked_conflict": 0,
           "create": 10,
@@ -232,7 +42,7 @@
         {
           "bundle_kind": "codex-skill-bundle",
           "canonical_entrypoint": "/skills",
-          "digest": "473e6eb2d332d27e0e12eafef2adb2a701ba0a4dd162bc70fbe6e93a80827d5e",
+          "digest": "ef89379d82d397ec43c5cf8d3f168814a9a8553f97c8817077876fdf92c79a95",
           "direct_invocation": "$pairslash-plan",
           "files": [
             {
@@ -246,7 +56,7 @@
               "relative_path": "agents/openai.yaml",
               "required": true,
               "runtime_selector": "codex_cli",
-              "sha256": "332eb4e1d36d516f56169f420dcae83956cda1dcfacf9d75ac0d66f470cf8a45",
+              "sha256": "2c677fd25484fcc0fcd2bc9161dbcb27c274f87765bad405b8004c0d25af0cb7",
               "uninstall_behavior": "detach_if_modified",
               "write_authority_guarded": false
             },
@@ -321,7 +131,7 @@
               "relative_path": "fragments/context/runtime-context.md",
               "required": true,
               "runtime_selector": "codex_cli",
-              "sha256": "feacb7742573eb30088d9b6efb15b4591cd0e50a5caada83aae8dc2fc55a4838",
+              "sha256": "4abc1ab8105021c6dd837c0b0bf082ab4a7ee346aadf48fc9d66cee8e2aabba5",
               "uninstall_behavior": "detach_if_modified",
               "write_authority_guarded": false
             },
@@ -351,7 +161,7 @@
               "relative_path": "pairslash.install.json",
               "required": true,
               "runtime_selector": "shared",
-              "sha256": "87b6bf1c5b36d96f84a1ab0f63faca71960561a52a42c208b44010e7b3bbca96",
+              "sha256": "b0eac283bacb4932f2faac9a3cc8ef9e48a4706d9a241c2fcf363607cf97eb87",
               "uninstall_behavior": "remove_if_unmodified",
               "write_authority_guarded": false
             },
@@ -386,352 +196,14 @@
               "write_authority_guarded": false
             }
           ],
-          "normalized_ir_digest": "20ec86abebd3a8a934aa7c13e49fa6814363848b677d72aca7bfd2b2107b4324",
+          "normalized_ir_digest": "51911531688bb69bac51ebba81c76a7bd4b37cb4dfdd528686621cb114edf6cd",
           "output_dir": "<repo>\\dist\\compiled\\codex\\pairslash-plan",
           "pack_id": "pairslash-plan",
           "runtime": "codex_cli",
           "version": "0.2.0"
         }
       ],
-      "doctor_after": {
-        "checks": [
-          {
-            "blocking_for_install": false,
-            "evidence": {
-              "runtimes": {
-                "codex_cli": {
-                  "available": true,
-                  "error": null,
-                  "executable": "codex",
-                  "version": "0.116.0"
-                },
-                "copilot_cli": {
-                  "available": true,
-                  "error": null,
-                  "executable": "gh",
-                  "version": "2.50.0"
-                }
-              }
-            },
-            "group": "runtime",
-            "id": "runtime.presence_matrix",
-            "remediation": null,
-            "severity": "info",
-            "status": "pass",
-            "summary": "detected runtime(s): codex_cli, copilot_cli"
-          },
-          {
-            "blocking_for_install": false,
-            "evidence": {
-              "version": "0.116.0"
-            },
-            "group": "runtime",
-            "id": "runtime.detect",
-            "remediation": null,
-            "severity": "info",
-            "status": "pass",
-            "summary": "runtime available via codex (0.116.0)"
-          },
-          {
-            "blocking_for_install": false,
-            "evidence": {
-              "version": "0.116.0"
-            },
-            "group": "runtime",
-            "id": "runtime.version_range",
-            "remediation": null,
-            "severity": "info",
-            "status": "pass",
-            "summary": "runtime version satisfies all selected pack ranges"
-          },
-          {
-            "blocking_for_install": false,
-            "evidence": {
-              "runtime_version": "0.116.0",
-              "tested_version_range": "0.116.0"
-            },
-            "group": "runtime",
-            "id": "runtime.tested_range",
-            "remediation": null,
-            "severity": "info",
-            "status": "pass",
-            "summary": "runtime version 0.116.0 matches recorded pilot evidence"
-          },
-          {
-            "blocking_for_install": false,
-            "evidence": {
-              "evidence_source": "docs/compatibility/compatibility-matrix.md; docs/runtime-mapping/pilot-acceptance.md; .pairslash/project-memory/60-architecture-decisions/phase-0-codex-cli-verification-on-v0-116-0.yaml",
-              "lane_status": "supported",
-              "tested_range_status": "recorded",
-              "tested_version_range": "0.116.0"
-            },
-            "group": "platform",
-            "id": "platform.support_lane",
-            "remediation": null,
-            "severity": "info",
-            "status": "pass",
-            "summary": "macOS Codex repo scope is the primary stable-tested compatibility lane."
-          },
-          {
-            "blocking_for_install": false,
-            "evidence": {},
-            "group": "platform",
-            "id": "platform.os_shell_support",
-            "remediation": null,
-            "severity": "info",
-            "status": "pass",
-            "summary": "platform <host-os> with shell <host-shell> is recognized"
-          },
-          {
-            "blocking_for_install": false,
-            "evidence": {
-              "candidates": [
-                "<repo>\\.compat-home\\.<host-shell>rc",
-                "<repo>\\.compat-home\\.zprofile"
-              ]
-            },
-            "group": "platform",
-            "id": "platform.shell_profile_candidates",
-            "remediation": null,
-            "severity": "info",
-            "status": "pass",
-            "summary": "detected 2 shell profile candidate(s)"
-          },
-          {
-            "blocking_for_install": false,
-            "evidence": {
-              "manifest_count": 1
-            },
-            "group": "scope",
-            "id": "scope.repo_root",
-            "remediation": null,
-            "severity": "info",
-            "status": "pass",
-            "summary": "repo root markers are present"
-          },
-          {
-            "blocking_for_install": false,
-            "evidence": {},
-            "group": "filesystem",
-            "id": "filesystem.config_home",
-            "remediation": null,
-            "severity": "info",
-            "status": "pass",
-            "summary": "config home path is valid"
-          },
-          {
-            "blocking_for_install": false,
-            "evidence": {},
-            "group": "filesystem",
-            "id": "filesystem.install_root",
-            "remediation": null,
-            "severity": "info",
-            "status": "pass",
-            "summary": "install root path is valid"
-          },
-          {
-            "blocking_for_install": false,
-            "evidence": {},
-            "group": "filesystem",
-            "id": "filesystem.write_permission",
-            "remediation": null,
-            "severity": "info",
-            "status": "pass",
-            "summary": "required filesystem paths are writable"
-          },
-          {
-            "blocking_for_install": false,
-            "evidence": {
-              "pack_count": 1
-            },
-            "group": "install_state",
-            "id": "install_state.load",
-            "remediation": null,
-            "severity": "info",
-            "status": "pass",
-            "summary": "install state loaded successfully"
-          },
-          {
-            "blocking_for_install": false,
-            "evidence": {
-              "discovered": 1
-            },
-            "group": "manifest",
-            "id": "manifest.discover_and_validate",
-            "remediation": null,
-            "severity": "info",
-            "status": "pass",
-            "summary": "1 manifest(s) selected for doctor checks"
-          },
-          {
-            "blocking_for_install": false,
-            "evidence": {},
-            "group": "manifest",
-            "id": "manifest.runtime_target_presence",
-            "remediation": null,
-            "severity": "info",
-            "status": "pass",
-            "summary": "all selected manifests declare the requested runtime and install target"
-          },
-          {
-            "blocking_for_install": false,
-            "evidence": {},
-            "group": "conflict",
-            "id": "manifest.naming_conflicts",
-            "remediation": null,
-            "severity": "info",
-            "status": "pass",
-            "summary": "no manifest naming conflicts detected"
-          },
-          {
-            "blocking_for_install": false,
-            "evidence": {},
-            "group": "dependencies",
-            "id": "dependencies.required_tools",
-            "remediation": null,
-            "severity": "info",
-            "status": "pass",
-            "summary": "required tool checks passed"
-          },
-          {
-            "blocking_for_install": false,
-            "evidence": {},
-            "group": "dependencies",
-            "id": "dependencies.required_mcp_servers",
-            "remediation": null,
-            "severity": "info",
-            "status": "pass",
-            "summary": "required MCP server config assets are present"
-          },
-          {
-            "blocking_for_install": false,
-            "evidence": {},
-            "group": "install_state",
-            "id": "install_state.owned_files_integrity",
-            "remediation": null,
-            "severity": "info",
-            "status": "pass",
-            "summary": "tracked managed files match install state receipts"
-          },
-          {
-            "blocking_for_install": false,
-            "evidence": {},
-            "group": "install_state",
-            "id": "install_state.update_preview_risk",
-            "remediation": null,
-            "severity": "info",
-            "status": "pass",
-            "summary": "update preview reports no override-preservation or conflict risk"
-          },
-          {
-            "blocking_for_install": false,
-            "evidence": {},
-            "group": "conflict",
-            "id": "conflict.unmanaged_install_root",
-            "remediation": null,
-            "severity": "info",
-            "status": "pass",
-            "summary": "no unmanaged runtime assets detected under the install root"
-          },
-          {
-            "blocking_for_install": false,
-            "evidence": {},
-            "group": "install_state",
-            "id": "install_state.asset_placement",
-            "remediation": null,
-            "severity": "info",
-            "status": "pass",
-            "summary": "installed runtime assets match expected placement for the selected runtime"
-          }
-        ],
-        "environment_summary": {
-          "config_home": "<repo>\\.agents",
-          "cwd": "<workspace>",
-          "install_root": "<repo>\\.agents\\skills",
-          "os": "<host-os>",
-          "repo_root": "<repo>",
-          "runtime_available": true,
-          "runtime_executable": "codex",
-          "runtime_version": "0.116.0",
-          "shell": "<host-shell>",
-          "shell_profile_candidates": [
-            "<repo>\\.compat-home\\.<host-shell>rc",
-            "<repo>\\.compat-home\\.zprofile"
-          ],
-          "state_path": "<repo>\\.pairslash\\install-state\\repo-codex_cli.json"
-        },
-        "first_workflow_guidance": {
-          "commands": [
-            "Launch codex from the repo root and use /skills to run pairslash-plan."
-          ],
-          "rationale": "A managed pack is already installed for this runtime and target.",
-          "ready": true,
-          "recommended_pack_id": "pairslash-plan"
-        },
-        "install_blocked": false,
-        "installed_packs": [
-          {
-            "id": "pairslash-plan",
-            "install_dir": "<repo>\\.agents\\skills\\pairslash-plan",
-            "local_overrides": 0,
-            "version": "0.2.0"
-          }
-        ],
-        "issues": [],
-        "next_actions": [
-          "No action required. Environment is ready for PairSlash compatibility diagnostics."
-        ],
-        "runtime": "codex_cli",
-        "runtime_compatibility": {
-          "compatible_pack_count": 1,
-          "incompatible_pack_ids": [],
-          "requested_runtime_range_max_status": "supported",
-          "selected_pack_count": 1
-        },
-        "scope_probes": {
-          "repo": {
-            "blocking_for_install": false,
-            "config_home": "<repo>\\.agents",
-            "config_home_exists": true,
-            "install_root": "<repo>\\.agents\\skills",
-            "install_root_exists": true,
-            "issue_codes": [],
-            "issues": [],
-            "selected": true,
-            "state_path": "<repo>\\.pairslash\\install-state\\repo-codex_cli.json",
-            "target": "repo",
-            "verdict": "pass",
-            "writable": true
-          },
-          "user": {
-            "blocking_for_install": false,
-            "config_home": "<repo>\\.compat-home\\.agents",
-            "config_home_exists": false,
-            "install_root": "<repo>\\.compat-home\\.agents\\skills",
-            "install_root_exists": false,
-            "issue_codes": [],
-            "issues": [],
-            "selected": false,
-            "state_path": "<repo>\\.pairslash\\install-state\\user-codex_cli.json",
-            "target": "user",
-            "verdict": "pass",
-            "writable": true
-          }
-        },
-        "support_lane": {
-          "blocking_for_install": false,
-          "evidence_source": "docs/compatibility/compatibility-matrix.md; docs/runtime-mapping/pilot-acceptance.md; .pairslash/project-memory/60-architecture-decisions/phase-0-codex-cli-verification-on-v0-116-0.yaml",
-          "lane_status": "supported",
-          "os": "darwin",
-          "runtime": "codex_cli",
-          "summary": "macOS Codex repo scope is the primary stable-tested compatibility lane.",
-          "target": "repo",
-          "tested_range_status": "recorded",
-          "tested_version_range": "0.116.0"
-        },
-        "support_verdict": "pass",
-        "target": "repo"
-      },
+      "doctor_after": null,
       "doctor_before": {
         "checks": [
           {
@@ -947,6 +419,29 @@
             "summary": "required MCP server config assets are present"
           },
           {
+            "blocking_for_install": false,
+            "evidence": {
+              "warnings": [
+                {
+                  "pack_id": "pairslash-plan",
+                  "policy_action": "allow",
+                  "signature_status": "missing",
+                  "source_class": "local-source",
+                  "summary": "legacy install state without trust receipt",
+                  "support_level": "local-dev",
+                  "trust_tier": "local-dev",
+                  "verification_status": "legacy"
+                }
+              ]
+            },
+            "group": "trust",
+            "id": "install_state.trust_posture",
+            "remediation": "Review `doctor --format json` to confirm which packs are local-dev, official-preview, or verified-external.",
+            "severity": "warn",
+            "status": "warn",
+            "summary": "1 installed pack(s) require trust review or carry non-core support posture"
+          },
+          {
             "blocking_for_install": true,
             "evidence": {
               "failures": [
@@ -976,7 +471,13 @@
                 }
               ],
               "errors": [
-                "ownership-mismatch:pairslash-plan:pairslash.install.json: missing on disk"
+                "ownership-mismatch:pairslash-plan:pairslash.install.json: missing on disk",
+                "trust-delta-blocked:pairslash-plan:capability-expanded:memory_read",
+                "trust-delta-blocked:pairslash-plan:capability-expanded:plan_generation",
+                "trust-delta-blocked:pairslash-plan:capability-expanded:repo_read",
+                "trust-delta-blocked:pairslash-plan:local-source:manifest-under-current-repo",
+                "trust-delta-blocked:pairslash-plan:release-trust-bundle:not-found",
+                "trust-delta-blocked:pairslash-plan:runtime-evidence-missing:codex_cli"
               ]
             },
             "group": "install_state",
@@ -1070,6 +571,31 @@
             "verdict": "warn"
           },
           {
+            "blocking_for_install": false,
+            "check_id": "install_state.trust_posture",
+            "code": "DOC-INSTALL_STATE-TRUST_POSTURE",
+            "evidence": {
+              "warnings": [
+                {
+                  "pack_id": "pairslash-plan",
+                  "policy_action": "allow",
+                  "signature_status": "missing",
+                  "source_class": "local-source",
+                  "summary": "legacy install state without trust receipt",
+                  "support_level": "local-dev",
+                  "trust_tier": "local-dev",
+                  "verification_status": "legacy"
+                }
+              ]
+            },
+            "message": "1 installed pack(s) require trust review or carry non-core support posture",
+            "remediation": "Review `doctor --format json` to confirm which packs are local-dev, official-preview, or verified-external.",
+            "severity": "warn",
+            "suggested_fix": "Review `doctor --format json` to confirm which packs are local-dev, official-preview, or verified-external.",
+            "summary": "1 installed pack(s) require trust review or carry non-core support posture",
+            "verdict": "warn"
+          },
+          {
             "blocking_for_install": true,
             "check_id": "install_state.owned_files_integrity",
             "code": "DOC-INSTALL_STATE-OWNED_FILES_INTEGRITY",
@@ -1103,7 +629,13 @@
                 }
               ],
               "errors": [
-                "ownership-mismatch:pairslash-plan:pairslash.install.json: missing on disk"
+                "ownership-mismatch:pairslash-plan:pairslash.install.json: missing on disk",
+                "trust-delta-blocked:pairslash-plan:capability-expanded:memory_read",
+                "trust-delta-blocked:pairslash-plan:capability-expanded:plan_generation",
+                "trust-delta-blocked:pairslash-plan:capability-expanded:repo_read",
+                "trust-delta-blocked:pairslash-plan:local-source:manifest-under-current-repo",
+                "trust-delta-blocked:pairslash-plan:release-trust-bundle:not-found",
+                "trust-delta-blocked:pairslash-plan:runtime-evidence-missing:codex_cli"
               ]
             },
             "message": "update preview found blocking conflicts or plan errors for the installed footprint",
@@ -1117,6 +649,7 @@
         "next_actions": [
           "Run install to create the runtime config home, or create the directory manually if policy requires it.",
           "Run install to create the runtime install root.",
+          "Review `doctor --format json` to confirm which packs are local-dev, official-preview, or verified-external.",
           "Run `pairslash update --preview` or restore the managed files before applying more changes.",
           "Run `pairslash update --preview` and resolve blocked conflicts before applying changes."
         ],
@@ -1173,8 +706,15 @@
       },
       "install_preview": {
         "action": "install",
-        "can_apply": true,
-        "errors": [],
+        "can_apply": false,
+        "errors": [
+          "trust-delta-blocked:pairslash-plan:capability-expanded:memory_read",
+          "trust-delta-blocked:pairslash-plan:capability-expanded:plan_generation",
+          "trust-delta-blocked:pairslash-plan:capability-expanded:repo_read",
+          "trust-delta-blocked:pairslash-plan:local-source:manifest-under-current-repo",
+          "trust-delta-blocked:pairslash-plan:release-trust-bundle:not-found",
+          "trust-delta-blocked:pairslash-plan:runtime-evidence-missing:codex_cli"
+        ],
         "install_root": "<repo>\\.agents\\skills",
         "operations": [
           {
@@ -1341,7 +881,8 @@
         },
         "target": "repo",
         "warnings": [
-          "lint-warning:LINT-RUNTIME-004:pairslash-plan:shared: runtime support has degraded/unverified surfaces: copilot_cli.direct_invocation=unverified"
+          "lint-warning:LINT-RUNTIME-004:pairslash-plan:shared: runtime support has degraded/unverified surfaces: copilot_cli.direct_invocation=unverified",
+          "trust-review:pairslash-plan: local-dev (local-dev; local-dev); version transition allowed (0.2.0 -> 0.2.0)"
         ]
       }
     },
@@ -1519,7 +1060,7 @@
               ],
               "id": "pairslash-plan",
               "install_dir": "<repo>\\.compat-home\\.copilot\\skills\\pairslash-plan",
-              "manifest_digest": "bbe66a51623bcd68b2c8d8ab44f521d567c2f83dc1d7d301a96c170fec8b42aa",
+              "manifest_digest": "9496c1ca414f4cca95d6085dd0de89637e8e0fba947193a4dc0e096c196d43b6",
               "previous_version": null,
               "version": "0.2.0"
             }
@@ -1545,7 +1086,7 @@
         {
           "bundle_kind": "copilot-package-bundle",
           "canonical_entrypoint": "/skills",
-          "digest": "828a5a75d5773fccde5106aef89dbf55b0d8f07c647d6c68c4b6a8e5e9046688",
+          "digest": "c892f626cfee0551602ea65fc88476ed3971f70eae173b166448b70159b95e3f",
           "direct_invocation": "/pairslash-plan",
           "files": [
             {
@@ -1634,7 +1175,7 @@
               "relative_path": "package/pairslash-bundle.json",
               "required": true,
               "runtime_selector": "copilot_cli",
-              "sha256": "befde84c3f8de1f5202abda79c8ba95898809acc835518d6e6dbbe2ba20a02dd",
+              "sha256": "74a71973996fbe768e7392cf370150428aefbd5892f697850e788abded9ad894",
               "uninstall_behavior": "detach_if_modified",
               "write_authority_guarded": false
             },
@@ -1649,7 +1190,7 @@
               "relative_path": "pairslash.install.json",
               "required": true,
               "runtime_selector": "shared",
-              "sha256": "fe1a2ed71d9207e92cef57bd2388ce90ad25972ab3d39a10cb260cf6566d45df",
+              "sha256": "48e719041a78a96328a4f2e9f54f6844265b68007f0b90c897b4b9a5b0e7a494",
               "uninstall_behavior": "remove_if_unmodified",
               "write_authority_guarded": false
             },
@@ -1684,7 +1225,7 @@
               "write_authority_guarded": false
             }
           ],
-          "normalized_ir_digest": "20ec86abebd3a8a934aa7c13e49fa6814363848b677d72aca7bfd2b2107b4324",
+          "normalized_ir_digest": "51911531688bb69bac51ebba81c76a7bd4b37cb4dfdd528686621cb114edf6cd",
           "output_dir": "<repo>\\dist\\compiled\\copilot\\pairslash-plan",
           "pack_id": "pairslash-plan",
           "runtime": "copilot_cli",
@@ -1902,6 +1443,29 @@
           },
           {
             "blocking_for_install": false,
+            "evidence": {
+              "warnings": [
+                {
+                  "pack_id": "pairslash-plan",
+                  "policy_action": "ask",
+                  "signature_status": "local-dev",
+                  "source_class": "local-source",
+                  "summary": "local-dev (local-dev; local-dev); initial install",
+                  "support_level": "local-dev",
+                  "trust_tier": "local-dev",
+                  "verification_status": "local"
+                }
+              ]
+            },
+            "group": "trust",
+            "id": "install_state.trust_posture",
+            "remediation": "Review `doctor --format json` to confirm which packs are local-dev, official-preview, or verified-external.",
+            "severity": "warn",
+            "status": "warn",
+            "summary": "1 installed pack(s) require trust review or carry non-core support posture"
+          },
+          {
+            "blocking_for_install": false,
             "evidence": {},
             "group": "install_state",
             "id": "install_state.owned_files_integrity",
@@ -1990,10 +1554,36 @@
             "suggested_fix": "Proceed with preview/doctor evidence, but treat the lane as unrecorded until live pilot evidence is captured.",
             "summary": "no recorded tested runtime version exists for this lane yet",
             "verdict": "warn"
+          },
+          {
+            "blocking_for_install": false,
+            "check_id": "install_state.trust_posture",
+            "code": "DOC-INSTALL_STATE-TRUST_POSTURE",
+            "evidence": {
+              "warnings": [
+                {
+                  "pack_id": "pairslash-plan",
+                  "policy_action": "ask",
+                  "signature_status": "local-dev",
+                  "source_class": "local-source",
+                  "summary": "local-dev (local-dev; local-dev); initial install",
+                  "support_level": "local-dev",
+                  "trust_tier": "local-dev",
+                  "verification_status": "local"
+                }
+              ]
+            },
+            "message": "1 installed pack(s) require trust review or carry non-core support posture",
+            "remediation": "Review `doctor --format json` to confirm which packs are local-dev, official-preview, or verified-external.",
+            "severity": "warn",
+            "suggested_fix": "Review `doctor --format json` to confirm which packs are local-dev, official-preview, or verified-external.",
+            "summary": "1 installed pack(s) require trust review or carry non-core support posture",
+            "verdict": "warn"
           }
         ],
         "next_actions": [
-          "Proceed with preview/doctor evidence, but treat the lane as unrecorded until live pilot evidence is captured."
+          "Proceed with preview/doctor evidence, but treat the lane as unrecorded until live pilot evidence is captured.",
+          "Review `doctor --format json` to confirm which packs are local-dev, official-preview, or verified-external."
         ],
         "runtime": "copilot_cli",
         "runtime_compatibility": {
@@ -2256,6 +1846,16 @@
             "severity": "info",
             "status": "pass",
             "summary": "required MCP server config assets are present"
+          },
+          {
+            "blocking_for_install": false,
+            "evidence": {},
+            "group": "trust",
+            "id": "install_state.trust_posture",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "no installed packs require trust posture verification yet"
           },
           {
             "blocking_for_install": false,
@@ -2587,7 +2187,8 @@
         },
         "target": "user",
         "warnings": [
-          "lint-warning:LINT-RUNTIME-004:pairslash-plan:shared: runtime support has degraded/unverified surfaces: copilot_cli.direct_invocation=unverified"
+          "lint-warning:LINT-RUNTIME-004:pairslash-plan:shared: runtime support has degraded/unverified surfaces: copilot_cli.direct_invocation=unverified",
+          "trust-review:pairslash-plan: local-dev (local-dev; local-dev); initial install"
         ]
       }
     }

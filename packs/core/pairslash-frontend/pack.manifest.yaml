@@ -253,3 +253,4 @@ docs_refs:
   example_invocation: example-invocation.md
   example_output: example-output.md
   validation_checklist: validation-checklist.md
+trust_descriptor: pack.trust.yaml

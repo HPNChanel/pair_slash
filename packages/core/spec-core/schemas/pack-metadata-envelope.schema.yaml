@@ -1,0 +1,90 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://pairslash.dev/schemas/pack-metadata-envelope/1.0.0"
+title: PairSlash Pack Metadata Envelope
+type: object
+required:
+  - kind
+  - schema_version
+  - publisher
+  - pack_id
+  - version
+  - canonical_entrypoint
+  - manifest_path
+  - manifest_digest
+  - source_root
+  - source_files
+  - runtime_artifacts
+properties:
+  kind:
+    const: pack-metadata-envelope
+  schema_version:
+    const: "1.0.0"
+  publisher:
+    type: string
+  pack_id:
+    type: string
+  version:
+    type: string
+  canonical_entrypoint:
+    const: /skills
+  manifest_path:
+    type: string
+  manifest_digest:
+    type: string
+  source_root:
+    type: string
+  source_files:
+    type: array
+    items:
+      type: object
+      required:
+        - relative_path
+        - sha256
+        - size_bytes
+      properties:
+        relative_path:
+          type: string
+        sha256:
+          type: string
+        size_bytes:
+          type: integer
+  runtime_artifacts:
+    type: array
+    items:
+      type: object
+      required:
+        - runtime
+        - bundle_kind
+        - compiled_digest
+        - normalized_ir_digest
+        - files
+      properties:
+        runtime:
+          type: string
+        bundle_kind:
+          type: string
+        compiled_digest:
+          type: string
+        normalized_ir_digest:
+          type: string
+        files:
+          type: array
+          items:
+            type: object
+            required:
+              - relative_path
+              - sha256
+              - size_bytes
+              - asset_kind
+              - install_surface
+            properties:
+              relative_path:
+                type: string
+              sha256:
+                type: string
+              size_bytes:
+                type: integer
+              asset_kind:
+                type: string
+              install_surface:
+                type: string

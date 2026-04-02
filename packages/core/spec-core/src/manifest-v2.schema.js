@@ -162,6 +162,9 @@ export const packManifestV2Schema = v.object({
   uninstall_strategy: uninstallStrategySchema,
   smoke_checks: v.pipe(v.array(smokeCheckSchema), v.nonEmpty()),
   docs_refs: docsRefsSchema,
+  trust_descriptor: v.optional(
+    nonEmptyString("trust_descriptor must be a non-empty string when present"),
+  ),
 });
 
 export function safeParsePackManifestV2(input) {
