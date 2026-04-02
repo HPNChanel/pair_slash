@@ -1,0 +1,52 @@
+kind: pairslash-advanced-pack-manifest
+schema_version: "0.1.0"
+pack:
+  id: pairslash-delegation-addon
+  display_name: PairSlash Delegation Lane Add-on
+  summary: Explicit bounded delegation scaffold with no hidden chain spawning.
+  workflow_class: read-oriented
+  phase: 11
+  status: scaffold-only
+canonical_entrypoint: /skills
+lane: delegation
+opt_in_required: true
+install:
+  core_discovery_enabled: false
+  core_pack_set_enabled: false
+  workspace_enabled: false
+package:
+  name: "@pairslash/delegation-engine-advanced"
+  entrypoint: packages/advanced/delegation-engine/src/index.js
+capability_flags:
+  delegation_lane_enabled: false
+  delegation_read_only_workers: true
+  delegation_analysis_workers: true
+  delegation_patch_proposal_workers: false
+  delegation_write_candidate_workers: false
+  delegation_no_chain_spawning: true
+  delegation_no_global_memory_write: true
+  delegation_no_new_front_door: true
+policy_contract:
+  decisions:
+    delegation.create_task: allow
+    delegation.read_scope: allow
+    delegation.analyze_scope: allow
+    delegation.propose_patch: ask
+    delegation.write_candidate: deny
+    delegation.chain_spawn: deny
+    delegation.write_task_memory: deny
+    delegation.write_global_memory: deny
+    delegation.open_front_door: deny
+  no_hidden_write: true
+  no_silent_delegation: true
+  no_hidden_chain_spawning: true
+  no_unbounded_fan_out: true
+  no_direct_global_memory_write: true
+  no_new_front_door: true
+  max_fan_out: 1
+runtime_support:
+  codex_cli: design-only
+  copilot_cli: design-only
+docs_refs:
+  contract: contract.md
+  usage: docs/phase-11/delegation-addon-usage.md

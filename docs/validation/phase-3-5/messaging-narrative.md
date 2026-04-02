@@ -29,6 +29,19 @@ AI workflows.
 - Important writes stay explicit, previewable, and auditable.
 - The product scope stays inside Codex CLI and GitHub Copilot CLI.
 
+## Advanced Lane Narrative Boundary
+
+Retrieval, CI, and Delegation are Phase 11 advanced optional lanes.
+They are not the main product story.
+
+Public messaging rules:
+
+- root README opening stays core-first
+- onboarding copy stays core-first
+- wedge workflow narrative stays core-first
+- advanced lanes may be linked only as experimental, opt-in side paths
+- advanced lane utility does not count as proof that the core wedge has won
+
 ## Claims allowed now
 
 Use claims like these:
@@ -47,6 +60,8 @@ Do not use claims like these:
 - "Installability proves users want the product."
 - "Autonomous memory updates remove the need for review."
 - "Runtime parity is solved" without recorded evidence on both lanes.
+- "Phase 11 advanced lanes are part of the default PairSlash experience."
+- "Retrieval, CI, or Delegation broaden PairSlash support" without live evidence.
 
 ## Message review checklist
 

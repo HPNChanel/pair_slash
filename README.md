@@ -125,6 +125,11 @@ Canonical workflow source: [packs/core/](packs/core/).
 - Maintainer index: [docs/maintainers/README.md](docs/maintainers/README.md)
 - Issue template chooser: [.github/ISSUE_TEMPLATE/](.github/ISSUE_TEMPLATE/)
 
+Advanced optional lanes are documented separately in
+[docs/phase-11/README.md](docs/phase-11/README.md).
+They are experimental, opt-in, and outside the default core install and
+onboarding path.
+
 ## Local repo commands
 
 ```bash

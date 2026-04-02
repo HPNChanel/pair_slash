@@ -61,6 +61,10 @@ Once `pairslash-plan` succeeds, use this visible adoption order:
 Do not describe this wedge order as benchmark-proven market validation.
 Keep `pairslash-onboard-repo` and `pairslash-review` labeled as `canary` workflows in public wording.
 
+Advanced optional lanes are documented separately in
+[../phase-11/README.md](../phase-11/README.md).
+They are experimental, opt-in, and not part of this first-run path.
+
 ## What `/skills` means in practice
 
 `/skills` is the runtime-native menu where users discover and run PairSlash workflows.

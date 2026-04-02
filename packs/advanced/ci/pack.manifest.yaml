@@ -1,0 +1,48 @@
+kind: pairslash-advanced-pack-manifest
+schema_version: "0.1.0"
+pack:
+  id: pairslash-ci-addon
+  display_name: PairSlash CI Lane Add-on
+  summary: Opt-in CI lane for verification reports and patch artifacts.
+  workflow_class: read-oriented
+  phase: 11
+  status: prototype
+canonical_entrypoint: /skills
+lane: ci
+opt_in_required: true
+install:
+  core_discovery_enabled: false
+  core_pack_set_enabled: false
+  workspace_enabled: false
+package:
+  name: "@pairslash/ci-engine-advanced"
+  entrypoint: packages/advanced/ci-engine/src/index.js
+capability_flags:
+  ci_lane_enabled: false
+  ci_plan_only: true
+  ci_generate_patch_artifact: false
+  ci_no_direct_memory_write: true
+  ci_no_direct_repo_commit_default: true
+  ci_requires_explicit_repo_policy: true
+policy_contract:
+  decisions:
+    ci.read_repo: allow
+    ci.run_checks: allow
+    ci.generate_diff: allow
+    ci.attach_artifact: allow
+    ci.open_pr_comment: ask
+    ci.commit: deny
+    ci.merge: deny
+    ci.write_task_memory_candidate: require-preview
+    ci.write_global_memory: deny
+  no_hidden_write: true
+  no_implicit_promote: true
+  no_direct_commit: true
+  no_direct_merge: true
+  no_direct_global_memory_write: true
+runtime_support:
+  codex_cli: design-only
+  copilot_cli: design-only
+docs_refs:
+  contract: contract.md
+  usage: docs/phase-11/ci-addon-usage.md

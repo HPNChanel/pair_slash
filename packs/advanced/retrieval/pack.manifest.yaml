@@ -1,0 +1,43 @@
+kind: pairslash-advanced-pack-manifest
+schema_version: "0.1.0"
+pack:
+  id: pairslash-retrieval-addon
+  display_name: PairSlash Retrieval Add-on
+  summary: Opt-in retrieval lane for supplemental local evidence lookup.
+  workflow_class: read-oriented
+  phase: 11
+  status: prototype
+canonical_entrypoint: /skills
+lane: retrieval
+opt_in_required: true
+install:
+  core_discovery_enabled: false
+  core_pack_set_enabled: false
+  workspace_enabled: false
+package:
+  name: "@pairslash/retrieval-engine-advanced"
+  entrypoint: packages/advanced/retrieval-engine/src/index.js
+capability_flags:
+  retrieval_enabled: false
+  retrieval_repo_local: true
+  retrieval_artifact_index: false
+  retrieval_external_disabled_by_default: true
+  retrieval_no_authoritative_write: true
+policy_contract:
+  decisions:
+    retrieval.query.repo_local: allow
+    retrieval.query.artifact_local: allow
+    retrieval.query.external: deny
+    retrieval.index.build: require-preview
+    retrieval.index.refresh: require-preview
+    retrieval.memory.promote: deny
+    retrieval.hidden_write: deny
+  no_hidden_write: true
+  no_implicit_promote: true
+  global_memory_precedence: global-wins-on-conflict
+runtime_support:
+  codex_cli: design-only
+  copilot_cli: design-only
+docs_refs:
+  contract: contract.md
+  usage: docs/phase-11/retrieval-addon-usage.md

@@ -788,6 +788,7 @@ Examples:
 ### Future phases
 
 Later phases may include stronger observability, registry maturity, richer policy systems, better testing/evals, more advanced memory audit, and optional retrieval-aware features.
+Phase 11 retrieval remains design-only unless it stays opt-in, non-authoritative, and outside core install and default discovery boundaries as defined by ADR 0002.
 But no future phase may violate the core rules of explicitness, reviewability, and source-of-truth discipline.
 
 ---

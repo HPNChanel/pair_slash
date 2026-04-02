@@ -16,6 +16,11 @@ Scope stays narrow: exactly two runtimes, `/skills` as canonical front door, and
 - [Onboarding Path](onboarding-path.md)
 - [OSS Positioning](oss-positioning.md)
 
+Advanced optional lanes are documented separately in
+[../phase-11/README.md](../phase-11/README.md).
+They are experimental and outside the default core docs, install, and wedge
+workflow path.
+
 ## By Task
 
 - Re-enter a repo: `pairslash-onboard-repo` (`canary`)
@@ -75,3 +80,4 @@ Do not add public claims that imply:
 - hidden memory behavior
 - autopilot behavior
 - broad runtime parity beyond lane-level evidence
+- advanced optional lanes are the default PairSlash story
