@@ -14,6 +14,7 @@ Maintainer scaling in Phase 9 has to sit on top of the support and evidence surf
 - `pairslash debug --bundle` and `pairslash trace export --support-bundle --include-doctor` are the only shipped paths that package local evidence, share-safety metadata, and bundled triage templates.
 - `docs/support/phase-7-support-ops.md` already defines local-first support, privacy boundaries, and redaction rules.
 - `docs/troubleshooting/compat-lab-bug-repro.md` already makes compat-lab a post-intake deterministic repro path.
+- `docs/releases/legal-packaging-status.md` already caps what PairSlash can say about source licensing, `NOTICE`, and package publicness.
 - `docs/compatibility/compatibility-matrix.md`, `docs/compatibility/runtime-verification.md`, `docs/releases/phase-5-shipped-scope.md`, `docs/releases/scoped-release-verdict.md`, `docs/releases/public-claim-policy.md`, and `docs/validation/phase-3-5/verdict.md` cap what PairSlash can claim publicly.
 - Pack release channels and compatibility notes already live in `packs/core/*/pack.manifest.yaml`, so triage cannot treat all packs as equally mature.
 
@@ -22,6 +23,7 @@ Maintainer scaling in Phase 9 has to sit on top of the support and evidence surf
 | Layer | Owner | What it answers |
 | --- | --- | --- |
 | Public support claim | `docs/compatibility/compatibility-matrix.md` | What PairSlash may say publicly about a runtime lane |
+| Legal/package truth | `docs/releases/legal-packaging-status.md` plus manifests/legal files | What PairSlash may say publicly about repository licensing, `NOTICE`, and package publicness |
 | Public claim policy | `docs/releases/public-claim-policy.md` | What PairSlash may say publicly across phase, release, and support wording |
 | Shipped scope | `docs/releases/phase-5-shipped-scope.md` and `docs/releases/scoped-release-verdict.md` | What installability behavior is actually in scope today |
 | Product-validation stage | `docs/validation/phase-3-5/verdict.md` | Whether PairSlash may claim product-validation progress beyond Phase 3.5 |
@@ -65,6 +67,9 @@ Severity is about trust and default-path impact, not raw code complexity.
 3. Normalize the lane and scope.
    Record runtime, target, OS, shell, and runtime version.
    Compare the report against the public compatibility matrix and the doctor lane at the same time.
+   If the claim mentions licensing, package publicness, or package-manager
+   publication, compare it against `docs/releases/legal-packaging-status.md`
+   and current manifests/legal files as well.
 
 4. Apply mandatory labels.
    Add exactly one `surface:*`, one `type:*`, one `lane:*`, one `severity:*`, and one `status:*`.
@@ -96,7 +101,7 @@ Severity is about trust and default-path impact, not raw code complexity.
 | --- | --- | --- |
 | Local setup, missing prerequisite, expected degraded lane, or known caveat | `type:support` | Recovery guidance or prerequisite fix |
 | Reproducible PairSlash defect relative to shipped scope | `type:bug` | Code fix, test, and deterministic coverage |
-| README, onboarding, compatibility, or workflow docs overclaiming or drifting | `type:docs-drift` | Docs patch or claim downgrade |
+| README, onboarding, compatibility, workflow, contributor, or release docs overclaiming or drifting | `type:docs-drift` | Docs patch or claim downgrade |
 | Missing live evidence, unsupported desired lane, or parity ask beyond repo proof | `type:evidence-gap` | Keep claim narrow and collect evidence before widening |
 | Request for a new task surface or pack fit | `type:pack-request` | Productization or contributor intake |
 
@@ -125,6 +130,7 @@ These files and paths are the canonical homes maintainers should use during tria
 
 - Public support claim truth: `docs/compatibility/compatibility-matrix.md`
 - Live runtime evidence promotion: `docs/compatibility/runtime-verification.md`
+- Legal/package boundary: `docs/releases/legal-packaging-status.md`
 - Shipped scope boundary: `docs/releases/phase-5-shipped-scope.md`
 - Scoped release verdict: `docs/releases/scoped-release-verdict.md`
 - Public claim policy: `docs/releases/public-claim-policy.md`
@@ -148,6 +154,8 @@ Use `type:evidence-gap` when:
 - The ask depends on a surface PairSlash does not currently claim, such as Windows live install parity, Copilot prompt-mode direct invocation, or a third runtime.
 - Compat-lab is green, but there is still no live `/skills` or live install proof for the public claim the reporter wants.
 - The issue is "please say this is supported" rather than "this shipped behavior is broken."
+- The ask is really for package-public wording or package-manager publication
+  that current manifests and legal files do not support.
 
 ## When Docs Must Be Downgraded Instead Of Code Being Changed
 
@@ -157,22 +165,27 @@ Prefer `type:docs-drift` and `resolution:docs-downgrade` when:
 - Docs imply hidden memory behavior, background writes, or autopilot behavior that the shipped scope forbids.
 - Docs imply Windows or Copilot parity beyond the compatibility matrix.
 - Docs present canary or preview packs as if they are the stable bootstrap default.
+- Docs imply Apache-2.0 repository source licensing means PairSlash is already
+  a published package-manager artifact.
 - Docs widen support language without matching updates to runtime verification and compatibility artifacts.
 
 ## How Support Claims Stay Aligned With Reality
 
 1. The compatibility matrix owns public support wording.
 2. Runtime verification owns live lane promotion and live downgrade evidence.
-3. Doctor owns machine-local diagnosis only. It is not a public support promotion mechanism.
-4. Compat-lab owns deterministic reproduction and regression control. It is not public proof of support breadth by itself.
-5. Shipped scope, the scoped release verdict, the public claim policy, and the product-validation verdict cap what maintainers may promise while triaging.
-6. Pack manifest release channels and runtime metadata limit how strongly maintainers may describe a pack in public responses.
+3. `docs/releases/legal-packaging-status.md`, root/package manifests, `LICENSE`, and `NOTICE` own source-license and package-publicness truth.
+4. Doctor owns machine-local diagnosis only. It is not a public support promotion mechanism.
+5. Compat-lab owns deterministic reproduction and regression control. It is not public proof of support breadth by itself.
+6. Shipped scope, the scoped release verdict, the public claim policy, and the product-validation verdict cap what maintainers may promise while triaging.
+7. Pack manifest release channels and runtime metadata limit how strongly maintainers may describe a pack in public responses.
 
 ## Maintainer Overload Traps
 
 - Requiring compat-lab from reporters before first triage.
 - Asking for support bundles when doctor output already answers the question.
 - Treating a single successful local run as enough to widen public support claims.
+- Treating a green doctor, release gate, or live-runtime check as proof that a
+  package-manager artifact is already public.
 - Routing docs overclaim as code work instead of downgrading the docs.
 - Letting contributors take `severity:s0` or public support-promotion work without maintainer ownership.
 

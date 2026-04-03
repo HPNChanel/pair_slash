@@ -7,6 +7,11 @@ Phase 4 introduces a managed install layer without changing the PairSlash runtim
 - `packs/core/` remains source-of-truth
 - runtime install paths remain derived artifacts
 
+This distribution model is repo-local from this checkout.
+It does not imply package-manager publication.
+Legal/package boundary source of truth:
+`docs/releases/legal-packaging-status.md`.
+
 ## Core model
 
 - `pack.manifest.yaml` v2 sits next to each source pack and defines the install/distribution contract.

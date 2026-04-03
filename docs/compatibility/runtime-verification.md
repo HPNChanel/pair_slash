@@ -11,6 +11,11 @@ If a live verification step fails and you need maintainer support, switch to the
 support flow in `docs/support/phase-7-support-ops.md` and capture a local
 support bundle before sharing anything externally.
 
+Live runtime verification can widen support truth only.
+It does not publish any `@pairslash/*` package, change `NOTICE` requirements,
+or alter the repo-local packaging boundary recorded in
+`docs/releases/legal-packaging-status.md`.
+
 ## Before you start
 
 - Complete managed install for the target lane.
@@ -61,6 +66,7 @@ When evidence changes, update:
 
 Keep manual evidence separate from deterministic compat-lab output. The matrix
 must tell users what is truly supported today.
+Do not use runtime verification results as package-publication evidence.
 
 ## Support capture
 

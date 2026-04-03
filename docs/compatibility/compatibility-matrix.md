@@ -29,6 +29,10 @@ status, or release scope by themselves.
 
 These labels are runtime-support truth only.
 They do not promote product-validation status, program phase, or release scope by themselves.
+They also do not change repository licensing, `NOTICE` posture, or package
+publishability. Legal/package truth stays with
+`docs/releases/legal-packaging-status.md`, root/package manifests, `LICENSE`,
+and `NOTICE`.
 
 ## Runtime lanes
 

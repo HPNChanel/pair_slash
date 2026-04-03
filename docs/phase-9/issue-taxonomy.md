@@ -16,6 +16,7 @@ PairSlash already ships the core Phase 9 support intake primitives:
 - `docs/compatibility/compatibility-matrix.md` owns the public support words: `stable-tested`, `degraded`, `prep`, `known-broken`.
 - `packages/tools/doctor` uses operational intake labels that are different from public support claims: `supported`, `unverified`, `prep`, `unsupported`, plus `pass`, `warn`, `degraded`, `fail`, `unsupported`.
 - `docs/troubleshooting/compat-lab-bug-repro.md` makes compat-lab a maintainer repro path after intake, not a first-contact requirement for casual users.
+- `docs/releases/legal-packaging-status.md` owns the current legal/package boundary for Apache-2.0 repo source licensing, repo-local installability, and non-published packages.
 - `docs/releases/phase-5-shipped-scope.md`, `docs/releases/scoped-release-verdict.md`, `docs/releases/public-claim-policy.md`, and `docs/validation/phase-3-5/verdict.md` cap all intake language to two runtimes, `/skills` as the canonical front door, explicit-write-only memory, and no silent fallback.
 
 ## Support-language boundary
@@ -25,6 +26,7 @@ PairSlash already ships the core Phase 9 support intake primitives:
 | Public support claim | `stable-tested`, `degraded`, `prep`, `known-broken` | `docs/compatibility/compatibility-matrix.md` | What PairSlash can say publicly about a lane |
 | Doctor lane | `supported`, `unverified`, `prep`, `unsupported` | `packages/tools/doctor` output | What the current runtime, target, and OS lane look like |
 | Doctor verdict | `pass`, `warn`, `degraded`, `fail`, `unsupported` | `packages/tools/doctor` output | How blocking the observed local setup is |
+| Legal/package publicness | `apache-2.0-repo-source`, repo-local, non-published | `docs/releases/legal-packaging-status.md` plus manifests/legal files | What PairSlash can say about source licensing, `NOTICE`, and package publishability today |
 
 # Decisions
 
@@ -132,6 +134,7 @@ These paths own the Phase 9 issue model:
 - Shipped scope boundary: `docs/releases/phase-5-shipped-scope.md`
 - Scoped release boundary: `docs/releases/scoped-release-verdict.md`
 - Claim-scope boundary: `docs/releases/public-claim-policy.md`
+- Legal/package boundary: `docs/releases/legal-packaging-status.md`
 - Product-validation boundary: `docs/validation/phase-3-5/verdict.md`
 - Pack-specific truth: `packs/core/*/pack.manifest.yaml`
 
@@ -146,6 +149,8 @@ Classify the issue as `type:evidence-gap` when one or more of these are true:
 - The only evidence for promotion is compat-lab or fake-runtime automation, with no matching live `/skills` or live install evidence.
 - The runtime version sits outside recorded pilot evidence and the behavior matches the current caveat.
 - The issue is really asking for broader support wording, not reporting a broken shipped behavior.
+- The request is really asking for package-public wording or package-manager
+  publication that current manifests and legal files do not support.
 
 ## When Docs Must Be Downgraded Instead Of Code Being Changed
 
@@ -156,12 +161,17 @@ Classify the issue as `type:docs-drift` and prefer docs downgrade when:
 - Docs imply Copilot prompt-mode direct invocation works when the compatibility matrix keeps it `known-broken`.
 - Docs imply hidden memory behavior, autopilot behavior, or broad runtime parity that the shipped scope does not support.
 - Docs present canary packs as if they are the bootstrap default.
+- Docs imply Apache-2.0 repo source licensing means PairSlash is already a
+  public package-manager artifact.
 
 ## How Support Claims Stay Aligned With Reality
 
 - Public support claims come from `docs/compatibility/compatibility-matrix.md`, not from a single issue, local success, or doctor pass.
 - Live support promotion requires `docs/compatibility/runtime-verification.md` evidence. Compat-lab alone is not enough.
 - `pairslash doctor` is intake and diagnosis. It does not widen public support claims by itself.
+- `docs/releases/legal-packaging-status.md`, root/package manifests, `LICENSE`,
+  and `NOTICE` own source-license and package-publicness truth.
+  Support evidence does not widen that boundary.
 - `docs/releases/phase-5-shipped-scope.md`, `docs/releases/scoped-release-verdict.md`, `docs/releases/public-claim-policy.md`, and `docs/validation/phase-3-5/verdict.md` cap what maintainers may say publicly while triaging issues.
 - Pack-specific support wording must stay aligned with `packs/core/*/pack.manifest.yaml`, especially release channels and runtime compatibility notes.
 
@@ -172,6 +182,8 @@ Classify the issue as `type:docs-drift` and prefer docs downgrade when:
 - The docs ask for `doctor`, `support-bundle`, `trace export`, `lint`, runtime version, and pack info only where those asks are realistic.
 - Casual reporters are never required to run compat-lab before opening an issue.
 - Public support labels stay separate from doctor lane and verdict labels.
+- Legal/package publicness stays separate from support labels and runtime
+  evidence.
 - The taxonomy preserves the two-runtime scope, `/skills` front door, explicit-write-only memory, and no-silent-fallback boundaries.
 
 # Next Handoff

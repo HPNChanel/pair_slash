@@ -25,6 +25,8 @@ Recommended narrative:
 - PairSlash is the trust layer for terminal-native AI workflows.
 - It supports exactly two runtimes: Codex CLI and GitHub Copilot CLI.
 - `/skills` is the canonical front door on both supported runtimes.
+- The PairSlash source repository is licensed under Apache-2.0, while the
+  current supported install path remains repo-local and non-published.
 - It gives users explicit workflows, preview-first lifecycle commands, and an authoritative Global Project Memory path that is explicit-write-only, previewable, audited, and reviewable.
 - When setup or runtime behavior fails, the public path starts with `doctor`, then moves to local debug / support-bundle capture instead of vague "just retry" advice.
 
@@ -222,6 +224,8 @@ Allowed wording:
 - "Global Project Memory writes are explicit, previewable, audited, and reviewable."
 - "Use `doctor` first when setup or runtime behavior fails."
 - "Support claims are lane-specific: `stable-tested`, `degraded`, `prep`, or `known-broken`."
+- "The PairSlash source repository is licensed under Apache-2.0, and the
+  current install path is repo-local from this checkout."
 
 Forbidden wording:
 
@@ -231,6 +235,8 @@ Forbidden wording:
 - "Runtime parity is complete."
 - "Copilot direct invocation is fully supported."
 - "PairSlash is benchmark-proven with strong reuse or business validation."
+- "PairSlash is already a published npm package."
+- "The Apache-2.0 repo license means every `@pairslash/*` package is public."
 
 ## Three Public Promises That Are Safe
 

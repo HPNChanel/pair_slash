@@ -25,7 +25,7 @@ PairSlash keeps one logical product surface while using a layered physical works
 - Codex runtime packages must not import Copilot runtime packages
 - Copilot runtime packages must not import Codex runtime packages
 - `tools/*` may depend on `core/*` and runtime packages when operationally required
-- Cross-package relative imports are forbidden from `src/`; use public package exports instead
+- Cross-package relative imports are forbidden from `src/`; use declared package `exports` boundaries instead
 
 These rules are enforced in `packages/tools/lint-bridge/`.
 

@@ -20,6 +20,10 @@ These public docs are derivative surfaces.
 They describe the shipped installability and trust substrate plus the current
 lane-specific support boundary; they do not widen phase, validation, or runtime
 claims beyond the authoritative sources below.
+The PairSlash source repository is licensed under Apache-2.0, but
+package-manager publication is not part of the current public surface.
+Keep reuse and install wording aligned with
+[Legal and Packaging Status](../releases/legal-packaging-status.md).
 
 ## Start Here
 
@@ -95,3 +99,5 @@ Do not add public claims that imply:
 - autopilot behavior
 - broad runtime parity beyond lane-level evidence
 - advanced optional lanes are the default PairSlash story
+- Apache-2.0 source licensing means PairSlash packages are already public or
+  package-manager published

@@ -10,6 +10,8 @@ product-validation exit.
 
 The current supported install path is repo-local from this checkout.
 Package-manager publication is not part of the current public surface.
+Legal/package boundary source of truth:
+`docs/releases/legal-packaging-status.md`.
 
 `/skills` is the canonical entrypoint after install on both runtimes.
 

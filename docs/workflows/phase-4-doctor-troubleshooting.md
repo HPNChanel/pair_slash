@@ -8,6 +8,10 @@ Public support labels live in `docs/compatibility/compatibility-matrix.md`.
 Doctor surfaces `support_verdict` and `support_lane` for operator decisions on
 the current machine; the compatibility matrix owns public labels such as
 `stable-tested`, `degraded`, `prep`, and `known-broken`.
+Doctor output does not widen legal/package truth.
+A `pass`, `warn`, or `degraded` result does not make any `@pairslash/*`
+package public or published; that boundary stays in
+`docs/releases/legal-packaging-status.md`.
 
 This page shows direct CLI invocation (`node packages/tools/cli/src/bin/pairslash.js ...`) for runtime-neutral docs.
 In this repo, use the equivalent shorthand `npm run pairslash -- <args>`.
@@ -37,6 +41,8 @@ debug report or support bundle instead of pasting raw logs.
 - `support_lane.unverified` or `support_lane.prep` means implementation or
   preview behavior may exist, but live support evidence remains narrower than
   the implementation surface.
+- Any doctor result is local diagnosis only; it does not change repository
+  licensing, `NOTICE` posture, or package publishability.
 
 ## Operator wording templates
 

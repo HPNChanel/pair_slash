@@ -14,6 +14,8 @@ PairSlash contribution in Phase 9 stays narrow and evidence-aware:
 - `/skills` is the canonical front door
 - Global Project Memory is explicit-write-only and reviewable
 - Support claims follow compatibility evidence, not aspiration
+- Repository source is licensed under Apache-2.0, while package publication
+  remains bounded by private manifests and repo-local install guidance
 
 ## Contributor Entry Points
 
@@ -36,6 +38,7 @@ Keep contributions aligned with:
 - `docs/compatibility/compatibility-matrix.md`
 - `docs/compatibility/runtime-verification.md`
 - `docs/releases/public-claim-policy.md`
+- `docs/releases/legal-packaging-status.md`
 - `docs/releases/scoped-release-verdict.md`
 - `docs/validation/phase-3-5/verdict.md`
 - `docs/releases/phase-5-shipped-scope.md`

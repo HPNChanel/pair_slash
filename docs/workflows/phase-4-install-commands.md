@@ -4,6 +4,10 @@ Phase 4 treats `install`, `update`, and `uninstall` as the main managed product
 surface for distribution and lifecycle work. `packs/core/` stays canonical
 source. Runtime folders stay derived artifacts. `/skills` stays the canonical
 entrypoint after install.
+This distribution surface is repo-local from this checkout.
+It does not imply package-manager publication.
+Legal/package boundary source of truth:
+`docs/releases/legal-packaging-status.md`.
 
 ## Quick start
 

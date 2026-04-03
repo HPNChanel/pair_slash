@@ -13,6 +13,11 @@ PairSlash support remains local-first:
 - remote telemetry is off by default
 - redaction runs before any bundle is marked shareable
 
+Support artifacts diagnose runtime and install behavior only.
+They do not widen public support claims by themselves, and they do not change
+repository licensing, `NOTICE` posture, or package publishability recorded in
+`docs/releases/legal-packaging-status.md`.
+
 ## Support workflow
 
 | Step | Actor | Input | Output | SLA / expectation |

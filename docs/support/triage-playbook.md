@@ -6,6 +6,7 @@ This playbook operationalizes Phase 9 support using repository truth:
 - Maintainer model source: `docs/phase-9/maintainer-playbook.md`
 - Public support claims: `docs/compatibility/compatibility-matrix.md`
 - Live support evidence: `docs/compatibility/runtime-verification.md`
+- Legal/package boundary: `docs/releases/legal-packaging-status.md`
 - Shipped scope cap: `docs/releases/phase-5-shipped-scope.md`
 - Product-validation truth: `docs/validation/phase-3-5/verdict.md`
 - Claim cap: `docs/releases/public-claim-policy.md`
@@ -55,6 +56,9 @@ PairSlash support remains local-first and evidence-aware.
 - Public language must use only compatibility labels: `stable-tested`, `degraded`, `prep`, `known-broken`.
 - Doctor output is local diagnosis, not public support promotion.
 - Compat-lab is deterministic maintainer repro, not proof of broad user value.
+- Apache-2.0 source licensing is repository-source truth only.
+  Do not treat support evidence, release readiness, or a doctor pass as proof
+  that a package-manager artifact is public.
 - If docs and runtime behavior conflict, file as `type:docs-drift` first, then decide whether code is also wrong.
 - If an ask exceeds proven support breadth, classify as `type:evidence-gap` and hold wording.
 
@@ -65,11 +69,15 @@ Route to `type:docs-drift` when:
 - README/onboarding wording overclaims lane support.
 - Docs flatten nuanced states into plain "supported."
 - Docs imply hidden memory behavior, autopilot behavior, or third-runtime scope.
+- Docs imply Apache-2.0 source licensing means PairSlash is already a published
+  package-manager artifact.
 
 Route to `type:evidence-gap` when:
 
 - Reporter asks for parity that is not backed by runtime verification evidence.
 - The lane is still `prep` or outside recorded runtime evidence.
+- Reporter asks for package-public wording that is not backed by current
+  manifests, legal files, and `docs/releases/legal-packaging-status.md`.
 
 # File/Path Plan
 

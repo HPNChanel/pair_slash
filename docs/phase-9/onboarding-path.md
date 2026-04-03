@@ -20,6 +20,10 @@ This page covers the first public success path for the technically shipped
 installability substrate.
 It does not widen runtime support beyond the compatibility matrix or
 product-validation beyond the current Phase 3.5 verdict.
+The PairSlash source repository is licensed under Apache-2.0.
+The supported install path remains repo-local from this checkout;
+package-manager publication is not claimed today and is tracked in
+[Legal and Packaging Status](../releases/legal-packaging-status.md).
 
 ## Runtime scope
 
@@ -109,6 +113,7 @@ Keep onboarding wording aligned to:
 - [Product-Validation Verdict](../validation/phase-3-5/verdict.md)
 - [Scoped Release Verdict](../releases/scoped-release-verdict.md)
 - [Public Claim Policy](../releases/public-claim-policy.md)
+- [Legal and Packaging Status](../releases/legal-packaging-status.md)
 - [Phase 5 Shipped Scope](../releases/phase-5-shipped-scope.md)
 - [Install Guide](../workflows/install-guide.md)
 - [Phase 4 Quickstart](../workflows/phase-4-quickstart.md)

@@ -127,6 +127,11 @@ test("compatibility matrix distinguishes implementation, deterministic, live, an
   for (const term of ["`implemented`", "`deterministic-tested`", "`live-evidence-backed`", "`publicly supported`"]) {
     assert.ok(contents.includes(term), `${matrixPath} should explain ${term}`);
   }
+
+  assert.ok(
+    contents.includes("do not change repository licensing"),
+    `${matrixPath} should keep legal/package truth separate from support truth`,
+  );
 });
 
 test("charter system record points to the markdown charter and verdict sources", () => {
@@ -256,6 +261,82 @@ test("contributor-facing docs distinguish source licensing from package publicat
   const contents = read("CONTRIBUTING.md");
   assert.ok(contents.includes("Apache-2.0"), "CONTRIBUTING.md should record the repository source license");
   assert.ok(contents.includes("remain `private`"), "CONTRIBUTING.md should keep package publication bounded");
+
+  const contributorModel = read("docs/phase-9/contributor-model.md");
+  assert.ok(
+    contributorModel.includes("Apache-2.0"),
+    "docs/phase-9/contributor-model.md should record the repository source license",
+  );
+  assert.ok(
+    contributorModel.includes(LEGAL_PACKAGING_STATUS_PATH),
+    "docs/phase-9/contributor-model.md should point to the legal/package boundary",
+  );
+});
+
+test("compatibility, support, and issue triage docs keep legal/package truth separate from support truth", () => {
+  const verificationContents = read("docs/compatibility/runtime-verification.md");
+  assert.ok(
+    verificationContents.includes("does not publish any `@pairslash/*` package"),
+    "docs/compatibility/runtime-verification.md should keep package publication separate from support verification",
+  );
+
+  const doctorContents = read("docs/workflows/phase-4-doctor-troubleshooting.md");
+  assert.ok(
+    doctorContents.includes("does not make any `@pairslash/*`"),
+    "docs/workflows/phase-4-doctor-troubleshooting.md should keep package publicness separate from doctor verdicts",
+  );
+
+  const supportOpsContents = read("docs/support/phase-7-support-ops.md");
+  assert.ok(
+    normalizeWhitespace(supportOpsContents).includes("do not change repository licensing"),
+    "docs/support/phase-7-support-ops.md should keep legal/package truth separate from support artifacts",
+  );
+
+  for (const relativePath of [
+    "docs/support/triage-playbook.md",
+    "docs/phase-9/issue-taxonomy.md",
+    "docs/phase-9/maintainer-playbook.md",
+  ]) {
+    const contents = read(relativePath);
+    assert.ok(
+      contents.includes(LEGAL_PACKAGING_STATUS_PATH),
+      `${relativePath} should point to the legal/package boundary`,
+    );
+  }
+});
+
+test("phase 9 public narrative docs keep repo source licensing separate from package publication", () => {
+  const phase9Readme = read("docs/phase-9/README.md");
+  assert.ok(
+    phase9Readme.includes("legal-packaging-status.md"),
+    "docs/phase-9/README.md should point to the legal/package boundary",
+  );
+  assert.ok(
+    phase9Readme.includes("package-manager publication is not part of the current public surface"),
+    "docs/phase-9/README.md should keep package publication bounded",
+  );
+
+  const onboardingContents = read("docs/phase-9/onboarding-path.md");
+  assert.ok(
+    onboardingContents.includes("legal-packaging-status.md"),
+    "docs/phase-9/onboarding-path.md should point to the legal/package boundary",
+  );
+  assert.ok(
+    onboardingContents.includes("package-manager publication is not claimed today"),
+    "docs/phase-9/onboarding-path.md should keep package publication bounded",
+  );
+
+  const positioningContents = read("docs/phase-9/oss-positioning.md");
+  assert.ok(
+    positioningContents.includes("current supported install path remains repo-local and non-published"),
+    "docs/phase-9/oss-positioning.md should keep source licensing separate from package publication",
+  );
+
+  const messagingContents = read("docs/validation/phase-3-5/messaging-narrative.md");
+  assert.ok(
+    messagingContents.includes("PairSlash is already a published npm package."),
+    "docs/validation/phase-3-5/messaging-narrative.md should block published-package overclaim wording",
+  );
 });
 
 test("legacy planning and benchmark docs stay derivative instead of owning current truth", () => {
@@ -306,6 +387,10 @@ test("resolved repo license does not flatten current truth roots into public pac
     "README.md",
     CHARTER_PATH,
     LEGAL_PACKAGING_STATUS_PATH,
+    "docs/phase-9/README.md",
+    "docs/phase-9/onboarding-path.md",
+    "docs/compatibility/compatibility-matrix.md",
+    "docs/support/triage-playbook.md",
     ".pairslash/project-memory/00-project-charter.yaml",
   ]) {
     const contents = read(relativePath);

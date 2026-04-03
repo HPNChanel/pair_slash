@@ -16,6 +16,8 @@ the repo. Source of truth:
 
 The current supported quickstart path is repo-local from this checkout.
 It does not imply package-manager publication.
+Legal/package boundary source of truth:
+`docs/releases/legal-packaging-status.md`.
 
 This page shows direct CLI invocation (`node packages/tools/cli/src/bin/pairslash.js ...`) for runtime-neutral docs.
 In this repo, use the equivalent shorthand `npm run pairslash -- <args>`.

@@ -28,6 +28,8 @@ AI workflows.
 - Global Project Memory is the durable source of truth.
 - Important writes stay explicit, previewable, and auditable.
 - The product scope stays inside Codex CLI and GitHub Copilot CLI.
+- The PairSlash source repository is licensed under Apache-2.0, while current
+  install guidance remains repo-local and non-published.
 
 ## Advanced Lane Narrative Boundary
 
@@ -62,6 +64,8 @@ Do not use claims like these:
 - "Runtime parity is solved" without recorded evidence on both lanes.
 - "Phase 11 advanced lanes are part of the default PairSlash experience."
 - "Retrieval, CI, or Delegation broaden PairSlash support" without live evidence.
+- "PairSlash is already a published npm package."
+- "The Apache-2.0 repo license means every `@pairslash/*` package is public."
 
 ## Message review checklist
 
