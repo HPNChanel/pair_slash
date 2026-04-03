@@ -7,6 +7,11 @@ Contribution scope is intentionally narrow:
 - `/skills` remains the canonical front door
 - Global Project Memory is explicit-write-only and reviewable
 
+Repository source is licensed under Apache-2.0.
+That does not widen package publication: root and PairSlash-owned package
+manifests remain `private`, and the supported install path stays repo-local
+from this checkout.
+
 ## Start
 
 Use Node `>=24.0.0` and `npm@11.7.0`.

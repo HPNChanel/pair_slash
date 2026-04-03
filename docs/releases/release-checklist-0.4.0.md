@@ -28,11 +28,16 @@ Status legend:
 - [ ] Block release if `npm run test:release` fails
 - [ ] Block release if `docs/phase-12/authoritative-program-charter.md` is absent
 - [ ] Block release if `docs/releases/scoped-release-verdict.md` is absent or remains `Gate status: NO-GO`
+- [ ] Block release if `docs/releases/legal-packaging-status.md` is absent
+- [ ] Block release if top-level `LICENSE` is absent
+- [ ] Block release if root or PairSlash-owned package manifests drift from the repository SPDX license
+- [ ] Block release if the current legal posture requires `NOTICE` and the file is absent
 - [ ] Block release if public docs imply product-validation exit while `docs/validation/phase-3-5/verdict.md` remains `Gate status: NO-GO`
 - [ ] Block release if `README.md`, `docs/phase-9/README.md`, or `docs/phase-9/onboarding-path.md` drift from the official phase sentence in `docs/phase-12/authoritative-program-charter.md`
 - [ ] Block release if docs claim live runtime compatibility beyond `docs/compatibility/runtime-verification.md` evidence
 - [ ] Block release if a new runtime is mentioned outside Codex CLI and GitHub Copilot CLI
 - [ ] Block release if messaging drifts beyond `docs/validation/phase-3-5/messaging-narrative.md` or `docs/releases/public-claim-policy.md`
+- [ ] Block release if public install docs imply package-manager publication while root or workspace manifests remain `private: true`
 
 ## Shipped hardening after Phase 4 baseline
 
@@ -73,7 +78,9 @@ Status legend:
 - [x] `docs/validation/phase-3-5/verdict.md`
 - [x] `docs/phase-12/authoritative-program-charter.md`
 - [x] `docs/releases/scoped-release-verdict.md`
+- [x] `docs/releases/legal-packaging-status.md`
 - [x] `docs/releases/public-claim-policy.md`
+- [x] `LICENSE`
 - [x] `docs/architecture/pack-manifest-v2-practical-spec.md`
 - [x] `docs/architecture/compiler-v2-implement-oriented.md`
 - [x] `docs/workflows/phase-4-install-commands.md`

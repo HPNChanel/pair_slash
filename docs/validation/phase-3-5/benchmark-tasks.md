@@ -1,8 +1,11 @@
 # PairSlash Product-Validation Benchmark Tasks
 
 This file defines the current product-validation benchmark system for
-PairSlash. The directory path is legacy. The benchmark method in this file is
-the active source of truth for the current business-validation phase.
+PairSlash. The directory path is legacy. This file owns the benchmark task
+catalog and evidence requirements only. It does not own the current
+product-validation verdict or the program phase statement; use
+`docs/validation/phase-3-5/verdict.md` for the verdict and
+`docs/phase-12/authoritative-program-charter.md` for the phase statement.
 
 ## Benchmark doctrine
 

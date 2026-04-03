@@ -2,6 +2,24 @@
 
 Generated from compat-lab metadata and deterministic release gates for PairSlash 0.4.0.
 
+This matrix is the public runtime-support source of truth for PairSlash today.
+It is narrower than implementation truth and narrower than deterministic test
+coverage.
+
+## Claim boundary
+
+- `implemented`: code, manifests, or adapters exist in the repo.
+- `deterministic-tested`: compat-lab or release gates cover the surface
+  repeatably.
+- `live-evidence-backed`: manual runtime verification is recorded for the exact
+  runtime/target/OS lane.
+- `publicly supported`: this matrix lists the lanes PairSlash can claim
+  publicly today.
+
+Implementation existence, doctor output, preview output, or deterministic
+coverage outside the rows below do not widen public support, product-validation
+status, or release scope by themselves.
+
 ## Support semantics
 
 - `stable-tested`: deterministic compat-lab gates are green and matching live runtime evidence exists.

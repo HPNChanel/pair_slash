@@ -1,6 +1,13 @@
 # PairSlash Phase 4 Doctor Troubleshooting
 
-Use `pairslash doctor` before install, after install, and before update. Phase 4 doctor is the adoption/support entrypoint, not just a version check.
+Use `pairslash doctor` before install, after install, and before update.
+Doctor is the local diagnosis surface for the technically shipped installability
+path, not a public support promotion step or a product-validation verdict.
+
+Public support labels live in `docs/compatibility/compatibility-matrix.md`.
+Doctor surfaces `support_verdict` and `support_lane` for operator decisions on
+the current machine; the compatibility matrix owns public labels such as
+`stable-tested`, `degraded`, `prep`, and `known-broken`.
 
 This page shows direct CLI invocation (`node packages/tools/cli/src/bin/pairslash.js ...`) for runtime-neutral docs.
 In this repo, use the equivalent shorthand `npm run pairslash -- <args>`.
@@ -17,6 +24,42 @@ debug report or support bundle instead of pasting raw logs.
 - `fail`: install/update/use is blocked until the issue is fixed
 - `unsupported`: the OS or runtime lane is outside the documented Phase 4 support surface
 
+## How to read doctor without overclaiming
+
+- `pass` or `warn` means the local path can continue; it does not by itself
+  promote public support.
+- `degraded` means the local path is usable with caveats; public wording still
+  stays lane-specific and evidence-bound.
+- `fail` or `unsupported` means stop and fix the local issue before
+  install/update.
+- `support_lane.supported` is a doctor signal, not a public `stable-tested`
+  claim.
+- `support_lane.unverified` or `support_lane.prep` means implementation or
+  preview behavior may exist, but live support evidence remains narrower than
+  the implementation surface.
+
+## Operator wording templates
+
+- Blocked due to unmanaged footprint:
+  "Install is blocked because PairSlash found an unmanaged runtime footprint
+  under the target install root. Use `preview install` as the source of truth,
+  then move or remove the unmanaged files if preview reports a blocking
+  conflict."
+- Degraded runtime lane:
+  "This lane is usable with documented caveats, but confidence is reduced.
+  Review the reported caveat before install or update, and do not widen public
+  support claims beyond the compatibility matrix."
+- Prep lane:
+  "This is a prep lane. Doctor and preview can confirm local readiness, but
+  live install support is not yet publicly claimable."
+- Runtime unavailable:
+  "The requested runtime is unavailable on this machine or not on `PATH`.
+  Install the runtime first, then rerun doctor before attempting install."
+- Evidence narrower than implementation:
+  "This surface exists in the repo and may be deterministically covered, but
+  live runtime evidence is narrower than the implementation. Keep public
+  wording at the documented lane level."
+
 ## What doctor now answers
 
 - Runtime installed or not, plus manifest compatibility range
@@ -28,13 +71,20 @@ debug report or support bundle instead of pasting raw logs.
 ## Common checks and remediations
 
 - `runtime.detect`
-  Run `codex --version` or `gh copilot --version` and make sure the runtime is installed and on `PATH`.
+  The requested runtime is unavailable on this machine or not on `PATH`.
+  Run `codex --version` or `gh copilot --version`, install the runtime if
+  needed, and rerun doctor before attempting install.
 - `runtime.version_range`
   Upgrade or downgrade the runtime until it falls inside `supported_runtime_ranges` from the pack manifest.
 - `runtime.tested_range`
-  Your runtime may satisfy the manifest floor but still sit outside recorded pilot evidence. Treat this as a support/readiness gap, not a spec mismatch.
+  Your runtime may satisfy the manifest floor but still sit outside recorded
+  live evidence. Treat this as evidence narrower than implementation, not as a
+  spec mismatch or public support proof.
 - `platform.support_lane`
-  Check whether the current OS/runtime/target lane is `supported`, `unverified`, `prep`, or `unsupported`. Windows remains a prep lane until live evidence is recorded.
+  Check whether the current OS/runtime/target lane is `supported`,
+  `unverified`, `prep`, or `unsupported`. These are doctor signals, not the
+  public support labels. Windows remains a prep lane until live evidence is
+  recorded.
 - `filesystem.config_home`
   Ensure the config-home path is a directory, not a file. Codex uses `.agents/` or `~/.agents/`; Copilot uses `.github/` or `~/.copilot/`.
 - `filesystem.write_permission`
@@ -54,9 +104,10 @@ debug report or support bundle instead of pasting raw logs.
 - `install_state.asset_placement`
   A managed file is present, but not where the runtime-native adapter expects it. Reinstall or fix compiler/runtime drift before trusting update or uninstall.
 - `conflict.unmanaged_install_root`
-    Use `preview install` as the source of truth. If preview reports a blocked
-    conflict, move or remove the unmanaged runtime folder; if preview stays
-    non-blocking, treat the unmanaged files as preserved local overrides.
+  Use `preview install` as the source of truth. If preview reports a blocked
+  conflict, move or remove the unmanaged runtime folder; if preview stays
+  non-blocking, treat the unmanaged files as preserved local overrides instead
+  of widening the support claim.
 - `platform.os_shell_support`
   Use PowerShell, cmd, bash, zsh, or sh on a supported OS before filing a runtime bug.
 
@@ -68,7 +119,9 @@ node packages/tools/cli/src/bin/pairslash.js doctor --runtime copilot --target u
 node packages/tools/cli/src/bin/pairslash.js doctor --runtime auto --target repo --format json
 ```
 
-If the verdict is `degraded`, review the non-blocking issues before install. If the verdict is `fail` or `unsupported`, fix the blocking issue first. Do not force `update` or `uninstall` around a failing doctor result.
+If the verdict is `degraded`, review the non-blocking issues before install.
+If the verdict is `fail` or `unsupported`, fix the blocking issue first.
+Do not force `update` or `uninstall` around a failing doctor result.
 
 Pilot-lane evidence and OS-specific expectations live in
 `docs/runtime-mapping/pilot-acceptance.md`.

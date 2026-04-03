@@ -1,7 +1,15 @@
 # PairSlash Install Guide
 
 Install PairSlash workflows into Codex CLI or GitHub Copilot CLI using the
-managed Phase 4 command surface.
+managed installability command surface.
+
+This guide covers the shipped install path only.
+It does not widen runtime support beyond
+`docs/compatibility/compatibility-matrix.md` and does not prove
+product-validation exit.
+
+The current supported install path is repo-local from this checkout.
+Package-manager publication is not part of the current public surface.
 
 `/skills` is the canonical entrypoint after install on both runtimes.
 

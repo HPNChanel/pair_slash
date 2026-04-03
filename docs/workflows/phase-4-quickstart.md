@@ -1,9 +1,21 @@
-# PairSlash Quickstart (Phase 6 Compat-Lab Baseline)
+# PairSlash Quickstart
 
 Use this path when the goal is simple: install PairSlash, run doctor, reach
 `/skills`, and execute the first workflow with the least friction.
 
+This page covers the technically shipped installability substrate only.
+It does not prove product-validation exit, broad runtime parity, or live
+support beyond the exact lanes in `docs/compatibility/compatibility-matrix.md`.
+
+PairSlash is currently at Phase 3.5 business validation on top of a technically
+shipped Phase 4 installability substrate with additional Phase 5/6 hardening in
+the repo. Source of truth:
+`docs/phase-12/authoritative-program-charter.md`.
+
 `/skills` is the canonical entrypoint on both supported runtimes.
+
+The current supported quickstart path is repo-local from this checkout.
+It does not imply package-manager publication.
 
 This page shows direct CLI invocation (`node packages/tools/cli/src/bin/pairslash.js ...`) for runtime-neutral docs.
 In this repo, use the equivalent shorthand `npm run pairslash -- <args>`.
@@ -40,8 +52,9 @@ Then:
 
 ## Windows prep lane
 
-Windows is still a prep lane in Phase 6. Use it to confirm doctor, preview, and
-path/profile behavior without claiming live install parity:
+Windows is still a prep lane in the current public compatibility boundary.
+Use it to confirm doctor, preview, and path/profile behavior without claiming
+live install parity:
 
 ```powershell
 node packages/tools/cli/src/bin/pairslash.js doctor --runtime codex --target repo

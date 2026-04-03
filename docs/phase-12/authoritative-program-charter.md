@@ -13,7 +13,7 @@ This charter exists to stop phase-governance drift. It makes one file responsibl
 
 ## 2. Canonical Product Statement
 
-PairSlash is the OSS trust layer for terminal-native AI workflows on exactly two runtimes, Codex CLI and GitHub Copilot CLI, with `/skills` as the canonical front door, explicit preview-first workflows, and Global Project Memory as the authoritative project memory layer. Its current publicly claimable surface is the shipped installability and trust-boundary substrate evidenced in repo code, release gates, and lane-specific compatibility docs; it is not yet entitled to claim benchmark-backed product validation, broad runtime parity, or hidden-write behavior.
+PairSlash is the trust layer for terminal-native AI workflows on exactly two runtimes, Codex CLI and GitHub Copilot CLI, with `/skills` as the canonical front door, explicit preview-first workflows, and Global Project Memory as the authoritative project memory layer. Its current publicly claimable surface is the shipped installability and trust-boundary substrate evidenced in repo code, release gates, and lane-specific compatibility docs; it is not yet entitled to claim benchmark-backed product validation, broad runtime parity, hidden-write behavior, or package-manager publication beyond current repo metadata.
 
 ## 3. Current Program Truth
 
@@ -27,7 +27,7 @@ Product-validation truth is governed only by `docs/validation/phase-3-5/verdict.
 
 ### Public-Claim Truth
 
-Public-claim truth is narrower than implementation truth. A public sentence is allowed only when it maps back to evidence class and source, stays inside `docs/releases/public-claim-policy.md`, stays inside `docs/releases/scoped-release-verdict.md`, stays inside the runtime-support boundary in `docs/compatibility/compatibility-matrix.md`, and does not outrun current legal/package metadata. README wording, onboarding wording, release wording, and support wording are downstream only.
+Public-claim truth is narrower than implementation truth. A public sentence is allowed only when it maps back to evidence class and source, stays inside `docs/releases/public-claim-policy.md`, stays inside `docs/releases/scoped-release-verdict.md`, stays inside the runtime-support boundary in `docs/compatibility/compatibility-matrix.md`, stays inside `docs/releases/legal-packaging-status.md`, and does not outrun current legal/package metadata. README wording, onboarding wording, release wording, and support wording are downstream only.
 
 ### Runtime-Support Truth
 
@@ -35,7 +35,7 @@ Runtime-support truth is lane-specific, not product-global. Public support label
 
 ### Release-Trust Truth
 
-Release-trust truth answers whether PairSlash can make a scoped installability claim without pretending product validation is complete. The authoritative files are `docs/releases/scoped-release-verdict.md`, `docs/releases/phase-5-shipped-scope.md`, and `docs/releases/release-checklist-0.4.0.md`. That layer is currently `GO` for a narrow technically shipped installability substrate and still `NO-GO` for product-validation exit. Legal and package publicness remain capped by current metadata in `package.json`, package-level `package.json` files, and the absence or presence of `LICENSE` and `NOTICE`.
+Release-trust truth answers whether PairSlash can make a scoped installability claim without pretending product validation is complete. The authoritative files are `docs/releases/scoped-release-verdict.md`, `docs/releases/phase-5-shipped-scope.md`, and `docs/releases/release-checklist-0.4.0.md`. That layer is currently `GO` for a narrow technically shipped installability substrate and still `NO-GO` for product-validation exit. Legal and package publicness remain capped by current metadata in `package.json`, package-level `package.json` files, the absence or presence of `LICENSE` and `NOTICE`, and the current boundary recorded in `docs/releases/legal-packaging-status.md`.
 
 ## 4. Official Phase Statement
 
@@ -45,7 +45,7 @@ What has been implemented: a two-runtime trust layer with `/skills` as the canon
 
 What has been validated: technical implementation, deterministic regression coverage, a scoped release/installability verdict, and lane-specific runtime support wording.
 
-What is still scoped only: benchmark-backed product pull, weekly-reuse proof, live install parity beyond the exact documented lanes, and legal/package publicness beyond current repo metadata.
+What is still scoped only: benchmark-backed product pull, weekly-reuse proof, live install parity beyond the exact documented lanes, and package publication scope beyond current repo metadata.
 
 What must not be overclaimed: that tests equal market validation, that preview or deterministic acceptance equals live runtime support, that Windows has live parity, that PairSlash supports a third runtime, or that read workflows or background processes can write authoritative project memory implicitly.
 
@@ -61,6 +61,7 @@ What must not be overclaimed: that tests equal market validation, that preview o
 | Pack catalog truth | `packs/core/*/pack.manifest.yaml` | Owns canonical core pack semantics. |
 | Pack catalog index | `packages/core/spec-core/registry/packs.yaml` | Derived index of the canonical pack manifests. |
 | Release checklist truth | `docs/releases/release-checklist-0.4.0.md` | Owns scoped release checklist and blockers. |
+| Legal/package status boundary | `docs/releases/legal-packaging-status.md` | Summarizes the current legal/package publicness boundary from manifests and legal files without replacing them. |
 | Legal/package truth | `package.json`, `packages/*/*/package.json`, `LICENSE`, `NOTICE` | Own legal/package publicness; absence is part of the truth. |
 | Machine-readable charter pointer | `.pairslash/project-memory/00-project-charter.yaml` | Downstream identity and pointer record only. |
 
@@ -110,6 +111,8 @@ The following files must never become competing truth roots for phase/governance
 - `docs/releases/scoped-release-verdict.md`
 - `docs/validation/phase-3-5/verdict.md`
 - `docs/compatibility/compatibility-matrix.md`
+- `docs/phase-9/oss-positioning.md`
+- `docs/validation/phase-3-5/benchmark-tasks.md`
 - `docs/phase-9/phase-9-baseline-reality-lock.md`
 - historical phase-exit and audit notes under `docs/phase-3.5/phase-exit/`
 
@@ -117,18 +120,21 @@ Rule: downstream files may restate the official phase sentence, but they must po
 
 ## 9. Anti-Drift Rules
 
-- README must not claim product-validation exit, broad runtime parity, finalized license status, or any runtime beyond Codex CLI and GitHub Copilot CLI.
+- README must not claim product-validation exit, broad runtime parity, package-manager publication, or any runtime beyond Codex CLI and GitHub Copilot CLI.
+- README, release wording, and public narrative docs must not use OSS/public-package wording stronger than current legal/package metadata allows.
+- README and install docs must not imply package-manager publication while the repository and workspace manifests remain `private: true`.
 - Release checklist must not treat deterministic tests, preview output, or doctor output as product-validation proof or live runtime support by themselves.
 - Compatibility wording must stay lane-specific and must not imply that support labels promote program phase or product maturity.
 - Validation docs must not become release verdicts, and release docs must not become product-validation verdicts.
 - Pack catalog or pack count changes must not widen public support wording unless the canonical manifests, derived registry, compatibility evidence, and release docs all stay aligned.
+- `docs/releases/legal-packaging-status.md` must stay aligned with package metadata and the current presence or absence of `LICENSE` and `NOTICE`.
 - `.pairslash/project-memory/00-project-charter.yaml` may summarize and point, but it must not carry a competing narrative root.
 
 ## 10. Official Answer Bank
 
 | Question | Exact short answer |
 | --- | --- |
-| PairSlash la gi? | "PairSlash la OSS trust layer cho terminal-native AI workflows tren Codex CLI va GitHub Copilot CLI." |
+| PairSlash la gi? | "PairSlash la trust layer cho terminal-native AI workflows tren Codex CLI va GitHub Copilot CLI." |
 | PairSlash dang o phase nao? | "PairSlash is currently at Phase 3.5 business validation on top of a technically shipped Phase 4 installability substrate with additional Phase 5/6 hardening in the repo." |
 | Nhung gi da that su ship? | "Da ship mot installability va trust substrate hep cho hai runtime loi, voi `/skills`, doctor, preview-first lifecycle, va explicit Global Project Memory writes." |
 | Nhung gi chua duoc phep noi manh? | "Chua duoc noi rang PairSlash da benchmark-validated, co broad runtime parity, co Windows live parity, hoac co hidden-write memory behavior." |

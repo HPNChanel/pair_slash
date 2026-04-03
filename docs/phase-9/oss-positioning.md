@@ -1,12 +1,19 @@
 ---
 title: OSS Positioning
 phase: 9
-status: draft
+status: derivative-note
 owner_file: docs/phase-9/oss-positioning.md
-baseline_source: docs/phase-9/phase-9-baseline-reality-lock.md
+truth_source: docs/phase-12/authoritative-program-charter.md
 ---
 
 # Reality Scan
+
+This Phase 9 note is a derivative planning artifact.
+It does not own current phase truth, public-claim truth, runtime-support truth,
+or legal/package truth. Use `docs/phase-12/authoritative-program-charter.md`,
+`docs/releases/public-claim-policy.md`, `docs/releases/scoped-release-verdict.md`,
+`docs/validation/phase-3-5/verdict.md`, and
+`docs/compatibility/compatibility-matrix.md` for current authority.
 
 ## Recommended Homepage / README Narrative
 
@@ -15,7 +22,7 @@ PairSlash should open on a narrow pain, not on architecture.
 Recommended narrative:
 
 - Terminal AI gets less trustworthy the moment project context has to survive the current session.
-- PairSlash is the OSS trust layer for terminal-native AI workflows.
+- PairSlash is the trust layer for terminal-native AI workflows.
 - It supports exactly two runtimes: Codex CLI and GitHub Copilot CLI.
 - `/skills` is the canonical front door on both supported runtimes.
 - It gives users explicit workflows, preview-first lifecycle commands, and an authoritative Global Project Memory path that is explicit-write-only, previewable, audited, and reviewable.
@@ -357,7 +364,11 @@ Maintainer surfaces should own:
 
 # Next Handoff
 
-Use this file as the source of truth for the next Phase 9 public surfaces:
+Do not use this file as a source-of-truth root for current public surfaces.
+Sync public wording from the charter, verdicts, compatibility matrix, and
+public claim policy instead.
+
+Historical downstream surfaces discussed here included:
 
 - `README.md`
 - `docs/phase-9/onboarding-path.md`
@@ -365,7 +376,7 @@ Use this file as the source of truth for the next Phase 9 public surfaces:
 - `docs/phase-9/contributor-model.md`
 - `docs/phase-9/maintainer-playbook.md`
 
-The first downstream execution sequence should be:
+The historical downstream execution sequence was:
 
 1. Patch `README.md` to match the opening, section order, and first-command decision in this file.
 2. Fill `docs/phase-9/onboarding-path.md` from the Start Here and failure-path decisions here.

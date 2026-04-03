@@ -3,8 +3,8 @@
 # Updated whenever a record is added, modified, or superseded.
 
 version: "0.1.0"
-last_updated: "2026-04-02T23:44:43+07:00"
-updated_by: phase12-truth-sync-charter-reset
+last_updated: "2026-04-03T16:10:00+07:00"
+updated_by: phase13-legal-packaging-implementation
 
 records:
   - file: 00-project-charter.yaml

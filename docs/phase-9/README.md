@@ -3,7 +3,7 @@ title: Phase 9 Public Docs Index
 phase: 9
 status: active-draft
 owner_file: docs/phase-9/README.md
-baseline_source: docs/phase-9/phase-9-baseline-reality-lock.md
+truth_source: docs/phase-12/authoritative-program-charter.md
 ---
 
 # Phase 9 Public Docs Index
@@ -15,6 +15,11 @@ Official stage statement: PairSlash is currently at Phase 3.5 business
 validation on top of a technically shipped Phase 4 installability substrate
 with additional Phase 5/6 hardening in the repo. Source of truth:
 [../phase-12/authoritative-program-charter.md](../phase-12/authoritative-program-charter.md).
+
+These public docs are derivative surfaces.
+They describe the shipped installability and trust substrate plus the current
+lane-specific support boundary; they do not widen phase, validation, or runtime
+claims beyond the authoritative sources below.
 
 ## Start Here
 
@@ -75,6 +80,7 @@ Current support labels must be preserved exactly: `stable-tested`, `degraded`, `
 Keep public wording aligned with:
 
 - [Authoritative Program Charter](../phase-12/authoritative-program-charter.md)
+- [Legal and Packaging Status](../releases/legal-packaging-status.md)
 - [Phase 9 Baseline Reality Lock](phase-9-baseline-reality-lock.md)
 - [Product-Validation Verdict](../validation/phase-3-5/verdict.md)
 - [Scoped Release Verdict](../releases/scoped-release-verdict.md)

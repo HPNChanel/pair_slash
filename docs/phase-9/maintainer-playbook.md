@@ -3,7 +3,7 @@ title: Maintainer Playbook
 phase: 9
 status: active-draft
 owner_file: docs/phase-9/maintainer-playbook.md
-baseline_source: docs/phase-9/phase-9-baseline-reality-lock.md
+truth_source: docs/phase-12/authoritative-program-charter.md
 ---
 
 # Reality Scan

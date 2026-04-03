@@ -10,9 +10,9 @@ phase: phase-12-truth-sync
 identity:
   name: PairSlash
   tagline: >-
-    OSS trust layer for terminal-native AI workflows on Codex CLI and
+    Trust layer for terminal-native AI workflows on Codex CLI and
     GitHub Copilot CLI.
-  license_status: unresolved-in-repo-metadata
+  license_status: apache-2.0-repo-source
 
 runtimes:
   supported:
@@ -45,12 +45,13 @@ truth_sources:
   runtime_support_matrix: docs/compatibility/compatibility-matrix.md
   runtime_support_evidence: docs/compatibility/runtime-verification.md
   runtime_support_data: docs/compatibility/runtime-surface-matrix.yaml
+  legal_package_status: docs/releases/legal-packaging-status.md
   pack_catalog_source: packs/core/*/pack.manifest.yaml
   pack_catalog_index: packages/core/spec-core/registry/packs.yaml
   legal_package_source: package.json
 
 provenance:
   created_by: phase-0-scaffold
-  updated_by: phase12-truth-sync-charter-reset
-  timestamp: "2026-04-02T23:44:43+07:00"
+  updated_by: phase13-legal-packaging-implementation
+  timestamp: "2026-04-03T16:10:00+07:00"
   source: docs/phase-12/authoritative-program-charter.md

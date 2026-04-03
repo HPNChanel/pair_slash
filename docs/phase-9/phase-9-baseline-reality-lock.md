@@ -1,10 +1,14 @@
 # Reality Scan
 
+This Phase 9 baseline note is historical and derivative.
+It does not own current phase truth, public-claim truth, runtime-support
+truth, or legal/package truth.
+
 ## Executive Verdict
 
 As of April 2, 2026, PairSlash can credibly present a narrow Phase 9 public story:
 
-- PairSlash is an OSS trust layer for terminal-native AI workflows.
+- PairSlash is a trust layer for terminal-native AI workflows.
 - It supports exactly two runtimes: Codex CLI and GitHub Copilot CLI.
 - `/skills` is the canonical front door.
 - Managed lifecycle commands are preview-first.

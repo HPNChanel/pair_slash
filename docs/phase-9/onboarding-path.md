@@ -3,7 +3,7 @@ title: Start Here Onboarding Path
 phase: 9
 status: active-draft
 owner_file: docs/phase-9/onboarding-path.md
-baseline_source: docs/phase-9/phase-9-baseline-reality-lock.md
+truth_source: docs/phase-12/authoritative-program-charter.md
 ---
 
 # Start Here Onboarding Path
@@ -15,6 +15,11 @@ Official stage statement: PairSlash is currently at Phase 3.5 business
 validation on top of a technically shipped Phase 4 installability substrate
 with additional Phase 5/6 hardening in the repo. Source of truth:
 [../phase-12/authoritative-program-charter.md](../phase-12/authoritative-program-charter.md).
+
+This page covers the first public success path for the technically shipped
+installability substrate.
+It does not widen runtime support beyond the compatibility matrix or
+product-validation beyond the current Phase 3.5 verdict.
 
 ## Runtime scope
 

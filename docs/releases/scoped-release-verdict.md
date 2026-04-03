@@ -1,7 +1,7 @@
 # PairSlash Scoped Release Verdict
 
 Gate status: GO
-Last updated: 2026-04-02
+Last updated: 2026-04-03
 Truth class: scoped-release
 Claim scope: phase4-installability-substrate
 Validated runtimes: codex_cli, copilot_cli
@@ -48,6 +48,7 @@ preview-first managed commands (`doctor`, `preview`, `install`, `update`,
 - Program phase truth: `docs/phase-12/authoritative-program-charter.md`
 - Product-validation truth: `docs/validation/phase-3-5/verdict.md`
 - Public claim policy: `docs/releases/public-claim-policy.md`
+- Legal/package status boundary: `docs/releases/legal-packaging-status.md`
 - Runtime support boundary: `docs/compatibility/compatibility-matrix.md`
 - Runtime promotion evidence: `docs/compatibility/runtime-verification.md`
 - Shipped-scope boundary: `docs/releases/phase-5-shipped-scope.md`

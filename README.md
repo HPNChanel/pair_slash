@@ -1,11 +1,17 @@
 # PairSlash
 
-Terminal AI is fast until you need to re-enter a repo and trust what gets written.
-That is where most workflows break.
+PairSlash is the trust layer for terminal-native AI workflows.
+It exists for the point where terminal AI stops feeling trustworthy: repo truth
+has to survive the current session, and durable writes have to stay explicit
+enough to review.
 
-PairSlash is the OSS trust layer for terminal-native AI workflows.
 It supports exactly two runtimes: Codex CLI and GitHub Copilot CLI.
 `/skills` is the canonical front door on both supported runtimes.
+
+PairSlash is a narrow trust layer with explicit workflows, preview-first
+lifecycle commands, and an explicit Global Project Memory write path.
+It is not a generic agent framework, not a third-runtime abstraction layer, and
+not an autopilot that writes or promotes memory in the background.
 
 Current stage: PairSlash is currently at Phase 3.5 business validation on top
 of a technically shipped Phase 4 installability substrate with additional
@@ -14,6 +20,19 @@ Phase 5/6 hardening in the repo. Public claims stay bounded by the
 [product-validation verdict](docs/validation/phase-3-5/verdict.md),
 [scoped release verdict](docs/releases/scoped-release-verdict.md), and
 [public claim policy](docs/releases/public-claim-policy.md).
+
+Support boundary: public support is lane-specific, not product-global.
+Use the exact labels in the
+[compatibility matrix](docs/compatibility/compatibility-matrix.md) for
+`stable-tested`, `degraded`, `prep`, and `known-broken`.
+Shipped code, doctor output, preview output, and deterministic gates do not by
+themselves widen runtime support or product-validation claims.
+
+License and packaging status: the PairSlash source repository is licensed under
+[Apache-2.0](LICENSE). The current supported install path is repo-local from
+this checkout. PairSlash is not currently presented as a package-manager-published
+artifact; use the repo-local CLI entrypoint documented in
+[docs/releases/legal-packaging-status.md](docs/releases/legal-packaging-status.md).
 
 ## Why install this
 

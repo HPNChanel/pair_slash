@@ -4,6 +4,7 @@ import process from "node:process";
 
 const requiredDocs = [
   "docs/phase-12/authoritative-program-charter.md",
+  "docs/releases/legal-packaging-status.md",
   "docs/compatibility/compatibility-matrix.md",
   "docs/compatibility/runtime-surface-matrix.yaml",
   "docs/compatibility/runtime-verification.md",

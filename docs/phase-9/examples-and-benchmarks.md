@@ -3,7 +3,7 @@ title: Examples And Benchmarks
 phase: 9
 status: draft
 owner_file: docs/phase-9/examples-and-benchmarks.md
-baseline_source: docs/phase-9/phase-9-baseline-reality-lock.md
+truth_source: docs/phase-12/authoritative-program-charter.md
 ---
 
 # Reality Scan
