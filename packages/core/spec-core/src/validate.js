@@ -23,8 +23,13 @@ import {
   NORMALIZED_IR_SCHEMA_VERSION,
   OWNERSHIP_FILE,
   OVERRIDE_MARKER_FILE,
+  PACK_CATALOG_CLASSES,
+  PACK_DEPRECATION_STATUSES,
+  PACK_DOCS_VISIBILITY,
   PACK_STATUSES,
   PACK_PUBLISHER_CLASSES,
+  PACK_RELEASE_VISIBILITY,
+  PACK_RUNTIME_EVIDENCE_KINDS,
   PACK_RUNTIME_SUPPORT_STATUSES,
   PACK_SIGNATURE_STATUSES,
   PACK_SUPPORT_LEVELS,
@@ -816,6 +821,195 @@ function validateCanonicalTrustDescriptor(canonical, errors) {
   validateNonEmptyString(canonical.trust_descriptor, "trust_descriptor", errors, "PSM063");
 }
 
+function deriveCanonicalRuntimeSupportStatus(canonical, runtime) {
+  const compatibility = canonical?.runtime_bindings?.[runtime]?.compatibility ?? {};
+  const canonicalStatus = compatibility.canonical_picker ?? "unverified";
+  const directStatus = compatibility.direct_invocation ?? "unverified";
+  if (canonicalStatus === "blocked") {
+    return "blocked";
+  }
+  if (canonicalStatus === "supported" && directStatus === "supported") {
+    return "supported";
+  }
+  if (canonicalStatus === "unverified" && directStatus === "unverified") {
+    return "unverified";
+  }
+  return "partial";
+}
+
+function validateCanonicalCatalog(canonical, errors) {
+  if (!validateObject(canonical.catalog, "catalog", errors, "PSM064")) {
+    return;
+  }
+  if (!PACK_CATALOG_CLASSES.includes(canonical.catalog?.pack_class)) {
+    push(errors, "PSM064", `catalog.pack_class must be one of ${PACK_CATALOG_CLASSES.join(", ")}`);
+  }
+  if (!RELEASE_CHANNELS.includes(canonical.catalog?.maturity)) {
+    push(errors, "PSM064", `catalog.maturity must be one of ${RELEASE_CHANNELS.join(", ")}`);
+  }
+  if (canonical.catalog?.maturity !== canonical.release_channel) {
+    push(errors, "PSM064", "catalog.maturity must match release_channel");
+  }
+  if (!PACK_DOCS_VISIBILITY.includes(canonical.catalog?.docs_visibility)) {
+    push(errors, "PSM064", `catalog.docs_visibility must be one of ${PACK_DOCS_VISIBILITY.join(", ")}`);
+  }
+  for (const field of ["default_discovery", "default_recommendation"]) {
+    if (typeof canonical.catalog?.[field] !== "boolean") {
+      push(errors, "PSM064", `catalog.${field} must be boolean`);
+    }
+  }
+  if (
+    canonical.catalog?.default_recommendation === true &&
+    canonical.catalog?.default_discovery !== true
+  ) {
+    push(errors, "PSM064", "catalog.default_recommendation requires catalog.default_discovery");
+  }
+  if (!PACK_RELEASE_VISIBILITY.includes(canonical.catalog?.release_visibility)) {
+    push(errors, "PSM064", `catalog.release_visibility must be one of ${PACK_RELEASE_VISIBILITY.join(", ")}`);
+  }
+  if (!PACK_DEPRECATION_STATUSES.includes(canonical.catalog?.deprecation_status)) {
+    push(
+      errors,
+      "PSM064",
+      `catalog.deprecation_status must be one of ${PACK_DEPRECATION_STATUSES.join(", ")}`,
+    );
+  }
+  if (
+    canonical.catalog?.deprecation_status === "archived" &&
+    canonical.status !== "deprecated"
+  ) {
+    push(errors, "PSM064", "catalog.deprecation_status archived requires manifest status deprecated");
+  }
+}
+
+function validateCanonicalSupport(canonical, errors) {
+  if (!validateObject(canonical.support, "support", errors, "PSM065")) {
+    return;
+  }
+  if (!validateObject(canonical.support?.publisher, "support.publisher", errors, "PSM065")) {
+    return;
+  }
+  validateNonEmptyString(canonical.support.publisher?.publisher_id, "support.publisher.publisher_id", errors, "PSM065");
+  validateNonEmptyString(canonical.support.publisher?.display_name, "support.publisher.display_name", errors, "PSM065");
+  validateNonEmptyString(canonical.support.publisher?.contact, "support.publisher.contact", errors, "PSM065");
+  if (!PACK_PUBLISHER_CLASSES.includes(canonical.support.publisher?.publisher_class)) {
+    push(
+      errors,
+      "PSM065",
+      `support.publisher.publisher_class must be one of ${PACK_PUBLISHER_CLASSES.join(", ")}`,
+    );
+  }
+  if (!PACK_TRUST_TIERS.includes(canonical.support?.tier_claim)) {
+    push(errors, "PSM065", `support.tier_claim must be one of ${PACK_TRUST_TIERS.join(", ")}`);
+  }
+  if (!PACK_SUPPORT_LEVELS.includes(canonical.support?.support_level_claim)) {
+    push(
+      errors,
+      "PSM065",
+      `support.support_level_claim must be one of ${PACK_SUPPORT_LEVELS.join(", ")}`,
+    );
+  }
+  if (!validateObject(canonical.support?.signature, "support.signature", errors, "PSM065")) {
+    return;
+  }
+  for (const field of ["required", "allow_local_unsigned"]) {
+    if (typeof canonical.support.signature?.[field] !== "boolean") {
+      push(errors, "PSM065", `support.signature.${field} must be boolean`);
+    }
+  }
+  if (!validateObject(canonical.support?.runtime_support, "support.runtime_support", errors, "PSM065")) {
+    return;
+  }
+  for (const runtime of SUPPORTED_RUNTIMES) {
+    const runtimeSupport = canonical.support.runtime_support?.[runtime];
+    if (!validateObject(runtimeSupport, `support.runtime_support.${runtime}`, errors, "PSM065")) {
+      continue;
+    }
+    if (!PACK_RUNTIME_SUPPORT_STATUSES.includes(runtimeSupport?.status)) {
+      push(
+        errors,
+        "PSM065",
+        `support.runtime_support.${runtime}.status must be one of ${PACK_RUNTIME_SUPPORT_STATUSES.join(", ")}`,
+      );
+    }
+    if (runtimeSupport?.evidence_ref !== null && typeof runtimeSupport?.evidence_ref !== "string") {
+      push(errors, "PSM065", `support.runtime_support.${runtime}.evidence_ref must be string or null`);
+    }
+    if (
+      ["supported", "partial"].includes(runtimeSupport?.status) &&
+      (typeof runtimeSupport?.evidence_ref !== "string" || runtimeSupport.evidence_ref.trim() === "")
+    ) {
+      push(errors, "PSM065", `support.runtime_support.${runtime}.status ${runtimeSupport.status} requires evidence_ref`);
+    }
+    if (!PACK_RUNTIME_EVIDENCE_KINDS.includes(runtimeSupport?.evidence_kind)) {
+      push(
+        errors,
+        "PSM065",
+        `support.runtime_support.${runtime}.evidence_kind must be one of ${PACK_RUNTIME_EVIDENCE_KINDS.join(", ")}`,
+      );
+    }
+    if (typeof runtimeSupport?.required_for_promotion !== "boolean") {
+      push(errors, "PSM065", `support.runtime_support.${runtime}.required_for_promotion must be boolean`);
+    }
+    const manifestStatus = deriveCanonicalRuntimeSupportStatus(canonical, runtime);
+    if (manifestStatus === "blocked" && runtimeSupport?.status !== "blocked") {
+      push(errors, "PSM065", `support.runtime_support.${runtime}.status cannot exceed blocked manifest runtime surface`);
+    }
+    if (manifestStatus === "unverified" && runtimeSupport?.status === "supported") {
+      push(errors, "PSM065", `support.runtime_support.${runtime}.status cannot exceed unverified manifest compatibility`);
+    }
+  }
+  if (!validateObject(canonical.support?.policy_requirements, "support.policy_requirements", errors, "PSM065")) {
+    return;
+  }
+  for (const field of [
+    "no_silent_fallback",
+    "preview_required_for_mutation",
+    "explicit_write_only_memory",
+  ]) {
+    if (canonical.support.policy_requirements?.[field] !== true) {
+      push(errors, "PSM065", `support.policy_requirements.${field} must be true`);
+    }
+  }
+  if (!validateObject(canonical.support?.maintainers, "support.maintainers", errors, "PSM065")) {
+    return;
+  }
+  validateNonEmptyString(canonical.support.maintainers?.owner, "support.maintainers.owner", errors, "PSM065");
+  validateNonEmptyString(canonical.support.maintainers?.contact, "support.maintainers.contact", errors, "PSM065");
+
+  if (
+    canonical.memory_permissions?.global_project_memory === "write" &&
+    canonical.support?.tier_claim !== "core-maintained"
+  ) {
+    push(errors, "PSM065", "memory-write packs must claim support.tier_claim core-maintained");
+  }
+  if (
+    (canonical.capabilities ?? []).includes("memory_write_global") &&
+    canonical.support?.tier_claim !== "core-maintained"
+  ) {
+    push(errors, "PSM065", "memory_write_global capability requires support.tier_claim core-maintained");
+  }
+  if (
+    canonical.support?.support_level_claim === "core-supported" &&
+    canonical.support?.tier_claim !== "core-maintained"
+  ) {
+    push(errors, "PSM065", "support.support_level_claim core-supported requires support.tier_claim core-maintained");
+  }
+  if (
+    canonical.support?.support_level_claim === "publisher-verified" &&
+    canonical.support?.tier_claim !== "verified-external"
+  ) {
+    push(errors, "PSM065", "support.support_level_claim publisher-verified requires support.tier_claim verified-external");
+  }
+  if (canonical.support?.publisher?.publisher_id === "pairslash") {
+    if (canonical.support?.tier_claim === "verified-external") {
+      push(errors, "PSM065", "pairslash publisher must not claim verified-external");
+    }
+  } else if (["core-maintained", "first-party-official"].includes(canonical.support?.tier_claim)) {
+    push(errors, "PSM065", "non-pairslash publishers cannot claim first-party tiers");
+  }
+}
+
 export function validatePackManifestV2(record) {
   const errors = [];
   const shape = detectPackManifestShape(record);
@@ -920,6 +1114,8 @@ export function validatePackManifestV2(record) {
   validateCanonicalOverridePolicy(canonical, assetIds, errors);
   validateCanonicalUpdateAndUninstall(canonical, errors);
   validateCanonicalSmokeChecks(canonical, errors);
+  validateCanonicalCatalog(canonical, errors);
+  validateCanonicalSupport(canonical, errors);
   validateCanonicalTrustDescriptor(canonical, errors);
 
   return errors;

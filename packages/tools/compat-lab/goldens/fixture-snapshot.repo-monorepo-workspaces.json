@@ -208,7 +208,7 @@
               ],
               "id": "pairslash-frontend",
               "install_dir": "<repo>\\.agents\\skills\\pairslash-frontend",
-              "manifest_digest": "9bdec5fe21c6f9d9ceeb9fdf3d54d91d6f3f796f6e0350add99cef5c080e66be",
+              "manifest_digest": "844b50a7797ac83f8d99e4e446a818cf8210f669bf2eb30341cc55b8a1a279b2",
               "previous_version": null,
               "version": "0.2.0"
             },
@@ -398,7 +398,7 @@
               ],
               "id": "pairslash-plan",
               "install_dir": "<repo>\\.agents\\skills\\pairslash-plan",
-              "manifest_digest": "9496c1ca414f4cca95d6085dd0de89637e8e0fba947193a4dc0e096c196d43b6",
+              "manifest_digest": "30db5437aa01f3839caf5f27a419b0df010ec142dcda25b29965f47a7d8e22e1",
               "previous_version": null,
               "version": "0.2.0"
             }
@@ -424,7 +424,7 @@
         {
           "bundle_kind": "codex-skill-bundle",
           "canonical_entrypoint": "/skills",
-          "digest": "bf0f0afc90a1fe6e04fd0176fefd9318e5df2dbe94e6fe4551742976b91822c1",
+          "digest": "764e52e9de443e13e2c2b54f80daf4654e1dab6c2eeff6153654b2f2601402d8",
           "direct_invocation": "$pairslash-frontend",
           "files": [
             {
@@ -543,7 +543,7 @@
               "relative_path": "pairslash.install.json",
               "required": true,
               "runtime_selector": "shared",
-              "sha256": "9a105eed469c7a50867c3dc2e4d6c7be9d77721b8ef3bdb6e2a142892ac336f6",
+              "sha256": "c6093aeff1fac0f22719c79ca31543888d623135507b7afdb4ef5291e30ac30c",
               "uninstall_behavior": "remove_if_unmodified",
               "write_authority_guarded": false
             },
@@ -578,7 +578,7 @@
               "write_authority_guarded": false
             }
           ],
-          "normalized_ir_digest": "87de911b83fc301afa758f9c79456583cb3048673c0b9e7cb7ed5a2c35427288",
+          "normalized_ir_digest": "2ea1211b6e2fa69b3f81b7e458ddaa353138d095c4cd2060318c8dd8ad85836d",
           "output_dir": "<repo>\\dist\\compiled\\codex\\pairslash-frontend",
           "pack_id": "pairslash-frontend",
           "runtime": "codex_cli",
@@ -587,7 +587,7 @@
         {
           "bundle_kind": "codex-skill-bundle",
           "canonical_entrypoint": "/skills",
-          "digest": "ef89379d82d397ec43c5cf8d3f168814a9a8553f97c8817077876fdf92c79a95",
+          "digest": "2fe9bfcf1242e43344e2e7f44acd8ce9b35cc5f2bf87267222fe5f402e131819",
           "direct_invocation": "$pairslash-plan",
           "files": [
             {
@@ -706,7 +706,7 @@
               "relative_path": "pairslash.install.json",
               "required": true,
               "runtime_selector": "shared",
-              "sha256": "b0eac283bacb4932f2faac9a3cc8ef9e48a4706d9a241c2fcf363607cf97eb87",
+              "sha256": "de70b8df0fb5dd4d867ac0e3cb9a7034e4c9c563efdf58ad75d41926b30ee628",
               "uninstall_behavior": "remove_if_unmodified",
               "write_authority_guarded": false
             },
@@ -741,7 +741,7 @@
               "write_authority_guarded": false
             }
           ],
-          "normalized_ir_digest": "51911531688bb69bac51ebba81c76a7bd4b37cb4dfdd528686621cb114edf6cd",
+          "normalized_ir_digest": "0ac58b35f777858dcca2fbe64d6d04a6a4d1daa6ebe67267b1a90d4a80380086",
           "output_dir": "<repo>\\dist\\compiled\\codex\\pairslash-plan",
           "pack_id": "pairslash-plan",
           "runtime": "codex_cli",
@@ -1832,6 +1832,7 @@
         "warnings": [
           "lint-warning:LINT-RUNTIME-004:pairslash-frontend:shared: runtime support has degraded/unverified surfaces: codex_cli.canonical_picker=unverified, codex_cli.direct_invocation=unverified, copilot_cli.canonical_picker=unverified, copilot_cli.direct_invocation=unverified",
           "lint-warning:LINT-RUNTIME-004:pairslash-plan:shared: runtime support has degraded/unverified surfaces: copilot_cli.direct_invocation=unverified",
+          "lint-warning:LINT-TRUST-003:pairslash-plan:shared: codex_cli support claim is backed only by shared matrix evidence, not pack-scoped runtime proof; copilot_cli support claim is backed only by shared matrix evidence, not pack-scoped runtime proof",
           "trust-review:pairslash-frontend: local-dev (local-dev; local-dev); initial install",
           "trust-review:pairslash-plan: local-dev (local-dev; local-dev); initial install"
         ]
@@ -2011,7 +2012,7 @@
               ],
               "id": "pairslash-frontend",
               "install_dir": "<repo>\\.compat-home\\.copilot\\skills\\pairslash-frontend",
-              "manifest_digest": "9bdec5fe21c6f9d9ceeb9fdf3d54d91d6f3f796f6e0350add99cef5c080e66be",
+              "manifest_digest": "844b50a7797ac83f8d99e4e446a818cf8210f669bf2eb30341cc55b8a1a279b2",
               "previous_version": null,
               "version": "0.2.0"
             },
@@ -2183,7 +2184,7 @@
               ],
               "id": "pairslash-plan",
               "install_dir": "<repo>\\.compat-home\\.copilot\\skills\\pairslash-plan",
-              "manifest_digest": "9496c1ca414f4cca95d6085dd0de89637e8e0fba947193a4dc0e096c196d43b6",
+              "manifest_digest": "30db5437aa01f3839caf5f27a419b0df010ec142dcda25b29965f47a7d8e22e1",
               "previous_version": null,
               "version": "0.2.0"
             }
@@ -2209,7 +2210,7 @@
         {
           "bundle_kind": "copilot-package-bundle",
           "canonical_entrypoint": "/skills",
-          "digest": "2a05704713261162f44a7719af90c73403ad428e60a963d38d156a425b15181f",
+          "digest": "65a9be91802f343e10a14c2fc87e18dbacfdd8a124c5ccdac1f2631130226756",
           "direct_invocation": "/pairslash-frontend",
           "files": [
             {
@@ -2313,7 +2314,7 @@
               "relative_path": "pairslash.install.json",
               "required": true,
               "runtime_selector": "shared",
-              "sha256": "dbbc178e0b500216e0b5edd9d03dbbfc81ed93e6c50d49cfe8ced176d63c1a5c",
+              "sha256": "3f62e935256a6d3b24a4e6f4890352db042fe5f268938ae118cde87c8d35f86d",
               "uninstall_behavior": "remove_if_unmodified",
               "write_authority_guarded": false
             },
@@ -2348,7 +2349,7 @@
               "write_authority_guarded": false
             }
           ],
-          "normalized_ir_digest": "87de911b83fc301afa758f9c79456583cb3048673c0b9e7cb7ed5a2c35427288",
+          "normalized_ir_digest": "2ea1211b6e2fa69b3f81b7e458ddaa353138d095c4cd2060318c8dd8ad85836d",
           "output_dir": "<repo>\\dist\\compiled\\copilot\\pairslash-frontend",
           "pack_id": "pairslash-frontend",
           "runtime": "copilot_cli",
@@ -2357,7 +2358,7 @@
         {
           "bundle_kind": "copilot-package-bundle",
           "canonical_entrypoint": "/skills",
-          "digest": "c892f626cfee0551602ea65fc88476ed3971f70eae173b166448b70159b95e3f",
+          "digest": "2d7def17c88dd3167bcb2c70505f2139cccb12aa27b4466be61ead3c5e68441d",
           "direct_invocation": "/pairslash-plan",
           "files": [
             {
@@ -2461,7 +2462,7 @@
               "relative_path": "pairslash.install.json",
               "required": true,
               "runtime_selector": "shared",
-              "sha256": "48e719041a78a96328a4f2e9f54f6844265b68007f0b90c897b4b9a5b0e7a494",
+              "sha256": "e00300ceae803669111bf5ee191c60737266646a388fd021dd60fee75f450b3f",
               "uninstall_behavior": "remove_if_unmodified",
               "write_authority_guarded": false
             },
@@ -2496,7 +2497,7 @@
               "write_authority_guarded": false
             }
           ],
-          "normalized_ir_digest": "51911531688bb69bac51ebba81c76a7bd4b37cb4dfdd528686621cb114edf6cd",
+          "normalized_ir_digest": "0ac58b35f777858dcca2fbe64d6d04a6a4d1daa6ebe67267b1a90d4a80380086",
           "output_dir": "<repo>\\dist\\compiled\\copilot\\pairslash-plan",
           "pack_id": "pairslash-plan",
           "runtime": "copilot_cli",
@@ -3597,6 +3598,7 @@
         "warnings": [
           "lint-warning:LINT-RUNTIME-004:pairslash-frontend:shared: runtime support has degraded/unverified surfaces: codex_cli.canonical_picker=unverified, codex_cli.direct_invocation=unverified, copilot_cli.canonical_picker=unverified, copilot_cli.direct_invocation=unverified",
           "lint-warning:LINT-RUNTIME-004:pairslash-plan:shared: runtime support has degraded/unverified surfaces: copilot_cli.direct_invocation=unverified",
+          "lint-warning:LINT-TRUST-003:pairslash-plan:shared: codex_cli support claim is backed only by shared matrix evidence, not pack-scoped runtime proof; copilot_cli support claim is backed only by shared matrix evidence, not pack-scoped runtime proof",
           "trust-review:pairslash-frontend: local-dev (local-dev; local-dev); initial install",
           "trust-review:pairslash-plan: local-dev (local-dev; local-dev); initial install"
         ]

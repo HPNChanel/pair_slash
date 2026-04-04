@@ -150,6 +150,45 @@ test("pairslash install without pack id selects bootstrap pack-set", serial, asy
   }
 });
 
+test("pairslash install without pack id honors catalog default recommendation", serial, async () => {
+  const fixture = createTempRepo({ packs: ["pairslash-plan", "pairslash-review"] });
+  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  let output = "";
+  try {
+    updatePackManifest({
+      repoRoot: fixture.tempRoot,
+      packId: "pairslash-plan",
+      mutate(manifest) {
+        manifest.catalog.default_recommendation = false;
+        return manifest;
+      },
+    });
+    updatePackManifest({
+      repoRoot: fixture.tempRoot,
+      packId: "pairslash-review",
+      mutate(manifest) {
+        manifest.catalog.default_recommendation = true;
+        return manifest;
+      },
+    });
+    const exitCode = await runCli({
+      argv: ["install", "--runtime", "codex", "--format", "json"],
+      cwd: fixture.tempRoot,
+      stdout: {
+        write(chunk) {
+          output += chunk;
+        },
+      },
+    });
+    assert.equal(exitCode, 0);
+    const payload = JSON.parse(output);
+    assert.deepEqual(payload.selected_packs, ["pairslash-review"]);
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
 test("pairslash install --all selects all valid manifests in the repo", serial, async () => {
   const fixture = createTempRepo({ packs: ["pairslash-plan", "pairslash-review"] });
   const runtime = installFakeRuntime({ codexVersion: "0.116.0" });

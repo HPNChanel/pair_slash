@@ -104,7 +104,7 @@ test("lint bridge emits warning when shell_exec is declared without required_too
   }
 });
 
-test("lint bridge warns when pack trust descriptor is absent", serial, () => {
+test("lint bridge treats missing pack trust descriptor as non-blocking when manifest support is authoritative", serial, () => {
   const fixture = createTempRepo({ packs: ["pairslash-plan"] });
   try {
     updatePackManifest({
@@ -124,15 +124,22 @@ test("lint bridge warns when pack trust descriptor is absent", serial, () => {
       packs: ["pairslash-plan"],
     });
     assert.equal(report.ok, true);
-    assert.ok(
-      report.issues.some((issue) => issue.code === "LINT-TRUST-001" && issue.result === "warning"),
+    assert.equal(hasIssue(report, "LINT-TRUST-001", "error"), false);
+    assert.equal(
+      report.issues.some(
+        (issue) =>
+          issue.code === "LINT-TRUST-003" &&
+          issue.result === "warning" &&
+          issue.message.includes("shared matrix evidence"),
+      ),
+      true,
     );
   } finally {
     fixture.cleanup();
   }
 });
 
-test("lint bridge errors when trust descriptor file is structurally invalid", serial, () => {
+test("lint bridge warns when pack trust descriptor shim drifts from authoritative manifest support", serial, () => {
   const fixture = createTempRepo({ packs: ["pairslash-plan"] });
   try {
     updateTrustDescriptor(fixture.tempRoot, "pairslash-plan", (descriptor) => {
@@ -146,12 +153,12 @@ test("lint bridge errors when trust descriptor file is structurally invalid", se
       target: "repo",
       packs: ["pairslash-plan"],
     });
-    assert.equal(report.ok, false);
+    assert.equal(report.ok, true);
     assert.ok(
       report.issues.some(
         (issue) =>
-          issue.code === "LINT-TRUST-001" &&
-          issue.result === "error" &&
+          issue.code === "LINT-TRUST-003" &&
+          issue.result === "warning" &&
           issue.message.includes("runtime_support.codex_cli.evidence_ref"),
       ),
     );
@@ -160,7 +167,7 @@ test("lint bridge errors when trust descriptor file is structurally invalid", se
   }
 });
 
-test("lint bridge errors when trust claim exceeds blocked runtime surface", serial, () => {
+test("lint bridge errors when manifest support claim exceeds blocked runtime surface", serial, () => {
   const fixture = createTempRepo({ packs: ["pairslash-plan"] });
   try {
     updatePackManifest({
@@ -185,9 +192,9 @@ test("lint bridge errors when trust claim exceeds blocked runtime surface", seri
     assert.ok(
       report.issues.some(
         (issue) =>
-          issue.code === "LINT-TRUST-002" &&
+          issue.code === "LINT-MANIFEST-001" &&
           issue.result === "error" &&
-          issue.message.includes("copilot_cli trust claim exceeds blocked manifest runtime surface"),
+          issue.message.includes("support.runtime_support.copilot_cli.status cannot exceed blocked manifest runtime surface"),
       ),
     );
   } finally {
@@ -294,6 +301,38 @@ test("lint bridge fails when runtime support marks a lane blocked", serial, () =
     });
     assert.equal(report.ok, false);
     assert.equal(hasIssue(report, "LINT-RUNTIME-004"), true);
+  } finally {
+    fixture.cleanup();
+  }
+});
+
+test("lint bridge warns when unverified runtime surfaces are missing evidence records", serial, () => {
+  const fixture = createTempRepo({ packs: ["pairslash-plan"] });
+  try {
+    updatePackManifest({
+      repoRoot: fixture.tempRoot,
+      packId: "pairslash-plan",
+      mutate(manifest) {
+        manifest.support.runtime_support.copilot_cli.status = "unverified";
+        manifest.support.runtime_support.copilot_cli.evidence_ref = null;
+        return manifest;
+      },
+    });
+    const report = runLintBridge({
+      repoRoot: fixture.tempRoot,
+      runtime: "all",
+      target: "repo",
+      packs: ["pairslash-plan"],
+    });
+    assert.equal(report.ok, true);
+    assert.ok(
+      report.issues.some(
+        (issue) =>
+          issue.code === "LINT-RUNTIME-006" &&
+          issue.result === "warning" &&
+          issue.message.includes("copilot_cli.direct_invocation"),
+      ),
+    );
   } finally {
     fixture.cleanup();
   }

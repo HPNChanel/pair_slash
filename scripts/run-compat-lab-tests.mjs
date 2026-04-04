@@ -3,6 +3,7 @@ import process from "node:process";
 
 const testFiles = [
   "packages/core/spec-core/tests/spec-core.test.js",
+  "packages/core/spec-core/tests/manifest-v2.conformance.test.js",
   "packages/core/spec-core/tests/project-memory.test.js",
   "packages/core/contract-engine/tests/contract-engine.test.js",
   "tests/contracts/contract-engine.contracts.test.js",

@@ -10,7 +10,7 @@ Status legend:
 
 ## Pass / fail gate
 
-- [x] `pack.manifest.yaml v2` validator, schemas, and registry discovery pass in `packages/core/spec-core/tests/spec-core.test.js`
+- [x] `pack.manifest.yaml v2` validator, authoritative pack catalog derivation, conformance drift gates, and derived registry sync pass in `packages/core/spec-core/tests/spec-core.test.js` and `packages/core/spec-core/tests/manifest-v2.conformance.test.js`
 - [x] compiler v2 stays one-spec-two-runtimes through shared IR coverage in `packages/runtimes/codex/compiler/tests/compiler-codex.test.js` and `packages/runtimes/copilot/compiler/tests/compiler-copilot.test.js`
 - [x] `install`, `update`, and `uninstall` exercise preview, rollback, override preservation, repo scope, and user scope in `packages/tools/installer/tests/installer.test.js`
 - [x] `doctor` covers runtime/version/path/permission/conflict/tool/MCP checks in `packages/tools/doctor/tests/doctor.test.js`

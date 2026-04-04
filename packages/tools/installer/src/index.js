@@ -16,6 +16,7 @@ import {
   buildTrustDelta,
   ensureDir,
   exists,
+  loadPackCatalogRecords,
   loadPackManifest,
   loadPackManifestRecords,
   normalizeRuntime,
@@ -64,7 +65,12 @@ function compilePackForRuntime(options) {
 
 function manifestSelection(repoRoot, requestedPacks = []) {
   const records = loadPackManifestRecords(repoRoot);
-  const { valid, invalid, missing } = selectPackManifestRecords(records, requestedPacks);
+  const catalogRecords = loadPackCatalogRecords(repoRoot, { includeAdvanced: false });
+  const inScopePackIds =
+    requestedPacks.length > 0
+      ? requestedPacks
+      : catalogRecords.map((record) => record.id);
+  const { valid, invalid, missing } = selectPackManifestRecords(records, inScopePackIds);
   const errors = [];
 
   for (const record of invalid) {

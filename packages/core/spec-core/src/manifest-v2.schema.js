@@ -8,6 +8,15 @@ import {
   MANIFEST_SMOKE_ACTIONS,
   MEMORY_ACCESS_LEVELS,
   MEMORY_AUTHORITY_MODES,
+  PACK_CATALOG_CLASSES,
+  PACK_DEPRECATION_STATUSES,
+  PACK_DOCS_VISIBILITY,
+  PACK_PUBLISHER_CLASSES,
+  PACK_RELEASE_VISIBILITY,
+  PACK_RUNTIME_EVIDENCE_KINDS,
+  PACK_RUNTIME_SUPPORT_STATUSES,
+  PACK_SUPPORT_LEVELS,
+  PACK_TRUST_TIERS,
   PACK_STATUSES,
   PHASE4_SCHEMA_VERSION,
   RELEASE_CHANNELS,
@@ -123,6 +132,59 @@ const docsRefsSchema = v.object({
   validation_checklist: nonEmptyString("docs_refs.validation_checklist must be a non-empty string"),
 });
 
+const catalogSchema = v.object({
+  pack_class: v.picklist(PACK_CATALOG_CLASSES),
+  maturity: v.picklist(RELEASE_CHANNELS),
+  docs_visibility: v.picklist(PACK_DOCS_VISIBILITY),
+  default_discovery: v.boolean(),
+  default_recommendation: v.boolean(),
+  release_visibility: v.picklist(PACK_RELEASE_VISIBILITY),
+  deprecation_status: v.picklist(PACK_DEPRECATION_STATUSES),
+  replacement_pack: v.optional(
+    v.nullable(nonEmptyString("catalog.replacement_pack must be null or a non-empty string")),
+  ),
+  backward_compatibility_notes: v.optional(
+    v.array(nonEmptyString("catalog.backward_compatibility_notes[] must be non-empty")),
+  ),
+});
+
+const supportRuntimeSchema = v.object({
+  status: v.picklist(PACK_RUNTIME_SUPPORT_STATUSES),
+  evidence_ref: v.nullable(
+    nonEmptyString("support.runtime_support.*.evidence_ref must be null or a non-empty string"),
+  ),
+  evidence_kind: v.picklist(PACK_RUNTIME_EVIDENCE_KINDS),
+  required_for_promotion: v.boolean(),
+});
+
+const supportSchema = v.object({
+  publisher: v.object({
+    publisher_id: nonEmptyString("support.publisher.publisher_id must be a non-empty string"),
+    display_name: nonEmptyString("support.publisher.display_name must be a non-empty string"),
+    publisher_class: v.picklist(PACK_PUBLISHER_CLASSES),
+    contact: nonEmptyString("support.publisher.contact must be a non-empty string"),
+  }),
+  tier_claim: v.picklist(PACK_TRUST_TIERS),
+  support_level_claim: v.picklist(PACK_SUPPORT_LEVELS),
+  signature: v.object({
+    required: v.boolean(),
+    allow_local_unsigned: v.boolean(),
+  }),
+  runtime_support: v.object({
+    codex_cli: supportRuntimeSchema,
+    copilot_cli: supportRuntimeSchema,
+  }),
+  policy_requirements: v.object({
+    no_silent_fallback: v.literal(true),
+    preview_required_for_mutation: v.literal(true),
+    explicit_write_only_memory: v.literal(true),
+  }),
+  maintainers: v.object({
+    owner: nonEmptyString("support.maintainers.owner must be a non-empty string"),
+    contact: nonEmptyString("support.maintainers.contact must be a non-empty string"),
+  }),
+});
+
 export const packManifestV2Schema = v.object({
   kind: v.literal("pack-manifest-v2"),
   schema_version: v.literal(PHASE4_SCHEMA_VERSION),
@@ -162,6 +224,8 @@ export const packManifestV2Schema = v.object({
   uninstall_strategy: uninstallStrategySchema,
   smoke_checks: v.pipe(v.array(smokeCheckSchema), v.nonEmpty()),
   docs_refs: docsRefsSchema,
+  catalog: catalogSchema,
+  support: supportSchema,
   trust_descriptor: v.optional(
     nonEmptyString("trust_descriptor must be a non-empty string when present"),
   ),

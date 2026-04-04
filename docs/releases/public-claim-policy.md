@@ -41,7 +41,8 @@ boundary ladder live in `docs/phase-12/authoritative-program-charter.md`.
   - `docs/phase-12/authoritative-program-charter.md`
 - Implementation truth:
   - `packs/core/*/pack.manifest.yaml`
-  - `packages/core/spec-core/registry/packs.yaml`
+  - `packages/core/spec-core/src/pack-catalog.js`
+  - `packages/core/spec-core/registry/packs.yaml` (derived index only)
   - `packages/tools/installer/`
   - `packages/tools/doctor/`
   - `packages/tools/compat-lab/`

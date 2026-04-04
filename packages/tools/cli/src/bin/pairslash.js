@@ -5,10 +5,12 @@ import { createInterface } from "node:readline/promises";
 
 import {
   exists,
+  loadPackCatalogRecords,
   loadPackManifestRecords,
   normalizeRuntime,
   normalizeTarget,
   relativeFrom,
+  selectDefaultCatalogPack,
   selectPackManifestRecords,
   stableJson,
   SUPPORTED_RUNTIMES,
@@ -370,9 +372,19 @@ function assertLifecycleAction(action, { command = "command" } = {}) {
   );
 }
 
-function resolveInstallPacks(options) {
+function resolveInstallPacks(repoRoot, options) {
   if (options.packs.length > 0) {
     return options.packs;
+  }
+  const catalogRecords = loadPackCatalogRecords(repoRoot, { includeAdvanced: false });
+  if (options.packSet === "bootstrap") {
+    const defaultRecord = selectDefaultCatalogPack(catalogRecords);
+    return defaultRecord ? [defaultRecord.id] : INSTALL_PACK_SETS.bootstrap;
+  }
+  if (options.packSet === "core") {
+    return catalogRecords
+      .filter((record) => record.default_discovery !== false)
+      .map((record) => record.id);
   }
   return INSTALL_PACK_SETS[options.packSet] ?? INSTALL_PACK_SETS.bootstrap;
 }
@@ -395,6 +407,8 @@ function getRuntimeAdapter(runtime) {
 function resolveSelectedPackRecord(repoRoot, requestedPacks = []) {
   const records = loadPackManifestRecords(repoRoot);
   const selection = selectPackManifestRecords(records, requestedPacks, { includeInvalid: true });
+  const catalogRecords = loadPackCatalogRecords(repoRoot, { includeAdvanced: false });
+  const preferredCatalogRecord = selectDefaultCatalogPack(catalogRecords);
   if (selection.missing.length > 0) {
     throw new Error(`pack-not-found: ${selection.missing.join(", ")}`);
   }
@@ -403,7 +417,9 @@ function resolveSelectedPackRecord(repoRoot, requestedPacks = []) {
   }
   const record =
     selection.valid[0] ??
-    records.find((candidate) => candidate.packId === "pairslash-plan" && candidate.isValid) ??
+    (preferredCatalogRecord
+      ? records.find((candidate) => candidate.packId === preferredCatalogRecord.id && candidate.isValid)
+      : null) ??
     records.find((candidate) => candidate.isValid) ??
     null;
   return {
@@ -881,7 +897,7 @@ function buildLifecycleEnvelope(action, repoRoot, options) {
   if (action !== "install" && options.packSetProvided) {
     throw new Error("--pack-set and --all are only available for install");
   }
-  const packs = action === "install" ? resolveInstallPacks(options) : options.packs;
+  const packs = action === "install" ? resolveInstallPacks(repoRoot, options) : options.packs;
   return action === "install"
     ? planInstall({ repoRoot, runtime: options.runtime, target: options.target, packs })
     : action === "update"

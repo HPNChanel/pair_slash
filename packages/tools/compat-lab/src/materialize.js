@@ -48,6 +48,16 @@ function copySourcePacks({ workspaceRoot, tempRoot, sourcePacks }) {
   }
 }
 
+function copyAuthoritativeSupportCatalog({ workspaceRoot, tempRoot }) {
+  const compatibilityRoot = join(workspaceRoot, "docs", "compatibility");
+  if (!exists(compatibilityRoot)) {
+    throw new Error("compat-lab requires docs/compatibility as authoritative support input");
+  }
+  cpSync(compatibilityRoot, join(tempRoot, "docs", "compatibility"), {
+    recursive: true,
+  });
+}
+
 function mutateManifestFiles({ fixture, tempRoot }) {
   if (typeof fixture.mutate_manifest !== "function") {
     return;
@@ -177,6 +187,10 @@ export function materializeCompatFixture({ repoRoot: workspaceRoot, fixtureId })
     workspaceRoot,
     tempRoot,
     sourcePacks: fixture.source_packs,
+  });
+  copyAuthoritativeSupportCatalog({
+    workspaceRoot,
+    tempRoot,
   });
   writeOverlayFiles(tempRoot, fixture.overlay_files);
   mutateManifestFiles({

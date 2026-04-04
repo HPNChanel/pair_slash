@@ -1,8 +1,8 @@
 # PairSlash Compatibility Matrix
 
-Generated from compat-lab metadata and deterministic release gates for PairSlash 0.4.0.
+Generated from docs/compatibility/runtime-surface-matrix.yaml and compat-lab metadata for PairSlash 0.4.0.
 
-This matrix is the public runtime-support source of truth for PairSlash today.
+This matrix is the public markdown rendering of the runtime-support catalog PairSlash consumes today.
 It is narrower than implementation truth and narrower than deterministic test
 coverage.
 

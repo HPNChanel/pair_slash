@@ -19,7 +19,7 @@ PairSlash is the trust layer for terminal-native AI workflows on exactly two run
 
 ### Implementation Truth
 
-Implementation truth is what the repo actually ships today in code, manifests, and deterministic checks. The authoritative implementation surfaces are `packs/core/*/pack.manifest.yaml`, `packages/core/spec-core/registry/packs.yaml`, `packages/tools/installer/`, `packages/tools/doctor/`, `packages/core/memory-engine/`, and `packages/tools/compat-lab/`. This layer proves that PairSlash has a narrow two-runtime installability and trust substrate with `/skills`, preview-first lifecycle commands, explicit memory write authority, and no-silent-fallback discipline.
+Implementation truth is what the repo actually ships today in code, manifests, and deterministic checks. The authoritative implementation surfaces are `packs/core/*/pack.manifest.yaml`, `packages/core/spec-core/src/pack-catalog.js`, `packages/tools/installer/`, `packages/tools/doctor/`, `packages/core/memory-engine/`, and `packages/tools/compat-lab/`. The optional compatibility shim at `packs/core/*/pack.trust.yaml` is downstream only, and the derived pack index at `packages/core/spec-core/registry/packs.yaml` is downstream only. This layer proves that PairSlash has a narrow two-runtime installability and trust substrate with `/skills`, preview-first lifecycle commands, explicit memory write authority, and no-silent-fallback discipline.
 
 ### Product-Validation Truth
 
@@ -27,11 +27,11 @@ Product-validation truth is governed only by `docs/validation/phase-3-5/verdict.
 
 ### Public-Claim Truth
 
-Public-claim truth is narrower than implementation truth. A public sentence is allowed only when it maps back to evidence class and source, stays inside `docs/releases/public-claim-policy.md`, stays inside `docs/releases/scoped-release-verdict.md`, stays inside the runtime-support boundary in `docs/compatibility/compatibility-matrix.md`, stays inside `docs/releases/legal-packaging-status.md`, and does not outrun current legal/package metadata. README wording, onboarding wording, release wording, and support wording are downstream only.
+Public-claim truth is narrower than implementation truth. A public sentence is allowed only when it maps back to evidence class and source, stays inside `docs/releases/public-claim-policy.md`, stays inside `docs/releases/scoped-release-verdict.md`, stays inside the runtime-support boundary in `docs/compatibility/runtime-surface-matrix.yaml`, stays inside `docs/releases/legal-packaging-status.md`, and does not outrun current legal/package metadata. README wording, onboarding wording, release wording, and support wording are downstream only.
 
 ### Runtime-Support Truth
 
-Runtime-support truth is lane-specific, not product-global. Public support labels come from `docs/compatibility/compatibility-matrix.md`. Promotion evidence is recorded through `docs/compatibility/runtime-verification.md` and `docs/compatibility/runtime-surface-matrix.yaml`. Current public support reality remains narrow: Codex CLI repo on macOS is `stable-tested`, GitHub Copilot CLI user on Linux is `degraded`, Windows lanes are `prep`, and Copilot prompt-mode direct invocation is `known-broken`.
+Runtime-support truth is lane-specific, not product-global. The machine-readable runtime-support catalog is `docs/compatibility/runtime-surface-matrix.yaml`, and `docs/compatibility/compatibility-matrix.md` is its public markdown rendering. Promotion evidence is recorded through `docs/compatibility/runtime-verification.md` and the same runtime-surface matrix. Current public support reality remains narrow: Codex CLI repo on macOS is `stable-tested`, GitHub Copilot CLI user on Linux is `degraded`, Windows lanes are `prep`, and Copilot prompt-mode direct invocation is `known-broken`.
 
 ### Release-Trust Truth
 
@@ -56,10 +56,14 @@ What must not be overclaimed: that tests equal market validation, that preview o
 | Phase truth | `docs/phase-12/authoritative-program-charter.md` | Owns the official stage sentence, truth-layer split, and authority hierarchy. |
 | Validation verdict | `docs/validation/phase-3-5/verdict.md` | Owns product-validation `GO/NO-GO` only. |
 | Public claim policy | `docs/releases/public-claim-policy.md` | Owns allowed and forbidden public wording rules, not the phase statement. |
-| Runtime support policy | `docs/compatibility/compatibility-matrix.md` | Owns public lane labels and their exact wording. |
+| Runtime support policy | `docs/compatibility/runtime-surface-matrix.yaml` | Owns machine-readable lane labels and promotion inputs consumed by doctor and compat-lab. |
+| Runtime support markdown | `docs/compatibility/compatibility-matrix.md` | Public rendering of the runtime-support catalog; never a competing source. |
 | Runtime promotion evidence | `docs/compatibility/runtime-verification.md` and `docs/compatibility/runtime-surface-matrix.yaml` | Own evidence class and promotion/demotion inputs for runtime labels. |
-| Pack catalog truth | `packs/core/*/pack.manifest.yaml` | Owns canonical core pack semantics. |
-| Pack catalog index | `packages/core/spec-core/registry/packs.yaml` | Derived index of the canonical pack manifests. |
+| Pack catalog truth | `packs/core/*/pack.manifest.yaml` | Own canonical core pack identity, maturity, support scope, runtime evidence mapping, and maintainer metadata. |
+| Pack catalog consumer API | `packages/core/spec-core/src/pack-catalog.js` | Resolves the authoritative pack catalog used by lint, doctor, docs rendering, and release-trust build. |
+| Pack catalog lifecycle conformance | `packages/core/spec-core/tests/manifest-v2.conformance.test.js` | Detects manifest/catalog drift, completeness regressions, and unsupported promotion claims. |
+| Pack trust shim | `packs/core/*/pack.trust.yaml` | Optional compatibility shim only; may not become a competing truth root. |
+| Pack catalog index | `packages/core/spec-core/registry/packs.yaml` | Derived index of the canonical pack catalog; may not become a competing truth root. |
 | Release checklist truth | `docs/releases/release-checklist-0.4.0.md` | Owns scoped release checklist and blockers. |
 | Legal/package status boundary | `docs/releases/legal-packaging-status.md` | Summarizes the current legal/package publicness boundary from manifests and legal files without replacing them. |
 | Legal/package truth | `package.json`, `packages/*/*/package.json`, `LICENSE`, `NOTICE` | Own legal/package publicness; absence is part of the truth. |
@@ -126,7 +130,7 @@ Rule: downstream files may restate the official phase sentence, but they must po
 - Release checklist must not treat deterministic tests, preview output, or doctor output as product-validation proof or live runtime support by themselves.
 - Compatibility wording must stay lane-specific and must not imply that support labels promote program phase or product maturity.
 - Validation docs must not become release verdicts, and release docs must not become product-validation verdicts.
-- Pack catalog or pack count changes must not widen public support wording unless the canonical manifests, derived registry, compatibility evidence, and release docs all stay aligned.
+- Pack catalog or pack count changes must not widen public support wording unless the canonical manifests, runtime-support catalog, optional trust shims, derived registry, and release docs all stay aligned.
 - `docs/releases/legal-packaging-status.md` must stay aligned with package metadata and the current presence or absence of `LICENSE` and `NOTICE`.
 - `.pairslash/project-memory/00-project-charter.yaml` may summarize and point, but it must not carry a competing narrative root.
 

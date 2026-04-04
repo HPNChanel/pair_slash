@@ -1,12 +1,27 @@
 import {
   findPublicCompatibilityLane,
   hasRecordedLiveTestedRange,
+  loadPublicSupportSnapshot,
   publicSupportLevelToDoctorLaneStatus,
   satisfiesRuntimeRange,
 } from "@pairslash/spec-core";
 
-export function resolveSupportLane({ runtime, target, os, runtimeVersion = null, runtimeAvailable = false }) {
-  const publicLane = findPublicCompatibilityLane({ runtime, target, os });
+export function resolveSupportLane({
+  repoRoot,
+  runtime,
+  target,
+  os,
+  runtimeVersion = null,
+  runtimeAvailable = false,
+}) {
+  const supportSnapshot = loadPublicSupportSnapshot(repoRoot);
+  const publicLane = findPublicCompatibilityLane({
+    repoRoot,
+    runtime,
+    target,
+    os,
+    snapshot: supportSnapshot,
+  });
 
   if (!publicLane && !["win32", "linux", "darwin"].includes(os)) {
     return {

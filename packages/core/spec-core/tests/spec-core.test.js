@@ -1,13 +1,16 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import YAML from "yaml";
 
 import {
   buildNormalizedIr,
+  buildPackCatalogIndex,
   buildManifestTemplate,
   discoverPackManifestPaths,
+  loadPublicSupportSnapshot,
+  loadPackCatalogRecords,
   loadPackManifest,
   loadPackManifestRecords,
   resolveManifestInstallSpec,
@@ -37,26 +40,44 @@ test("discoverPackManifestPaths finds phase 4 manifests", () => {
 });
 
 test("derived pack registry stays aligned with canonical core manifests", () => {
-  const registry = YAML.parse(
-    readFileSync(join(repoRoot, "packages", "core", "spec-core", "registry", "packs.yaml"), "utf8"),
-  );
-  const manifestPackIds = loadPackManifestRecords(repoRoot)
-    .filter((record) => !record.error && record.manifestPath.startsWith(join(repoRoot, "packs", "core")))
-    .map((record) => record.packId)
-    .sort((left, right) => left.localeCompare(right));
-  const registryPackIds = registry.packs
-    .map((entry) => entry.id)
-    .sort((left, right) => left.localeCompare(right));
+  const registry = YAML.parse(readFileSync(join(repoRoot, "packages", "core", "spec-core", "registry", "packs.yaml"), "utf8"));
+  const derivedIndex = buildPackCatalogIndex(repoRoot, {
+    version: registry.version,
+    lastUpdated: registry.last_updated,
+  });
 
-  assert.deepEqual(registryPackIds, manifestPackIds);
+  assert.deepEqual(registry, derivedIndex);
   assert.ok(
-    registry.packs.every(
-      (entry) =>
-        entry.metadata_file === `packs/core/${entry.id}/pack.manifest.yaml` &&
-        entry.skill_file === `packs/core/${entry.id}/SKILL.md` &&
-        entry.contract_file === `packs/core/${entry.id}/contract.md`,
-    ),
+    registry.packs.every((entry) => entry.release_channel && entry.support_scope),
   );
+});
+
+test("pack catalog records include core metadata and excluded advanced inventory", () => {
+  const records = loadPackCatalogRecords(repoRoot);
+  const planRecord = records.find((record) => record.id === "pairslash-plan" && record.catalog_scope === "core");
+  const advancedRecord = records.find((record) => record.id === "pairslash-retrieval-addon");
+
+  assert.ok(planRecord);
+  assert.equal(planRecord.maturity, "preview");
+  assert.equal(planRecord.support_scope, "core-supported");
+  assert.equal(planRecord.runtime_support.codex_cli.evidence_scope, "shared-matrix");
+  assert.equal(planRecord.promotion_ready, false);
+  assert.ok(advancedRecord);
+  assert.equal(advancedRecord.catalog_scope, "advanced");
+  assert.equal(advancedRecord.catalog_status, "excluded");
+});
+
+test("public support snapshot fails closed when runtime support data is missing", () => {
+  const fixture = createTempRepo();
+  try {
+    unlinkSync(join(fixture.tempRoot, "docs", "compatibility", "runtime-surface-matrix.yaml"));
+    assert.throws(
+      () => loadPublicSupportSnapshot(fixture.tempRoot),
+      /public-support-snapshot-missing/,
+    );
+  } finally {
+    fixture.cleanup();
+  }
 });
 
 test("pairslash-plan manifest v2 validates", () => {
@@ -85,6 +106,31 @@ test("pairslash-plan trust descriptor validates against manifest", () => {
   assert.deepEqual(validatePackTrustDescriptor(descriptor, { manifest }), []);
   assert.equal(descriptor.tier_claim, "core-maintained");
   assert.equal(descriptor.support_level_claim, "core-supported");
+});
+
+test("pack catalog resolves support metadata from manifest when trust shim is absent", () => {
+  const fixture = createTempRepo({ packs: ["pairslash-plan"] });
+  try {
+    updatePackManifest({
+      repoRoot: fixture.tempRoot,
+      packId: "pairslash-plan",
+      mutate(manifest) {
+        delete manifest.trust_descriptor;
+        return manifest;
+      },
+    });
+    const trustPath = join(fixture.tempRoot, "packs", "core", "pairslash-plan", "pack.trust.yaml");
+    unlinkSync(trustPath);
+    const records = loadPackCatalogRecords(fixture.tempRoot, { includeAdvanced: false });
+    const planRecord = records.find((record) => record.id === "pairslash-plan");
+    assert.ok(planRecord);
+    assert.equal(planRecord.trust_tier, "core-maintained");
+    assert.equal(planRecord.support_scope, "core-supported");
+    assert.equal(planRecord.trust_descriptor, null);
+    assert.deepEqual(planRecord.descriptor_errors, []);
+  } finally {
+    fixture.cleanup();
+  }
 });
 
 test("buildNormalizedIr produces deterministic canonical asset graph", () => {

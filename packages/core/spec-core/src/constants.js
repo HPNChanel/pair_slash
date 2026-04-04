@@ -290,3 +290,13 @@ export const PACK_SUPPORT_LEVELS = [
 export const PACK_RUNTIME_SUPPORT_STATUSES = ["supported", "partial", "unverified", "blocked"];
 export const PACK_PUBLISHER_CLASSES = ["core-product", "first-party", "external"];
 export const PACK_SIGNATURE_STATUSES = ["verified", "missing", "invalid", "local-dev"];
+export const PACK_CATALOG_CLASSES = ["core", "advanced", "docs-only"];
+export const PACK_DOCS_VISIBILITY = ["public", "maintainer", "hidden"];
+export const PACK_RELEASE_VISIBILITY = ["public", "appendix", "hidden"];
+export const PACK_DEPRECATION_STATUSES = ["active", "deprecated", "archived"];
+export const PACK_RUNTIME_EVIDENCE_KINDS = [
+  "lane-matrix",
+  "pack-runtime-live",
+  "deterministic",
+  "docs-only",
+];

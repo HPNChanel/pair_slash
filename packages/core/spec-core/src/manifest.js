@@ -206,6 +206,10 @@ export function buildManifestTemplate({
       direct_invocation: "unverified",
     },
   },
+  defaultRecommendation = id === "pairslash-plan",
+  supportLevelClaim = id === "pairslash-plan" ? "core-supported" : "official-preview",
+  tierClaim = id === "pairslash-plan" ? "core-maintained" : "first-party-official",
+  publisherClass = id === "pairslash-plan" ? "core-product" : "first-party",
 }) {
   const sortedInclude = include.slice().sort((left, right) => left.localeCompare(right));
   const sortedOverridePaths = overridePaths.slice().sort((left, right) => left.localeCompare(right));
@@ -304,6 +308,58 @@ export function buildManifestTemplate({
       example_invocation: "example-invocation.md",
       example_output: "example-output.md",
       validation_checklist: "validation-checklist.md",
+    },
+    catalog: {
+      pack_class: "core",
+      maturity: releaseChannel,
+      docs_visibility: "public",
+      default_discovery: true,
+      default_recommendation: defaultRecommendation,
+      release_visibility: releaseChannel === "canary" ? "appendix" : "public",
+      deprecation_status: "active",
+    },
+    support: {
+      publisher: {
+        publisher_id: "pairslash",
+        display_name: "PairSlash",
+        publisher_class: publisherClass,
+        contact: "SECURITY.md",
+      },
+      tier_claim: tierClaim,
+      support_level_claim: supportLevelClaim,
+      signature: {
+        required: true,
+        allow_local_unsigned: true,
+      },
+      runtime_support: Object.fromEntries(
+        SUPPORTED_RUNTIMES.map((runtime) => [
+          runtime,
+          {
+            status:
+              compatibility[runtime].canonical_picker === "blocked"
+                ? "blocked"
+                : compatibility[runtime].canonical_picker === "supported" &&
+                    compatibility[runtime].direct_invocation === "supported"
+                  ? "supported"
+                  : compatibility[runtime].canonical_picker === "unverified" &&
+                      compatibility[runtime].direct_invocation === "unverified"
+                    ? "unverified"
+                    : "partial",
+            evidence_ref: "docs/compatibility/runtime-surface-matrix.yaml",
+            evidence_kind: "lane-matrix",
+            required_for_promotion: true,
+          },
+        ]),
+      ),
+      policy_requirements: {
+        no_silent_fallback: true,
+        preview_required_for_mutation: true,
+        explicit_write_only_memory: true,
+      },
+      maintainers: {
+        owner: "pairslash",
+        contact: "SECURITY.md",
+      },
     },
     },
     { attachAliases: true },

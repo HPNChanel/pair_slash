@@ -275,4 +275,41 @@ docs_refs:
   example_invocation: example-invocation.md
   example_output: example-output.md
   validation_checklist: validation-checklist.md
+catalog:
+  pack_class: core
+  maturity: preview
+  docs_visibility: public
+  default_discovery: true
+  default_recommendation: false
+  release_visibility: public
+  deprecation_status: active
+support:
+  publisher:
+    publisher_id: pairslash
+    display_name: PairSlash
+    publisher_class: core-product
+    contact: SECURITY.md
+  tier_claim: core-maintained
+  support_level_claim: official-preview
+  signature:
+    required: true
+    allow_local_unsigned: true
+  runtime_support:
+    codex_cli:
+      status: partial
+      evidence_ref: docs/compatibility/runtime-surface-matrix.yaml
+      evidence_kind: lane-matrix
+      required_for_promotion: true
+    copilot_cli:
+      status: partial
+      evidence_ref: docs/compatibility/runtime-surface-matrix.yaml
+      evidence_kind: lane-matrix
+      required_for_promotion: true
+  policy_requirements:
+    no_silent_fallback: true
+    preview_required_for_mutation: true
+    explicit_write_only_memory: true
+  maintainers:
+    owner: pairslash
+    contact: SECURITY.md
 trust_descriptor: pack.trust.yaml

@@ -9,7 +9,11 @@ import {
   renderCompatibilityMatrixMarkdown,
   renderRuntimeSurfaceMatrixYaml,
 } from "@pairslash/compat-lab";
-import { stableJson, writeTextFile } from "@pairslash/spec-core";
+import {
+  renderPackCatalogIndexYaml,
+  stableJson,
+  writeTextFile,
+} from "@pairslash/spec-core";
 
 const SNAPSHOT_FIXTURES = [
   "repo-monorepo-workspaces",
@@ -57,11 +61,15 @@ function generatedArtifacts(repoRoot) {
 
   artifacts.push({
     path: resolve(repoRoot, "docs", "compatibility", "compatibility-matrix.md"),
-    content: renderCompatibilityMatrixMarkdown({ version }),
+    content: renderCompatibilityMatrixMarkdown({ repoRoot, version }),
   });
   artifacts.push({
     path: resolve(repoRoot, "docs", "compatibility", "runtime-surface-matrix.yaml"),
-    content: renderRuntimeSurfaceMatrixYaml({ version }),
+    content: renderRuntimeSurfaceMatrixYaml({ repoRoot, version }),
+  });
+  artifacts.push({
+    path: resolve(repoRoot, "packages", "core", "spec-core", "registry", "packs.yaml"),
+    content: renderPackCatalogIndexYaml(repoRoot, { version }),
   });
 
   return artifacts;

@@ -32,6 +32,8 @@ required:
   - uninstall_strategy
   - smoke_checks
   - docs_refs
+  - catalog
+  - support
 properties:
   kind:
     const: pack-manifest-v2
@@ -257,6 +259,162 @@ properties:
         type: string
       validation_checklist:
         type: string
+  catalog:
+    type: object
+    additionalProperties: false
+    required:
+      - pack_class
+      - maturity
+      - docs_visibility
+      - default_discovery
+      - default_recommendation
+      - release_visibility
+      - deprecation_status
+    properties:
+      pack_class:
+        type: string
+        enum:
+          - core
+          - advanced
+          - docs-only
+      maturity:
+        type: string
+        enum:
+          - stable
+          - preview
+          - canary
+      docs_visibility:
+        type: string
+        enum:
+          - public
+          - maintainer
+          - hidden
+      default_discovery:
+        type: boolean
+      default_recommendation:
+        type: boolean
+      release_visibility:
+        type: string
+        enum:
+          - public
+          - appendix
+          - hidden
+      deprecation_status:
+        type: string
+        enum:
+          - active
+          - deprecated
+          - archived
+      replacement_pack:
+        type:
+          - string
+          - "null"
+      backward_compatibility_notes:
+        type: array
+        items:
+          type: string
+          minLength: 1
+  support:
+    type: object
+    additionalProperties: false
+    required:
+      - publisher
+      - tier_claim
+      - support_level_claim
+      - signature
+      - runtime_support
+      - policy_requirements
+      - maintainers
+    properties:
+      publisher:
+        type: object
+        additionalProperties: false
+        required:
+          - publisher_id
+          - display_name
+          - publisher_class
+          - contact
+        properties:
+          publisher_id:
+            type: string
+            minLength: 1
+          display_name:
+            type: string
+            minLength: 1
+          publisher_class:
+            type: string
+            enum:
+              - core-product
+              - first-party
+              - external
+          contact:
+            type: string
+            minLength: 1
+      tier_claim:
+        type: string
+        enum:
+          - core-maintained
+          - first-party-official
+          - verified-external
+          - local-dev
+          - unverified-external
+      support_level_claim:
+        type: string
+        enum:
+          - core-supported
+          - official-preview
+          - publisher-verified
+          - local-dev
+          - unsupported
+      signature:
+        type: object
+        additionalProperties: false
+        required:
+          - required
+          - allow_local_unsigned
+        properties:
+          required:
+            type: boolean
+          allow_local_unsigned:
+            type: boolean
+      runtime_support:
+        type: object
+        additionalProperties: false
+        required:
+          - codex_cli
+          - copilot_cli
+        properties:
+          codex_cli:
+            $ref: "#/$defs/supportRuntime"
+          copilot_cli:
+            $ref: "#/$defs/supportRuntime"
+      policy_requirements:
+        type: object
+        additionalProperties: false
+        required:
+          - no_silent_fallback
+          - preview_required_for_mutation
+          - explicit_write_only_memory
+        properties:
+          no_silent_fallback:
+            const: true
+          preview_required_for_mutation:
+            const: true
+          explicit_write_only_memory:
+            const: true
+      maintainers:
+        type: object
+        additionalProperties: false
+        required:
+          - owner
+          - contact
+        properties:
+          owner:
+            type: string
+            minLength: 1
+          contact:
+            type: string
+            minLength: 1
   trust_descriptor:
     type: string
 
@@ -507,3 +665,32 @@ $defs:
           - preview_update
           - preview_uninstall
           - doctor
+  supportRuntime:
+    type: object
+    additionalProperties: false
+    required:
+      - status
+      - evidence_ref
+      - evidence_kind
+      - required_for_promotion
+    properties:
+      status:
+        type: string
+        enum:
+          - supported
+          - partial
+          - unverified
+          - blocked
+      evidence_ref:
+        type:
+          - string
+          - "null"
+      evidence_kind:
+        type: string
+        enum:
+          - lane-matrix
+          - pack-runtime-live
+          - deterministic
+          - docs-only
+      required_for_promotion:
+        type: boolean

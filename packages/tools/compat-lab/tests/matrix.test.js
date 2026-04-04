@@ -13,6 +13,7 @@ import { repoRoot } from "../../../../tests/compat-lab-helpers.js";
 
 test("compatibility matrix artifact exposes public support semantics", () => {
   const artifact = buildCompatibilityMatrixArtifact({
+    repoRoot,
     version: "0.4.0",
   });
   assert.equal(artifact.runtime_lanes.length, 4);
@@ -25,9 +26,11 @@ test("compatibility matrix artifact exposes public support semantics", () => {
 
 test("generated compatibility docs stay in sync with committed artifacts", () => {
   const markdown = renderCompatibilityMatrixMarkdown({
+    repoRoot,
     version: "0.4.0",
   });
   const yaml = renderRuntimeSurfaceMatrixYaml({
+    repoRoot,
     version: "0.4.0",
   });
   assert.equal(

@@ -181,6 +181,67 @@ function isLikelyRemoteRef(value) {
   return typeof value === "string" && /^[a-z]+:\/\//i.test(value);
 }
 
+function buildManifestSupportDescriptor(manifest) {
+  if (!manifest?.support) {
+    return null;
+  }
+  return {
+    kind: "pack-trust-descriptor",
+    schema_version: PACK_TRUST_DESCRIPTOR_SCHEMA_VERSION,
+    pack_name: manifest.pack?.id ?? manifest.pack_name ?? null,
+    pack_version: manifest.pack_version ?? null,
+    publisher: clone(manifest.support.publisher ?? {}),
+    tier_claim: manifest.support.tier_claim ?? null,
+    support_level_claim: manifest.support.support_level_claim ?? null,
+    signature: clone(manifest.support.signature ?? {}),
+    runtime_support: Object.fromEntries(
+      SUPPORTED_RUNTIMES.map((runtime) => [
+        runtime,
+        clone(manifest.support.runtime_support?.[runtime] ?? {}),
+      ]),
+    ),
+    policy_requirements: clone(manifest.support.policy_requirements ?? {}),
+  };
+}
+
+function compareDescriptorToManifestSupport(descriptor, manifestDescriptor) {
+  if (!descriptor || !manifestDescriptor) {
+    return [];
+  }
+  const mismatches = [];
+  for (const field of [
+    "pack_name",
+    "pack_version",
+    "tier_claim",
+    "support_level_claim",
+  ]) {
+    if ((descriptor?.[field] ?? null) !== (manifestDescriptor?.[field] ?? null)) {
+      mismatches.push(`trust-descriptor:drift:${field}`);
+    }
+  }
+  for (const field of ["publisher_id", "display_name", "publisher_class", "contact"]) {
+    if ((descriptor?.publisher?.[field] ?? null) !== (manifestDescriptor?.publisher?.[field] ?? null)) {
+      mismatches.push(`trust-descriptor:drift:publisher.${field}`);
+    }
+  }
+  for (const field of ["required", "allow_local_unsigned"]) {
+    if ((descriptor?.signature?.[field] ?? null) !== (manifestDescriptor?.signature?.[field] ?? null)) {
+      mismatches.push(`trust-descriptor:drift:signature.${field}`);
+    }
+  }
+  for (const runtime of SUPPORTED_RUNTIMES) {
+    for (const field of ["status", "evidence_ref"]) {
+      if (
+        (descriptor?.runtime_support?.[runtime]?.[field] ?? null) !==
+        (manifestDescriptor?.runtime_support?.[runtime]?.[field] ?? null)
+      ) {
+        mismatches.push(`trust-descriptor:drift:${runtime}.${field}`);
+      }
+    }
+  }
+  return mismatches;
+}
+
 export function resolvePackTrustDescriptorPath(manifestPath, manifest) {
   const manifestDir = dirname(resolve(manifestPath));
   if (typeof manifest?.trust_descriptor === "string" && manifest.trust_descriptor.trim() !== "") {
@@ -191,38 +252,101 @@ export function resolvePackTrustDescriptorPath(manifestPath, manifest) {
 }
 
 export function loadPackTrustDescriptorRecord({ manifestPath, manifest }) {
+  const manifestDescriptor = buildManifestSupportDescriptor(manifest);
   const descriptorPath = resolvePackTrustDescriptorPath(manifestPath, manifest);
+  if (manifestDescriptor) {
+    if (!descriptorPath) {
+      return {
+        descriptorSource: "manifest",
+        descriptorPath: null,
+        evidenceBasePath: manifestPath,
+        descriptorDigest: null,
+        descriptor: manifestDescriptor,
+        errors: [],
+        shimErrors: [],
+      };
+    }
+    if (!exists(descriptorPath)) {
+      return {
+        descriptorSource: "manifest",
+        descriptorPath,
+        evidenceBasePath: manifestPath,
+        descriptorDigest: null,
+        descriptor: manifestDescriptor,
+        errors: [],
+        shimErrors: [`trust-descriptor:not-found:${relativeFromRoot(dirname(descriptorPath), descriptorPath)}`],
+      };
+    }
+    try {
+      const shimDescriptor = loadStructuredFile(descriptorPath);
+      const shimErrors = [
+        ...validatePackTrustDescriptor(shimDescriptor, { manifest }),
+        ...compareDescriptorToManifestSupport(shimDescriptor, manifestDescriptor),
+      ];
+      return {
+        descriptorSource: "manifest",
+        descriptorPath,
+        evidenceBasePath: manifestPath,
+        descriptorDigest: sha256(readFileNormalized(descriptorPath)),
+        descriptor: manifestDescriptor,
+        errors: [],
+        shimErrors,
+      };
+    } catch (error) {
+      return {
+        descriptorSource: "manifest",
+        descriptorPath,
+        evidenceBasePath: manifestPath,
+        descriptorDigest: null,
+        descriptor: manifestDescriptor,
+        errors: [],
+        shimErrors: [`trust-descriptor:invalid:${error.message}`],
+      };
+    }
+  }
   if (!descriptorPath) {
     return {
+      descriptorSource: "descriptor",
       descriptorPath: null,
+      evidenceBasePath: null,
       descriptorDigest: null,
       descriptor: null,
       errors: ["trust-descriptor:missing"],
+      shimErrors: [],
     };
   }
   if (!exists(descriptorPath)) {
     return {
+      descriptorSource: "descriptor",
       descriptorPath,
+      evidenceBasePath: descriptorPath,
       descriptorDigest: null,
       descriptor: null,
       errors: [`trust-descriptor:not-found:${relativeFromRoot(dirname(descriptorPath), descriptorPath)}`],
+      shimErrors: [],
     };
   }
   try {
     const descriptor = loadStructuredFile(descriptorPath);
     const errors = validatePackTrustDescriptor(descriptor, { manifest });
     return {
+      descriptorSource: "descriptor",
       descriptorPath,
+      evidenceBasePath: descriptorPath,
       descriptorDigest: sha256(readFileNormalized(descriptorPath)),
       descriptor,
       errors,
+      shimErrors: [],
     };
   } catch (error) {
     return {
+      descriptorSource: "descriptor",
       descriptorPath,
+      evidenceBasePath: descriptorPath,
       descriptorDigest: null,
       descriptor: null,
       errors: [`trust-descriptor:invalid:${error.message}`],
+      shimErrors: [],
     };
   }
 }
@@ -283,7 +407,7 @@ function compareSemver(left, right) {
   return 0;
 }
 
-function deriveManifestRuntimeSupportStatus(manifest, runtime) {
+export function deriveManifestRuntimeSupportStatus(manifest, runtime) {
   const compatibility = manifest?.runtime_bindings?.[runtime]?.compatibility ?? {};
   const canonicalStatus = compatibility.canonical_picker ?? "unverified";
   const directStatus = compatibility.direct_invocation ?? "unverified";
@@ -299,7 +423,7 @@ function deriveManifestRuntimeSupportStatus(manifest, runtime) {
   return "partial";
 }
 
-function resolveEvidencePresence({ repoRoot, descriptorPath, evidenceRef }) {
+export function resolveRuntimeEvidencePresence({ repoRoot, descriptorPath, evidenceRef }) {
   if (typeof evidenceRef !== "string" || evidenceRef.trim() === "") {
     return false;
   }
@@ -314,17 +438,21 @@ function resolveEvidencePresence({ repoRoot, descriptorPath, evidenceRef }) {
   return candidatePaths.some((candidatePath) => exists(candidatePath));
 }
 
-function evaluateRuntimeSupportClaim({ repoRoot, manifest, runtime, descriptorRecord }) {
+export function evaluateRuntimeSupportClaim({ repoRoot, manifest, runtime, descriptorRecord }) {
   const manifestStatus = deriveManifestRuntimeSupportStatus(manifest, runtime);
   const declaredStatus = normalizeRuntimeSupportStatus(
     descriptorRecord?.descriptor?.runtime_support?.[runtime]?.status,
     manifestStatus,
   );
   const evidenceRef = descriptorRecord?.descriptor?.runtime_support?.[runtime]?.evidence_ref ?? null;
-  const evidencePresent = descriptorRecord?.descriptorPath
-    ? resolveEvidencePresence({
+  const evidenceKind = descriptorRecord?.descriptor?.runtime_support?.[runtime]?.evidence_kind ?? "lane-matrix";
+  const requiredForPromotion =
+    descriptorRecord?.descriptor?.runtime_support?.[runtime]?.required_for_promotion ?? true;
+  const evidenceBasePath = descriptorRecord?.evidenceBasePath ?? descriptorRecord?.descriptorPath ?? null;
+  const evidencePresent = evidenceBasePath
+    ? resolveRuntimeEvidencePresence({
         repoRoot,
-        descriptorPath: descriptorRecord.descriptorPath,
+        descriptorPath: evidenceBasePath,
         evidenceRef,
       })
     : false;
@@ -353,6 +481,8 @@ function evaluateRuntimeSupportClaim({ repoRoot, manifest, runtime, descriptorRe
     declared_status: declaredStatus,
     resolved_status: resolvedStatus,
     evidence_ref: evidenceRef,
+    evidence_kind: evidenceKind,
+    required_for_promotion: requiredForPromotion,
     evidence_present: evidencePresent,
     policy_action: policyAction,
     reasons,

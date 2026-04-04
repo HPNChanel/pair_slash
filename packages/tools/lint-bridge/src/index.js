@@ -19,7 +19,7 @@ import {
   POLICY_VERDICT_SCHEMA_VERSION,
   SUPPORTED_RUNTIMES,
   SUPPORTED_TARGETS,
-  loadPackTrustDescriptorRecord,
+  loadPackCatalogRecords,
   loadPackManifestRecords,
   normalizeRuntime,
   normalizeTarget,
@@ -514,8 +514,10 @@ function applyRuntimeSupportRule(entry, checks, target) {
     return;
   }
   const degraded = [];
+  const missingEvidence = [];
   for (const runtime of SUPPORTED_RUNTIMES) {
     const compatibility = entry.manifest.runtime_bindings?.[runtime]?.compatibility ?? {};
+    const supportEvidenceRef = entry.manifest.support?.runtime_support?.[runtime]?.evidence_ref;
     for (const field of ["canonical_picker", "direct_invocation"]) {
       const value = compatibility[field];
       if (value === "blocked") {
@@ -533,6 +535,9 @@ function applyRuntimeSupportRule(entry, checks, target) {
         );
       } else if (value === "unverified") {
         degraded.push(`${runtime}.${field}=unverified`);
+        if (typeof supportEvidenceRef !== "string" || supportEvidenceRef.trim() === "") {
+          missingEvidence.push(`${runtime}.${field}`);
+        }
       }
     }
   }
@@ -556,6 +561,19 @@ function applyRuntimeSupportRule(entry, checks, target) {
         path: entry.manifestPath,
         message: `runtime support has degraded/unverified surfaces: ${degraded.join(", ")}`,
         remediation: "Keep degraded behavior explicit and tracked before claiming fully supported runtime surfaces.",
+      }),
+    );
+  }
+  if (missingEvidence.length > 0) {
+    checks.push(
+      createCheck({
+        code: "LINT-RUNTIME-006",
+        result: "warning",
+        packId: entry.packId,
+        target,
+        path: entry.manifestPath,
+        message: `unverified runtime surfaces are missing support evidence_ref records: ${missingEvidence.join(", ")}`,
+        remediation: "Add support.runtime_support.<runtime>.evidence_ref for each runtime with unverified surfaces.",
       }),
     );
   }
@@ -703,82 +721,76 @@ function applyReferenceRule(repoRoot, entry, checks, target) {
   );
 }
 
-function deriveManifestRuntimeSupport(entry, runtime) {
-  const compatibility = entry.manifest.runtime_bindings?.[runtime]?.compatibility ?? {};
-  const canonicalStatus = compatibility.canonical_picker ?? "unverified";
-  const directStatus = compatibility.direct_invocation ?? "unverified";
-  if (canonicalStatus === "blocked") {
-    return "blocked";
-  }
-  if (canonicalStatus === "supported" && directStatus === "supported") {
-    return "supported";
-  }
-  if (canonicalStatus === "unverified" && directStatus === "unverified") {
-    return "unverified";
-  }
-  return "partial";
-}
-
-function applyTrustDescriptorRule(repoRoot, entry, checks, target) {
-  const descriptorRecord = loadPackTrustDescriptorRecord({
-    manifestPath: entry.manifestPath,
-    manifest: entry.manifest,
-  });
-  if (!descriptorRecord.descriptorPath) {
-    checks.push(
-      createCheck({
-        code: "LINT-TRUST-001",
-        result: "warning",
-        packId: entry.packId,
-        target,
-        path: entry.manifestPath,
-        message: "trust descriptor is missing; pack trust will downgrade to local-dev or verified-external only",
-        remediation: "Add pack.trust.yaml and reference it through trust_descriptor.",
-      }),
-    );
-    return;
-  }
-  if (descriptorRecord.errors.length > 0) {
+function applyTrustDescriptorRule(catalogEntry, entry, checks, target) {
+  if (!catalogEntry) {
     checks.push(
       createCheck({
         code: "LINT-TRUST-001",
         result: "error",
         packId: entry.packId,
         target,
-        path: descriptorRecord.descriptorPath,
-        message: `trust descriptor is invalid: ${descriptorRecord.errors.join("; ")}`,
-        remediation: "Fix pack.trust.yaml so publisher, tier, support claims, and manifest alignment are coherent.",
+        path: entry.manifestPath,
+        message: "resolved catalog entry is missing for this manifest",
+        remediation: "Fix pack catalog resolution so lint, doctor, docs, and release consume the same pack record.",
+      }),
+    );
+    return;
+  }
+  if (!catalogEntry.support_metadata_complete) {
+    checks.push(
+      createCheck({
+        code: "LINT-TRUST-001",
+        result: "error",
+        packId: entry.packId,
+        target,
+        path: entry.manifestPath,
+        message: "pack manifest is missing authoritative maturity or support metadata",
+        remediation: "Populate manifest catalog/support metadata before shipping the pack.",
+      }),
+    );
+    return;
+  }
+  if ((catalogEntry.descriptor_errors ?? []).length > 0) {
+    checks.push(
+      createCheck({
+        code: "LINT-TRUST-001",
+        result: "error",
+        packId: entry.packId,
+        target,
+        path: entry.manifestPath,
+        message: `authoritative support metadata is invalid: ${catalogEntry.descriptor_errors.join("; ")}`,
+        remediation: "Fix manifest support metadata so publisher, tier, support claims, and runtime evidence stay coherent.",
       }),
     );
     return;
   }
 
-  const descriptor = descriptorRecord.descriptor;
   const issues = [];
   const warnings = [];
   if (
     entry.manifest.memory_permissions?.global_project_memory === "write" &&
-    descriptor.tier_claim !== "core-maintained"
+    catalogEntry.trust_tier !== "core-maintained"
   ) {
     issues.push("global memory write requires tier_claim core-maintained");
   }
   if (
-    ["core-maintained", "first-party-official"].includes(descriptor.tier_claim) &&
-    descriptor.publisher?.publisher_id !== "pairslash"
+    ["core-maintained", "first-party-official"].includes(catalogEntry.trust_tier) &&
+    catalogEntry.publisher_id !== "pairslash"
   ) {
     issues.push("first-party tiers require publisher_id pairslash");
   }
   if (
-    descriptor.tier_claim === "verified-external" &&
-    descriptor.publisher?.publisher_id === "pairslash"
+    catalogEntry.trust_tier === "verified-external" &&
+    catalogEntry.publisher_id === "pairslash"
   ) {
     issues.push("verified-external tier must not be used by pairslash-published packs");
   }
 
   for (const runtime of SUPPORTED_RUNTIMES) {
-    const manifestStatus = deriveManifestRuntimeSupport(entry, runtime);
-    const declared = descriptor.runtime_support?.[runtime]?.status ?? "unverified";
-    const evidenceRef = descriptor.runtime_support?.[runtime]?.evidence_ref ?? null;
+    const runtimeSupport = catalogEntry.runtime_support?.[runtime];
+    const manifestStatus = runtimeSupport?.manifest_status ?? "unverified";
+    const declared = runtimeSupport?.declared_status ?? "unverified";
+    const evidenceRef = runtimeSupport?.evidence_ref ?? null;
     if (["supported", "partial"].includes(declared) && (!evidenceRef || evidenceRef.trim() === "")) {
       issues.push(`${runtime} support claim ${declared} is missing evidence_ref`);
     }
@@ -787,6 +799,16 @@ function applyTrustDescriptorRule(repoRoot, entry, checks, target) {
     } else if (manifestStatus === "unverified" && declared === "supported") {
       warnings.push(`${runtime} support claim is stronger than manifest compatibility evidence`);
     }
+    if (
+      ["supported", "partial"].includes(declared) &&
+      runtimeSupport?.evidence_scope === "shared-matrix" &&
+      !runtimeSupport?.promotion_evidence_ready
+    ) {
+      warnings.push(`${runtime} support claim is backed only by shared matrix evidence, not pack-scoped runtime proof`);
+    }
+  }
+  if ((catalogEntry.descriptor_shim_errors ?? []).length > 0) {
+    warnings.push(`pack.trust.yaml shim drift: ${catalogEntry.descriptor_shim_errors.join("; ")}`);
   }
 
   if (issues.length > 0) {
@@ -796,7 +818,7 @@ function applyTrustDescriptorRule(repoRoot, entry, checks, target) {
         result: "error",
         packId: entry.packId,
         target,
-        path: descriptorRecord.descriptorPath,
+        path: entry.manifestPath,
         message: issues.join("; "),
         remediation: "Lower the trust/support claim or add the missing evidence before shipping the pack.",
       }),
@@ -810,9 +832,9 @@ function applyTrustDescriptorRule(repoRoot, entry, checks, target) {
         result: "warning",
         packId: entry.packId,
         target,
-        path: descriptorRecord.descriptorPath,
+        path: catalogEntry.trust_descriptor ?? entry.manifestPath,
         message: warnings.join("; "),
-        remediation: "Keep runtime support wording bounded by manifest compatibility and recorded evidence.",
+        remediation: "Keep manifest support metadata authoritative, and keep pack.trust.yaml aligned if the shim is still committed.",
       }),
     );
   }
@@ -823,8 +845,8 @@ function applyTrustDescriptorRule(repoRoot, entry, checks, target) {
       result: "pass",
       packId: entry.packId,
       target,
-      path: descriptorRecord.descriptorPath,
-      message: "trust descriptor is present and coherent with manifest trust boundaries",
+      path: entry.manifestPath,
+      message: "authoritative support metadata is coherent with the resolved pack catalog",
     }),
   );
 }
@@ -1538,6 +1560,8 @@ export function runLintBridge({
   const { runtimeScope, runtimes } = normalizeRuntimeScope(runtime);
   const checks = [];
   const policyVerdicts = [];
+  const catalogEntries = loadPackCatalogRecords(repoRoot, { includeAdvanced: false });
+  const catalogByPackId = new Map(catalogEntries.map((entry) => [entry.id, entry]));
   const parsedEntries = parseManifestEntries(repoRoot);
   const selectedEntries = selectManifestEntries(parsedEntries, packs, checks, normalizedTarget);
   const validEntries = [];
@@ -1564,7 +1588,7 @@ export function runLintBridge({
     applyRuntimeSupportRule(entry, checks, normalizedTarget);
     applyNamingRule(entry, checks, normalizedTarget);
     applyReferenceRule(repoRoot, entry, checks, normalizedTarget);
-    applyTrustDescriptorRule(repoRoot, entry, checks, normalizedTarget);
+    applyTrustDescriptorRule(catalogByPackId.get(entry.packId), entry, checks, normalizedTarget);
     applyToolsRule(entry, checks, normalizedTarget);
     applyMcpRule(entry, checks, normalizedTarget);
     applyMemoryRule(entry, checks, normalizedTarget);

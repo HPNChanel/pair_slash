@@ -17,11 +17,13 @@ import {
   SUPPORTED_TARGETS,
   SUPPORTED_RUNTIMES,
   exists,
+  loadPackCatalogRecords,
   loadPackManifestRecords,
   normalizeRuntime,
   normalizeTarget,
   readFileNormalized,
   relativeFrom,
+  selectDefaultCatalogPack,
   selectPackManifestRecords,
   sha256,
   validateDoctorReport,
@@ -363,6 +365,7 @@ function buildBaseContext({
     runtimeSelectionOverride,
   );
   const adapter = adapterOverride ?? getAdapter(normalizedRuntime);
+  const catalogRecords = loadPackCatalogRecords(repoRoot, { includeAdvanced: false });
   const runtimePresence = Object.fromEntries(
     SUPPORTED_RUNTIMES.map((supportedRuntime) => {
       if (supportedRuntime === normalizedRuntime) {
@@ -397,6 +400,7 @@ function buildBaseContext({
 
   const detection = runtimePresence[normalizedRuntime];
   const supportLane = resolveSupportLane({
+    repoRoot,
     runtime: normalizedRuntime,
     target: normalizedTarget,
     os,
@@ -423,6 +427,7 @@ function buildBaseContext({
     stateError,
     shell,
     shellProfileCandidates: detectShellProfileCandidates(shell),
+    catalogRecords,
     manifestRecords,
     selectedManifests: manifestSelection.valid,
     invalidSelectedManifests: manifestSelection.invalid,
@@ -2269,26 +2274,26 @@ function buildRecentTraceSummary(repoRoot, runtime, target) {
 
 function preferredPackId(context) {
   const selectedPackIds = context.selectedManifests.map((record) => record.packId);
-  if (selectedPackIds.includes("pairslash-plan")) {
-    return "pairslash-plan";
+  const defaultCatalogRecord = selectDefaultCatalogPack(context.catalogRecords ?? []);
+  if (defaultCatalogRecord && selectedPackIds.includes(defaultCatalogRecord.id)) {
+    return defaultCatalogRecord.id;
   }
   if (selectedPackIds.length > 0) {
     return selectedPackIds[0];
   }
   const installedPackIds = (context.state?.packs ?? []).map((pack) => pack.id);
-  if (installedPackIds.includes("pairslash-plan")) {
-    return "pairslash-plan";
+  if (defaultCatalogRecord && installedPackIds.includes(defaultCatalogRecord.id)) {
+    return defaultCatalogRecord.id;
   }
   if (installedPackIds.length > 0) {
     return installedPackIds[0];
   }
-  const availablePackIds = context.manifestRecords
-    .filter((record) => !record.error)
-    .map((record) => record.packId)
-    .sort((left, right) => left.localeCompare(right));
-  if (availablePackIds.includes("pairslash-plan")) {
-    return "pairslash-plan";
+  if (defaultCatalogRecord) {
+    return defaultCatalogRecord.id;
   }
+  const availablePackIds = context.catalogRecords
+    .map((record) => record.id)
+    .sort((left, right) => left.localeCompare(right));
   return availablePackIds[0] ?? null;
 }
 

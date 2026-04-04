@@ -1,8 +1,5 @@
 import {
-  PUBLIC_COMPATIBILITY_LANES,
-  PUBLIC_KNOWN_ISSUES,
-  PUBLIC_RELEASE_GATES,
-  PUBLIC_SUPPORT_POLICY,
+  loadPublicSupportSnapshot,
   stableYaml,
 } from "@pairslash/spec-core";
 
@@ -18,20 +15,24 @@ function formatTable(headers, rows) {
   return [headerLine, separatorLine, ...rowLines].join("\n");
 }
 
-export function buildCompatibilityMatrixArtifact({ version = "0.4.0" } = {}) {
+export function buildCompatibilityMatrixArtifact({
+  repoRoot = process.cwd(),
+  version = "0.4.0",
+} = {}) {
   const fixtures = listCompatFixtures();
+  const supportSnapshot = loadPublicSupportSnapshot(repoRoot, { version });
   return {
-    version,
+    version: supportSnapshot.version ?? version,
     generated_from: {
       fixtures: fixtures.map((fixture) => fixture.id),
       smoke_lanes: DEFAULT_SMOKE_LANES.map((lane) => lane.id),
       acceptance_lanes: DEFAULT_ACCEPTANCE_LANES.map((lane) => lane.id),
       evals: DEFAULT_COMPAT_EVALS.map((entry) => entry.id),
     },
-    support_policy: { ...PUBLIC_SUPPORT_POLICY },
-    runtime_lanes: PUBLIC_COMPATIBILITY_LANES.map((lane) => ({ ...lane })),
-    known_issues: PUBLIC_KNOWN_ISSUES.map((issue) => ({ ...issue })),
-    release_gates: PUBLIC_RELEASE_GATES.map((gate) => ({ ...gate })),
+    support_policy: { ...supportSnapshot.support_policy },
+    runtime_lanes: supportSnapshot.runtime_lanes.map((lane) => ({ ...lane })),
+    known_issues: supportSnapshot.known_issues.map((issue) => ({ ...issue })),
+    release_gates: supportSnapshot.release_gates.map((gate) => ({ ...gate })),
     fixture_catalog: fixtures.map((fixture) => ({
       id: fixture.id,
       repo_archetype: fixture.repo_archetype,
@@ -42,8 +43,11 @@ export function buildCompatibilityMatrixArtifact({ version = "0.4.0" } = {}) {
   };
 }
 
-export function renderCompatibilityMatrixMarkdown({ version = "0.4.0" } = {}) {
-  const artifact = buildCompatibilityMatrixArtifact({ version });
+export function renderCompatibilityMatrixMarkdown({
+  repoRoot = process.cwd(),
+  version = "0.4.0",
+} = {}) {
+  const artifact = buildCompatibilityMatrixArtifact({ repoRoot, version });
   const laneTable = formatTable(
     [
       "Runtime",
@@ -99,9 +103,9 @@ export function renderCompatibilityMatrixMarkdown({ version = "0.4.0" } = {}) {
   return [
     "# PairSlash Compatibility Matrix",
     "",
-    `Generated from compat-lab metadata and deterministic release gates for PairSlash ${artifact.version}.`,
+    `Generated from docs/compatibility/runtime-surface-matrix.yaml and compat-lab metadata for PairSlash ${artifact.version}.`,
     "",
-    "This matrix is the public runtime-support source of truth for PairSlash today.",
+    "This matrix is the public markdown rendering of the runtime-support catalog PairSlash consumes today.",
     "It is narrower than implementation truth and narrower than deterministic test",
     "coverage.",
     "",
@@ -128,6 +132,10 @@ export function renderCompatibilityMatrixMarkdown({ version = "0.4.0" } = {}) {
     "",
     "These labels are runtime-support truth only.",
     "They do not promote product-validation status, program phase, or release scope by themselves.",
+    "They also do not change repository licensing, `NOTICE` posture, or package",
+    "publishability. Legal/package truth stays with",
+    "`docs/releases/legal-packaging-status.md`, root/package manifests, `LICENSE`,",
+    "and `NOTICE`.",
     "",
     "## Runtime lanes",
     "",
@@ -155,6 +163,9 @@ export function renderCompatibilityMatrixMarkdown({ version = "0.4.0" } = {}) {
   ].join("\n");
 }
 
-export function renderRuntimeSurfaceMatrixYaml({ version = "0.4.0" } = {}) {
-  return stableYaml(buildCompatibilityMatrixArtifact({ version }));
+export function renderRuntimeSurfaceMatrixYaml({
+  repoRoot = process.cwd(),
+  version = "0.4.0",
+} = {}) {
+  return stableYaml(buildCompatibilityMatrixArtifact({ repoRoot, version }));
 }

@@ -109,6 +109,38 @@ test("doctor reports structured environment summary for codex repo lane", () => 
   }
 });
 
+test("doctor first workflow guidance honors catalog default recommendation", () => {
+  const fixture = createTempRepo({ packs: ["pairslash-plan", "pairslash-review"] });
+  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  try {
+    updatePackManifest({
+      repoRoot: fixture.tempRoot,
+      packId: "pairslash-plan",
+      mutate(manifest) {
+        manifest.catalog.default_recommendation = false;
+        return manifest;
+      },
+    });
+    updatePackManifest({
+      repoRoot: fixture.tempRoot,
+      packId: "pairslash-review",
+      mutate(manifest) {
+        manifest.catalog.default_recommendation = true;
+        return manifest;
+      },
+    });
+    const report = runDoctor({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      target: "repo",
+    });
+    assert.equal(report.first_workflow_guidance.recommended_pack_id, "pairslash-review");
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
 test("doctor surfaces installed pack trust posture from install state", () => {
   const fixture = createTempRepo();
   const runtime = installFakeRuntime({ codexVersion: "0.116.0" });

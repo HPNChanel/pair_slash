@@ -83,7 +83,8 @@
     "target": "repo",
     "warnings": [
       "lint-warning:LINT-RUNTIME-004:pairslash-devops:shared: runtime support has degraded/unverified surfaces: codex_cli.canonical_picker=unverified, codex_cli.direct_invocation=unverified, copilot_cli.canonical_picker=unverified",
-      "lint-warning:LINT-RUNTIME-004:pairslash-memory-write-global:shared: runtime support has degraded/unverified surfaces: codex_cli.direct_invocation=unverified, copilot_cli.direct_invocation=unverified"
+      "lint-warning:LINT-RUNTIME-004:pairslash-memory-write-global:shared: runtime support has degraded/unverified surfaces: codex_cli.direct_invocation=unverified, copilot_cli.direct_invocation=unverified",
+      "lint-warning:LINT-TRUST-003:pairslash-memory-write-global:shared: codex_cli support claim is backed only by shared matrix evidence, not pack-scoped runtime proof; copilot_cli support claim is backed only by shared matrix evidence, not pack-scoped runtime proof"
     ]
   },
   "kind": "compat-preview-policy-golden",

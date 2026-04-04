@@ -6,7 +6,8 @@ import { compileCodexPack } from "@pairslash/compiler-codex";
 import { compileCopilotPack } from "@pairslash/compiler-copilot";
 import {
   buildPackMetadataEnvelope,
-  loadPackManifestRecords,
+  loadPackCatalogRecords,
+  loadPackManifest,
   stableJson,
   writeReleaseTrustBundle,
 } from "@pairslash/spec-core";
@@ -87,19 +88,28 @@ function detectReleaseId(repoRoot) {
 }
 
 function selectManifestRecords(repoRoot, requestedPacks) {
-  const records = loadPackManifestRecords(repoRoot)
-    .filter((record) => record.isValid)
-    .sort((left, right) => left.packId.localeCompare(right.packId));
+  const records = loadPackCatalogRecords(repoRoot, { includeAdvanced: false })
+    .filter((record) => record.catalog_scope === "core")
+    .sort((left, right) => left.id.localeCompare(right.id));
   if (requestedPacks.length === 0) {
-    return records;
+    return records.map((record) => ({
+      packId: record.id,
+      manifestPath: resolve(repoRoot, record.pack_manifest),
+      manifest: loadPackManifest(resolve(repoRoot, record.pack_manifest)),
+    }));
   }
-  const byId = new Map(records.map((record) => [record.packId, record]));
+  const byId = new Map(records.map((record) => [record.id, record]));
   return requestedPacks.map((packId) => {
     const record = byId.get(packId);
     if (!record) {
       throw new Error(`pack-not-found:${packId}`);
     }
-    return record;
+    const manifestPath = resolve(repoRoot, record.pack_manifest);
+    return {
+      packId: record.id,
+      manifestPath,
+      manifest: loadPackManifest(manifestPath),
+    };
   });
 }
 
@@ -122,9 +132,9 @@ const privateKeyPem = options.privateKeyFile ? readFileSync(options.privateKeyFi
 
 const packArtifacts = selectedRecords.map((record) => {
   const compiledPacks = compileAllRuntimes({
-    repoRoot: options.repoRoot,
-    manifestPath: record.manifestPath,
-  });
+      repoRoot: options.repoRoot,
+      manifestPath: record.manifestPath,
+    });
   return {
     pack_id: record.packId,
     metadata: buildPackMetadataEnvelope({

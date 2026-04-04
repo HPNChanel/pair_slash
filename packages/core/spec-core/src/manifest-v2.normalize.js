@@ -4,6 +4,14 @@ import {
   MANIFEST_MARKER_MODES,
   OWNERSHIP_FILE,
   OVERRIDE_MARKER_FILE,
+  PACK_DEPRECATION_STATUSES,
+  PACK_DOCS_VISIBILITY,
+  PACK_PUBLISHER_CLASSES,
+  PACK_RELEASE_VISIBILITY,
+  PACK_RUNTIME_EVIDENCE_KINDS,
+  PACK_RUNTIME_SUPPORT_STATUSES,
+  PACK_SUPPORT_LEVELS,
+  PACK_TRUST_TIERS,
   PACK_STATUSES,
   PHASE4_SCHEMA_VERSION,
   RELEASE_CHANNELS,
@@ -146,6 +154,143 @@ function deriveDocsRefs(record) {
       pickFirstString(docsRefs.example_output, legacyDocs.example_output_file) ?? "example-output.md",
     validation_checklist:
       pickFirstString(docsRefs.validation_checklist, legacyDocs.validation_checklist_file) ?? "validation-checklist.md",
+  };
+}
+
+function deriveRuntimeSupportStatus(runtimeBindings, runtime) {
+  const compatibility = runtimeBindings?.[runtime]?.compatibility ?? {};
+  const canonicalStatus = COMPATIBILITY_STATUSES.includes(compatibility.canonical_picker)
+    ? compatibility.canonical_picker
+    : "supported";
+  const directStatus = COMPATIBILITY_STATUSES.includes(compatibility.direct_invocation)
+    ? compatibility.direct_invocation
+    : runtime === "codex_cli"
+      ? "supported"
+      : "unverified";
+  if (canonicalStatus === "blocked") {
+    return "blocked";
+  }
+  if (canonicalStatus === "supported" && directStatus === "supported") {
+    return "supported";
+  }
+  if (canonicalStatus === "unverified" && directStatus === "unverified") {
+    return "unverified";
+  }
+  return "partial";
+}
+
+function deriveCatalog(record, packName, releaseChannel, status) {
+  const catalog = isObject(record.catalog) ? record.catalog : {};
+  const deprecationStatus =
+    pickFirstString(catalog.deprecation_status) ?? (status === "deprecated" ? "deprecated" : "active");
+  const docsVisibility = pickFirstString(catalog.docs_visibility) ?? "public";
+  const releaseVisibility = pickFirstString(catalog.release_visibility) ?? (releaseChannel === "canary" ? "appendix" : "public");
+  return {
+    pack_class: pickFirstString(catalog.pack_class) ?? "core",
+    maturity:
+      pickFirstString(catalog.maturity, releaseChannel) ?? "stable",
+    docs_visibility:
+      PACK_DOCS_VISIBILITY.includes(docsVisibility) ? docsVisibility : "public",
+    default_discovery:
+      typeof catalog.default_discovery === "boolean" ? catalog.default_discovery : true,
+    default_recommendation:
+      typeof catalog.default_recommendation === "boolean"
+        ? catalog.default_recommendation
+        : packName === "pairslash-plan",
+    release_visibility:
+      PACK_RELEASE_VISIBILITY.includes(releaseVisibility) ? releaseVisibility : "public",
+    deprecation_status:
+      PACK_DEPRECATION_STATUSES.includes(deprecationStatus) ? deprecationStatus : "active",
+    replacement_pack: pickFirstString(catalog.replacement_pack) ?? null,
+    backward_compatibility_notes: sortStrings(catalog.backward_compatibility_notes ?? []),
+  };
+}
+
+function deriveSupport(record, packName, runtimeBindings, memoryPermissions) {
+  const support = isObject(record.support) ? record.support : {};
+  const publisher = isObject(support.publisher) ? support.publisher : {};
+  const defaultPublisherClass =
+    memoryPermissions.global_project_memory === "write" || packName === "pairslash-plan"
+      ? "core-product"
+      : "first-party";
+  const tierClaim =
+    pickFirstString(support.tier_claim) ??
+    (memoryPermissions.global_project_memory === "write" || packName === "pairslash-plan"
+      ? "core-maintained"
+      : "first-party-official");
+  const supportLevelClaim =
+    pickFirstString(support.support_level_claim) ??
+    (packName === "pairslash-plan" ? "core-supported" : "official-preview");
+  const runtimeSupport = Object.fromEntries(
+    SUPPORTED_RUNTIMES.map((runtime) => {
+      const runtimeSupportRecord = isObject(support.runtime_support?.[runtime]) ? support.runtime_support[runtime] : {};
+      const evidenceRef = pickFirstString(runtimeSupportRecord.evidence_ref);
+      return [
+        runtime,
+        {
+          status:
+            pickFirstString(runtimeSupportRecord.status) ?? deriveRuntimeSupportStatus(runtimeBindings, runtime),
+          evidence_ref: evidenceRef ?? null,
+          evidence_kind:
+            pickFirstString(runtimeSupportRecord.evidence_kind) ?? (evidenceRef ? "lane-matrix" : "docs-only"),
+          required_for_promotion:
+            typeof runtimeSupportRecord.required_for_promotion === "boolean"
+              ? runtimeSupportRecord.required_for_promotion
+              : true,
+        },
+      ];
+    }),
+  );
+  return {
+    publisher: {
+      publisher_id: pickFirstString(publisher.publisher_id) ?? "pairslash",
+      display_name: pickFirstString(publisher.display_name) ?? "PairSlash",
+      publisher_class:
+        PACK_PUBLISHER_CLASSES.includes(pickFirstString(publisher.publisher_class) ?? defaultPublisherClass)
+          ? pickFirstString(publisher.publisher_class) ?? defaultPublisherClass
+          : defaultPublisherClass,
+      contact: pickFirstString(publisher.contact) ?? "SECURITY.md",
+    },
+    tier_claim: PACK_TRUST_TIERS.includes(tierClaim) ? tierClaim : "first-party-official",
+    support_level_claim:
+      PACK_SUPPORT_LEVELS.includes(supportLevelClaim) ? supportLevelClaim : "official-preview",
+    signature: {
+      required:
+        typeof support.signature?.required === "boolean" ? support.signature.required : true,
+      allow_local_unsigned:
+        typeof support.signature?.allow_local_unsigned === "boolean"
+          ? support.signature.allow_local_unsigned
+          : true,
+    },
+    runtime_support: Object.fromEntries(
+      SUPPORTED_RUNTIMES.map((runtime) => {
+        const runtimeRecord = runtimeSupport[runtime];
+        return [
+          runtime,
+          {
+            status:
+              PACK_RUNTIME_SUPPORT_STATUSES.includes(runtimeRecord.status)
+                ? runtimeRecord.status
+                : "unverified",
+            evidence_ref: runtimeRecord.evidence_ref,
+            evidence_kind:
+              PACK_RUNTIME_EVIDENCE_KINDS.includes(runtimeRecord.evidence_kind)
+                ? runtimeRecord.evidence_kind
+                : "lane-matrix",
+            required_for_promotion: runtimeRecord.required_for_promotion,
+          },
+        ];
+      }),
+    ),
+    policy_requirements: {
+      no_silent_fallback: true,
+      preview_required_for_mutation: true,
+      explicit_write_only_memory: true,
+    },
+    maintainers: {
+      owner: pickFirstString(support.maintainers?.owner) ?? "pairslash",
+      contact: pickFirstString(support.maintainers?.contact) ?? "SECURITY.md",
+    },
   };
 }
 
@@ -533,6 +678,8 @@ function toCanonicalManifest(record, { preferCanonicalOverride } = {}) {
         ? record.uninstall_strategy.remove_empty_pack_dir
         : true,
   };
+  const catalog = deriveCatalog(record, packName, releaseChannel, status);
+  const support = deriveSupport(record, packName, runtimeBindings, memoryPermissions);
   const canonical = {
     kind: "pack-manifest-v2",
     schema_version: PHASE4_SCHEMA_VERSION,
@@ -562,6 +709,8 @@ function toCanonicalManifest(record, { preferCanonicalOverride } = {}) {
     uninstall_strategy: uninstallStrategy,
     smoke_checks: buildSmokeChecks(record, supportedRuntimes, installTargets),
     docs_refs: docsRefs,
+    catalog,
+    support,
     trust_descriptor: pickFirstString(record.trust_descriptor) ?? undefined,
   };
   return canonical;
