@@ -9,6 +9,7 @@ It complements `docs/phase-9/maintainer-playbook.md` with operational links used
 - Reproduction evidence requirements: `docs/support/repro-assets.md`
 - Taxonomy and labels: `docs/phase-9/issue-taxonomy.md`
 - Maintainer decision model: `docs/phase-9/maintainer-playbook.md`
+- Pack lifecycle checklist: `docs/maintainers/pack-lifecycle-checklist.md`
 
 ## Release Hygiene
 
