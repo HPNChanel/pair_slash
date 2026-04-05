@@ -92,6 +92,9 @@ logs/
 .agents/skills/
 .github/skills/
 
+# ─── Social media drafts (non-shipped content) ───────────────────────────────
+social_media/
+
 # ─── Local utility files ──────────────────────────────────────────────────────
 .git_commit_msg
 .pytest_cache/
