@@ -1,4 +1,4 @@
-import { readFileSync, rmSync } from "node:fs";
+import { lstatSync, readFileSync, realpathSync, rmSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 
@@ -34,6 +34,15 @@ import {
 
 import { getRuntimeAdapter, detectRuntimeSelection, satisfiesRuntimeRange } from "./runtime.js";
 import {
+  buildInstallStateMetadataMismatches,
+  buildLifecycleCommand,
+  buildReviewRemediationAction,
+  buildRunCommandRemediationAction,
+  collectLifecycleReasonCodes,
+  dedupeRemediationActions,
+  isPathWithinRoot,
+} from "./semantics.js";
+import {
   buildEmptyState,
   findStatePack,
   loadInstallState,
@@ -43,6 +52,17 @@ import {
 } from "./state.js";
 
 const SYSTEM_PACK_ID = "_pairslash";
+const REASON_CODE_INSTALL_STATE_INVALID = "install-state-invalid";
+const REASON_CODE_INSTALL_STATE_METADATA_MISMATCH = "install-state-metadata-mismatch";
+const REASON_CODE_MANAGED_PACK_REQUIRES_UPDATE = "managed-pack-requires-update";
+const REASON_CODE_RECONCILE_IDENTICAL = "reconcile-unmanaged-identical";
+const REASON_CODE_RECONCILE_OVERRIDE = "reconcile-unmanaged-override-preserved";
+const REASON_CODE_UNMANAGED_CONFLICT = "unmanaged-conflict-blocking";
+const REASON_CODE_MANAGED_OVERRIDE = "managed-override-preserved";
+const REASON_CODE_MANAGED_ORPHAN_OVERRIDE = "managed-orphan-override-preserved";
+const REASON_CODE_OWNERSHIP_METADATA_CONFLICT = "ownership-metadata-conflict";
+const REASON_CODE_UPDATE_CONFLICT = "update-conflict-blocking";
+const REASON_CODE_UNINSTALL_PRESERVE_UNMANAGED = "uninstall-preserve-unmanaged";
 const POLICY_PRECEDENCE = Object.freeze({
   allow: 0,
   ask: 1,
@@ -55,6 +75,61 @@ const RISKY_MUTATION_SURFACES = new Set(["config", "metadata", "hook", "mcp", "a
 
 function uniqueSorted(values) {
   return [...new Set(values.filter(Boolean))].sort((left, right) => left.localeCompare(right));
+}
+
+function buildPreviewInstallAction({ runtime, target, packId, preferred = false }) {
+  return buildRunCommandRemediationAction({
+    actionId: `preview-install:${runtime}:${target}:${packId}`,
+    summary: "Review the install preview before applying changes.",
+    command: buildLifecycleCommand({
+      action: "preview install",
+      runtime,
+      target,
+      packId,
+    }),
+    appliesToActions: ["doctor", "install"],
+    reasonCodes: [
+      REASON_CODE_RECONCILE_IDENTICAL,
+      REASON_CODE_RECONCILE_OVERRIDE,
+      REASON_CODE_UNMANAGED_CONFLICT,
+      REASON_CODE_OWNERSHIP_METADATA_CONFLICT,
+    ],
+    preferred,
+  });
+}
+
+function buildPreviewUpdateAction({ runtime, target, packId, preferred = false }) {
+  return buildRunCommandRemediationAction({
+    actionId: `preview-update:${runtime}:${target}:${packId}`,
+    summary: "Review the update preview for the already managed pack.",
+    command: buildLifecycleCommand({
+      action: "update",
+      runtime,
+      target,
+      packId,
+      dryRun: true,
+    }),
+    appliesToActions: ["doctor", "install", "update"],
+    reasonCodes: [
+      REASON_CODE_MANAGED_PACK_REQUIRES_UPDATE,
+      REASON_CODE_MANAGED_OVERRIDE,
+      REASON_CODE_MANAGED_ORPHAN_OVERRIDE,
+      REASON_CODE_UPDATE_CONFLICT,
+      REASON_CODE_OWNERSHIP_METADATA_CONFLICT,
+    ],
+    preferred,
+  });
+}
+
+function buildStateReviewAction({ runtime, target, statePath, preferred = false }) {
+  return buildReviewRemediationAction({
+    actionId: `review-state:${runtime}:${target}`,
+    summary: "Review and repair or remove the stale PairSlash install-state file before retrying.",
+    path: statePath,
+    appliesToActions: ["doctor", "install", "update", "uninstall"],
+    reasonCodes: [REASON_CODE_INSTALL_STATE_INVALID, REASON_CODE_INSTALL_STATE_METADATA_MISMATCH],
+    preferred,
+  });
 }
 
 function compilePackForRuntime(options) {
@@ -225,6 +300,7 @@ function buildCommitability({
   errors,
   policySummary,
   requiresConfirmation,
+  reasonCodes = [],
 }) {
   const blockedOperations = operations.filter((operation) => operation.kind === "blocked_conflict");
   const mutatingOperations = operations.filter((operation) => MUTATING_OPERATION_KINDS.has(operation.kind));
@@ -241,6 +317,10 @@ function buildCommitability({
     ...blockedOperations.map((operation) => operation.reason),
     ...policySummary.reasons,
   ]);
+  const blockedReasonCodes = collectLifecycleReasonCodes({
+    reasonCodes,
+    operations: blockedOperations,
+  });
 
   return {
     status: canProceed ? (needsExplicitApproval ? "needs-explicit-approval" : "proceedable") : "blocked",
@@ -256,6 +336,7 @@ function buildCommitability({
       : [],
     blocked_operations_count: blockedOperations.length,
     blocked_reasons: blockedReasons,
+    blocked_reason_codes: blockedReasonCodes,
     explicit_approval_hint: needsExplicitApproval ? "Run the same action with --apply and explicit confirmation." : null,
   };
 }
@@ -272,6 +353,8 @@ function createPlan({
   trustDelta = null,
   warnings = [],
   errors = [],
+  reasonCodes = [],
+  remediationActions = [],
 }) {
   const sortedOperations = sortOperations(operations);
   const sortedWarnings = warnings.slice().sort((a, b) => a.localeCompare(b));
@@ -293,7 +376,16 @@ function createPlan({
     errors: sortedErrors,
     policySummary,
     requiresConfirmation,
+    reasonCodes,
   });
+  const lifecycleReasonCodes = collectLifecycleReasonCodes({
+    reasonCodes,
+    operations: sortedOperations,
+  });
+  const planRemediationActions = dedupeRemediationActions([
+    ...remediationActions,
+    ...sortedOperations.flatMap((operation) => operation.remediation_actions ?? []),
+  ]);
   const plan = {
     kind: "preview-plan",
     schema_version: PREVIEW_PLAN_SCHEMA_VERSION,
@@ -311,6 +403,8 @@ function createPlan({
     summary: createSummary(sortedOperations),
     warnings: sortedWarnings,
     errors: sortedErrors,
+    reason_codes: lifecycleReasonCodes,
+    remediation_actions: planRemediationActions,
     operations: sortedOperations,
     asset_diff: assetDiff,
     policy_summary: policySummary,
@@ -341,6 +435,11 @@ function buildOperation(
     installSurface = null,
     ownership = null,
     overrideEligible = null,
+    reasonCode = null,
+    reasonDetail = null,
+    managementMode = null,
+    reconcileMode = null,
+    remediationActions = [],
   },
 ) {
   return {
@@ -352,6 +451,13 @@ function buildOperation(
     ...(installSurface ? { install_surface: installSurface } : {}),
     ...(ownership ? { ownership } : {}),
     ...(typeof overrideEligible === "boolean" ? { override_eligible: overrideEligible } : {}),
+    ...(reasonCode ? { reason_code: reasonCode } : {}),
+    ...(reasonDetail ? { reason_detail: reasonDetail } : {}),
+    ...(managementMode ? { management_mode: managementMode } : {}),
+    ...(reconcileMode ? { reconcile_mode: reconcileMode } : {}),
+    ...(remediationActions.length > 0
+      ? { remediation_actions: dedupeRemediationActions(remediationActions) }
+      : {}),
     reason,
   };
 }
@@ -450,24 +556,34 @@ function buildStatePack({ compiledPack, installDir, operations, previousStatePac
       (entry) => entry.relative_path === file.relative_path,
     );
     const digest = currentDigest(absolutePath);
-      const matchedCompiled = digest === file.sha256;
-      const ownedByPairslash =
-        op?.kind === "create" || op?.kind === "replace"
-          ? file.owner === "pairslash"
-          : previousFile
-            ? previousFile.owned_by_pairslash
-            : false;
-      return {
-        asset_id: file.asset_id,
-        generator: file.generator,
-        required: file.required,
-        declared_owner: file.owner,
-        uninstall_behavior: file.uninstall_behavior,
-        relative_path: file.relative_path,
-        absolute_path: absolutePath,
-        source_digest: file.sha256,
-        current_digest: digest,
-        owned_by_pairslash: ownedByPairslash,
+    const matchedCompiled = digest === file.sha256;
+    const ownedByPairslash =
+      op?.kind === "create" || op?.kind === "replace"
+        ? file.owner === "pairslash"
+        : previousFile
+          ? previousFile.owned_by_pairslash
+          : false;
+    const managementMode =
+      op?.management_mode ??
+      previousFile?.management_mode ??
+      (ownedByPairslash ? "pairslash_owned" : "reconciled_unmanaged");
+    const reconciledReasonCode =
+      op?.reason_code && managementMode === "reconciled_unmanaged"
+        ? op.reason_code
+        : previousFile?.reconciled_reason_code ?? null;
+    return {
+      asset_id: file.asset_id,
+      generator: file.generator,
+      required: file.required,
+      declared_owner: file.owner,
+      uninstall_behavior: file.uninstall_behavior,
+      relative_path: file.relative_path,
+      absolute_path: absolutePath,
+      source_digest: file.sha256,
+      current_digest: digest,
+      owned_by_pairslash: ownedByPairslash,
+      management_mode: managementMode,
+      ...(reconciledReasonCode ? { reconciled_reason_code: reconciledReasonCode } : {}),
       override_eligible: file.override_eligible,
       local_override: !matchedCompiled,
       asset_kind: file.asset_kind,
@@ -564,6 +680,109 @@ function findExistingParentPath(path) {
   return current;
 }
 
+function safeLstat(path) {
+  try {
+    return { ok: true, stat: lstatSync(path) };
+  } catch (error) {
+    return { ok: false, error: error.message };
+  }
+}
+
+function safeRealpath(path) {
+  try {
+    const resolvedPath = typeof realpathSync.native === "function"
+      ? realpathSync.native(path)
+      : realpathSync(path);
+    return { ok: true, path: resolvedPath };
+  } catch (error) {
+    return { ok: false, error: error.message };
+  }
+}
+
+function inspectInstallDirBoundary({ installRoot, installDir }) {
+  const rootPath = resolve(installRoot);
+  const candidatePath = resolve(installDir);
+  if (!isPathWithinRoot(rootPath, candidatePath)) {
+    return {
+      reason: "resolved pack install path escapes install root",
+      detail: `install root ${rootPath} does not contain ${candidatePath}`,
+    };
+  }
+
+  const rootAnchor = findExistingParentPath(rootPath);
+  const rootAnchorRealpath = safeRealpath(rootAnchor);
+  const candidateAnchor = findExistingParentPath(candidatePath);
+  const candidateAnchorStat = safeLstat(candidateAnchor);
+  if (!candidateAnchorStat.ok) {
+    return {
+      reason: "unable to inspect existing install path anchor",
+      detail: candidateAnchorStat.error,
+    };
+  }
+  if (candidateAnchorStat.stat.isSymbolicLink()) {
+    return {
+      reason: "install path anchor is a symbolic link and cannot be trusted",
+      detail: candidateAnchor,
+    };
+  }
+
+  if (rootAnchorRealpath.ok) {
+    const candidateAnchorRealpath = safeRealpath(candidateAnchor);
+    if (!candidateAnchorRealpath.ok) {
+      return {
+        reason: "unable to resolve install path anchor realpath",
+        detail: candidateAnchorRealpath.error,
+      };
+    }
+    if (!isPathWithinRoot(rootAnchorRealpath.path, candidateAnchorRealpath.path)) {
+      return {
+        reason: "install path anchor resolves outside install root boundary",
+        detail: `${candidateAnchorRealpath.path} not within ${rootAnchorRealpath.path}`,
+      };
+    }
+  }
+
+  if (!exists(candidatePath)) {
+    return null;
+  }
+
+  const installDirStat = safeLstat(candidatePath);
+  if (!installDirStat.ok) {
+    return {
+      reason: "unable to inspect existing install path",
+      detail: installDirStat.error,
+    };
+  }
+  if (installDirStat.stat.isSymbolicLink()) {
+    return {
+      reason: "pack install path is a symbolic link and cannot be adopted",
+      detail: candidatePath,
+    };
+  }
+  if (!installDirStat.stat.isDirectory()) {
+    return {
+      reason: "pack install path exists but is not a directory",
+      detail: candidatePath,
+    };
+  }
+  if (rootAnchorRealpath.ok) {
+    const installDirRealpath = safeRealpath(candidatePath);
+    if (!installDirRealpath.ok) {
+      return {
+        reason: "unable to resolve pack install path realpath",
+        detail: installDirRealpath.error,
+      };
+    }
+    if (!isPathWithinRoot(rootAnchorRealpath.path, installDirRealpath.path)) {
+      return {
+        reason: "pack install path resolves outside install root boundary",
+        detail: `${installDirRealpath.path} not within ${rootAnchorRealpath.path}`,
+      };
+    }
+  }
+  return null;
+}
+
 function parseSimpleCommand(command) {
   if (typeof command !== "string" || command.trim() === "") {
     return null;
@@ -655,7 +874,15 @@ function applyLintPreflight({ repoRoot, packs, runtime, target, errors, warnings
   return report;
 }
 
-function resolveInstallEnvironment({ repoRoot, runtime, target, adapter, errors }) {
+function resolveInstallEnvironment({
+  repoRoot,
+  runtime,
+  target,
+  adapter,
+  errors,
+  reasonCodes = [],
+  remediationActions = [],
+}) {
   let state;
   let statePath;
   try {
@@ -664,12 +891,43 @@ function resolveInstallEnvironment({ repoRoot, runtime, target, adapter, errors 
     statePath = loaded.statePath;
   } catch (error) {
     errors.push(`state-invalid: ${error.message}`);
+    reasonCodes.push(REASON_CODE_INSTALL_STATE_INVALID);
     statePath = resolveStatePath({ repoRoot, runtime, target });
     state = buildEmptyState({ repoRoot, runtime, target, adapter });
+    remediationActions.push(
+      buildStateReviewAction({
+        runtime,
+        target,
+        statePath,
+        preferred: true,
+      }),
+    );
   }
 
   const installRoot = adapter.resolveInstallRoot({ repoRoot, target });
+  const configHome = adapter.resolveConfigHome({ repoRoot, target });
   const journalDir = resolve(repoRoot, ".pairslash", INSTALL_JOURNAL_DIR);
+  const mismatches = buildInstallStateMetadataMismatches({
+    state,
+    runtime,
+    target,
+    configHome,
+    installRoot,
+  });
+  if (mismatches.length > 0) {
+    errors.push(
+      `state-metadata-mismatch:${mismatches.map((entry) => `${entry.field}:${entry.actual}`).join(",")}`,
+    );
+    reasonCodes.push(REASON_CODE_INSTALL_STATE_METADATA_MISMATCH);
+    remediationActions.push(
+      buildStateReviewAction({
+        runtime,
+        target,
+        statePath,
+        preferred: true,
+      }),
+    );
+  }
   const permissionTargets = [
     findExistingParentPath(installRoot),
     findExistingParentPath(dirname(statePath)),
@@ -686,11 +944,20 @@ function resolveInstallEnvironment({ repoRoot, runtime, target, adapter, errors 
     state,
     statePath,
     installRoot,
+    configHome,
     journalDir,
   };
 }
 
-function resolveUpdateEnvironment({ repoRoot, runtime, target, adapter, errors }) {
+function resolveUpdateEnvironment({
+  repoRoot,
+  runtime,
+  target,
+  adapter,
+  errors,
+  reasonCodes = [],
+  remediationActions = [],
+}) {
   const installRoot = adapter.resolveInstallRoot({ repoRoot, target });
   const configHome = adapter.resolveConfigHome({ repoRoot, target });
   const journalDir = resolve(repoRoot, ".pairslash", INSTALL_JOURNAL_DIR);
@@ -702,19 +969,37 @@ function resolveUpdateEnvironment({ repoRoot, runtime, target, adapter, errors }
     state = loaded.state;
   } catch (error) {
     errors.push(`state-invalid: ${error.message}`);
+    reasonCodes.push(REASON_CODE_INSTALL_STATE_INVALID);
+    remediationActions.push(
+      buildStateReviewAction({
+        runtime,
+        target,
+        statePath,
+        preferred: true,
+      }),
+    );
   }
 
-  if (state.runtime !== runtime) {
-    errors.push(`runtime-mismatch:state expected ${runtime} got ${state.runtime}`);
-  }
-  if (state.target !== target) {
-    errors.push(`target-mismatch:state expected ${target} got ${state.target}`);
-  }
-  if (state.install_root !== installRoot) {
-    errors.push(`install-root-mismatch: expected ${installRoot} got ${state.install_root}`);
-  }
-  if (state.config_home !== configHome) {
-    errors.push(`config-home-mismatch: expected ${configHome} got ${state.config_home}`);
+  const mismatches = buildInstallStateMetadataMismatches({
+    state,
+    runtime,
+    target,
+    configHome,
+    installRoot,
+  });
+  if (mismatches.length > 0) {
+    errors.push(
+      ...mismatches.map((entry) => `${entry.field}-mismatch: expected ${entry.expected} got ${entry.actual}`),
+    );
+    reasonCodes.push(REASON_CODE_INSTALL_STATE_METADATA_MISMATCH);
+    remediationActions.push(
+      buildStateReviewAction({
+        runtime,
+        target,
+        statePath,
+        preferred: true,
+      }),
+    );
   }
 
   const permissionTargets = [
@@ -849,18 +1134,70 @@ function buildInstallOperations({
 }) {
   const operations = [];
   const mkdirs = new Set();
+  const installRoot = adapter.resolveInstallRoot({ repoRoot, target });
 
   for (const compiledPack of compiledPacks) {
     const installDir = buildPackInstallDir(adapter, repoRoot, target, compiledPack.pack_id);
+    const existingStatePack = findStatePack(state, compiledPack.pack_id);
+    if (existingStatePack) {
+      operations.push(
+        buildOperation("blocked_conflict", {
+          packId: compiledPack.pack_id,
+          relativePath: ".",
+          absolutePath: installDir,
+          ownership: "pairslash",
+          reason: "pack is already managed by PairSlash; run update instead of install",
+          reasonCode: REASON_CODE_MANAGED_PACK_REQUIRES_UPDATE,
+          remediationActions: [
+            buildPreviewUpdateAction({
+              runtime: state.runtime,
+              target: state.target,
+              packId: compiledPack.pack_id,
+              preferred: true,
+            }),
+          ],
+        }),
+      );
+      continue;
+    }
+    const boundaryIssue = inspectInstallDirBoundary({
+      installRoot,
+      installDir,
+    });
+    if (boundaryIssue) {
+      operations.push(
+        buildOperation("blocked_conflict", {
+          packId: compiledPack.pack_id,
+          relativePath: ".",
+          absolutePath: installDir,
+          ownership: "unmanaged",
+          reason: boundaryIssue.reason,
+          reasonCode: REASON_CODE_UNMANAGED_CONFLICT,
+          reasonDetail: boundaryIssue.detail,
+          remediationActions: [
+            buildPreviewInstallAction({
+              runtime: state.runtime,
+              target: state.target,
+              packId: compiledPack.pack_id,
+              preferred: true,
+            }),
+            buildReviewRemediationAction({
+              actionId: `review-install-dir:${compiledPack.pack_id}`,
+              summary: "Fix the unmanaged install directory path before installing this pack.",
+              path: installDir,
+              appliesToActions: ["doctor", "install"],
+              reasonCodes: [REASON_CODE_UNMANAGED_CONFLICT],
+            }),
+          ],
+        }),
+      );
+      continue;
+    }
     if (!exists(installDir)) {
       mkdirs.add(`${compiledPack.pack_id}\u0000${installDir}`);
     }
-    const existingStatePack = findStatePack(state, compiledPack.pack_id);
     for (const file of compiledPack.files) {
       const absolutePath = join(installDir, file.relative_path);
-      const stateFile = existingStatePack?.files?.find(
-        (entry) => entry.relative_path === file.relative_path,
-      );
       if (!exists(absolutePath)) {
         operations.push(
           buildOperation("create", {
@@ -876,6 +1213,37 @@ function buildInstallOperations({
         );
         continue;
       }
+      if (file.relative_path === OWNERSHIP_FILE) {
+        operations.push(
+          buildOperation("blocked_conflict", {
+            packId: compiledPack.pack_id,
+            relativePath: file.relative_path,
+            absolutePath,
+            assetKind: file.asset_kind,
+            installSurface: file.install_surface,
+            ownership: "unmanaged",
+            overrideEligible: file.override_eligible,
+            reason: "unmanaged ownership metadata exists; install must not take over receipt state",
+            reasonCode: REASON_CODE_OWNERSHIP_METADATA_CONFLICT,
+            remediationActions: [
+              buildPreviewInstallAction({
+                runtime: state.runtime,
+                target: state.target,
+                packId: compiledPack.pack_id,
+                preferred: true,
+              }),
+              buildReviewRemediationAction({
+                actionId: `review-ownership:${compiledPack.pack_id}`,
+                summary: "Review or remove unmanaged ownership metadata before install.",
+                path: absolutePath,
+                appliesToActions: ["doctor", "install"],
+                reasonCodes: [REASON_CODE_OWNERSHIP_METADATA_CONFLICT],
+              }),
+            ],
+          }),
+        );
+        continue;
+      }
 
       const digest = safeCurrentDigest(absolutePath);
       if (!digest.ok) {
@@ -886,24 +1254,58 @@ function buildInstallOperations({
             absolutePath,
             assetKind: file.asset_kind,
             installSurface: file.install_surface,
-            ownership: stateFile?.owned_by_pairslash ? "pairslash" : "unmanaged",
+            ownership: "unmanaged",
             overrideEligible: file.override_eligible,
             reason: `existing path is not a writable file: ${digest.error}`,
+            reasonCode: REASON_CODE_UNMANAGED_CONFLICT,
+            remediationActions: [
+              buildPreviewInstallAction({
+                runtime: state.runtime,
+                target: state.target,
+                packId: compiledPack.pack_id,
+                preferred: true,
+              }),
+              buildReviewRemediationAction({
+                actionId: `review-unmanaged:${compiledPack.pack_id}:${file.relative_path}`,
+                summary: "Review or move the unmanaged path before installing.",
+                path: absolutePath,
+                appliesToActions: ["doctor", "install"],
+                reasonCodes: [REASON_CODE_UNMANAGED_CONFLICT],
+              }),
+            ],
           }),
         );
         continue;
       }
       if (digest.digest === file.sha256) {
         operations.push(
-          buildOperation("skip_identical", {
+          buildOperation("reconcile_unmanaged", {
             packId: compiledPack.pack_id,
             relativePath: file.relative_path,
             absolutePath,
             assetKind: file.asset_kind,
             installSurface: file.install_surface,
-            ownership: stateFile?.owned_by_pairslash ? "pairslash" : "unmanaged",
+            ownership: "user",
             overrideEligible: file.override_eligible,
             reason: "existing file already matches compiled artifact",
+            reasonCode: REASON_CODE_RECONCILE_IDENTICAL,
+            managementMode: "reconciled_unmanaged",
+            reconcileMode: "identical",
+            remediationActions: [
+              buildPreviewInstallAction({
+                runtime: state.runtime,
+                target: state.target,
+                packId: compiledPack.pack_id,
+                preferred: true,
+              }),
+              buildReviewRemediationAction({
+                actionId: `review-reconciled:${compiledPack.pack_id}:${file.relative_path}`,
+                summary: "Leave the identical unmanaged file in place or move it before install.",
+                path: absolutePath,
+                appliesToActions: ["doctor", "install", "update", "uninstall"],
+                reasonCodes: [REASON_CODE_RECONCILE_IDENTICAL],
+              }),
+            ],
           }),
         );
         continue;
@@ -913,17 +1315,33 @@ function buildInstallOperations({
           `preserve-override:${compiledPack.pack_id}/${file.relative_path}: existing content will be preserved`,
         );
         operations.push(
-          buildOperation("preserve_override", {
+          buildOperation("reconcile_unmanaged", {
             packId: compiledPack.pack_id,
             relativePath: file.relative_path,
             absolutePath,
             assetKind: file.asset_kind,
             installSurface: file.install_surface,
-            ownership: stateFile?.owned_by_pairslash ? "pairslash" : "user",
+            ownership: "user",
             overrideEligible: file.override_eligible,
-            reason: stateFile
-              ? "existing managed file differs from compiled artifact"
-              : "existing unmanaged file preserved as local override",
+            reason: "existing unmanaged file preserved as local override",
+            reasonCode: REASON_CODE_RECONCILE_OVERRIDE,
+            managementMode: "reconciled_unmanaged",
+            reconcileMode: "override_preserved",
+            remediationActions: [
+              buildPreviewInstallAction({
+                runtime: state.runtime,
+                target: state.target,
+                packId: compiledPack.pack_id,
+                preferred: true,
+              }),
+              buildReviewRemediationAction({
+                actionId: `review-override:${compiledPack.pack_id}:${file.relative_path}`,
+                summary: "Review the unmanaged local override before updating or uninstalling the pack.",
+                path: absolutePath,
+                appliesToActions: ["doctor", "install", "update", "uninstall"],
+                reasonCodes: [REASON_CODE_RECONCILE_OVERRIDE],
+              }),
+            ],
           }),
         );
         continue;
@@ -935,9 +1353,25 @@ function buildInstallOperations({
           absolutePath,
           assetKind: file.asset_kind,
           installSurface: file.install_surface,
-          ownership: stateFile?.owned_by_pairslash ? "pairslash" : "unmanaged",
+          ownership: "unmanaged",
           overrideEligible: file.override_eligible,
           reason: "non-override file already exists and would be clobbered",
+          reasonCode: REASON_CODE_UNMANAGED_CONFLICT,
+          remediationActions: [
+            buildPreviewInstallAction({
+              runtime: state.runtime,
+              target: state.target,
+              packId: compiledPack.pack_id,
+              preferred: true,
+            }),
+            buildReviewRemediationAction({
+              actionId: `review-unmanaged:${compiledPack.pack_id}:${file.relative_path}`,
+              summary: "Rename, remove, or move the unmanaged path before installing.",
+              path: absolutePath,
+              appliesToActions: ["doctor", "install"],
+              reasonCodes: [REASON_CODE_UNMANAGED_CONFLICT],
+            }),
+          ],
         }),
       );
     }
@@ -1216,6 +1650,8 @@ export function planInstall({ repoRoot, runtime = "auto", target = "repo", packs
   const adapter = runtimeSelection.adapter ?? getRuntimeAdapter(normalizedRuntime);
   const warnings = [];
   const errors = [];
+  const reasonCodes = [];
+  const remediationActions = [];
 
   if (!runtimeSelection.detection?.available) {
     errors.push(
@@ -1231,6 +1667,8 @@ export function planInstall({ repoRoot, runtime = "auto", target = "repo", packs
     target: normalizedTarget,
     adapter,
     errors,
+    reasonCodes,
+    remediationActions,
   });
 
   const { selection, errors: selectionErrors } = manifestSelection(repoRoot, packs);
@@ -1319,6 +1757,8 @@ export function planInstall({ repoRoot, runtime = "auto", target = "repo", packs
         : null,
     warnings,
     errors,
+    reasonCodes,
+    remediationActions,
   });
 
   return {
@@ -1350,6 +1790,8 @@ function buildUpdateBlockedOperation({
   absolutePath = null,
   ownership = "unmanaged",
   reason,
+  reasonCode = REASON_CODE_UPDATE_CONFLICT,
+  remediationActions = [],
 }) {
   return buildOperation("blocked_conflict", {
     packId,
@@ -1357,10 +1799,27 @@ function buildUpdateBlockedOperation({
     absolutePath: absolutePath ?? join(installDir, relativePath),
     ownership,
     reason,
+    reasonCode,
+    remediationActions,
   });
 }
 
-function validateManagedOwnershipFile({ existingStatePack, errors, operations }) {
+function validateManagedOwnershipFile({ existingStatePack, errors, operations, runtime, target }) {
+  const remediationActions = [
+    buildPreviewUpdateAction({
+      runtime,
+      target,
+      packId: existingStatePack.id,
+      preferred: true,
+    }),
+    buildReviewRemediationAction({
+      actionId: `review-ownership:${existingStatePack.id}`,
+      summary: "Review the managed ownership receipt before updating.",
+      path: join(existingStatePack.install_dir, OWNERSHIP_FILE),
+      appliesToActions: ["doctor", "update"],
+      reasonCodes: [REASON_CODE_OWNERSHIP_METADATA_CONFLICT],
+    }),
+  ];
   const ownershipStateFile = existingStatePack.files.find(
     (file) => file.relative_path === OWNERSHIP_FILE,
   );
@@ -1373,6 +1832,8 @@ function validateManagedOwnershipFile({ existingStatePack, errors, operations })
         relativePath: OWNERSHIP_FILE,
         ownership: "pairslash",
         reason: "ownership metadata missing from install receipt",
+        reasonCode: REASON_CODE_OWNERSHIP_METADATA_CONFLICT,
+        remediationActions,
       }),
     );
     return false;
@@ -1388,6 +1849,8 @@ function validateManagedOwnershipFile({ existingStatePack, errors, operations })
         absolutePath: ownershipStateFile.absolute_path,
         ownership: "user",
         reason: "ownership metadata is not PairSlash-owned and blocks update",
+        reasonCode: REASON_CODE_OWNERSHIP_METADATA_CONFLICT,
+        remediationActions,
       }),
     );
     return false;
@@ -1403,6 +1866,8 @@ function validateManagedOwnershipFile({ existingStatePack, errors, operations })
         absolutePath: ownershipStateFile.absolute_path,
         ownership: "pairslash",
         reason: "ownership metadata file is missing and blocks update",
+        reasonCode: REASON_CODE_OWNERSHIP_METADATA_CONFLICT,
+        remediationActions,
       }),
     );
     return false;
@@ -1419,6 +1884,8 @@ function validateManagedOwnershipFile({ existingStatePack, errors, operations })
         absolutePath: ownershipStateFile.absolute_path,
         ownership: "pairslash",
         reason: `ownership metadata file is unreadable: ${digest.error}`,
+        reasonCode: REASON_CODE_OWNERSHIP_METADATA_CONFLICT,
+        remediationActions,
       }),
     );
     return false;
@@ -1434,6 +1901,8 @@ function validateManagedOwnershipFile({ existingStatePack, errors, operations })
         absolutePath: ownershipStateFile.absolute_path,
         ownership: "pairslash",
         reason: "ownership metadata file was modified locally and blocks update",
+        reasonCode: REASON_CODE_OWNERSHIP_METADATA_CONFLICT,
+        remediationActions,
       }),
     );
     return false;
@@ -1453,6 +1922,7 @@ function buildUpdateOperations({
   errors,
 }) {
   const operations = [];
+  const installRoot = adapter.resolveInstallRoot({ repoRoot, target });
 
   for (const packId of selectedPackIds) {
     const existingStatePack = findStatePack(state, packId);
@@ -1464,11 +1934,57 @@ function buildUpdateOperations({
           absolutePath: buildPackInstallDir(adapter, repoRoot, target, packId),
           ownership: "unmanaged",
           reason: "pack is not managed by PairSlash; run install instead",
+          reasonCode: REASON_CODE_UPDATE_CONFLICT,
+          remediationActions: [
+            buildPreviewInstallAction({
+              runtime: state.runtime,
+              target: state.target,
+              packId,
+              preferred: true,
+            }),
+          ],
         }),
       );
       continue;
     }
-    if (!validateManagedOwnershipFile({ existingStatePack, errors, operations })) {
+    const boundaryIssue = inspectInstallDirBoundary({
+      installRoot,
+      installDir: existingStatePack.install_dir,
+    });
+    if (boundaryIssue) {
+      errors.push(`update-install-dir-untrusted:${packId}: ${boundaryIssue.reason}`);
+      operations.push(
+        buildUpdateBlockedOperation({
+          packId,
+          installDir: existingStatePack.install_dir,
+          reason: `${boundaryIssue.reason}: ${boundaryIssue.detail}`,
+          reasonCode: REASON_CODE_UPDATE_CONFLICT,
+          remediationActions: [
+            buildPreviewUpdateAction({
+              runtime: state.runtime,
+              target: state.target,
+              packId,
+              preferred: true,
+            }),
+            buildReviewRemediationAction({
+              actionId: `review-install-dir:${packId}`,
+              summary: "Fix the managed install directory path before updating this pack.",
+              path: existingStatePack.install_dir,
+              appliesToActions: ["doctor", "update"],
+              reasonCodes: [REASON_CODE_UPDATE_CONFLICT],
+            }),
+          ],
+        }),
+      );
+      continue;
+    }
+    if (!validateManagedOwnershipFile({
+      existingStatePack,
+      errors,
+      operations,
+      runtime: state.runtime,
+      target: state.target,
+    })) {
       continue;
     }
 
@@ -1502,6 +2018,17 @@ function buildUpdateOperations({
             ownership: "user",
             overrideEligible: stateFile.override_eligible,
             reason: "file no longer exists upstream but was not created by PairSlash",
+            reasonCode: stateFile.reconciled_reason_code ?? REASON_CODE_UNINSTALL_PRESERVE_UNMANAGED,
+            managementMode: stateFile.management_mode ?? "reconciled_unmanaged",
+            remediationActions: [
+              buildReviewRemediationAction({
+                actionId: `review-unmanaged:${packId}:${stateFile.relative_path}`,
+                summary: "Review the unmanaged file that PairSlash will continue to preserve.",
+                path: stateFile.absolute_path,
+                appliesToActions: ["doctor", "update", "uninstall"],
+                reasonCodes: [stateFile.reconciled_reason_code ?? REASON_CODE_UNINSTALL_PRESERVE_UNMANAGED],
+              }),
+            ],
           }),
         );
         continue;
@@ -1518,6 +2045,15 @@ function buildUpdateOperations({
             ownership: "pairslash",
             overrideEligible: stateFile.override_eligible,
             reason: "managed file is missing locally and blocks orphan cleanup",
+            reasonCode: REASON_CODE_UPDATE_CONFLICT,
+            remediationActions: [
+              buildPreviewUpdateAction({
+                runtime: state.runtime,
+                target: state.target,
+                packId,
+                preferred: true,
+              }),
+            ],
           }),
         );
         continue;
@@ -1534,6 +2070,15 @@ function buildUpdateOperations({
             ownership: "pairslash",
             overrideEligible: stateFile.override_eligible,
             reason: `existing path is not a writable file: ${digest.error}`,
+            reasonCode: REASON_CODE_UPDATE_CONFLICT,
+            remediationActions: [
+              buildPreviewUpdateAction({
+                runtime: state.runtime,
+                target: state.target,
+                packId,
+                preferred: true,
+              }),
+            ],
           }),
         );
         continue;
@@ -1567,6 +2112,15 @@ function buildUpdateOperations({
             ownership: "pairslash",
             overrideEligible: stateFile.override_eligible,
             reason: "orphaned override-eligible file was edited locally and is preserved",
+            reasonCode: REASON_CODE_MANAGED_ORPHAN_OVERRIDE,
+            remediationActions: [
+              buildPreviewUpdateAction({
+                runtime: state.runtime,
+                target: state.target,
+                packId,
+                preferred: true,
+              }),
+            ],
           }),
         );
         continue;
@@ -1582,6 +2136,15 @@ function buildUpdateOperations({
           ownership: "pairslash",
           overrideEligible: stateFile.override_eligible,
           reason: "orphaned non-override managed file was modified locally and blocks update",
+          reasonCode: REASON_CODE_UPDATE_CONFLICT,
+          remediationActions: [
+            buildPreviewUpdateAction({
+              runtime: state.runtime,
+              target: state.target,
+              packId,
+              preferred: true,
+            }),
+          ],
         }),
       );
     }
@@ -1606,6 +2169,15 @@ function buildUpdateOperations({
             ownership,
             overrideEligible: file.override_eligible,
             reason: "ownership metadata is not tracked in receipt and blocks update",
+            reasonCode: REASON_CODE_OWNERSHIP_METADATA_CONFLICT,
+            remediationActions: [
+              buildPreviewUpdateAction({
+                runtime: state.runtime,
+                target: state.target,
+                packId,
+                preferred: true,
+              }),
+            ],
           }),
         );
         continue;
@@ -1623,6 +2195,15 @@ function buildUpdateOperations({
               ownership,
               overrideEligible: file.override_eligible,
               reason: "ownership metadata file is missing and blocks update",
+              reasonCode: REASON_CODE_OWNERSHIP_METADATA_CONFLICT,
+              remediationActions: [
+                buildPreviewUpdateAction({
+                  runtime: state.runtime,
+                  target: state.target,
+                  packId,
+                  preferred: true,
+                }),
+              ],
             }),
           );
           continue;
@@ -1654,14 +2235,49 @@ function buildUpdateOperations({
             ownership,
             overrideEligible: file.override_eligible,
             reason: `existing path is not a writable file: ${digest.error}`,
+            reasonCode: REASON_CODE_UPDATE_CONFLICT,
+            remediationActions: [
+              buildPreviewUpdateAction({
+                runtime: state.runtime,
+                target: state.target,
+                packId,
+                preferred: true,
+              }),
+            ],
           }),
         );
         continue;
       }
 
       if (digest.digest === file.sha256) {
+        if (stateFile?.owned_by_pairslash === false) {
+          operations.push(
+            buildOperation("reconcile_unmanaged", {
+              packId,
+              relativePath: file.relative_path,
+              absolutePath,
+              assetKind: file.asset_kind,
+              installSurface: file.install_surface,
+              ownership,
+              overrideEligible: file.override_eligible,
+              reason: "unmanaged file already matches compiled artifact",
+              reasonCode: REASON_CODE_RECONCILE_IDENTICAL,
+              managementMode: "reconciled_unmanaged",
+              reconcileMode: "identical",
+              remediationActions: [
+                buildPreviewUpdateAction({
+                  runtime: state.runtime,
+                  target: state.target,
+                  packId,
+                  preferred: true,
+                }),
+              ],
+            }),
+          );
+          continue;
+        }
         operations.push(
-          buildOperation(stateFile?.owned_by_pairslash === false ? "skip_unmanaged" : "skip_identical", {
+          buildOperation("skip_identical", {
             packId,
             relativePath: file.relative_path,
             absolutePath,
@@ -1669,10 +2285,7 @@ function buildUpdateOperations({
             installSurface: file.install_surface,
             ownership,
             overrideEligible: file.override_eligible,
-            reason:
-              stateFile?.owned_by_pairslash === false
-                ? "unmanaged file already matches compiled artifact"
-                : "existing file already matches compiled artifact",
+            reason: "existing file already matches compiled artifact",
           }),
         );
         continue;
@@ -1682,7 +2295,7 @@ function buildUpdateOperations({
         if (file.override_eligible) {
           warnings.push(`preserve-override:${packId}/${file.relative_path}: existing unmanaged file preserved`);
           operations.push(
-            buildOperation("preserve_override", {
+            buildOperation("reconcile_unmanaged", {
               packId,
               relativePath: file.relative_path,
               absolutePath,
@@ -1691,6 +2304,17 @@ function buildUpdateOperations({
               ownership,
               overrideEligible: file.override_eligible,
               reason: "existing unmanaged file preserved as local override",
+              reasonCode: REASON_CODE_RECONCILE_OVERRIDE,
+              managementMode: "reconciled_unmanaged",
+              reconcileMode: "override_preserved",
+              remediationActions: [
+                buildPreviewUpdateAction({
+                  runtime: state.runtime,
+                  target: state.target,
+                  packId,
+                  preferred: true,
+                }),
+              ],
             }),
           );
         } else {
@@ -1704,6 +2328,15 @@ function buildUpdateOperations({
               ownership,
               overrideEligible: file.override_eligible,
               reason: "unmanaged conflicting file blocks update",
+              reasonCode: REASON_CODE_UNMANAGED_CONFLICT,
+              remediationActions: [
+                buildPreviewInstallAction({
+                  runtime: state.runtime,
+                  target: state.target,
+                  packId,
+                  preferred: true,
+                }),
+              ],
             }),
           );
         }
@@ -1714,7 +2347,7 @@ function buildUpdateOperations({
         if (file.override_eligible) {
           warnings.push(`preserve-override:${packId}/${file.relative_path}: existing unmanaged file preserved`);
           operations.push(
-            buildOperation("preserve_override", {
+            buildOperation("reconcile_unmanaged", {
               packId,
               relativePath: file.relative_path,
               absolutePath,
@@ -1723,6 +2356,17 @@ function buildUpdateOperations({
               ownership,
               overrideEligible: file.override_eligible,
               reason: "existing unmanaged file preserved as local override",
+              reasonCode: REASON_CODE_RECONCILE_OVERRIDE,
+              managementMode: "reconciled_unmanaged",
+              reconcileMode: "override_preserved",
+              remediationActions: [
+                buildPreviewUpdateAction({
+                  runtime: state.runtime,
+                  target: state.target,
+                  packId,
+                  preferred: true,
+                }),
+              ],
             }),
           );
         } else {
@@ -1736,6 +2380,15 @@ function buildUpdateOperations({
               ownership,
               overrideEligible: file.override_eligible,
               reason: "unmanaged conflicting file blocks update",
+              reasonCode: REASON_CODE_UNMANAGED_CONFLICT,
+              remediationActions: [
+                buildPreviewInstallAction({
+                  runtime: state.runtime,
+                  target: state.target,
+                  packId,
+                  preferred: true,
+                }),
+              ],
             }),
           );
         }
@@ -1770,6 +2423,15 @@ function buildUpdateOperations({
             ownership: "pairslash",
             overrideEligible: file.override_eligible,
             reason: "valid local override preserved during update",
+            reasonCode: REASON_CODE_MANAGED_OVERRIDE,
+            remediationActions: [
+              buildPreviewUpdateAction({
+                runtime: state.runtime,
+                target: state.target,
+                packId,
+                preferred: true,
+              }),
+            ],
           }),
         );
         continue;
@@ -1785,6 +2447,15 @@ function buildUpdateOperations({
           ownership: "pairslash",
           overrideEligible: file.override_eligible,
           reason: "local modification on non-override file blocks update",
+          reasonCode: REASON_CODE_UPDATE_CONFLICT,
+          remediationActions: [
+            buildPreviewUpdateAction({
+              runtime: state.runtime,
+              target: state.target,
+              packId,
+              preferred: true,
+            }),
+          ],
         }),
       );
     }
@@ -1817,6 +2488,8 @@ export function planUpdate({
   const adapter = runtimeSelection.adapter ?? getRuntimeAdapter(normalizedRuntime);
   const warnings = [];
   const errors = [];
+  const reasonCodes = [];
+  const remediationActions = [];
 
   if (!runtimeSelection.detection?.available) {
     errors.push(
@@ -1832,6 +2505,8 @@ export function planUpdate({
     target: normalizedTarget,
     adapter,
     errors,
+    reasonCodes,
+    remediationActions,
   });
 
   const { selectedPackIds, selection } = resolveUpdateSelection({
@@ -1920,6 +2595,8 @@ export function planUpdate({
     selectedPackIds,
     warnings,
     errors,
+    reasonCodes,
+    remediationActions,
   });
 
   if (selectedPackIds.length > 0) {
@@ -2008,10 +2685,37 @@ function buildStateAfterUninstall({ envelope, transactionId }) {
   };
 }
 
-function buildUninstallOperations({ state, selectedPacks, warnings }) {
+function buildUninstallOperations({ selectedPacks, warnings, installRoot }) {
   const operations = [];
 
   for (const pack of selectedPacks) {
+    const boundaryIssue = inspectInstallDirBoundary({
+      installRoot,
+      installDir: pack.install_dir,
+    });
+    if (boundaryIssue) {
+      operations.push(
+        buildOperation("blocked_conflict", {
+          packId: pack.id,
+          relativePath: ".",
+          absolutePath: pack.install_dir,
+          ownership: "unmanaged",
+          reason: `${boundaryIssue.reason}: ${boundaryIssue.detail}`,
+          reasonCode: REASON_CODE_UNMANAGED_CONFLICT,
+          remediationActions: [
+            buildReviewRemediationAction({
+              actionId: `review-install-dir:${pack.id}`,
+              summary: "Fix the unmanaged install directory path before uninstalling this pack.",
+              path: pack.install_dir,
+              appliesToActions: ["doctor", "uninstall"],
+              reasonCodes: [REASON_CODE_UNMANAGED_CONFLICT],
+              preferred: true,
+            }),
+          ],
+        }),
+      );
+      continue;
+    }
     const trackedPaths = new Set(pack.files.map((file) => file.absolute_path));
     let containerRetained = false;
 
@@ -2028,6 +2732,17 @@ function buildUninstallOperations({ state, selectedPacks, warnings }) {
             ownership: "user",
             overrideEligible: file.override_eligible,
             reason: "file preserved because PairSlash did not create it",
+            reasonCode: file.reconciled_reason_code ?? REASON_CODE_UNINSTALL_PRESERVE_UNMANAGED,
+            managementMode: file.management_mode ?? "reconciled_unmanaged",
+            remediationActions: [
+              buildReviewRemediationAction({
+                actionId: `review-unmanaged:${pack.id}:${file.relative_path}`,
+                summary: "Review the unmanaged file that uninstall will preserve.",
+                path: file.absolute_path,
+                appliesToActions: ["doctor", "uninstall"],
+                reasonCodes: [file.reconciled_reason_code ?? REASON_CODE_UNINSTALL_PRESERVE_UNMANAGED],
+              }),
+            ],
           }),
         );
         continue;
@@ -2102,20 +2817,37 @@ function buildUninstallOperations({ state, selectedPacks, warnings }) {
     }
 
     if (exists(pack.install_dir)) {
-      const unknownFiles = walkFiles(pack.install_dir).filter((absolutePath) => !trackedPaths.has(absolutePath));
-      for (const absolutePath of unknownFiles) {
+      const installDirStat = safeLstat(pack.install_dir);
+      if (!installDirStat.ok || !installDirStat.stat.isDirectory()) {
         containerRetained = true;
-        const relativePath = relativeFrom(pack.install_dir, absolutePath);
-        warnings.push(`orphan-unknown:${pack.id}/${relativePath}: unknown file preserved`);
+        warnings.push(`orphan-root-invalid:${pack.id}: install root is not a directory and will be preserved`);
         operations.push(
           buildOperation("skip_unmanaged", {
             packId: pack.id,
-            relativePath,
-            absolutePath,
+            relativePath: ".",
+            absolutePath: pack.install_dir,
             ownership: "unmanaged",
-            reason: "unknown file under pack install dir preserved",
+            reason: "pack install root is not a directory and will be preserved",
+            reasonCode: REASON_CODE_UNINSTALL_PRESERVE_UNMANAGED,
           }),
         );
+      } else {
+        const unknownFiles = walkFiles(pack.install_dir).filter((absolutePath) => !trackedPaths.has(absolutePath));
+        for (const absolutePath of unknownFiles) {
+          containerRetained = true;
+          const relativePath = relativeFrom(pack.install_dir, absolutePath);
+          warnings.push(`orphan-unknown:${pack.id}/${relativePath}: unknown file preserved`);
+          operations.push(
+            buildOperation("skip_unmanaged", {
+              packId: pack.id,
+              relativePath,
+              absolutePath,
+              ownership: "unmanaged",
+              reason: "unknown file under pack install dir preserved",
+              reasonCode: REASON_CODE_UNINSTALL_PRESERVE_UNMANAGED,
+            }),
+          );
+        }
       }
     }
 
@@ -2141,12 +2873,16 @@ export function planUninstall({ repoRoot, runtime, target = "repo", packs = [] }
   const adapter = getRuntimeAdapter(normalizedRuntime);
   const warnings = [];
   const errors = [];
+  const reasonCodes = [];
+  const remediationActions = [];
   const { statePath, state, installRoot, journalDir } = resolveUpdateEnvironment({
     repoRoot,
     runtime: normalizedRuntime,
     target: normalizedTarget,
     adapter,
     errors,
+    reasonCodes,
+    remediationActions,
   });
 
   for (const requestedPack of packs) {
@@ -2157,9 +2893,9 @@ export function planUninstall({ repoRoot, runtime, target = "repo", packs = [] }
 
   const selected = packs.length > 0 ? state.packs.filter((pack) => packs.includes(pack.id)) : state.packs;
   const operations = buildUninstallOperations({
-    state,
     selectedPacks: selected,
     warnings,
+    installRoot,
   });
 
   if (selected.length > 0) {
@@ -2191,6 +2927,8 @@ export function planUninstall({ repoRoot, runtime, target = "repo", packs = [] }
     selectedPacks: selected.map((pack) => pack.id),
     warnings,
     errors,
+    reasonCodes,
+    remediationActions,
   });
   return {
     repoRoot,
@@ -2226,3 +2964,11 @@ export function loadStateForDoctor({ repoRoot, runtime, target }) {
 
 export { resolveStatePath };
 export { detectRuntimeSelection, satisfiesRuntimeRange };
+export {
+  buildInstallStateMetadataMismatches,
+  buildLifecycleCommand,
+  buildReviewRemediationAction,
+  buildRunCommandRemediationAction,
+  collectLifecycleReasonCodes,
+  dedupeRemediationActions,
+} from "./semantics.js";

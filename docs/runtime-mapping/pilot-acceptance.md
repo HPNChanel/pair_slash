@@ -26,6 +26,9 @@ The acceptance slice covers:
 - fresh install user-scope
 - update that preserves a valid local override
 - uninstall that removes only PairSlash-owned assets
+- preview/doctor parity for non-blocking unmanaged reconcile cases
+- preview/doctor parity for stale install-state metadata blocks
+- install preview redirecting already managed packs to `update`
 - doctor catching a broken setup
 
 The JSON report is an automation baseline for CI and reproducibility. It is not

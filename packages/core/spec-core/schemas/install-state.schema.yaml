@@ -183,10 +183,19 @@ properties:
                 type: boolean
               owned_by_pairslash:
                 type: boolean
+              management_mode:
+                type: string
+                enum:
+                  - pairslash_owned
+                  - reconciled_unmanaged
               override_eligible:
                 type: boolean
               local_override:
                 type: boolean
+              reconciled_reason_code:
+                type:
+                  - string
+                  - "null"
               last_operation:
                 type:
                   - string

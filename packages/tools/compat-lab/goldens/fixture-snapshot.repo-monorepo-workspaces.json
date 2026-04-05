@@ -412,6 +412,7 @@
           "create": 20,
           "mkdir": 2,
           "preserve_override": 0,
+          "reconcile_unmanaged": 0,
           "remove": 0,
           "replace": 0,
           "skip_identical": 0,
@@ -1012,6 +1013,31 @@
             "summary": "update preview reports no override-preservation or conflict risk"
           },
           {
+            "blocking_for_install": true,
+            "evidence": {
+              "redirects": [
+                {
+                  "pack_id": "pairslash-frontend",
+                  "reason": "pack is already managed by PairSlash; run update instead of install",
+                  "reason_code": "managed-pack-requires-update",
+                  "relative_path": "."
+                },
+                {
+                  "pack_id": "pairslash-plan",
+                  "reason": "pack is already managed by PairSlash; run update instead of install",
+                  "reason_code": "managed-pack-requires-update",
+                  "relative_path": "."
+                }
+              ]
+            },
+            "group": "install_state",
+            "id": "install_state.install_preview_parity",
+            "remediation": "Run `pairslash update --preview` for those packs instead of reinstalling them.",
+            "severity": "fail",
+            "status": "fail",
+            "summary": "2 requested pack(s) are already managed; install preview redirects to update"
+          },
+          {
             "blocking_for_install": false,
             "evidence": {},
             "group": "conflict",
@@ -1050,13 +1076,13 @@
         },
         "first_workflow_guidance": {
           "commands": [
-            "Launch codex from the repo root and use /skills to run pairslash-plan."
+            "node packages/tools/cli/src/bin/pairslash.js doctor --runtime codex --target repo"
           ],
-          "rationale": "A managed pack is already installed for this runtime and target.",
-          "ready": true,
+          "rationale": "Blocking issues must be fixed before install or first workflow execution.",
+          "ready": false,
           "recommended_pack_id": "pairslash-plan"
         },
-        "install_blocked": false,
+        "install_blocked": true,
         "installed_packs": [
           {
             "id": "pairslash-frontend",
@@ -1106,10 +1132,38 @@
             "suggested_fix": "Review `doctor --format json` to confirm which packs are local-dev, official-preview, or verified-external.",
             "summary": "2 installed pack(s) require trust review or carry non-core support posture",
             "verdict": "warn"
+          },
+          {
+            "blocking_for_install": true,
+            "check_id": "install_state.install_preview_parity",
+            "code": "DOC-INSTALL_STATE-INSTALL_PREVIEW_PARITY",
+            "evidence": {
+              "redirects": [
+                {
+                  "pack_id": "pairslash-frontend",
+                  "reason": "pack is already managed by PairSlash; run update instead of install",
+                  "reason_code": "managed-pack-requires-update",
+                  "relative_path": "."
+                },
+                {
+                  "pack_id": "pairslash-plan",
+                  "reason": "pack is already managed by PairSlash; run update instead of install",
+                  "reason_code": "managed-pack-requires-update",
+                  "relative_path": "."
+                }
+              ]
+            },
+            "message": "2 requested pack(s) are already managed; install preview redirects to update",
+            "remediation": "Run `pairslash update --preview` for those packs instead of reinstalling them.",
+            "severity": "fail",
+            "suggested_fix": "Run `pairslash update --preview` for those packs instead of reinstalling them.",
+            "summary": "2 requested pack(s) are already managed; install preview redirects to update",
+            "verdict": "fail"
           }
         ],
         "next_actions": [
-          "Review `doctor --format json` to confirm which packs are local-dev, official-preview, or verified-external."
+          "node packages/tools/cli/src/bin/pairslash.js update pairslash-frontend --runtime codex --target repo --dry-run",
+          "node packages/tools/cli/src/bin/pairslash.js update pairslash-plan --runtime codex --target repo --dry-run"
         ],
         "runtime": "codex_cli",
         "runtime_compatibility": {
@@ -1159,7 +1213,7 @@
           "tested_range_status": "recorded",
           "tested_version_range": "0.116.0"
         },
-        "support_verdict": "warn",
+        "support_verdict": "fail",
         "target": "repo"
       },
       "doctor_before": {
@@ -1403,6 +1457,16 @@
             "severity": "info",
             "status": "pass",
             "summary": "no installed packs require update-risk analysis yet"
+          },
+          {
+            "blocking_for_install": false,
+            "evidence": {},
+            "group": "install_state",
+            "id": "install_state.install_preview_parity",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "requested packs are not already PairSlash-managed for this runtime and target"
           },
           {
             "blocking_for_install": false,
@@ -1821,6 +1885,7 @@
           "create": 20,
           "mkdir": 2,
           "preserve_override": 0,
+          "reconcile_unmanaged": 0,
           "remove": 0,
           "replace": 0,
           "skip_identical": 0,
@@ -2198,6 +2263,7 @@
           "create": 18,
           "mkdir": 2,
           "preserve_override": 0,
+          "reconcile_unmanaged": 0,
           "remove": 0,
           "replace": 0,
           "skip_identical": 0,
@@ -2767,6 +2833,31 @@
             "summary": "update preview reports no override-preservation or conflict risk"
           },
           {
+            "blocking_for_install": true,
+            "evidence": {
+              "redirects": [
+                {
+                  "pack_id": "pairslash-frontend",
+                  "reason": "pack is already managed by PairSlash; run update instead of install",
+                  "reason_code": "managed-pack-requires-update",
+                  "relative_path": "."
+                },
+                {
+                  "pack_id": "pairslash-plan",
+                  "reason": "pack is already managed by PairSlash; run update instead of install",
+                  "reason_code": "managed-pack-requires-update",
+                  "relative_path": "."
+                }
+              ]
+            },
+            "group": "install_state",
+            "id": "install_state.install_preview_parity",
+            "remediation": "Run `pairslash update --preview` for those packs instead of reinstalling them.",
+            "severity": "fail",
+            "status": "fail",
+            "summary": "2 requested pack(s) are already managed; install preview redirects to update"
+          },
+          {
             "blocking_for_install": false,
             "evidence": {},
             "group": "conflict",
@@ -2806,13 +2897,13 @@
         },
         "first_workflow_guidance": {
           "commands": [
-            "Launch gh from the repo root and use /skills to run pairslash-plan."
+            "node packages/tools/cli/src/bin/pairslash.js doctor --runtime copilot --target user"
           ],
-          "rationale": "A managed pack is already installed for this runtime and target.",
-          "ready": true,
+          "rationale": "Blocking issues must be fixed before install or first workflow execution.",
+          "ready": false,
           "recommended_pack_id": "pairslash-plan"
         },
-        "install_blocked": false,
+        "install_blocked": true,
         "installed_packs": [
           {
             "id": "pairslash-frontend",
@@ -2877,11 +2968,38 @@
             "suggested_fix": "Review `doctor --format json` to confirm which packs are local-dev, official-preview, or verified-external.",
             "summary": "2 installed pack(s) require trust review or carry non-core support posture",
             "verdict": "warn"
+          },
+          {
+            "blocking_for_install": true,
+            "check_id": "install_state.install_preview_parity",
+            "code": "DOC-INSTALL_STATE-INSTALL_PREVIEW_PARITY",
+            "evidence": {
+              "redirects": [
+                {
+                  "pack_id": "pairslash-frontend",
+                  "reason": "pack is already managed by PairSlash; run update instead of install",
+                  "reason_code": "managed-pack-requires-update",
+                  "relative_path": "."
+                },
+                {
+                  "pack_id": "pairslash-plan",
+                  "reason": "pack is already managed by PairSlash; run update instead of install",
+                  "reason_code": "managed-pack-requires-update",
+                  "relative_path": "."
+                }
+              ]
+            },
+            "message": "2 requested pack(s) are already managed; install preview redirects to update",
+            "remediation": "Run `pairslash update --preview` for those packs instead of reinstalling them.",
+            "severity": "fail",
+            "suggested_fix": "Run `pairslash update --preview` for those packs instead of reinstalling them.",
+            "summary": "2 requested pack(s) are already managed; install preview redirects to update",
+            "verdict": "fail"
           }
         ],
         "next_actions": [
-          "Proceed with preview/doctor evidence, but treat the lane as unrecorded until live pilot evidence is captured.",
-          "Review `doctor --format json` to confirm which packs are local-dev, official-preview, or verified-external."
+          "node packages/tools/cli/src/bin/pairslash.js update pairslash-frontend --runtime copilot --target user --dry-run",
+          "node packages/tools/cli/src/bin/pairslash.js update pairslash-plan --runtime copilot --target user --dry-run"
         ],
         "runtime": "copilot_cli",
         "runtime_compatibility": {
@@ -2931,7 +3049,7 @@
           "tested_range_status": "unrecorded",
           "tested_version_range": null
         },
-        "support_verdict": "warn",
+        "support_verdict": "fail",
         "target": "user"
       },
       "doctor_before": {
@@ -3174,6 +3292,16 @@
             "severity": "info",
             "status": "pass",
             "summary": "no installed packs require update-risk analysis yet"
+          },
+          {
+            "blocking_for_install": false,
+            "evidence": {},
+            "group": "install_state",
+            "id": "install_state.install_preview_parity",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "requested packs are not already PairSlash-managed for this runtime and target"
           },
           {
             "blocking_for_install": false,
@@ -3587,6 +3715,7 @@
           "create": 18,
           "mkdir": 2,
           "preserve_override": 0,
+          "reconcile_unmanaged": 0,
           "remove": 0,
           "replace": 0,
           "skip_identical": 0,

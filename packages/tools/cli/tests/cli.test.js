@@ -12,6 +12,7 @@ import {
   installFakeRuntime,
   repoRoot,
   updatePackManifest,
+  writeManualInstallFile,
 } from "../../../../tests/phase4-helpers.js";
 
 const serial = { concurrency: false };
@@ -87,6 +88,50 @@ test("pairslash preview install emits json plan", serial, async () => {
     assert.deepEqual(payload.selected_packs, ["pairslash-plan"]);
   } finally {
     runtime.cleanup();
+  }
+});
+
+test("pairslash preview install json includes lifecycle reason codes and remediation actions", serial, async () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  let output = "";
+  try {
+    writeManualInstallFile({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      packId: "pairslash-plan",
+      relativePath: "SKILL.md",
+      content: "manual override\n",
+    });
+    const exitCode = await runCli({
+      argv: [
+        "preview",
+        "install",
+        "pairslash-plan",
+        "--runtime",
+        "codex",
+        "--target",
+        "repo",
+        "--format",
+        "json",
+      ],
+      cwd: fixture.tempRoot,
+      stdout: {
+        write(chunk) {
+          output += chunk;
+        },
+      },
+    });
+    assert.equal(exitCode, 0);
+    const payload = JSON.parse(output);
+    const operation = payload.operations.find((entry) => entry.relative_path === "SKILL.md");
+    assert.ok(payload.reason_codes.includes("reconcile-unmanaged-override-preserved"));
+    assert.ok(Array.isArray(payload.remediation_actions));
+    assert.equal(operation.kind, "reconcile_unmanaged");
+    assert.equal(operation.reason_code, "reconcile-unmanaged-override-preserved");
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
   }
 });
 
@@ -540,6 +585,184 @@ test("pairslash doctor emits structured json report", serial, async () => {
     assert.ok(Array.isArray(payload.checks));
     assert.ok(Array.isArray(payload.issues));
     assert.ok(Array.isArray(payload.first_workflow_guidance.commands));
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("pairslash doctor json includes lifecycle reason codes and remediation actions", serial, async () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  let output = "";
+  try {
+    writeManualInstallFile({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      packId: "pairslash-plan",
+      relativePath: "SKILL.md",
+      content: "manual override\n",
+    });
+    const exitCode = await runCli({
+      argv: ["doctor", "--runtime", "codex", "--target", "repo", "--format", "json"],
+      cwd: fixture.tempRoot,
+      stdout: {
+        write(chunk) {
+          output += chunk;
+        },
+      },
+    });
+    assert.equal(exitCode, 0);
+    const payload = JSON.parse(output);
+    const issue = payload.issues.find((entry) => entry.check_id === "conflict.unmanaged_install_root");
+    assert.ok(payload.reason_codes.includes("reconcile-unmanaged-override-preserved"));
+    assert.ok(Array.isArray(payload.remediation_actions));
+    assert.ok(issue.reason_codes.includes("reconcile-unmanaged-override-preserved"));
+    assert.equal(payload.remediation.status, "advisory");
+    assert.ok(Array.isArray(payload.remediation.commands));
+    assert.ok(
+      payload.remediation.commands.some((command) =>
+        command.command.includes("preview install pairslash-plan"),
+      ),
+    );
+    assert.ok(
+      payload.remediation.actions.some(
+        (action) =>
+          action.reason_codes.includes("reconcile-unmanaged-override-preserved") &&
+          action.decision === "reconcile",
+      ),
+    );
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("pairslash preview install and doctor --packs share managed reinstall reason code", serial, async () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  let previewOutput = "";
+  let doctorOutput = "";
+  try {
+    await runCli({
+      argv: [
+        "install",
+        "pairslash-plan",
+        "--runtime",
+        "codex",
+        "--target",
+        "repo",
+        "--apply",
+        "--yes",
+      ],
+      cwd: fixture.tempRoot,
+      stdout: { write() {}, isTTY: true },
+      stdin: { isTTY: true },
+    });
+
+    const previewExitCode = await runCli({
+      argv: [
+        "preview",
+        "install",
+        "pairslash-plan",
+        "--runtime",
+        "codex",
+        "--target",
+        "repo",
+        "--format",
+        "json",
+      ],
+      cwd: fixture.tempRoot,
+      stdout: {
+        write(chunk) {
+          previewOutput += chunk;
+        },
+      },
+    });
+    assert.equal(previewExitCode, 1);
+
+    const doctorExitCode = await runCli({
+      argv: [
+        "doctor",
+        "--runtime",
+        "codex",
+        "--target",
+        "repo",
+        "--packs",
+        "pairslash-plan",
+        "--format",
+        "json",
+      ],
+      cwd: fixture.tempRoot,
+      stdout: {
+        write(chunk) {
+          doctorOutput += chunk;
+        },
+      },
+    });
+    assert.equal(doctorExitCode, 1);
+
+    const previewPayload = JSON.parse(previewOutput);
+    const doctorPayload = JSON.parse(doctorOutput);
+    assert.ok(previewPayload.commitability.blocked_reason_codes.includes("managed-pack-requires-update"));
+    assert.ok(previewPayload.reason_codes.includes("managed-pack-requires-update"));
+    assert.ok(doctorPayload.reason_codes.includes("managed-pack-requires-update"));
+    assert.ok(
+      doctorPayload.issues.some((issue) => issue.reason_codes?.includes("managed-pack-requires-update")),
+    );
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("pairslash preview install and doctor block non-directory pack install root", serial, async () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  let previewOutput = "";
+  let doctorOutput = "";
+  try {
+    mkdirSync(join(fixture.tempRoot, ".agents", "skills"), { recursive: true });
+    writeFileSync(join(fixture.tempRoot, ".agents", "skills", "pairslash-plan"), "blocked-root\n");
+
+    const previewExitCode = await runCli({
+      argv: [
+        "preview",
+        "install",
+        "pairslash-plan",
+        "--runtime",
+        "codex",
+        "--target",
+        "repo",
+        "--format",
+        "json",
+      ],
+      cwd: fixture.tempRoot,
+      stdout: {
+        write(chunk) {
+          previewOutput += chunk;
+        },
+      },
+    });
+    assert.equal(previewExitCode, 1);
+
+    const doctorExitCode = await runCli({
+      argv: ["doctor", "--runtime", "codex", "--target", "repo", "--format", "json"],
+      cwd: fixture.tempRoot,
+      stdout: {
+        write(chunk) {
+          doctorOutput += chunk;
+        },
+      },
+    });
+    assert.equal(doctorExitCode, 1);
+
+    const previewPayload = JSON.parse(previewOutput);
+    const doctorPayload = JSON.parse(doctorOutput);
+    const issue = doctorPayload.issues.find((entry) => entry.check_id === "conflict.unmanaged_install_root");
+    assert.ok(previewPayload.reason_codes.includes("unmanaged-conflict-blocking"));
+    assert.ok(doctorPayload.reason_codes.includes("unmanaged-conflict-blocking"));
+    assert.ok(issue?.reason_codes?.includes("unmanaged-conflict-blocking"));
   } finally {
     runtime.cleanup();
     fixture.cleanup();

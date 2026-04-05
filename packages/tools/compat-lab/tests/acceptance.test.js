@@ -35,13 +35,21 @@ test("compat-lab acceptance macos lane reaches first workflow and keeps uninstal
       "fresh-install.macos.codex.repo",
       "update-preserve-override.macos.codex.repo",
       "uninstall-owned-only.macos.codex.repo",
+      "semantic-parity.reconcile-unmanaged.macos.codex.repo",
+      "semantic-parity.install-root-shape.macos.codex.repo",
+      "semantic-parity.stale-state.macos.codex.repo",
+      "semantic-parity.managed-reinstall.macos.codex.repo",
+      "semantic-parity.managed-reinstall-remediation.macos.codex.repo",
       "doctor-broken-setup.macos.codex.repo",
     ],
   );
   assert.equal(report.scenarios[0].support_verdict, "warn");
   assert.equal(report.scenarios[1].update_success, true);
   assert.equal(report.scenarios[2].uninstall_success, true);
-  assert.equal(report.scenarios[3].doctor_success, true);
+  assert.equal(
+    report.scenarios.find((scenario) => scenario.id === "doctor-broken-setup.macos.codex.repo")?.doctor_success,
+    true,
+  );
 });
 
 test("compat-lab acceptance linux lane stays usable despite copilot tested-range warning", serial, () => {

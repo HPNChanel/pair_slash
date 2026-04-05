@@ -17,6 +17,8 @@ import {
   serializePackManifestV2,
   selectPackManifestRecords,
   validateDoctorReport,
+  validateInstallState,
+  validatePreviewPlan,
   validateLintReport,
   validatePackManifestV2,
   validatePackTrustDescriptor,
@@ -413,6 +415,51 @@ test("doctor report validator accepts phase 4 execution report shape", () => {
       compatible_pack_count: 1,
       incompatible_pack_ids: [],
     },
+    reason_codes: ["reconcile-unmanaged-identical"],
+    remediation_actions: [
+      {
+        action_id: "preview-install:codex_cli:repo:pairslash-plan",
+        action_kind: "run_command",
+        summary: "Review the install preview before applying changes.",
+        command: "node packages/tools/cli/src/bin/pairslash.js preview install pairslash-plan --runtime codex --target repo",
+        safe_without_write: true,
+        requires_preview: false,
+        applies_to_actions: ["doctor", "install"],
+        reason_codes: ["reconcile-unmanaged-identical"],
+        preferred: true,
+      },
+    ],
+    remediation: {
+      status: "advisory",
+      commands: [
+        {
+          action_id: "preview-install:codex_cli:repo:pairslash-plan",
+          summary: "Review the install preview before applying changes.",
+          command: "node packages/tools/cli/src/bin/pairslash.js preview install pairslash-plan --runtime codex --target repo",
+          safe_without_write: true,
+          requires_preview: false,
+          applies_to_actions: ["doctor", "install"],
+          reason_codes: ["reconcile-unmanaged-identical"],
+          preferred: true,
+          decision: "reconcile",
+        },
+      ],
+      actions: [
+        {
+          action_id: "preview-install:codex_cli:repo:pairslash-plan",
+          action_kind: "run_command",
+          summary: "Review the install preview before applying changes.",
+          command: "node packages/tools/cli/src/bin/pairslash.js preview install pairslash-plan --runtime codex --target repo",
+          path: null,
+          safe_without_write: true,
+          requires_preview: false,
+          applies_to_actions: ["doctor", "install"],
+          reason_codes: ["reconcile-unmanaged-identical"],
+          preferred: true,
+          decision: "reconcile",
+        },
+      ],
+    },
     checks: [
       {
         id: "runtime.detect",
@@ -426,6 +473,8 @@ test("doctor report validator accepts phase 4 execution report shape", () => {
         remediation: null,
         evidence: {},
         blocking_for_install: false,
+        reason_codes: [],
+        remediation_actions: [],
       },
     ],
     issues: [
@@ -442,6 +491,20 @@ test("doctor report validator accepts phase 4 execution report shape", () => {
         blocking_for_install: false,
         message: "Windows is a prep lane for Phase 4 doctor and preview coverage.",
         remediation: "Use macOS Codex repo lane or Linux Copilot user lane for pilot-grade install evidence.",
+        reason_codes: ["reconcile-unmanaged-identical"],
+        remediation_actions: [
+          {
+            action_id: "preview-install:codex_cli:repo:pairslash-plan",
+            action_kind: "run_command",
+            summary: "Review the install preview before applying changes.",
+            command: "node packages/tools/cli/src/bin/pairslash.js preview install pairslash-plan --runtime codex --target repo",
+            safe_without_write: true,
+            requires_preview: false,
+            applies_to_actions: ["doctor", "install"],
+            reason_codes: ["reconcile-unmanaged-identical"],
+            preferred: true,
+          },
+        ],
       },
     ],
     next_actions: ["No action required."],
@@ -455,6 +518,127 @@ test("doctor report validator accepts phase 4 execution report shape", () => {
         "node packages/tools/cli/src/bin/pairslash.js install pairslash-plan --runtime codex --target repo --apply --yes",
       ],
     },
+  });
+  assert.deepEqual(errors, []);
+});
+
+test("preview plan validator accepts lifecycle reason codes and remediation actions", () => {
+  const errors = validatePreviewPlan({
+    kind: "preview-plan",
+    schema_version: "1.0.0",
+    action: "install",
+    runtime: "codex_cli",
+    target: "repo",
+    install_root: join(repoRoot, ".agents", "skills"),
+    state_path: join(repoRoot, ".pairslash", "install-state", "repo-codex_cli.json"),
+    can_apply: true,
+    requires_confirmation: true,
+    selected_packs: ["pairslash-plan"],
+    summary: {
+      mkdir: 1,
+      create: 0,
+      replace: 0,
+      reconcile_unmanaged: 1,
+      skip_identical: 0,
+      preserve_override: 0,
+      remove: 0,
+      skip_unmanaged: 0,
+      blocked_conflict: 0,
+      write_state: 1,
+      write_journal: 1,
+    },
+    warnings: [],
+    errors: [],
+    reason_codes: ["reconcile-unmanaged-identical"],
+    remediation_actions: [
+      {
+        action_id: "preview-install:codex_cli:repo:pairslash-plan",
+        action_kind: "run_command",
+        summary: "Review the install preview before applying changes.",
+        command: "node packages/tools/cli/src/bin/pairslash.js preview install pairslash-plan --runtime codex --target repo",
+        safe_without_write: true,
+        requires_preview: false,
+        applies_to_actions: ["doctor", "install"],
+        reason_codes: ["reconcile-unmanaged-identical"],
+        preferred: true,
+      },
+    ],
+    operations: [
+      {
+        kind: "reconcile_unmanaged",
+        pack_id: "pairslash-plan",
+        relative_path: "SKILL.md",
+        absolute_path: join(repoRoot, ".agents", "skills", "pairslash-plan", "SKILL.md"),
+        asset_kind: "skill_markdown",
+        install_surface: "canonical_skill",
+        ownership: "user",
+        override_eligible: true,
+        reason: "existing file already matches compiled artifact",
+        reason_code: "reconcile-unmanaged-identical",
+        management_mode: "reconciled_unmanaged",
+        reconcile_mode: "identical",
+        remediation_actions: [],
+      },
+    ],
+    commitability: {
+      status: "proceedable",
+      can_proceed: true,
+      blocked: false,
+      needs_explicit_approval: true,
+      can_proceed_operations: [],
+      blocked_operations_count: 0,
+      blocked_reasons: [],
+      blocked_reason_codes: [],
+      explicit_approval_hint: "Run the same action with --apply and explicit confirmation.",
+    },
+    preview_boundary: {
+      preview_only: true,
+      no_commit_on_preview: true,
+      commit_path: "pairslash install ... --apply",
+      note: "Preview is deterministic and does not write assets/config/memory.",
+    },
+  });
+  assert.deepEqual(errors, []);
+});
+
+test("install state validator accepts explicit management metadata", () => {
+  const errors = validateInstallState({
+    kind: "install-state",
+    schema_version: "1.0.0",
+    runtime: "codex_cli",
+    target: "repo",
+    config_home: join(repoRoot, ".agents"),
+    install_root: join(repoRoot, ".agents", "skills"),
+    updated_at: null,
+    last_transaction_id: null,
+    packs: [
+      {
+        id: "pairslash-plan",
+        version: "0.1.0",
+        install_dir: join(repoRoot, ".agents", "skills", "pairslash-plan"),
+        manifest_digest: "abc123",
+        compiler_version: "2.0.0",
+        files: [
+          {
+            relative_path: "SKILL.md",
+            absolute_path: join(repoRoot, ".agents", "skills", "pairslash-plan", "SKILL.md"),
+            source_digest: "abc123",
+            current_digest: "def456",
+            asset_kind: "skill_markdown",
+            install_surface: "canonical_skill",
+            runtime_selector: "shared",
+            generated: false,
+            write_authority_guarded: false,
+            owned_by_pairslash: false,
+            management_mode: "reconciled_unmanaged",
+            override_eligible: true,
+            local_override: true,
+            reconciled_reason_code: "reconcile-unmanaged-override-preserved",
+            last_operation: "reconcile_unmanaged",
+          },
+        ],
+      },
+    ],
   });
   assert.deepEqual(errors, []);
 });

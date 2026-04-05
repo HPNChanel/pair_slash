@@ -14,6 +14,10 @@ import {
   writeManualInstallFile,
 } from "../../../../tests/phase4-helpers.js";
 
+function repoStatePath(tempRoot, runtime = "codex_cli", target = "repo") {
+  return join(tempRoot, ".pairslash", "install-state", `${target}-${runtime}.json`);
+}
+
 function buildCodexTestAdapter({
   runtimeAvailable = true,
   runtimeVersion = "0.116.0",
@@ -268,6 +272,225 @@ test("doctor mirrors install preview when unmanaged pack directories are non-blo
     assert.equal(report.install_blocked, false);
     assert.ok(unmanagedIssue);
     assert.notEqual(unmanagedIssue.verdict, "fail");
+    assert.ok(
+      unmanagedIssue.reason_codes.includes("reconcile-unmanaged-identical"),
+    );
+    assert.ok(
+      unmanagedIssue.remediation_actions.some((action) =>
+        action.command?.includes("preview install pairslash-plan"),
+      ),
+    );
+    assert.equal(report.remediation.status, "advisory");
+    assert.ok(
+      report.remediation.commands.some((command) =>
+        command.command.includes("preview install pairslash-plan"),
+      ),
+    );
+    assert.ok(
+      report.remediation.actions.some(
+        (action) =>
+          action.reason_codes.includes("reconcile-unmanaged-identical") && action.decision === "reconcile",
+      ),
+    );
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("doctor blocks when selected pack install root is not a directory", () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  try {
+    mkdirSync(join(fixture.tempRoot, ".agents", "skills"), { recursive: true });
+    writeFileSync(join(fixture.tempRoot, ".agents", "skills", "pairslash-plan"), "blocked-root\n");
+
+    const report = runDoctor({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      target: "repo",
+    });
+    const issue = report.issues.find((entry) => entry.check_id === "conflict.unmanaged_install_root");
+
+    assert.equal(report.install_blocked, true);
+    assert.ok(issue);
+    assert.ok(issue.reason_codes.includes("unmanaged-conflict-blocking"));
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("doctor default install intent does not block on off-intent unmanaged collisions", () => {
+  const fixture = createTempRepo({ packs: ["pairslash-plan", "pairslash-review"] });
+  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  try {
+    writeManualInstallFile({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      packId: "pairslash-review",
+      relativePath: "pairslash.install.json",
+      content: "manual ownership file\n",
+    });
+
+    const preview = planInstall({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      target: "repo",
+      packs: ["pairslash-plan"],
+    });
+    const report = runDoctor({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      target: "repo",
+    });
+
+    assert.equal(preview.plan.can_apply, true);
+    assert.equal(report.install_blocked, false);
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("doctor emits blocked remediation command decisions for unmanaged conflicts", () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  try {
+    writeManualInstallFile({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      packId: "pairslash-plan",
+      relativePath: "pairslash.install.json",
+      content: "manual ownership file\n",
+    });
+
+    const report = runDoctor({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      target: "repo",
+    });
+    const issue = report.issues.find((entry) => entry.check_id === "conflict.unmanaged_install_root");
+
+    assert.equal(report.install_blocked, true);
+    assert.ok(issue);
+    assert.ok(issue.reason_codes.includes("ownership-metadata-conflict"));
+    assert.equal(report.remediation.status, "blocked");
+    assert.ok(
+      report.remediation.commands.some((command) =>
+        command.command.includes("preview install pairslash-plan"),
+      ),
+    );
+    assert.ok(
+      report.remediation.actions.some(
+        (action) =>
+          action.reason_codes.includes("ownership-metadata-conflict") && action.decision === "abort",
+      ),
+    );
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("doctor blocks stale install-state metadata with the same lifecycle reason code", () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  try {
+    mkdirSync(join(fixture.tempRoot, ".pairslash", "install-state"), { recursive: true });
+    writeFileSync(
+      repoStatePath(fixture.tempRoot),
+      JSON.stringify(
+        {
+          kind: "install-state",
+          schema_version: "1.0.0",
+          runtime: "codex_cli",
+          target: "repo",
+          config_home: join(fixture.tempRoot, ".agents-stale"),
+          install_root: join(fixture.tempRoot, ".agents-stale", "skills"),
+          updated_at: "2026-04-04T00:00:00.000Z",
+          last_transaction_id: null,
+          packs: [],
+        },
+        null,
+        2,
+      ),
+    );
+
+    const report = runDoctor({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      target: "repo",
+    });
+    const issue = report.issues.find((entry) => entry.check_id === "install_state.load");
+
+    assert.equal(report.install_blocked, true);
+    assert.ok(issue);
+    assert.ok(issue.reason_codes.includes("install-state-metadata-mismatch"));
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("doctor keeps reconciled unmanaged files visible after install", () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  try {
+    writeManualInstallFile({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      packId: "pairslash-plan",
+      relativePath: "SKILL.md",
+      content: "manual override\n",
+    });
+    applyInstall(planInstall({ repoRoot: fixture.tempRoot, runtime: "codex", target: "repo" }));
+
+    const report = runDoctor({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      target: "repo",
+    });
+    const issue = report.issues.find((entry) => entry.check_id === "conflict.unmanaged_install_root");
+
+    assert.ok(issue);
+    assert.ok(issue.reason_codes.includes("reconcile-unmanaged-override-preserved"));
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("doctor blocks explicit install intent when requested packs are already managed", () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  try {
+    applyInstall(planInstall({ repoRoot: fixture.tempRoot, runtime: "codex", target: "repo" }));
+
+    const report = runDoctor({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      target: "repo",
+      packs: ["pairslash-plan"],
+    });
+    const issue = report.issues.find((entry) => entry.check_id === "install_state.install_preview_parity");
+
+    assert.equal(report.install_blocked, true);
+    assert.ok(issue);
+    assert.ok(issue.reason_codes.includes("managed-pack-requires-update"));
+    assert.equal(report.remediation.status, "blocked");
+    assert.ok(
+      report.remediation.commands.some((command) =>
+        command.command.includes("update pairslash-plan --runtime codex --target repo --dry-run"),
+      ),
+    );
+    assert.ok(
+      report.remediation.actions.some(
+        (action) =>
+          action.reason_codes.includes("managed-pack-requires-update") &&
+          action.decision === "repair",
+      ),
+    );
   } finally {
     runtime.cleanup();
     fixture.cleanup();
@@ -324,6 +547,22 @@ test("doctor fails missing runtime check", () => {
     });
     assert.equal(report.support_verdict, "fail");
     assert.ok(report.issues.some((issue) => issue.check_id === "runtime.detect"));
+  } finally {
+    fixture.cleanup();
+  }
+});
+
+test("doctor remediation status is blocked whenever install is blocked", () => {
+  const fixture = createTempRepo();
+  try {
+    const report = runDoctor({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      target: "repo",
+      _adapter_override: buildCodexTestAdapter({ runtimeAvailable: false }),
+    });
+    assert.equal(report.install_blocked, true);
+    assert.equal(report.remediation.status, "blocked");
   } finally {
     fixture.cleanup();
   }

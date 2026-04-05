@@ -120,8 +120,28 @@ export function formatPreviewPlanText(plan) {
         lines.push(`  ${reason}`);
       }
     }
+    if (plan.commitability.blocked_reason_codes?.length > 0) {
+      lines.push("- blocked reason codes:");
+      for (const reasonCode of plan.commitability.blocked_reason_codes) {
+        lines.push(`  ${reasonCode}`);
+      }
+    }
     if (plan.commitability.explicit_approval_hint) {
       lines.push(`- approval hint: ${plan.commitability.explicit_approval_hint}`);
+    }
+  }
+  if (plan.reason_codes?.length > 0) {
+    lines.push("", "Lifecycle reason codes:");
+    for (const reasonCode of plan.reason_codes) {
+      lines.push(`- ${reasonCode}`);
+    }
+  }
+  if (plan.remediation_actions?.length > 0) {
+    lines.push("", "Remediation actions:");
+    for (const action of plan.remediation_actions) {
+      lines.push(
+        `- ${action.action_kind} ${action.action_id}: ${action.summary}${action.command ? ` :: ${action.command}` : ""}`,
+      );
     }
   }
   if (plan.preview_boundary) {
@@ -159,6 +179,9 @@ export function formatPreviewPlanText(plan) {
         typeof operation.override_eligible === "boolean"
           ? `override=${operation.override_eligible ? "yes" : "no"}`
           : null,
+        operation.reason_code ? `reason_code=${operation.reason_code}` : null,
+        operation.management_mode ? `management=${operation.management_mode}` : null,
+        operation.reconcile_mode ? `reconcile=${operation.reconcile_mode}` : null,
       ].filter(Boolean);
       lines.push(`- ${operation.kind} [${operation.pack_id}${rel}] ${operation.absolute_path}`);
       lines.push(`  ${operation.reason}${details.length > 0 ? ` :: ${details.join(", ")}` : ""}`);
@@ -209,6 +232,30 @@ export function formatDoctorText(report) {
     `Immediate next action: ${immediateNextAction}`,
     "",
   );
+  if (report.reason_codes?.length > 0) {
+    lines.push("Lifecycle reason codes:");
+    for (const reasonCode of report.reason_codes) {
+      lines.push(`- ${reasonCode}`);
+    }
+    lines.push("");
+  }
+  if (report.remediation) {
+    lines.push("Remediation:");
+    lines.push(`- status: ${report.remediation.status}`);
+    for (const command of report.remediation.commands ?? []) {
+      lines.push(`- command (${command.decision}): ${command.command}`);
+    }
+    lines.push("");
+  }
+  if (report.remediation_actions?.length > 0) {
+    lines.push("Remediation actions:");
+    for (const action of report.remediation_actions) {
+      lines.push(
+        `- ${action.action_kind} ${action.action_id}: ${action.summary}${action.command ? ` :: ${action.command}` : ""}`,
+      );
+    }
+    lines.push("");
+  }
   if (report.recent_trace_summary) {
     lines.push(
       "Recent traces:",
@@ -261,6 +308,9 @@ export function formatDoctorText(report) {
   } else {
     for (const issue of blockingIssues) {
       lines.push(`- ${issue.verdict} ${issue.code}: ${issue.summary}`);
+      if (issue.reason_codes?.length > 0) {
+        lines.push(`  reason codes: ${issue.reason_codes.join(", ")}`);
+      }
       if (issue.suggested_fix) {
         lines.push(`  fix: ${issue.suggested_fix}`);
       }
@@ -272,6 +322,9 @@ export function formatDoctorText(report) {
   } else {
     for (const issue of advisoryIssues) {
       lines.push(`- ${issue.verdict} ${issue.code}: ${issue.summary}`);
+      if (issue.reason_codes?.length > 0) {
+        lines.push(`  reason codes: ${issue.reason_codes.join(", ")}`);
+      }
       if (issue.suggested_fix) {
         lines.push(`  fix: ${issue.suggested_fix}`);
       }

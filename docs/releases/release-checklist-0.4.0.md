@@ -13,7 +13,7 @@ Status legend:
 - [x] `pack.manifest.yaml v2` validator, authoritative pack catalog derivation, conformance drift gates, and derived registry sync pass in `packages/core/spec-core/tests/spec-core.test.js` and `packages/core/spec-core/tests/manifest-v2.conformance.test.js`
 - [x] compiler v2 stays one-spec-two-runtimes through shared IR coverage in `packages/runtimes/codex/compiler/tests/compiler-codex.test.js` and `packages/runtimes/copilot/compiler/tests/compiler-copilot.test.js`
 - [x] `install`, `update`, and `uninstall` exercise preview, rollback, override preservation, repo scope, and user scope in `packages/tools/installer/tests/installer.test.js`
-- [x] `doctor` covers runtime/version/path/permission/conflict/tool/MCP checks in `packages/tools/doctor/tests/doctor.test.js`
+- [x] `doctor` covers runtime/version/path/permission/conflict/tool/MCP checks plus shared lifecycle reason-code parity in `packages/tools/doctor/tests/doctor.test.js`
 - [x] `pairslash lint` blocks installability regressions in `packages/tools/lint-bridge/tests/lint-bridge.test.js`
 - [x] CLI wiring for `preview`, `install`, `update`, `uninstall`, `doctor`, and `lint` is covered in `packages/tools/cli/tests/cli.test.js`
 - [x] compat-lab keeps the multi-archetype Phase 6 fixture corpus, deterministic compiler/config goldens, and fixture snapshots in `packages/tools/compat-lab/tests/compat-lab.test.js`
@@ -22,6 +22,7 @@ Status legend:
 - [x] public compatibility docs stay generated and in sync in `packages/tools/compat-lab/tests/matrix.test.js`
 - [ ] Do not declare Phase 4 complete if any managed command mutates without preview or dry-run support
 - [ ] Do not declare Phase 4 complete if uninstall removes unmanaged or user-edited content
+- [ ] Do not declare Phase 4 complete if `doctor`, `preview install`, `install`, `update`, and `uninstall` disagree on stale install-state, managed reinstall redirect, or reconciled unmanaged ownership semantics
 
 ## Blockers
 

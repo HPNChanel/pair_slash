@@ -117,7 +117,7 @@ function laneCommandsFor(lane) {
   ];
 }
 
-function doctorOptions(lane, runtime, target, packs = [PRIMARY_PACK_ID]) {
+function doctorOptions(lane, runtime, target, packs = []) {
   return {
     runtime,
     target,
@@ -475,6 +475,367 @@ function runBrokenConfigDoctorScenario({ repoRoot, lane, runtimeHarness }) {
   );
 }
 
+function runReconcileParityScenario({ repoRoot, lane, runtimeHarness }) {
+  const definition = {
+    id: `semantic-parity.reconcile-unmanaged.${lane.os_lane}.${runtimeFlag(lane.runtime)}.${lane.target}`,
+    runtime: lane.runtime,
+    target: lane.target,
+    fixture_id: "repo-basic-readonly",
+    commands: [
+      buildLifecycleCommand("preview install", lane.runtime, lane.target),
+      buildDoctorCommand(lane.runtime, lane.target),
+    ],
+  };
+  return runScenario(definition, () =>
+    withFixture(
+      {
+        repoRoot,
+        fixtureId: definition.fixture_id,
+        runtimeHarness,
+        target: lane.target,
+      },
+      ({ tempRoot }) => {
+        const seedPreview = planInstall({
+          repoRoot: tempRoot,
+          runtime: lane.runtime,
+          target: lane.target,
+          packs: [PRIMARY_PACK_ID],
+        });
+        const compiledFile =
+          seedPreview.compiledPacks[0]?.files.find((file) => file.override_eligible) ??
+          seedPreview.compiledPacks[0]?.files[0];
+        if (!compiledFile) {
+          throw new Error("compat fixture did not produce a compiled file to seed unmanaged reconcile state");
+        }
+        const manualPath = join(seedPreview.plan.install_root, PRIMARY_PACK_ID, compiledFile.relative_path);
+        mkdirSync(dirname(manualPath), { recursive: true });
+        writeFileSync(manualPath, compiledFile.content);
+
+        const preview = planInstall({
+          repoRoot: tempRoot,
+          runtime: lane.runtime,
+          target: lane.target,
+          packs: [PRIMARY_PACK_ID],
+        });
+        const doctor = runDoctor({
+          repoRoot: tempRoot,
+          ...doctorOptions(lane, lane.runtime, lane.target),
+        });
+        const operation = preview.plan.operations.find(
+          (entry) => entry.relative_path === compiledFile.relative_path,
+        );
+        const issue = doctor.issues.find((entry) => entry.check_id === "conflict.unmanaged_install_root");
+        const success =
+          operation?.reason_code === "reconcile-unmanaged-identical" &&
+          issue?.reason_codes?.includes("reconcile-unmanaged-identical");
+        return {
+          success,
+          summary: success
+            ? "doctor and preview install agree on non-blocking unmanaged reconcile semantics"
+            : "doctor and preview install diverged on non-blocking unmanaged reconcile semantics",
+          doctor_success: Boolean(issue),
+          support_verdict: doctor.support_verdict,
+          issue_codes: collectIssueCodes(doctor),
+          repro_key: `${definition.id}:${definition.fixture_id}:${lane.runtime}:${lane.target}`,
+          commands: definition.commands,
+          details: {
+            preview_reason_codes: preview.plan.reason_codes.slice(),
+            doctor_reason_codes: doctor.reason_codes.slice(),
+          },
+        };
+      },
+    ),
+  );
+}
+
+function runStaleStateParityScenario({ repoRoot, lane, runtimeHarness }) {
+  const definition = {
+    id: `semantic-parity.stale-state.${lane.os_lane}.${runtimeFlag(lane.runtime)}.${lane.target}`,
+    runtime: lane.runtime,
+    target: lane.target,
+    fixture_id: "repo-basic-readonly",
+    commands: [
+      buildLifecycleCommand("preview install", lane.runtime, lane.target),
+      buildDoctorCommand(lane.runtime, lane.target),
+    ],
+  };
+  return runScenario(definition, () =>
+    withFixture(
+      {
+        repoRoot,
+        fixtureId: definition.fixture_id,
+        runtimeHarness,
+        target: lane.target,
+      },
+      ({ tempRoot }) => {
+        mkdirSync(join(tempRoot, ".pairslash", "install-state"), { recursive: true });
+        writeFileSync(
+          resolveStatePath({
+            repoRoot: tempRoot,
+            runtime: lane.runtime,
+            target: lane.target,
+          }),
+          JSON.stringify(
+            {
+              kind: "install-state",
+              schema_version: "1.0.0",
+              runtime: lane.runtime,
+              target: lane.target,
+              config_home: join(tempRoot, "stale-config-home"),
+              install_root: join(tempRoot, "stale-install-root"),
+              updated_at: "2026-04-04T00:00:00.000Z",
+              last_transaction_id: null,
+              packs: [],
+            },
+            null,
+            2,
+          ),
+        );
+        const preview = planInstall({
+          repoRoot: tempRoot,
+          runtime: lane.runtime,
+          target: lane.target,
+          packs: [PRIMARY_PACK_ID],
+        });
+        const doctor = runDoctor({
+          repoRoot: tempRoot,
+          ...doctorOptions(lane, lane.runtime, lane.target),
+        });
+        const issue = doctor.issues.find((entry) => entry.check_id === "install_state.load");
+        const success =
+          preview.plan.reason_codes.includes("install-state-metadata-mismatch") &&
+          issue?.reason_codes?.includes("install-state-metadata-mismatch") &&
+          doctor.install_blocked;
+        return {
+          success,
+          summary: success
+            ? "doctor and preview install both block stale install-state metadata"
+            : "stale install-state metadata parity regressed between doctor and preview install",
+          doctor_success: doctor.install_blocked,
+          support_verdict: doctor.support_verdict,
+          issue_codes: collectIssueCodes(doctor),
+          repro_key: `${definition.id}:${definition.fixture_id}:${lane.runtime}:${lane.target}`,
+          commands: definition.commands,
+          details: {
+            preview_reason_codes: preview.plan.reason_codes.slice(),
+            doctor_reason_codes: doctor.reason_codes.slice(),
+          },
+        };
+      },
+    ),
+  );
+}
+
+function runInstallRootShapeParityScenario({ repoRoot, lane, runtimeHarness }) {
+  const definition = {
+    id: `semantic-parity.install-root-shape.${lane.os_lane}.${runtimeFlag(lane.runtime)}.${lane.target}`,
+    runtime: lane.runtime,
+    target: lane.target,
+    fixture_id: "repo-basic-readonly",
+    commands: [
+      buildLifecycleCommand("preview install", lane.runtime, lane.target),
+      buildDoctorCommand(lane.runtime, lane.target),
+    ],
+  };
+  return runScenario(definition, () =>
+    withFixture(
+      {
+        repoRoot,
+        fixtureId: definition.fixture_id,
+        runtimeHarness,
+        target: lane.target,
+      },
+      ({ tempRoot }) => {
+        const seed = planInstall({
+          repoRoot: tempRoot,
+          runtime: lane.runtime,
+          target: lane.target,
+          packs: [PRIMARY_PACK_ID],
+        });
+        const installRoot = seed.plan.install_root;
+        mkdirSync(installRoot, { recursive: true });
+        writeFileSync(join(installRoot, PRIMARY_PACK_ID), "not-a-directory\n");
+        const preview = planInstall({
+          repoRoot: tempRoot,
+          runtime: lane.runtime,
+          target: lane.target,
+          packs: [PRIMARY_PACK_ID],
+        });
+        const doctor = runDoctor({
+          repoRoot: tempRoot,
+          ...doctorOptions(lane, lane.runtime, lane.target),
+        });
+        const issue = doctor.issues.find((entry) => entry.check_id === "conflict.unmanaged_install_root");
+        const success =
+          !preview.plan.can_apply &&
+          preview.plan.reason_codes.includes("unmanaged-conflict-blocking") &&
+          doctor.install_blocked &&
+          issue?.reason_codes?.includes("unmanaged-conflict-blocking");
+        return {
+          success,
+          summary: success
+            ? "doctor and preview install both block non-directory pack install roots"
+            : "doctor and preview install diverged on non-directory pack install-root handling",
+          doctor_success: doctor.install_blocked,
+          support_verdict: doctor.support_verdict,
+          issue_codes: collectIssueCodes(doctor),
+          repro_key: `${definition.id}:${definition.fixture_id}:${lane.runtime}:${lane.target}`,
+          commands: definition.commands,
+          details: {
+            preview_reason_codes: preview.plan.reason_codes.slice(),
+            doctor_reason_codes: doctor.reason_codes.slice(),
+          },
+        };
+      },
+    ),
+  );
+}
+
+function runManagedReinstallRedirectScenario({ repoRoot, lane, runtimeHarness }) {
+  const definition = {
+    id: `semantic-parity.managed-reinstall.${lane.os_lane}.${runtimeFlag(lane.runtime)}.${lane.target}`,
+    runtime: lane.runtime,
+    target: lane.target,
+    fixture_id: "repo-basic-readonly",
+    commands: [
+      buildLifecycleCommand("install", lane.runtime, lane.target, { apply: true }),
+      buildLifecycleCommand("preview install", lane.runtime, lane.target),
+      buildLifecycleCommand("update", lane.runtime, lane.target, { dryRun: true }),
+      buildDoctorCommand(lane.runtime, lane.target),
+    ],
+  };
+  return runScenario(definition, () =>
+    withFixture(
+      {
+        repoRoot,
+        fixtureId: definition.fixture_id,
+        runtimeHarness,
+        target: lane.target,
+      },
+      ({ tempRoot }) => {
+        applyInstall(
+          planInstall({
+            repoRoot: tempRoot,
+            runtime: lane.runtime,
+            target: lane.target,
+            packs: [PRIMARY_PACK_ID],
+          }),
+        );
+        const reinstallPreview = planInstall({
+          repoRoot: tempRoot,
+          runtime: lane.runtime,
+          target: lane.target,
+          packs: [PRIMARY_PACK_ID],
+        });
+        const updatePreview = planUpdate({
+          repoRoot: tempRoot,
+          runtime: lane.runtime,
+          target: lane.target,
+          packs: [PRIMARY_PACK_ID],
+        });
+        const doctor = runDoctor({
+          repoRoot: tempRoot,
+          runtime: lane.runtime,
+          target: lane.target,
+          packs: [PRIMARY_PACK_ID],
+          _os_override: lane.os_override,
+          _shell_override: lane.shell_override,
+        });
+        const issue = doctor.issues.find((entry) => entry.check_id === "install_state.install_preview_parity");
+        const success =
+          reinstallPreview.plan.reason_codes.includes("managed-pack-requires-update") &&
+          updatePreview.plan.can_apply &&
+          issue?.reason_codes?.includes("managed-pack-requires-update");
+        return {
+          success,
+          summary: success
+            ? "reinstall preview redirects to update and doctor reports the same lifecycle reason"
+            : "managed reinstall/update semantic parity regressed",
+          doctor_success: Boolean(issue),
+          update_success: updatePreview.plan.can_apply,
+          support_verdict: doctor.support_verdict,
+          issue_codes: collectIssueCodes(doctor),
+          repro_key: `${definition.id}:${definition.fixture_id}:${lane.runtime}:${lane.target}`,
+          commands: definition.commands,
+          details: {
+            reinstall_reason_codes: reinstallPreview.plan.reason_codes.slice(),
+            update_reason_codes: updatePreview.plan.reason_codes.slice(),
+            doctor_reason_codes: doctor.reason_codes.slice(),
+          },
+        };
+      },
+    ),
+  );
+}
+
+function runManagedReinstallRemediationScenario({ repoRoot, lane, runtimeHarness }) {
+  const definition = {
+    id: `semantic-parity.managed-reinstall-remediation.${lane.os_lane}.${runtimeFlag(lane.runtime)}.${lane.target}`,
+    runtime: lane.runtime,
+    target: lane.target,
+    fixture_id: "repo-basic-readonly",
+    commands: [
+      buildLifecycleCommand("install", lane.runtime, lane.target, { apply: true }),
+      buildLifecycleCommand("preview install", lane.runtime, lane.target),
+      `${buildDoctorCommand(lane.runtime, lane.target)} --packs ${PRIMARY_PACK_ID}`,
+    ],
+  };
+  return runScenario(definition, () =>
+    withFixture(
+      {
+        repoRoot,
+        fixtureId: definition.fixture_id,
+        runtimeHarness,
+        target: lane.target,
+      },
+      ({ tempRoot }) => {
+        applyInstall(
+          planInstall({
+            repoRoot: tempRoot,
+            runtime: lane.runtime,
+            target: lane.target,
+            packs: [PRIMARY_PACK_ID],
+          }),
+        );
+        const defaultInstallPreview = planInstall({
+          repoRoot: tempRoot,
+          runtime: lane.runtime,
+          target: lane.target,
+          packs: [PRIMARY_PACK_ID],
+        });
+        const doctor = runDoctor({
+          repoRoot: tempRoot,
+          ...doctorOptions(lane, lane.runtime, lane.target, [PRIMARY_PACK_ID]),
+        });
+        const issue = doctor.issues.find((entry) => entry.check_id === "install_state.install_preview_parity");
+        const success =
+          defaultInstallPreview.plan.reason_codes.includes("managed-pack-requires-update")
+          && doctor.install_blocked
+          && issue?.reason_codes?.includes("managed-pack-requires-update")
+          && doctor.remediation?.commands?.some((command) =>
+            command.command.includes("update pairslash-plan --runtime")
+          );
+        return {
+          success,
+          summary: success
+            ? "doctor managed reinstall parity includes machine-readable remediation commands"
+            : "doctor managed reinstall parity is missing machine-readable remediation commands",
+          doctor_success: doctor.install_blocked,
+          support_verdict: doctor.support_verdict,
+          issue_codes: collectIssueCodes(doctor),
+          repro_key: `${definition.id}:${definition.fixture_id}:${lane.runtime}:${lane.target}`,
+          commands: definition.commands,
+          details: {
+            preview_reason_codes: defaultInstallPreview.plan.reason_codes.slice(),
+            doctor_reason_codes: doctor.reason_codes.slice(),
+            remediation_commands: (doctor.remediation?.commands ?? []).map((entry) => entry.command),
+          },
+        };
+      },
+    ),
+  );
+}
+
 function runWindowsPrepPreviewScenario({ repoRoot, lane, runtimeHarness, runtime, target }) {
   const definition = {
     id: `prep-preview.${runtimeFlag(runtime)}.${target}`,
@@ -578,6 +939,11 @@ function runLaneScenarios({ repoRoot, lane, runtimeHarness }) {
       runFreshInstallScenario({ repoRoot, lane, runtimeHarness }),
       runUpdatePreserveOverrideScenario({ repoRoot, lane, runtimeHarness }),
       runUninstallOwnedOnlyScenario({ repoRoot, lane, runtimeHarness }),
+      runReconcileParityScenario({ repoRoot, lane, runtimeHarness }),
+      runInstallRootShapeParityScenario({ repoRoot, lane, runtimeHarness }),
+      runStaleStateParityScenario({ repoRoot, lane, runtimeHarness }),
+      runManagedReinstallRedirectScenario({ repoRoot, lane, runtimeHarness }),
+      runManagedReinstallRemediationScenario({ repoRoot, lane, runtimeHarness }),
       runBrokenConfigDoctorScenario({ repoRoot, lane, runtimeHarness }),
     ];
   }

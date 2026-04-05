@@ -17,6 +17,7 @@ required:
   - checks
   - issues
   - next_actions
+  - remediation
   - installed_packs
   - first_workflow_guidance
 properties:
@@ -220,6 +221,16 @@ properties:
             type: boolean
           preserve_bundles:
             type: boolean
+  reason_codes:
+    type: array
+    items:
+      type: string
+  remediation_actions:
+    type: array
+    items:
+      $ref: "#/$defs/remediationAction"
+  remediation:
+    $ref: "#/$defs/remediationEnvelope"
   checks:
     type: array
     items:
@@ -288,6 +299,14 @@ properties:
           type: object
         blocking_for_install:
           type: boolean
+        reason_codes:
+          type: array
+          items:
+            type: string
+        remediation_actions:
+          type: array
+          items:
+            $ref: "#/$defs/remediationAction"
   issues:
     type: array
     items:
@@ -336,6 +355,14 @@ properties:
           type:
             - string
             - "null"
+        reason_codes:
+          type: array
+          items:
+            type: string
+        remediation_actions:
+          type: array
+          items:
+            $ref: "#/$defs/remediationAction"
   next_actions:
     type: array
     items:
@@ -437,3 +464,151 @@ $defs:
         type: array
         items:
           type: string
+  remediationAction:
+    type: object
+    required:
+      - action_id
+      - action_kind
+      - summary
+      - safe_without_write
+      - requires_preview
+      - applies_to_actions
+      - reason_codes
+      - preferred
+    properties:
+      action_id:
+        type: string
+      action_kind:
+        type: string
+      summary:
+        type: string
+      command:
+        type:
+          - string
+          - "null"
+      path:
+        type:
+          - string
+          - "null"
+      safe_without_write:
+        type: boolean
+      requires_preview:
+        type: boolean
+      applies_to_actions:
+        type: array
+        items:
+          type: string
+      reason_codes:
+        type: array
+        items:
+          type: string
+      preferred:
+        type: boolean
+  remediationDecision:
+    type: string
+    enum:
+      - repair
+      - adopt
+      - reconcile
+      - abort
+  remediationCommand:
+    type: object
+    required:
+      - action_id
+      - summary
+      - command
+      - safe_without_write
+      - requires_preview
+      - applies_to_actions
+      - reason_codes
+      - preferred
+      - decision
+    properties:
+      action_id:
+        type: string
+      summary:
+        type: string
+      command:
+        type: string
+      safe_without_write:
+        type: boolean
+      requires_preview:
+        type: boolean
+      applies_to_actions:
+        type: array
+        items:
+          type: string
+      reason_codes:
+        type: array
+        items:
+          type: string
+      preferred:
+        type: boolean
+      decision:
+        $ref: "#/$defs/remediationDecision"
+  remediationActionWithDecision:
+    type: object
+    required:
+      - action_id
+      - action_kind
+      - summary
+      - command
+      - path
+      - safe_without_write
+      - requires_preview
+      - applies_to_actions
+      - reason_codes
+      - preferred
+      - decision
+    properties:
+      action_id:
+        type: string
+      action_kind:
+        type: string
+      summary:
+        type: string
+      command:
+        type:
+          - string
+          - "null"
+      path:
+        type:
+          - string
+          - "null"
+      safe_without_write:
+        type: boolean
+      requires_preview:
+        type: boolean
+      applies_to_actions:
+        type: array
+        items:
+          type: string
+      reason_codes:
+        type: array
+        items:
+          type: string
+      preferred:
+        type: boolean
+      decision:
+        $ref: "#/$defs/remediationDecision"
+  remediationEnvelope:
+    type: object
+    required:
+      - status
+      - commands
+      - actions
+    properties:
+      status:
+        type: string
+        enum:
+          - none
+          - advisory
+          - blocked
+      commands:
+        type: array
+        items:
+          $ref: "#/$defs/remediationCommand"
+      actions:
+        type: array
+        items:
+          $ref: "#/$defs/remediationActionWithDecision"

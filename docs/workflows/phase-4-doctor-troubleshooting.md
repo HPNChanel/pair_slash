@@ -105,15 +105,20 @@ debug report or support bundle instead of pasting raw logs.
   Restore the required MCP fragment or install the missing server configuration.
 - `install_state.owned_files_integrity`
   Run `pairslash update --preview` to inspect preserved overrides and blocked conflicts before any apply step.
+- `install_state.install_preview_parity`
+  If doctor is scoped to explicit packs that are already PairSlash-managed, it now reports the same `managed-pack-requires-update` lifecycle reason that `preview install` emits. Use `pairslash update --preview` instead of reinstalling.
 - `install_state.update_preview_risk`
-  Doctor reuses update preview logic to show whether local overrides would be preserved or whether update would block on conflicts.
+  Doctor reuses update preview logic to show whether local overrides would be preserved, whether reconciled unmanaged files stay user-owned, or whether update would block on conflicts.
+- `install_state.load`
+  Doctor, `preview install`, `update`, and `uninstall` now share the same stale install-state metadata check. If the state points at the wrong runtime/target/config-home/install-root, every lifecycle command blocks until the stale state is repaired or removed.
 - `install_state.asset_placement`
   A managed file is present, but not where the runtime-native adapter expects it. Reinstall or fix compiler/runtime drift before trusting update or uninstall.
 - `conflict.unmanaged_install_root`
   Use `preview install` as the source of truth. If preview reports a blocked
   conflict, move or remove the unmanaged runtime folder; if preview stays
-  non-blocking, treat the unmanaged files as preserved local overrides instead
-  of widening the support claim.
+  non-blocking, treat the unmanaged files as `reconcile_unmanaged`: preserved,
+  still user-owned, and visible to later `doctor`, `update`, and `uninstall`
+  runs.
 - `platform.os_shell_support`
   Use PowerShell, cmd, bash, zsh, or sh on a supported OS before filing a runtime bug.
 

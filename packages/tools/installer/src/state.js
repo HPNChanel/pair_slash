@@ -10,6 +10,8 @@ import {
   writeTextFile,
 } from "@pairslash/spec-core";
 
+import { normalizeInstallStateRecord } from "./semantics.js";
+
 export function resolveStatePath({ repoRoot, runtime, target }) {
   return resolve(repoRoot, ".pairslash", "install-state", `${target}-${runtime}.json`);
 }
@@ -41,7 +43,7 @@ export function loadInstallState({ repoRoot, runtime, target, adapter }) {
   if (errors.length > 0) {
     throw new Error(`invalid install state ${statePath} :: ${errors.join("; ")}`);
   }
-  return { statePath, state };
+  return { statePath, state: normalizeInstallStateRecord(state) };
 }
 
 export function writeInstallState(statePath, state) {

@@ -62,6 +62,14 @@ properties:
     type: array
     items:
       type: string
+  reason_codes:
+    type: array
+    items:
+      type: string
+  remediation_actions:
+    type: array
+    items:
+      $ref: "#/$defs/remediationAction"
   asset_diff:
     type: object
     required:
@@ -189,6 +197,10 @@ properties:
         type: array
         items:
           type: string
+      blocked_reason_codes:
+        type: array
+        items:
+          type: string
       explicit_approval_hint:
         type:
           - string
@@ -279,6 +291,16 @@ properties:
           type: string
         override_eligible:
           type: boolean
+        reason_code:
+          type: string
+        reason_detail:
+          type:
+            - string
+            - "null"
+        management_mode:
+          type: string
+        reconcile_mode:
+          type: string
         runtime_selector:
           type: string
         generated:
@@ -287,3 +309,48 @@ properties:
           type: boolean
         reason:
           type: string
+        remediation_actions:
+          type: array
+          items:
+            $ref: "#/$defs/remediationAction"
+$defs:
+  remediationAction:
+    type: object
+    required:
+      - action_id
+      - action_kind
+      - summary
+      - safe_without_write
+      - requires_preview
+      - applies_to_actions
+      - reason_codes
+      - preferred
+    properties:
+      action_id:
+        type: string
+      action_kind:
+        type: string
+      summary:
+        type: string
+      command:
+        type:
+          - string
+          - "null"
+      path:
+        type:
+          - string
+          - "null"
+      safe_without_write:
+        type: boolean
+      requires_preview:
+        type: boolean
+      applies_to_actions:
+        type: array
+        items:
+          type: string
+      reason_codes:
+        type: array
+        items:
+          type: string
+      preferred:
+        type: boolean

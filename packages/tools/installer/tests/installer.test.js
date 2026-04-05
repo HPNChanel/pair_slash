@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 import {
@@ -20,6 +20,14 @@ import {
 } from "../../../../tests/phase4-helpers.js";
 
 const serial = { concurrency: false };
+
+function repoStatePath(tempRoot, runtime = "codex_cli", target = "repo") {
+  return join(tempRoot, ".pairslash", "install-state", `${target}-${runtime}.json`);
+}
+
+function createDirectoryLink(targetPath, linkPath) {
+  symlinkSync(targetPath, linkPath, process.platform === "win32" ? "junction" : "dir");
+}
 
 test("install creates managed repo-target runtime footprint", serial, () => {
   const fixture = createTempRepo();
@@ -156,6 +164,303 @@ test("install preview emits local-source trust delta for repo manifests", serial
     );
     assert.equal(envelope.plan.trust_delta.pack_changes[0].candidate.signature_status, "local-dev");
     assert.equal(envelope.plan.trust_delta.pack_changes[0].candidate.support_level, "local-dev");
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("install blocks stale install-state metadata mismatch", serial, () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  try {
+    mkdirSync(join(fixture.tempRoot, ".pairslash", "install-state"), { recursive: true });
+    writeFileSync(
+      repoStatePath(fixture.tempRoot),
+      JSON.stringify(
+        {
+          kind: "install-state",
+          schema_version: "1.0.0",
+          runtime: "codex_cli",
+          target: "repo",
+          config_home: join(fixture.tempRoot, ".agents-stale"),
+          install_root: join(fixture.tempRoot, ".agents-stale", "skills"),
+          updated_at: "2026-04-04T00:00:00.000Z",
+          last_transaction_id: null,
+          packs: [],
+        },
+        null,
+        2,
+      ),
+    );
+
+    const envelope = planInstall({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      target: "repo",
+      packs: ["pairslash-plan"],
+    });
+    assert.equal(envelope.plan.can_apply, false);
+    assert.ok(
+      envelope.plan.reason_codes.includes("install-state-metadata-mismatch"),
+    );
+    assert.ok(
+      envelope.plan.commitability.blocked_reason_codes.includes("install-state-metadata-mismatch"),
+    );
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("install tolerates case-only install-state path drift on Windows", serial, () => {
+  if (process.platform !== "win32") {
+    return;
+  }
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  try {
+    const configHome = join(fixture.tempRoot, ".agents");
+    const installRoot = join(fixture.tempRoot, ".agents", "skills");
+    const swapDriveCase = (value) => (
+      /^[A-Za-z]:/.test(value)
+        ? `${value[0] === value[0].toLowerCase() ? value[0].toUpperCase() : value[0].toLowerCase()}${value.slice(1)}`
+        : value
+    );
+    mkdirSync(join(fixture.tempRoot, ".pairslash", "install-state"), { recursive: true });
+    writeFileSync(
+      repoStatePath(fixture.tempRoot),
+      JSON.stringify(
+        {
+          kind: "install-state",
+          schema_version: "1.0.0",
+          runtime: "codex_cli",
+          target: "repo",
+          config_home: swapDriveCase(configHome),
+          install_root: swapDriveCase(installRoot),
+          updated_at: "2026-04-04T00:00:00.000Z",
+          last_transaction_id: null,
+          packs: [],
+        },
+        null,
+        2,
+      ),
+    );
+
+    const envelope = planInstall({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      target: "repo",
+      packs: ["pairslash-plan"],
+    });
+    assert.equal(envelope.plan.reason_codes.includes("install-state-metadata-mismatch"), false);
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("install preview blocks when pack install root exists as a file", serial, () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  try {
+    mkdirSync(join(fixture.tempRoot, ".agents", "skills"), { recursive: true });
+    writeFileSync(join(fixture.tempRoot, ".agents", "skills", "pairslash-plan"), "blocked-root\n");
+
+    const envelope = planInstall({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      target: "repo",
+      packs: ["pairslash-plan"],
+    });
+    const blocked = envelope.plan.operations.find(
+      (operation) =>
+        operation.kind === "blocked_conflict" &&
+        operation.pack_id === "pairslash-plan" &&
+        operation.relative_path === ".",
+    );
+    assert.equal(envelope.plan.can_apply, false);
+    assert.ok(blocked);
+    assert.equal(blocked.reason_code, "unmanaged-conflict-blocking");
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("install preview blocks symlinked install roots", serial, (t) => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  try {
+    mkdirSync(join(fixture.tempRoot, ".agents", "skills"), { recursive: true });
+    const externalRoot = join(fixture.tempRoot, "external-skill-root");
+    mkdirSync(externalRoot, { recursive: true });
+    const packRoot = join(fixture.tempRoot, ".agents", "skills", "pairslash-plan");
+    try {
+      createDirectoryLink(externalRoot, packRoot);
+    } catch (error) {
+      if (error?.code === "EPERM" || error?.code === "EACCES") {
+        t.skip("symlink/junction creation is not permitted in this environment");
+        return;
+      }
+      throw error;
+    }
+
+    const envelope = planInstall({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      target: "repo",
+      packs: ["pairslash-plan"],
+    });
+    const blocked = envelope.plan.operations.find(
+      (operation) =>
+        operation.kind === "blocked_conflict" &&
+        operation.pack_id === "pairslash-plan" &&
+        operation.relative_path === ".",
+    );
+    assert.equal(envelope.plan.can_apply, false);
+    assert.ok(blocked);
+    assert.equal(blocked.reason_code, "unmanaged-conflict-blocking");
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("install blocks unmanaged ownership receipt even when content is identical", serial, () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  try {
+    const seed = planInstall({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      target: "repo",
+      packs: ["pairslash-plan"],
+    });
+    const ownershipCompiledFile = seed.compiledPacks[0]?.files.find(
+      (file) => file.relative_path === "pairslash.install.json",
+    );
+    assert.ok(ownershipCompiledFile, "compiled ownership receipt should exist");
+    writeManualInstallFile({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      packId: "pairslash-plan",
+      relativePath: "pairslash.install.json",
+      content: ownershipCompiledFile.content,
+    });
+
+    const envelope = planInstall({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      target: "repo",
+      packs: ["pairslash-plan"],
+    });
+    const blocked = envelope.plan.operations.find(
+      (operation) =>
+        operation.kind === "blocked_conflict" &&
+        operation.pack_id === "pairslash-plan" &&
+        operation.relative_path === "pairslash.install.json",
+    );
+    assert.equal(envelope.plan.can_apply, false);
+    assert.ok(blocked);
+    assert.equal(blocked.reason_code, "ownership-metadata-conflict");
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("install preview emits reconcile_unmanaged for override-eligible unmanaged files", serial, () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  try {
+    writeManualInstallFile({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      packId: "pairslash-plan",
+      relativePath: "SKILL.md",
+      content: "manual override\n",
+    });
+
+    const envelope = planInstall({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      target: "repo",
+      packs: ["pairslash-plan"],
+    });
+    const operation = envelope.plan.operations.find(
+      (entry) => entry.relative_path === "SKILL.md",
+    );
+    assert.ok(operation);
+    assert.equal(operation.kind, "reconcile_unmanaged");
+    assert.equal(operation.reason_code, "reconcile-unmanaged-override-preserved");
+    assert.equal(operation.management_mode, "reconciled_unmanaged");
+    assert.equal(operation.reconcile_mode, "override_preserved");
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("install redirects already-managed packs to update semantics", serial, () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  try {
+    applyInstall(
+      planInstall({
+        repoRoot: fixture.tempRoot,
+        runtime: "codex_cli",
+        target: "repo",
+        packs: ["pairslash-plan"],
+      }),
+    );
+
+    const envelope = planInstall({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      target: "repo",
+      packs: ["pairslash-plan"],
+    });
+    const redirect = envelope.plan.operations.find(
+      (entry) => entry.reason_code === "managed-pack-requires-update",
+    );
+    assert.equal(envelope.plan.can_apply, false);
+    assert.ok(redirect);
+    assert.ok(
+      redirect.remediation_actions.some((action) =>
+        action.command?.includes("update pairslash-plan"),
+      ),
+    );
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("install state records reconciled unmanaged ownership explicitly", serial, () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  try {
+    writeManualInstallFile({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      packId: "pairslash-plan",
+      relativePath: "SKILL.md",
+      content: "manual override\n",
+    });
+
+    const result = applyInstall(
+      planInstall({
+        repoRoot: fixture.tempRoot,
+        runtime: "codex_cli",
+        target: "repo",
+        packs: ["pairslash-plan"],
+      }),
+    );
+    const skillFile = result.state.packs[0].files.find((file) => file.relative_path === "SKILL.md");
+    assert.equal(skillFile.owned_by_pairslash, false);
+    assert.equal(skillFile.management_mode, "reconciled_unmanaged");
+    assert.equal(skillFile.reconciled_reason_code, "reconcile-unmanaged-override-preserved");
   } finally {
     runtime.cleanup();
     fixture.cleanup();
@@ -685,6 +990,43 @@ test("uninstall warns and detaches when tracked file is already missing", serial
           operation.relative_path === "example-output.md",
       ),
     );
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("uninstall preview blocks when managed install root is no longer a directory", serial, () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  try {
+    applyInstall(
+      planInstall({
+        repoRoot: fixture.tempRoot,
+        runtime: "codex_cli",
+        target: "repo",
+        packs: ["pairslash-plan"],
+      }),
+    );
+    const installDir = join(fixture.tempRoot, ".agents", "skills", "pairslash-plan");
+    rmSync(installDir, { recursive: true, force: true });
+    writeFileSync(installDir, "not-a-directory\n");
+
+    const envelope = planUninstall({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      target: "repo",
+      packs: ["pairslash-plan"],
+    });
+    const blocked = envelope.plan.operations.find(
+      (operation) =>
+        operation.kind === "blocked_conflict" &&
+        operation.pack_id === "pairslash-plan" &&
+        operation.relative_path === ".",
+    );
+    assert.equal(envelope.plan.can_apply, false);
+    assert.ok(blocked);
+    assert.equal(blocked.reason_code, "unmanaged-conflict-blocking");
   } finally {
     runtime.cleanup();
     fixture.cleanup();

@@ -57,7 +57,10 @@ Install semantics:
 - Detect the requested runtime lane.
 - Check supported runtime range before apply.
 - Run preview-first conflict detection.
+- Block `install` when the existing install-state metadata points at a different runtime/target/config-home/install-root. `doctor`, `preview install`, `update`, and `uninstall` now report the same stale-state condition.
+- Treat an already managed pack as `use update`, not as a second first-install. If the selected pack is already PairSlash-managed, `install` emits a blocking redirect to `update --dry-run`.
 - Write only PairSlash-owned files into the derived install root.
+- Record safe unmanaged adoption explicitly as `reconcile_unmanaged`. This means PairSlash leaves the file in place, does not take ownership of it, and keeps it visible to `doctor`, `update`, and `uninstall`.
 - Record ownership and digests in repo-local install state.
 - Write a transaction journal so apply can roll back on failure.
 
@@ -77,6 +80,7 @@ Update semantics:
 - Diff against the last managed receipt, not just the current filesystem tree.
 - Replace a file only when it still matches the last managed digest.
 - Preserve override-eligible local edits as `preserve_override`.
+- Preserve previously reconciled unmanaged files as `reconcile_unmanaged` when they still match the compiled artifact or remain valid override-eligible local overrides.
 - Block non-override local drift as `blocked_conflict`.
 - Remove orphaned managed assets only when ownership state proves they are
   PairSlash-managed.
@@ -97,7 +101,7 @@ Uninstall semantics:
 
 - Only files marked as PairSlash-owned and still unchanged are removed.
 - User files, unmanaged files, and locally edited managed files are preserved.
-- Preserved files show up as `skip_unmanaged` in the preview or result summary.
+- Preserved reconciled unmanaged files remain user-owned in install-state and show up as `skip_unmanaged` during uninstall.
 - The install state is detached or removed after a successful uninstall.
 - The transaction journal allows rollback if uninstall fails mid-flight.
 

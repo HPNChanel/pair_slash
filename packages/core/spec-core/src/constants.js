@@ -81,10 +81,29 @@ export const MANIFEST_SMOKE_ACTIONS = [
   "preview_uninstall",
   "doctor",
 ];
+export const MANAGEMENT_MODES = ["pairslash_owned", "reconciled_unmanaged"];
+export const RECONCILE_MODES = ["identical", "override_preserved"];
+export const LIFECYCLE_REASON_CODES = [
+  "install-state-invalid",
+  "install-state-metadata-mismatch",
+  "managed-pack-requires-update",
+  "reconcile-unmanaged-identical",
+  "reconcile-unmanaged-override-preserved",
+  "unmanaged-conflict-blocking",
+  "managed-override-preserved",
+  "managed-orphan-override-preserved",
+  "ownership-metadata-conflict",
+  "update-conflict-blocking",
+  "uninstall-preserve-unmanaged",
+];
+export const REMEDIATION_ACTION_KINDS = ["run_command", "review_manual"];
+export const REMEDIATION_STATUSES = ["none", "advisory", "blocked"];
+export const REMEDIATION_DECISIONS = ["repair", "adopt", "reconcile", "abort"];
 export const PREVIEW_OPERATION_KINDS = [
   "mkdir",
   "create",
   "replace",
+  "reconcile_unmanaged",
   "skip_identical",
   "preserve_override",
   "remove",

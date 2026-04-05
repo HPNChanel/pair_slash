@@ -25,10 +25,11 @@
         ],
         "status": "blocked",
         "summary": {
-          "blocked_conflict": 0,
-          "create": 10,
-          "mkdir": 1,
+          "blocked_conflict": 1,
+          "create": 0,
+          "mkdir": 0,
           "preserve_override": 0,
+          "reconcile_unmanaged": 0,
           "remove": 0,
           "replace": 0,
           "skip_identical": 0,
@@ -466,6 +467,7 @@
                 {
                   "pack_id": "pairslash-plan",
                   "reason": "ownership metadata file is missing and blocks update",
+                  "reason_code": "ownership-metadata-conflict",
                   "relative_path": "pairslash.install.json"
                 }
               ],
@@ -484,6 +486,25 @@
             "severity": "fail",
             "status": "fail",
             "summary": "update preview found blocking conflicts or plan errors for the installed footprint"
+          },
+          {
+            "blocking_for_install": true,
+            "evidence": {
+              "redirects": [
+                {
+                  "pack_id": "pairslash-plan",
+                  "reason": "pack is already managed by PairSlash; run update instead of install",
+                  "reason_code": "managed-pack-requires-update",
+                  "relative_path": "."
+                }
+              ]
+            },
+            "group": "install_state",
+            "id": "install_state.install_preview_parity",
+            "remediation": "Run `pairslash update --preview` for those packs instead of reinstalling them.",
+            "severity": "fail",
+            "status": "fail",
+            "summary": "1 requested pack(s) are already managed; install preview redirects to update"
           },
           {
             "blocking_for_install": false,
@@ -623,6 +644,7 @@
                 {
                   "pack_id": "pairslash-plan",
                   "reason": "ownership metadata file is missing and blocks update",
+                  "reason_code": "ownership-metadata-conflict",
                   "relative_path": "pairslash.install.json"
                 }
               ],
@@ -641,14 +663,31 @@
             "suggested_fix": "Run `pairslash update --preview` and resolve blocked conflicts before applying changes.",
             "summary": "update preview found blocking conflicts or plan errors for the installed footprint",
             "verdict": "fail"
+          },
+          {
+            "blocking_for_install": true,
+            "check_id": "install_state.install_preview_parity",
+            "code": "DOC-INSTALL_STATE-INSTALL_PREVIEW_PARITY",
+            "evidence": {
+              "redirects": [
+                {
+                  "pack_id": "pairslash-plan",
+                  "reason": "pack is already managed by PairSlash; run update instead of install",
+                  "reason_code": "managed-pack-requires-update",
+                  "relative_path": "."
+                }
+              ]
+            },
+            "message": "1 requested pack(s) are already managed; install preview redirects to update",
+            "remediation": "Run `pairslash update --preview` for those packs instead of reinstalling them.",
+            "severity": "fail",
+            "suggested_fix": "Run `pairslash update --preview` for those packs instead of reinstalling them.",
+            "summary": "1 requested pack(s) are already managed; install preview redirects to update",
+            "verdict": "fail"
           }
         ],
         "next_actions": [
-          "Run install to create the runtime config home, or create the directory manually if policy requires it.",
-          "Run install to create the runtime install root.",
-          "Review `doctor --format json` to confirm which packs are local-dev, official-preview, or verified-external.",
-          "Run `pairslash update --preview` or restore the managed files before applying more changes.",
-          "Run `pairslash update --preview` and resolve blocked conflicts before applying changes."
+          "node packages/tools/cli/src/bin/pairslash.js update pairslash-plan --runtime codex --target repo --dry-run"
         ],
         "runtime": "codex_cli",
         "runtime_compatibility": {
@@ -736,125 +775,15 @@
             "relative_path": null
           },
           {
-            "absolute_path": "<repo>\\.agents\\skills\\pairslash-plan\\agents\\openai.yaml",
-            "asset_kind": "runtime_manifest",
-            "install_surface": "metadata",
-            "kind": "create",
-            "override_eligible": false,
-            "ownership": "pairslash",
-            "pack_id": "pairslash-plan",
-            "reason": "missing target file",
-            "relative_path": "agents/openai.yaml"
-          },
-          {
-            "absolute_path": "<repo>\\.agents\\skills\\pairslash-plan\\contract.md",
-            "asset_kind": "support_doc",
-            "install_surface": "support_doc",
-            "kind": "create",
-            "override_eligible": true,
-            "ownership": "pairslash",
-            "pack_id": "pairslash-plan",
-            "reason": "missing target file",
-            "relative_path": "contract.md"
-          },
-          {
-            "absolute_path": "<repo>\\.agents\\skills\\pairslash-plan\\example-invocation.md",
-            "asset_kind": "support_doc",
-            "install_surface": "support_doc",
-            "kind": "create",
-            "override_eligible": true,
-            "ownership": "pairslash",
-            "pack_id": "pairslash-plan",
-            "reason": "missing target file",
-            "relative_path": "example-invocation.md"
-          },
-          {
-            "absolute_path": "<repo>\\.agents\\skills\\pairslash-plan\\example-output.md",
-            "asset_kind": "support_doc",
-            "install_surface": "support_doc",
-            "kind": "create",
-            "override_eligible": true,
-            "ownership": "pairslash",
-            "pack_id": "pairslash-plan",
-            "reason": "missing target file",
-            "relative_path": "example-output.md"
-          },
-          {
-            "absolute_path": "<repo>\\.agents\\skills\\pairslash-plan\\fragments\\config\\pack-config.yaml",
-            "asset_kind": "config_fragment",
-            "install_surface": "config",
-            "kind": "create",
-            "override_eligible": false,
-            "ownership": "pairslash",
-            "pack_id": "pairslash-plan",
-            "reason": "missing target file",
-            "relative_path": "fragments/config/pack-config.yaml"
-          },
-          {
-            "absolute_path": "<repo>\\.agents\\skills\\pairslash-plan\\fragments\\context\\runtime-context.md",
-            "asset_kind": "context_fragment",
-            "install_surface": "context",
-            "kind": "create",
-            "override_eligible": false,
-            "ownership": "pairslash",
-            "pack_id": "pairslash-plan",
-            "reason": "missing target file",
-            "relative_path": "fragments/context/runtime-context.md"
-          },
-          {
-            "absolute_path": "<repo>\\.agents\\skills\\pairslash-plan\\pack.yaml",
-            "asset_kind": "support_doc",
-            "install_surface": "support_doc",
-            "kind": "create",
-            "override_eligible": true,
-            "ownership": "pairslash",
-            "pack_id": "pairslash-plan",
-            "reason": "missing target file",
-            "relative_path": "pack.yaml"
-          },
-          {
-            "absolute_path": "<repo>\\.agents\\skills\\pairslash-plan\\pairslash.install.json",
-            "asset_kind": "ownership_manifest",
-            "install_surface": "metadata",
-            "kind": "create",
-            "override_eligible": false,
-            "ownership": "pairslash",
-            "pack_id": "pairslash-plan",
-            "reason": "missing target file",
-            "relative_path": "pairslash.install.json"
-          },
-          {
-            "absolute_path": "<repo>\\.agents\\skills\\pairslash-plan\\SKILL.md",
-            "asset_kind": "skill_markdown",
-            "install_surface": "canonical_skill",
-            "kind": "create",
-            "override_eligible": true,
-            "ownership": "pairslash",
-            "pack_id": "pairslash-plan",
-            "reason": "missing target file",
-            "relative_path": "SKILL.md"
-          },
-          {
-            "absolute_path": "<repo>\\.agents\\skills\\pairslash-plan\\validation-checklist.md",
-            "asset_kind": "support_doc",
-            "install_surface": "support_doc",
-            "kind": "create",
-            "override_eligible": true,
-            "ownership": "pairslash",
-            "pack_id": "pairslash-plan",
-            "reason": "missing target file",
-            "relative_path": "validation-checklist.md"
-          },
-          {
             "absolute_path": "<repo>\\.agents\\skills\\pairslash-plan",
             "asset_kind": null,
             "install_surface": null,
-            "kind": "mkdir",
+            "kind": "blocked_conflict",
             "override_eligible": null,
-            "ownership": "system",
+            "ownership": "pairslash",
             "pack_id": "pairslash-plan",
-            "reason": "install directory will be created",
-            "relative_path": null
+            "reason": "pack is already managed by PairSlash; run update instead of install",
+            "relative_path": "."
           }
         ],
         "requires_confirmation": true,
@@ -864,10 +793,11 @@
         ],
         "state_path": "<repo>\\.pairslash\\install-state\\repo-codex_cli.json",
         "summary": {
-          "blocked_conflict": 0,
-          "create": 10,
-          "mkdir": 1,
+          "blocked_conflict": 1,
+          "create": 0,
+          "mkdir": 0,
           "preserve_override": 0,
+          "reconcile_unmanaged": 0,
           "remove": 0,
           "replace": 0,
           "skip_identical": 0,
@@ -1071,6 +1001,7 @@
           "create": 9,
           "mkdir": 1,
           "preserve_override": 0,
+          "reconcile_unmanaged": 0,
           "remove": 0,
           "replace": 0,
           "skip_identical": 0,
@@ -1482,6 +1413,25 @@
             "summary": "update preview reports no override-preservation or conflict risk"
           },
           {
+            "blocking_for_install": true,
+            "evidence": {
+              "redirects": [
+                {
+                  "pack_id": "pairslash-plan",
+                  "reason": "pack is already managed by PairSlash; run update instead of install",
+                  "reason_code": "managed-pack-requires-update",
+                  "relative_path": "."
+                }
+              ]
+            },
+            "group": "install_state",
+            "id": "install_state.install_preview_parity",
+            "remediation": "Run `pairslash update --preview` for those packs instead of reinstalling them.",
+            "severity": "fail",
+            "status": "fail",
+            "summary": "1 requested pack(s) are already managed; install preview redirects to update"
+          },
+          {
             "blocking_for_install": false,
             "evidence": {},
             "group": "conflict",
@@ -1521,13 +1471,13 @@
         },
         "first_workflow_guidance": {
           "commands": [
-            "Launch gh from the repo root and use /skills to run pairslash-plan."
+            "node packages/tools/cli/src/bin/pairslash.js doctor --runtime copilot --target user"
           ],
-          "rationale": "A managed pack is already installed for this runtime and target.",
-          "ready": true,
+          "rationale": "Blocking issues must be fixed before install or first workflow execution.",
+          "ready": false,
           "recommended_pack_id": "pairslash-plan"
         },
-        "install_blocked": false,
+        "install_blocked": true,
         "installed_packs": [
           {
             "id": "pairslash-plan",
@@ -1576,11 +1526,31 @@
             "suggested_fix": "Review `doctor --format json` to confirm which packs are local-dev, official-preview, or verified-external.",
             "summary": "1 installed pack(s) require trust review or carry non-core support posture",
             "verdict": "warn"
+          },
+          {
+            "blocking_for_install": true,
+            "check_id": "install_state.install_preview_parity",
+            "code": "DOC-INSTALL_STATE-INSTALL_PREVIEW_PARITY",
+            "evidence": {
+              "redirects": [
+                {
+                  "pack_id": "pairslash-plan",
+                  "reason": "pack is already managed by PairSlash; run update instead of install",
+                  "reason_code": "managed-pack-requires-update",
+                  "relative_path": "."
+                }
+              ]
+            },
+            "message": "1 requested pack(s) are already managed; install preview redirects to update",
+            "remediation": "Run `pairslash update --preview` for those packs instead of reinstalling them.",
+            "severity": "fail",
+            "suggested_fix": "Run `pairslash update --preview` for those packs instead of reinstalling them.",
+            "summary": "1 requested pack(s) are already managed; install preview redirects to update",
+            "verdict": "fail"
           }
         ],
         "next_actions": [
-          "Proceed with preview/doctor evidence, but treat the lane as unrecorded until live pilot evidence is captured.",
-          "Review `doctor --format json` to confirm which packs are local-dev, official-preview, or verified-external."
+          "node packages/tools/cli/src/bin/pairslash.js update pairslash-plan --runtime copilot --target user --dry-run"
         ],
         "runtime": "copilot_cli",
         "runtime_compatibility": {
@@ -1630,7 +1600,7 @@
           "tested_range_status": "unrecorded",
           "tested_version_range": null
         },
-        "support_verdict": "warn",
+        "support_verdict": "fail",
         "target": "user"
       },
       "doctor_before": {
@@ -1873,6 +1843,16 @@
             "severity": "info",
             "status": "pass",
             "summary": "no installed packs require update-risk analysis yet"
+          },
+          {
+            "blocking_for_install": false,
+            "evidence": {},
+            "group": "install_state",
+            "id": "install_state.install_preview_parity",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "requested packs are not already PairSlash-managed for this runtime and target"
           },
           {
             "blocking_for_install": false,
@@ -2175,6 +2155,7 @@
           "create": 9,
           "mkdir": 1,
           "preserve_override": 0,
+          "reconcile_unmanaged": 0,
           "remove": 0,
           "replace": 0,
           "skip_identical": 0,

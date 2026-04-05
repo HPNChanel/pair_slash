@@ -14,10 +14,12 @@ import {
   INSTALL_JOURNAL_SCHEMA_VERSION,
   INSTALL_STATE_SCHEMA_VERSION,
   INSTALL_SURFACES,
+  LIFECYCLE_REASON_CODES,
   LOGICAL_ASSET_KINDS,
   LINT_CHECK_RESULTS,
   MEMORY_ACCESS_LEVELS,
   MEMORY_AUTHORITY_MODES,
+  MANAGEMENT_MODES,
   MANIFEST_MARKER_MODES,
   MANIFEST_SMOKE_ACTIONS,
   NORMALIZED_IR_SCHEMA_VERSION,
@@ -39,6 +41,10 @@ import {
   POLICY_EXPLANATION_SCHEMA_VERSION,
   PREVIEW_OPERATION_KINDS,
   PREVIEW_PLAN_SCHEMA_VERSION,
+  RECONCILE_MODES,
+  REMEDIATION_ACTION_KINDS,
+  REMEDIATION_DECISIONS,
+  REMEDIATION_STATUSES,
   RELEASE_CHANNELS,
   RISK_LEVELS,
   RUNTIME_ASSET_GENERATORS,
@@ -134,6 +140,143 @@ function validateStringArray(value, field, errors, code, { allowEmpty = false } 
     out.push(item);
   }
   return out;
+}
+
+function validateLifecycleReasonCodes(value, field, errors, code) {
+  if (!Array.isArray(value)) {
+    push(errors, code, `${field} must be a list`);
+    return;
+  }
+  for (const reasonCode of value) {
+    if (!LIFECYCLE_REASON_CODES.includes(reasonCode)) {
+      push(errors, code, `${field} contains unsupported reason code ${reasonCode}`);
+    }
+  }
+}
+
+function validateRemediationActions(value, field, errors, code) {
+  if (!Array.isArray(value)) {
+    push(errors, code, `${field} must be a list`);
+    return;
+  }
+  for (const action of value) {
+    if (!isObject(action)) {
+      push(errors, code, `${field} entries must be objects`);
+      continue;
+    }
+    validateNonEmptyString(action?.action_id, `${field}[].action_id`, errors, code);
+    if (!REMEDIATION_ACTION_KINDS.includes(action?.action_kind)) {
+      push(errors, code, `${field}[].action_kind must be one of ${REMEDIATION_ACTION_KINDS.join(", ")}`);
+    }
+    validateNonEmptyString(action?.summary, `${field}[].summary`, errors, code);
+    if ("command" in action && action?.command !== null && typeof action?.command !== "string") {
+      push(errors, code, `${field}[].command must be string or null`);
+    }
+    if ("path" in action && action?.path !== null && typeof action?.path !== "string") {
+      push(errors, code, `${field}[].path must be string or null`);
+    }
+    if (typeof action?.safe_without_write !== "boolean") {
+      push(errors, code, `${field}[].safe_without_write must be boolean`);
+    }
+    if (typeof action?.requires_preview !== "boolean") {
+      push(errors, code, `${field}[].requires_preview must be boolean`);
+    }
+    if (typeof action?.preferred !== "boolean") {
+      push(errors, code, `${field}[].preferred must be boolean`);
+    }
+    if (!Array.isArray(action?.applies_to_actions)) {
+      push(errors, code, `${field}[].applies_to_actions must be a list`);
+    } else {
+      for (const appliesToAction of action.applies_to_actions) {
+        validateNonEmptyString(appliesToAction, `${field}[].applies_to_actions[]`, errors, code);
+      }
+    }
+    validateLifecycleReasonCodes(action?.reason_codes, `${field}[].reason_codes`, errors, code);
+  }
+}
+
+function validateDoctorRemediation(record, errors) {
+  if (!isObject(record)) {
+    errors.push("remediation must be an object");
+    return;
+  }
+  if (!REMEDIATION_STATUSES.includes(record?.status)) {
+    errors.push(`unsupported remediation.status: ${record?.status}`);
+  }
+  if (!Array.isArray(record?.commands)) {
+    errors.push("remediation.commands must be a list");
+  } else {
+    for (const command of record.commands) {
+      if (!isObject(command)) {
+        errors.push("remediation.commands entries must be objects");
+        continue;
+      }
+      validateNonEmptyString(command?.action_id, "remediation.commands[].action_id", errors, "DCR001");
+      validateNonEmptyString(command?.summary, "remediation.commands[].summary", errors, "DCR001");
+      validateNonEmptyString(command?.command, "remediation.commands[].command", errors, "DCR001");
+      if (typeof command?.safe_without_write !== "boolean") {
+        errors.push("remediation.commands[].safe_without_write must be boolean");
+      }
+      if (typeof command?.requires_preview !== "boolean") {
+        errors.push("remediation.commands[].requires_preview must be boolean");
+      }
+      if (typeof command?.preferred !== "boolean") {
+        errors.push("remediation.commands[].preferred must be boolean");
+      }
+      if (!Array.isArray(command?.applies_to_actions)) {
+        errors.push("remediation.commands[].applies_to_actions must be a list");
+      } else {
+        for (const appliesToAction of command.applies_to_actions) {
+          validateNonEmptyString(appliesToAction, "remediation.commands[].applies_to_actions[]", errors, "DCR001");
+        }
+      }
+      validateLifecycleReasonCodes(command?.reason_codes, "remediation.commands[].reason_codes", errors, "DCR001");
+      if (!REMEDIATION_DECISIONS.includes(command?.decision)) {
+        errors.push(`unsupported remediation.commands[].decision: ${command?.decision}`);
+      }
+    }
+  }
+  if (!Array.isArray(record?.actions)) {
+    errors.push("remediation.actions must be a list");
+  } else {
+    for (const action of record.actions) {
+      if (!isObject(action)) {
+        errors.push("remediation.actions entries must be objects");
+        continue;
+      }
+      validateNonEmptyString(action?.action_id, "remediation.actions[].action_id", errors, "DCR001");
+      if (!REMEDIATION_ACTION_KINDS.includes(action?.action_kind)) {
+        errors.push(`remediation.actions[].action_kind must be one of ${REMEDIATION_ACTION_KINDS.join(", ")}`);
+      }
+      validateNonEmptyString(action?.summary, "remediation.actions[].summary", errors, "DCR001");
+      if (action?.command !== null && typeof action?.command !== "string") {
+        errors.push("remediation.actions[].command must be string or null");
+      }
+      if (action?.path !== null && typeof action?.path !== "string") {
+        errors.push("remediation.actions[].path must be string or null");
+      }
+      if (typeof action?.safe_without_write !== "boolean") {
+        errors.push("remediation.actions[].safe_without_write must be boolean");
+      }
+      if (typeof action?.requires_preview !== "boolean") {
+        errors.push("remediation.actions[].requires_preview must be boolean");
+      }
+      if (typeof action?.preferred !== "boolean") {
+        errors.push("remediation.actions[].preferred must be boolean");
+      }
+      if (!Array.isArray(action?.applies_to_actions)) {
+        errors.push("remediation.actions[].applies_to_actions must be a list");
+      } else {
+        for (const appliesToAction of action.applies_to_actions) {
+          validateNonEmptyString(appliesToAction, "remediation.actions[].applies_to_actions[]", errors, "DCR001");
+        }
+      }
+      validateLifecycleReasonCodes(action?.reason_codes, "remediation.actions[].reason_codes", errors, "DCR001");
+      if (!REMEDIATION_DECISIONS.includes(action?.decision)) {
+        errors.push(`unsupported remediation.actions[].decision: ${action?.decision}`);
+      }
+    }
+  }
 }
 
 function validatePackBlock(value, errors) {
@@ -1616,6 +1759,9 @@ export function validateInstallState(record) {
       if (typeof file?.owned_by_pairslash !== "boolean") {
         errors.push("packs[].files[].owned_by_pairslash must be boolean");
       }
+      if ("management_mode" in file && !MANAGEMENT_MODES.includes(file?.management_mode)) {
+        errors.push(`unsupported packs[].files[].management_mode: ${file?.management_mode}`);
+      }
       if (typeof file?.override_eligible !== "boolean") {
         errors.push("packs[].files[].override_eligible must be boolean");
       }
@@ -1630,6 +1776,15 @@ export function validateInstallState(record) {
       }
       if (typeof file?.local_override !== "boolean") {
         errors.push("packs[].files[].local_override must be boolean");
+      }
+      if (
+        "reconciled_reason_code" in file &&
+        file?.reconciled_reason_code !== null &&
+        !LIFECYCLE_REASON_CODES.includes(file?.reconciled_reason_code)
+      ) {
+        errors.push(
+          `unsupported packs[].files[].reconciled_reason_code: ${file?.reconciled_reason_code}`,
+        );
       }
       if ("last_operation" in file && typeof file?.last_operation !== "string" && file?.last_operation !== null) {
         errors.push("packs[].files[].last_operation must be string or null");
@@ -1715,6 +1870,12 @@ export function validatePreviewPlan(record) {
       }
     }
   }
+  if ("reason_codes" in record) {
+    validateLifecycleReasonCodes(record?.reason_codes, "reason_codes", errors, "PPL001");
+  }
+  if ("remediation_actions" in record) {
+    validateRemediationActions(record?.remediation_actions, "remediation_actions", errors, "PPL001");
+  }
   if (!Array.isArray(record?.operations)) {
     errors.push("operations must be a list");
     return errors;
@@ -1737,6 +1898,21 @@ export function validatePreviewPlan(record) {
     }
     if ("override_eligible" in op && typeof op?.override_eligible !== "boolean") {
       errors.push("operations[].override_eligible must be boolean");
+    }
+    if ("reason_code" in op && !LIFECYCLE_REASON_CODES.includes(op?.reason_code)) {
+      errors.push(`unsupported operations[].reason_code: ${op?.reason_code}`);
+    }
+    if ("reason_detail" in op && op?.reason_detail !== null && typeof op?.reason_detail !== "string") {
+      errors.push("operations[].reason_detail must be string or null");
+    }
+    if ("management_mode" in op && !MANAGEMENT_MODES.includes(op?.management_mode)) {
+      errors.push(`unsupported operations[].management_mode: ${op?.management_mode}`);
+    }
+    if ("reconcile_mode" in op && !RECONCILE_MODES.includes(op?.reconcile_mode)) {
+      errors.push(`unsupported operations[].reconcile_mode: ${op?.reconcile_mode}`);
+    }
+    if ("remediation_actions" in op) {
+      validateRemediationActions(op?.remediation_actions, "operations[].remediation_actions", errors, "PPL001");
     }
   }
   if ("asset_diff" in record) {
@@ -1804,6 +1980,14 @@ export function validatePreviewPlan(record) {
       }
       if (!Array.isArray(record.commitability.blocked_reasons)) {
         errors.push("commitability.blocked_reasons must be a list");
+      }
+      if ("blocked_reason_codes" in record.commitability) {
+        validateLifecycleReasonCodes(
+          record.commitability.blocked_reason_codes,
+          "commitability.blocked_reason_codes",
+          errors,
+          "PPL001",
+        );
       }
       if ("explicit_approval_hint" in record.commitability) {
         if (record.commitability.explicit_approval_hint !== null && typeof record.commitability.explicit_approval_hint !== "string") {
@@ -2063,6 +2247,20 @@ export function validateDoctorReport(record) {
       }
     }
   }
+  if ("reason_codes" in record) {
+    validateLifecycleReasonCodes(record?.reason_codes, "reason_codes", errors, "DCR001");
+  }
+  if ("remediation" in record) {
+    validateDoctorRemediation(record?.remediation, errors);
+    if (record?.install_blocked === true && record?.remediation?.status !== "blocked") {
+      errors.push("remediation.status must be blocked when install_blocked is true");
+    }
+  } else {
+    errors.push("remediation must be an object");
+  }
+  if ("remediation_actions" in record) {
+    validateRemediationActions(record?.remediation_actions, "remediation_actions", errors, "DCR001");
+  }
   if (!Array.isArray(record?.checks)) {
     errors.push("checks must be a list");
   } else {
@@ -2096,6 +2294,12 @@ export function validateDoctorReport(record) {
       if (typeof check?.blocking_for_install !== "boolean") {
         errors.push("checks[].blocking_for_install must be boolean");
       }
+      if ("reason_codes" in check) {
+        validateLifecycleReasonCodes(check?.reason_codes, "checks[].reason_codes", errors, "DCR002");
+      }
+      if ("remediation_actions" in check) {
+        validateRemediationActions(check?.remediation_actions, "checks[].remediation_actions", errors, "DCR002");
+      }
     }
   }
   if (!Array.isArray(record?.issues)) {
@@ -2125,6 +2329,12 @@ export function validateDoctorReport(record) {
       }
       if ("remediation" in issue && issue?.remediation !== null && typeof issue?.remediation !== "string") {
         errors.push("issues[].remediation must be string or null");
+      }
+      if ("reason_codes" in issue) {
+        validateLifecycleReasonCodes(issue?.reason_codes, "issues[].reason_codes", errors, "DCR003");
+      }
+      if ("remediation_actions" in issue) {
+        validateRemediationActions(issue?.remediation_actions, "issues[].remediation_actions", errors, "DCR003");
       }
     }
   }

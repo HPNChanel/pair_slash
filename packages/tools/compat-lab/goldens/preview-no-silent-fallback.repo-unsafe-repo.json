@@ -15,6 +15,7 @@
     "commitability": {
       "blocked": true,
       "blocked_operations_count": 0,
+      "blocked_reason_codes": [],
       "blocked_reasons": [
         "lint-error:LINT-RUNTIME-004:pairslash-devops:copilot_cli: runtime compatibility copilot_cli.direct_invocation=blocked is not allowed for shippable Phase 5 workflows",
         "LINT-RUNTIME-004:pairslash-devops:copilot_cli",
@@ -73,6 +74,7 @@
       "create": 0,
       "mkdir": 0,
       "preserve_override": 0,
+      "reconcile_unmanaged": 0,
       "remove": 0,
       "replace": 0,
       "skip_identical": 0,

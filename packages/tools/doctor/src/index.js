@@ -4,6 +4,12 @@ import { basename, dirname, join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 
 import {
+  buildInstallStateMetadataMismatches,
+  buildLifecycleCommand,
+  buildReviewRemediationAction,
+  buildRunCommandRemediationAction,
+  collectLifecycleReasonCodes,
+  dedupeRemediationActions,
   detectRuntimeSelection,
   loadStateForDoctor,
   planInstall,
@@ -40,6 +46,23 @@ import {
 import { resolveSupportLane } from "./support-lane.js";
 
 const ISSUE_STATUSES = new Set(["warn", "degraded", "fail", "unsupported"]);
+const REASON_CODE_INSTALL_STATE_INVALID = "install-state-invalid";
+const REASON_CODE_INSTALL_STATE_METADATA_MISMATCH = "install-state-metadata-mismatch";
+const REASON_CODE_MANAGED_PACK_REQUIRES_UPDATE = "managed-pack-requires-update";
+const REASON_CODE_RECONCILE_IDENTICAL = "reconcile-unmanaged-identical";
+const REASON_CODE_RECONCILE_OVERRIDE = "reconcile-unmanaged-override-preserved";
+const REASON_CODE_UNMANAGED_CONFLICT = "unmanaged-conflict-blocking";
+const REASON_CODE_MANAGED_OVERRIDE = "managed-override-preserved";
+const REASON_CODE_MANAGED_ORPHAN_OVERRIDE = "managed-orphan-override-preserved";
+const REASON_CODE_UNINSTALL_PRESERVE_UNMANAGED = "uninstall-preserve-unmanaged";
+const REASON_CODE_OWNERSHIP_METADATA_CONFLICT = "ownership-metadata-conflict";
+const REASON_CODE_UPDATE_CONFLICT = "update-conflict-blocking";
+const REMEDIATION_STATUS_NONE = "none";
+const REMEDIATION_STATUS_ADVISORY = "advisory";
+const REMEDIATION_STATUS_BLOCKED = "blocked";
+const REMEDIATION_DECISION_REPAIR = "repair";
+const REMEDIATION_DECISION_RECONCILE = "reconcile";
+const REMEDIATION_DECISION_ABORT = "abort";
 
 function getAdapter(runtime) {
   const normalized = normalizeRuntime(runtime);
@@ -60,6 +83,61 @@ function buildIssueCode(checkId) {
   return `DOC-${checkId.replace(/\./g, "-").toUpperCase()}`;
 }
 
+function buildPreviewInstallAction({ runtime, target, packId, preferred = false }) {
+  return buildRunCommandRemediationAction({
+    actionId: `preview-install:${runtime}:${target}:${packId}`,
+    summary: "Review the install preview before applying changes.",
+    command: buildLifecycleCommand({
+      action: "preview install",
+      runtime,
+      target,
+      packId,
+    }),
+    appliesToActions: ["doctor", "install"],
+    reasonCodes: [
+      REASON_CODE_RECONCILE_IDENTICAL,
+      REASON_CODE_RECONCILE_OVERRIDE,
+      REASON_CODE_UNMANAGED_CONFLICT,
+      REASON_CODE_OWNERSHIP_METADATA_CONFLICT,
+    ],
+    preferred,
+  });
+}
+
+function buildPreviewUpdateAction({ runtime, target, packId, preferred = false }) {
+  return buildRunCommandRemediationAction({
+    actionId: `preview-update:${runtime}:${target}:${packId}`,
+    summary: "Review the update preview for the managed pack.",
+    command: buildLifecycleCommand({
+      action: "update",
+      runtime,
+      target,
+      packId,
+      dryRun: true,
+    }),
+    appliesToActions: ["doctor", "install", "update"],
+    reasonCodes: [
+      REASON_CODE_MANAGED_PACK_REQUIRES_UPDATE,
+      REASON_CODE_MANAGED_OVERRIDE,
+      REASON_CODE_MANAGED_ORPHAN_OVERRIDE,
+      REASON_CODE_UPDATE_CONFLICT,
+      REASON_CODE_OWNERSHIP_METADATA_CONFLICT,
+    ],
+    preferred,
+  });
+}
+
+function buildStateReviewAction({ runtime, target, statePath, preferred = false }) {
+  return buildReviewRemediationAction({
+    actionId: `review-state:${runtime}:${target}`,
+    summary: "Review and repair or remove the stale PairSlash install-state file before retrying.",
+    path: statePath,
+    appliesToActions: ["doctor", "install", "update", "uninstall"],
+    reasonCodes: [REASON_CODE_INSTALL_STATE_INVALID, REASON_CODE_INSTALL_STATE_METADATA_MISMATCH],
+    preferred,
+  });
+}
+
 function createCheckResult({
   id,
   group,
@@ -71,6 +149,8 @@ function createCheckResult({
   remediation = null,
   evidence = {},
   blockingForInstall = false,
+  reasonCodes = [],
+  remediationActions = [],
 }) {
   return {
     id,
@@ -84,6 +164,10 @@ function createCheckResult({
     remediation,
     evidence,
     blocking_for_install: blockingForInstall,
+    reason_codes: collectLifecycleReasonCodes({
+      reasonCodes,
+    }),
+    remediation_actions: dedupeRemediationActions(remediationActions),
   };
 }
 
@@ -377,6 +461,12 @@ function buildBaseContext({
   const requestedPacks = [...new Set(packs)].sort((left, right) => left.localeCompare(right));
   const manifestRecords = loadPackManifestRecords(repoRoot);
   const manifestSelection = selectPackManifestRecords(manifestRecords, requestedPacks);
+  const defaultCatalogRecord = selectDefaultCatalogPack(catalogRecords);
+  const installIntentPacks = requestedPacks.length > 0
+    ? [...requestedPacks]
+    : defaultCatalogRecord
+      ? [defaultCatalogRecord.id]
+      : [];
   const os = osOverride ?? process.platform;
   const shell = detectShellName(shellOverride);
   const statePath = resolveStatePath({
@@ -415,6 +505,7 @@ function buildBaseContext({
     runtime: normalizedRuntime,
     target: normalizedTarget,
     requestedPacks,
+    installIntentPacks,
     adapter,
     runtimePresence,
     detection,
@@ -1076,6 +1167,15 @@ function runInstallStateLoad(context) {
       remediation: "Remove or repair the invalid install state file, then rerun install or update.",
       evidence: {},
       blockingForInstall: true,
+      reasonCodes: [REASON_CODE_INSTALL_STATE_INVALID],
+      remediationActions: [
+        buildStateReviewAction({
+          runtime: context.runtime,
+          target: context.target,
+          statePath: context.statePath,
+          preferred: true,
+        }),
+      ],
     });
   }
   if (!context.state) {
@@ -1093,19 +1193,13 @@ function runInstallStateLoad(context) {
     });
   }
 
-  const mismatches = [];
-  if (context.state.runtime !== context.runtime) {
-    mismatches.push(`runtime ${context.state.runtime}`);
-  }
-  if (context.state.target !== context.target) {
-    mismatches.push(`target ${context.state.target}`);
-  }
-  if (context.state.config_home !== context.configHome) {
-    mismatches.push(`config_home ${context.state.config_home}`);
-  }
-  if (context.state.install_root !== context.installRoot) {
-    mismatches.push(`install_root ${context.state.install_root}`);
-  }
+  const mismatches = buildInstallStateMetadataMismatches({
+    state: context.state,
+    runtime: context.runtime,
+    target: context.target,
+    configHome: context.configHome,
+    installRoot: context.installRoot,
+  });
   if (mismatches.length > 0) {
     return createCheckResult({
       id: "install_state.load",
@@ -1119,9 +1213,22 @@ function runInstallStateLoad(context) {
       summary: "install state metadata does not match the current runtime/target paths",
       remediation: "Reinstall for the intended runtime/target or remove stale install state before retrying.",
       evidence: {
-        mismatches,
+        mismatches: mismatches.map((entry) => ({
+          field: entry.field,
+          expected: entry.expected,
+          actual: entry.actual,
+        })),
       },
       blockingForInstall: true,
+      reasonCodes: [REASON_CODE_INSTALL_STATE_METADATA_MISMATCH],
+      remediationActions: [
+        buildStateReviewAction({
+          runtime: context.runtime,
+          target: context.target,
+          statePath: context.statePath,
+          preferred: true,
+        }),
+      ],
     });
   }
 
@@ -1805,9 +1912,55 @@ function runInstalledTrustPosture(context) {
 function runUnmanagedInstallRoot(context) {
   const entries = listInstallRootEntries(context.installRoot);
   const trackedNames = new Set((context.state?.packs ?? []).map((pack) => relativeFrom(context.installRoot, pack.install_dir)));
-  const selectedNames = new Set(context.selectedManifests.map((record) => record.packId));
+  const installIntentPacks = context.installIntentPacks.length > 0
+    ? context.installIntentPacks
+    : context.selectedManifests.map((record) => record.packId);
+  const selectedNames = new Set(installIntentPacks);
   const unmanaged = entries.filter((entry) => !trackedNames.has(entry.name));
+  const reconciledFiles = (context.state?.packs ?? [])
+    .flatMap((pack) =>
+      pack.files
+        .filter((file) => file.management_mode === "reconciled_unmanaged")
+        .map((file) => ({
+          pack_id: pack.id,
+          relative_path: file.relative_path,
+          absolute_path: file.absolute_path,
+          reason_code: file.reconciled_reason_code ?? REASON_CODE_UNINSTALL_PRESERVE_UNMANAGED,
+        })),
+    )
+    .sort((left, right) =>
+      `${left.pack_id}\u0000${left.relative_path}`.localeCompare(
+        `${right.pack_id}\u0000${right.relative_path}`,
+      ),
+    );
   if (unmanaged.length === 0) {
+    if (reconciledFiles.length > 0) {
+      return createCheckResult({
+        id: "conflict.unmanaged_install_root",
+        group: "conflict",
+        status: "warn",
+        runtime: context.runtime,
+        target: context.target,
+        inputs: {},
+        summary: `${reconciledFiles.length} reconciled unmanaged file(s) remain under PairSlash-managed pack roots`,
+        remediation: "Review preserved unmanaged files before update or uninstall.",
+        evidence: {
+          reconciled_files: reconciledFiles,
+        },
+        reasonCodes: reconciledFiles.map((file) => file.reason_code),
+        remediationActions: dedupeRemediationActions(
+          reconciledFiles.map((file) =>
+            buildReviewRemediationAction({
+              actionId: `review-unmanaged:${file.pack_id}:${file.relative_path}`,
+              summary: "Review the unmanaged file that PairSlash preserves.",
+              path: file.absolute_path,
+              appliesToActions: ["doctor", "update", "uninstall"],
+              reasonCodes: [file.reason_code],
+            }),
+          ),
+        ),
+      });
+    }
     return createCheckResult({
       id: "conflict.unmanaged_install_root",
       group: "conflict",
@@ -1821,8 +1974,9 @@ function runUnmanagedInstallRoot(context) {
   }
 
   const collisions = unmanaged.filter((entry) => selectedNames.has(entry.name));
+  const offIntentEntries = unmanaged.filter((entry) => !selectedNames.has(entry.name));
   if (collisions.length > 0) {
-    const selectedPackIds = context.selectedManifests.map((record) => record.packId);
+    const selectedPackIds = [...selectedNames];
     try {
       const preview = planInstall({
         repoRoot: context.repoRoot,
@@ -1830,8 +1984,14 @@ function runUnmanagedInstallRoot(context) {
         target: context.target,
         packs: selectedPackIds,
       });
-      const unmanagedOperations = preview.plan.operations.filter(
-        (operation) => selectedNames.has(operation.pack_id) && operation.ownership === "unmanaged",
+      const unmanagedOperations = preview.plan.operations.filter((operation) =>
+        selectedNames.has(operation.pack_id) &&
+        [
+          REASON_CODE_RECONCILE_IDENTICAL,
+          REASON_CODE_RECONCILE_OVERRIDE,
+          REASON_CODE_UNMANAGED_CONFLICT,
+          REASON_CODE_OWNERSHIP_METADATA_CONFLICT,
+        ].includes(operation.reason_code),
       );
       const blocked = unmanagedOperations.filter((operation) => operation.kind === "blocked_conflict");
       if (blocked.length > 0) {
@@ -1851,16 +2011,20 @@ function runUnmanagedInstallRoot(context) {
               pack_id: operation.pack_id,
               relative_path: operation.relative_path,
               reason: operation.reason,
+              reason_code: operation.reason_code ?? null,
             })),
+            ignored_non_intent_paths: offIntentEntries.map((entry) => entry.absolutePath),
           },
           blockingForInstall: true,
+          reasonCodes: blocked.map((operation) => operation.reason_code ?? REASON_CODE_UNMANAGED_CONFLICT),
+          remediationActions: dedupeRemediationActions(
+            blocked.flatMap((operation) => operation.remediation_actions ?? []),
+          ),
         });
       }
 
-      const preserved = unmanagedOperations.filter((operation) =>
-        ["preserve_override", "skip_identical", "skip_unmanaged"].includes(operation.kind),
-      );
-      if (preserved.length > 0) {
+      const reconciled = unmanagedOperations.filter((operation) => operation.kind === "reconcile_unmanaged");
+      if (reconciled.length > 0) {
         return createCheckResult({
           id: "conflict.unmanaged_install_root",
           group: "conflict",
@@ -1873,13 +2037,20 @@ function runUnmanagedInstallRoot(context) {
             "Keep `pairslash preview install` as the source of truth before apply and review any preserved overrides carefully.",
           evidence: {
             collisions: collisions.map((entry) => entry.absolutePath),
-            preview_operations: preserved.map((operation) => ({
+            preview_operations: reconciled.map((operation) => ({
               kind: operation.kind,
               pack_id: operation.pack_id,
               relative_path: operation.relative_path,
               reason: operation.reason,
+              reason_code: operation.reason_code ?? null,
+              reconcile_mode: operation.reconcile_mode ?? null,
             })),
+            ignored_non_intent_paths: offIntentEntries.map((entry) => entry.absolutePath),
           },
+          reasonCodes: reconciled.map((operation) => operation.reason_code),
+          remediationActions: dedupeRemediationActions(
+            reconciled.flatMap((operation) => operation.remediation_actions ?? []),
+          ),
         });
       }
     } catch (error) {
@@ -1895,6 +2066,7 @@ function runUnmanagedInstallRoot(context) {
         evidence: {
           collisions: collisions.map((entry) => entry.absolutePath),
           preview_error: error.message,
+          ignored_non_intent_paths: offIntentEntries.map((entry) => entry.absolutePath),
         },
       });
     }
@@ -1940,7 +2112,9 @@ function runUpdatePreviewRisk(context) {
       packs: context.state.packs.map((pack) => pack.id),
     });
     const blocked = envelope.plan.operations.filter((operation) => operation.kind === "blocked_conflict");
-    const preserved = envelope.plan.operations.filter((operation) => operation.kind === "preserve_override");
+    const preserved = envelope.plan.operations.filter((operation) =>
+      ["preserve_override", "reconcile_unmanaged"].includes(operation.kind),
+    );
     if (envelope.plan.errors.length > 0 || blocked.length > 0) {
       return createCheckResult({
         id: "install_state.update_preview_risk",
@@ -1957,9 +2131,14 @@ function runUpdatePreviewRisk(context) {
             pack_id: operation.pack_id,
             relative_path: operation.relative_path,
             reason: operation.reason,
+            reason_code: operation.reason_code ?? null,
           })),
         },
         blockingForInstall: true,
+        reasonCodes: blocked.map((operation) => operation.reason_code),
+        remediationActions: dedupeRemediationActions(
+          blocked.flatMap((operation) => operation.remediation_actions ?? []),
+        ),
       });
     }
     if (preserved.length > 0) {
@@ -1977,8 +2156,16 @@ function runUpdatePreviewRisk(context) {
             pack_id: operation.pack_id,
             relative_path: operation.relative_path,
             reason: operation.reason,
+            reason_code: operation.reason_code ?? null,
+            kind: operation.kind,
+            management_mode: operation.management_mode ?? null,
+            reconcile_mode: operation.reconcile_mode ?? null,
           })),
         },
+        reasonCodes: preserved.map((operation) => operation.reason_code),
+        remediationActions: dedupeRemediationActions(
+          preserved.flatMap((operation) => operation.remediation_actions ?? []),
+        ),
       });
     }
   } catch (error) {
@@ -2006,6 +2193,89 @@ function runUpdatePreviewRisk(context) {
     inputs: {},
     summary: "update preview reports no override-preservation or conflict risk",
     evidence: {},
+  });
+}
+
+function runInstallPreviewParity(context) {
+  if (context.requestedPacks.length === 0) {
+    return createCheckResult({
+      id: "install_state.install_preview_parity",
+      group: "install_state",
+      status: "skip",
+      runtime: context.runtime,
+      target: context.target,
+      inputs: {},
+      summary: "skipped because doctor was not scoped to explicit pack install intent",
+      evidence: {},
+    });
+  }
+
+  const installedRequestedPacks = context.requestedPacks.filter((packId) =>
+    (context.state?.packs ?? []).some((pack) => pack.id === packId),
+  );
+  if (installedRequestedPacks.length === 0) {
+    return createCheckResult({
+      id: "install_state.install_preview_parity",
+      group: "install_state",
+      status: "pass",
+      runtime: context.runtime,
+      target: context.target,
+      inputs: {
+        requested_packs: context.requestedPacks,
+      },
+      summary: "requested packs are not already PairSlash-managed for this runtime and target",
+      evidence: {},
+    });
+  }
+
+  const preview = planInstall({
+    repoRoot: context.repoRoot,
+    runtime: context.runtime,
+    target: context.target,
+    packs: installedRequestedPacks,
+  });
+  const redirects = preview.plan.operations.filter(
+    (operation) => operation.reason_code === REASON_CODE_MANAGED_PACK_REQUIRES_UPDATE,
+  );
+  if (redirects.length === 0) {
+    return createCheckResult({
+      id: "install_state.install_preview_parity",
+      group: "install_state",
+      status: "pass",
+      runtime: context.runtime,
+      target: context.target,
+      inputs: {
+        requested_packs: context.requestedPacks,
+      },
+      summary: "requested packs do not require install-to-update redirection",
+      evidence: {},
+    });
+  }
+
+  return createCheckResult({
+    id: "install_state.install_preview_parity",
+    group: "install_state",
+    status: "fail",
+    runtime: context.runtime,
+    target: context.target,
+    inputs: {
+      requested_packs: context.requestedPacks,
+    },
+    summary: `${redirects.length} requested pack(s) are already managed; install preview redirects to update`,
+    remediation: "Run `pairslash update --preview` for those packs instead of reinstalling them.",
+    evidence: {
+      redirects: redirects.map((operation) => ({
+        pack_id: operation.pack_id,
+        relative_path: operation.relative_path,
+        reason: operation.reason,
+        reason_code: operation.reason_code ?? null,
+      })),
+    },
+    blockingForInstall: true,
+    reasonCodes: [REASON_CODE_MANAGED_PACK_REQUIRES_UPDATE],
+    remediationActions: dedupeRemediationActions(
+      redirects.flatMap((operation) => operation.remediation_actions ?? []),
+    ),
   });
 }
 
@@ -2115,6 +2385,7 @@ const CHECKS = [
   runInstalledTrustPosture,
   runOwnedFilesIntegrity,
   runUpdatePreviewRisk,
+  runInstallPreviewParity,
   runUnmanagedInstallRoot,
   runAssetPlacement,
 ];
@@ -2176,10 +2447,110 @@ function buildIssues(checks) {
       blocking_for_install: check.blocking_for_install,
       message: check.summary,
       remediation: check.remediation,
+      reason_codes: collectLifecycleReasonCodes({
+        reasonCodes: check.reason_codes ?? [],
+      }),
+      remediation_actions: dedupeRemediationActions(check.remediation_actions ?? []),
     }));
 }
 
-function buildNextActions(issues) {
+function buildRemediationActions(checks, issues) {
+  return dedupeRemediationActions([
+    ...checks.flatMap((check) => check.remediation_actions ?? []),
+    ...issues.flatMap((issue) => issue.remediation_actions ?? []),
+  ]);
+}
+
+function remediationDecisionForReasonCodes(reasonCodes) {
+  if (
+    reasonCodes.includes(REASON_CODE_UNMANAGED_CONFLICT) ||
+    reasonCodes.includes(REASON_CODE_OWNERSHIP_METADATA_CONFLICT)
+  ) {
+    return REMEDIATION_DECISION_ABORT;
+  }
+  if (reasonCodes.includes(REASON_CODE_RECONCILE_IDENTICAL)) {
+    return REMEDIATION_DECISION_RECONCILE;
+  }
+  if (
+    reasonCodes.some((reasonCode) => [
+      REASON_CODE_RECONCILE_OVERRIDE,
+      REASON_CODE_MANAGED_OVERRIDE,
+      REASON_CODE_MANAGED_ORPHAN_OVERRIDE,
+      REASON_CODE_UNINSTALL_PRESERVE_UNMANAGED,
+    ].includes(reasonCode))
+  ) {
+    return REMEDIATION_DECISION_RECONCILE;
+  }
+  return REMEDIATION_DECISION_REPAIR;
+}
+
+function buildDoctorRemediation({ remediationActions, activeReasonCodes, installBlocked, issues }) {
+  const normalizedActions = dedupeRemediationActions(remediationActions).map((action) => {
+    const actionReasonCodes = collectLifecycleReasonCodes({
+      reasonCodes: action.reason_codes ?? [],
+    });
+    const effectiveReasonCodes = collectLifecycleReasonCodes({
+      reasonCodes:
+        actionReasonCodes.filter((reasonCode) => activeReasonCodes.includes(reasonCode)).length > 0
+          ? actionReasonCodes.filter((reasonCode) => activeReasonCodes.includes(reasonCode))
+          : actionReasonCodes,
+    });
+    return {
+      action_id: action.action_id,
+      action_kind: action.action_kind,
+      summary: action.summary,
+      command: action.command ?? null,
+      path: action.path ?? null,
+      safe_without_write: action.safe_without_write,
+      requires_preview: action.requires_preview,
+      applies_to_actions: [...(action.applies_to_actions ?? [])],
+      reason_codes: effectiveReasonCodes,
+      preferred: action.preferred,
+      decision: remediationDecisionForReasonCodes(effectiveReasonCodes),
+    };
+  });
+  const commands = [];
+  const seenCommands = new Set();
+  for (const action of normalizedActions) {
+    if (typeof action.command !== "string" || action.command.trim() === "") {
+      continue;
+    }
+    const key = `${action.command}\u0000${action.decision}`;
+    if (seenCommands.has(key)) {
+      continue;
+    }
+    seenCommands.add(key);
+    commands.push({
+      action_id: action.action_id,
+      summary: action.summary,
+      command: action.command,
+      applies_to_actions: [...action.applies_to_actions],
+      reason_codes: [...action.reason_codes],
+      safe_without_write: action.safe_without_write,
+      requires_preview: action.requires_preview,
+      preferred: action.preferred,
+      decision: action.decision,
+    });
+  }
+  const status = installBlocked
+    ? REMEDIATION_STATUS_BLOCKED
+    : commands.length > 0 || normalizedActions.length > 0 || issues.length > 0
+      ? REMEDIATION_STATUS_ADVISORY
+      : REMEDIATION_STATUS_NONE;
+  return {
+    status,
+    commands,
+    actions: normalizedActions,
+  };
+}
+
+function buildNextActions(issues, remediationActions = []) {
+  const commandActions = remediationActions
+    .filter((action) => typeof action.command === "string" && action.command.trim() !== "")
+    .map((action) => action.command);
+  if (commandActions.length > 0) {
+    return [...new Set(commandActions)];
+  }
   const deduped = [];
   const seen = new Set();
   for (const issue of issues) {
@@ -2370,9 +2741,20 @@ export function runDoctor({
   });
   const checks = CHECKS.map((check) => check(context));
   const issues = buildIssues(checks);
+  const remediationActions = buildRemediationActions(checks, issues);
   const installBlocked = checks.some(
     (check) => check.blocking_for_install && ISSUE_STATUSES.has(check.status),
   );
+  const reasonCodes = collectLifecycleReasonCodes({
+    checks,
+    issues,
+  });
+  const remediation = buildDoctorRemediation({
+    remediationActions,
+    activeReasonCodes: reasonCodes,
+    installBlocked,
+    issues,
+  });
   const report = {
     kind: "doctor-report",
     schema_version: DOCTOR_REPORT_SCHEMA_VERSION,
@@ -2387,9 +2769,12 @@ export function runDoctor({
     runtime_compatibility: buildRuntimeCompatibility(context, checks),
     recent_trace_summary: buildRecentTraceSummary(context.repoRoot, context.runtime, context.target),
     observability_health: buildObservabilityHealth(context.repoRoot, context.runtime, context.target),
+    reason_codes: reasonCodes,
+    remediation,
+    remediation_actions: remediationActions,
     checks,
     issues,
-    next_actions: buildNextActions(issues),
+    next_actions: buildNextActions(issues, remediationActions),
     installed_packs: buildInstalledPacks(context.state),
     first_workflow_guidance: buildFirstWorkflowGuidance(context, {
       installBlocked,
