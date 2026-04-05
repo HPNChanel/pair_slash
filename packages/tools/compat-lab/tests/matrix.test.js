@@ -17,9 +17,26 @@ test("compatibility matrix artifact exposes public support semantics", () => {
     version: "0.4.0",
   });
   assert.equal(artifact.runtime_lanes.length, 4);
-  assert.ok(artifact.runtime_lanes.some((lane) => lane.support_level === "stable-tested"));
+  assert.equal(artifact.evidence_policy.canonical_entrypoint, "/skills");
+  assert.equal(artifact.runtime_lanes.some((lane) => lane.support_level === "stable-tested"), false);
   assert.ok(artifact.runtime_lanes.some((lane) => lane.support_level === "degraded"));
   assert.ok(artifact.runtime_lanes.some((lane) => lane.support_level === "prep"));
+  assert.ok(
+    artifact.runtime_lanes.every((lane) => lane.evidence_source.startsWith("docs/evidence/live-runtime/")),
+  );
+  assert.ok(
+    artifact.runtime_lanes.every((lane) => lane.evidence_data_ref.startsWith("docs/evidence/live-runtime/")),
+  );
+  assert.ok(
+    artifact.runtime_lanes.some(
+      (lane) => lane.lane_id === "codex-cli-repo-macos" && lane.support_level === "degraded" && lane.actual_evidence_class === "live_smoke",
+    ),
+  );
+  assert.ok(
+    artifact.runtime_lanes.some(
+      (lane) => lane.lane_id === "copilot-cli-user-linux" && lane.support_level === "prep" && lane.actual_evidence_class === null,
+    ),
+  );
   assert.equal(artifact.release_gates.length, 4);
   assert.ok(artifact.generated_from.evals.length >= 6);
 });

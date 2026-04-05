@@ -30,7 +30,9 @@ npm run test
 npm run test:release
 ```
 
-All three commands should pass before treating the local checkout as operationally ready.
+`npm run lint` and `npm run test` should pass before treating the local
+checkout as operationally ready. `npm run test:release` is a stricter release
+gate and must be treated as blocking when it fails.
 
 ## Memory-write safety gates
 

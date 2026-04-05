@@ -28,7 +28,7 @@ excluded_repo_manifests:
 generated_from:
   compatibility_matrix: docs/compatibility/runtime-surface-matrix.yaml
   core_manifest_root: packs/core
-last_updated: 2026-04-04
+last_updated: 2026-04-05
 model: pack-manifest-derived-index
 packs:
   - category: backend

@@ -12,78 +12,230 @@ import {
 import { exists, relativeFrom, stableYaml, walkFiles } from "./utils.js";
 
 const SHARED_RUNTIME_SURFACE_MATRIX = "docs/compatibility/runtime-surface-matrix.yaml";
+const LIVE_RUNTIME_EVIDENCE_ROOT = "docs/evidence/live-runtime";
+const LIVE_RUNTIME_LANE_RECORD_KIND = "live-runtime-lane-record";
+const LIVE_RUNTIME_LANE_RECORD_SCHEMA_VERSION = "1.0.0";
+const ALLOWED_PUBLIC_SUPPORT_LEVELS = new Set(["stable-tested", "preview", "degraded", "prep", "blocked"]);
+const ALLOWED_LIVE_EVIDENCE_CLASSES = new Set([
+  "deterministic_test",
+  "fake_acceptance",
+  "shim_acceptance",
+  "live_smoke",
+  "live_verification",
+  "repeated_live_verification",
+]);
+const ALLOWED_FRESHNESS_STATES = new Set(["none-recorded", "fresh", "stale", "expired"]);
 
 export const DEFAULT_PUBLIC_SUPPORT_POLICY = Object.freeze({
-  stable_tested:
-    "Deterministic compat-lab gates are green and a matching live runtime lane has recorded evidence.",
+  blocked:
+    "Fresh negative live evidence blocks the exact lane or documented surface until superseded by newer live verification.",
   degraded:
-    "Deterministic compat-lab gates are green, but support is reduced by missing or partial live evidence or by documented caveats.",
+    "Real runtime evidence exists, but the canonical /skills path is missing, partial, or caveated for the documented lane.",
   prep:
-    "Doctor and preview are expected to work, but install claims are not yet recorded as live evidence.",
-  known_broken:
-    "PairSlash has an explicit known issue or blocked surface. No silent fallback is allowed.",
+    "Deterministic coverage and optional live smoke may exist, but canonical /skills verification is not yet recorded for the documented lane.",
+  preview:
+    "One fresh canonical live verification exists for the exact lane, but repeated live verification is not recorded yet.",
+  stable_tested:
+    "Repeated fresh canonical live verification exists for the exact runtime, target, OS, and lane scope.",
 });
 
 export const DEFAULT_PUBLIC_COMPATIBILITY_LANES = Object.freeze([
   {
+    actual_evidence_class: "live_smoke",
+    canonical_entrypoint: "/skills",
     runtime: "Codex CLI",
     runtime_id: "codex_cli",
     target: "repo",
     os_lane: "macOS",
-    support_level: "stable-tested",
+    lane_id: "codex-cli-repo-macos",
+    support_level: "degraded",
     recommended_version: "0.116.0",
-    live_tested_range: "0.116.0",
+    live_tested_range: "none recorded",
     deterministic_lab_baseline: "0.116.0",
     support_semantics:
-      "Canonical release lane. Use this lane when you need the strongest PairSlash support claim.",
+      "Real Codex CLI behavior was observed on macOS repo scope, but only through codex exec/direct invocation and not through a checked-in canonical /skills picker capture. Keep this lane degraded.",
     release_gate: "required",
-    evidence_source:
-      "docs/compatibility/compatibility-matrix.md; docs/compatibility/runtime-verification.md; docs/runtime-mapping/pilot-acceptance.md",
+    evidence_source: `${LIVE_RUNTIME_EVIDENCE_ROOT}/codex-cli-repo-macos.md`,
+    evidence_data_ref: `${LIVE_RUNTIME_EVIDENCE_ROOT}/codex-cli-repo-macos.yaml`,
+    evidence_summary:
+      "Archived direct-invocation live smoke exists for Codex CLI 0.116.0 on macOS repo scope, but canonical /skills evidence is still unrecorded.",
+    freshness_state: "fresh",
+    host_profile_count: 1,
+    last_verified_at: "2026-03-21",
+    owner_id: "runtime-truth",
+    required_evidence_class: "live_verification",
+    deterministic_evidence_refs: [
+      "docs/runtime-mapping/pilot-acceptance.md",
+      "packages/tools/compat-lab/tests/acceptance.test.js",
+      "packages/tools/compat-lab/tests/matrix.test.js",
+    ],
+    shim_evidence_refs: [
+      "packages/tools/compat-lab/src/runtime-fixtures.js",
+      "packages/tools/compat-lab/src/acceptance.js",
+    ],
+    live_evidence_refs: [
+      "docs/compatibility/phase-0-acceptance.md",
+      ".pairslash/project-memory/60-architecture-decisions/phase-0-codex-cli-verification-on-v0-116-0.yaml",
+    ],
+    negative_evidence_refs: [
+      ".pairslash/project-memory/70-known-good-patterns/codex-exec-as-non-interactive-skill-testing-surface.yaml",
+    ],
+    claim_guard_refs: [
+      "docs/compatibility/runtime-verification.md",
+      "docs/releases/public-claim-policy.md",
+    ],
+    surface_verdicts: {
+      canonical_picker: "unrecorded",
+      direct_invocation: "pass",
+      gh_availability: "not_applicable",
+      install_apply: "unrecorded",
+      preview_install: "unrecorded",
+      runtime_available: "pass",
+    },
   },
   {
+    actual_evidence_class: null,
+    canonical_entrypoint: "/skills",
     runtime: "GitHub Copilot CLI",
     runtime_id: "copilot_cli",
     target: "user",
     os_lane: "Linux",
-    support_level: "degraded",
+    lane_id: "copilot-cli-user-linux",
+    support_level: "prep",
     recommended_version: "2.50.x",
     live_tested_range: "none recorded",
     deterministic_lab_baseline: "2.50.0",
     support_semantics:
-      "Deterministically covered in compat-lab, but live runtime evidence is not yet bounded enough for stable-tested claims.",
+      "Deterministic coverage exists, but no checked-in canonical /skills verification or live install record exists for the Linux user lane. Keep this lane prep-only.",
     release_gate: "required",
-    evidence_source:
-      "docs/compatibility/compatibility-matrix.md; docs/compatibility/runtime-verification.md; docs/runtime-mapping/pilot-acceptance.md",
+    evidence_source: `${LIVE_RUNTIME_EVIDENCE_ROOT}/copilot-cli-user-linux.md`,
+    evidence_data_ref: `${LIVE_RUNTIME_EVIDENCE_ROOT}/copilot-cli-user-linux.yaml`,
+    evidence_summary:
+      "Deterministic installability coverage exists, but no checked-in Linux user /skills verification or live install record is present.",
+    freshness_state: "none-recorded",
+    host_profile_count: 0,
+    last_verified_at: null,
+    owner_id: "runtime-truth",
+    required_evidence_class: "live_verification",
+    deterministic_evidence_refs: [
+      "docs/runtime-mapping/pilot-acceptance.md",
+      "packages/tools/compat-lab/tests/acceptance.test.js",
+      "packages/tools/compat-lab/tests/matrix.test.js",
+    ],
+    shim_evidence_refs: [
+      "packages/tools/compat-lab/src/runtime-fixtures.js",
+      "packages/tools/compat-lab/src/acceptance.js",
+    ],
+    live_evidence_refs: [],
+    negative_evidence_refs: [],
+    claim_guard_refs: [
+      "docs/compatibility/runtime-verification.md",
+      "docs/releases/public-claim-policy.md",
+    ],
+    surface_verdicts: {
+      canonical_picker: "unrecorded",
+      direct_invocation: "blocked",
+      gh_availability: "unrecorded",
+      install_apply: "unrecorded",
+      preview_install: "unrecorded",
+      runtime_available: "unrecorded",
+    },
   },
   {
+    actual_evidence_class: "live_smoke",
+    canonical_entrypoint: "/skills",
     runtime: "Codex CLI",
     runtime_id: "codex_cli",
     target: "repo",
     os_lane: "Windows",
+    lane_id: "codex-cli-repo-windows",
     support_level: "prep",
-    recommended_version: "0.116.0",
+    recommended_version: "0.118.0",
     live_tested_range: "none recorded",
     deterministic_lab_baseline: "0.116.0",
     support_semantics:
-      "Doctor and preview are expected; install evidence remains prep-only until manual live verification is recorded.",
+      "Real Windows doctor and preview smoke are recorded, but install apply and canonical /skills verification remain unrecorded. Keep this lane prep-only.",
     release_gate: "nightly-only",
-    evidence_source:
-      "docs/compatibility/compatibility-matrix.md; docs/compatibility/runtime-verification.md; docs/runtime-mapping/pilot-acceptance.md",
+    evidence_source: `${LIVE_RUNTIME_EVIDENCE_ROOT}/codex-cli-repo-windows.md`,
+    evidence_data_ref: `${LIVE_RUNTIME_EVIDENCE_ROOT}/codex-cli-repo-windows.yaml`,
+    evidence_summary:
+      "Real Windows doctor and preview smoke were recorded on 2026-04-05, but install apply and canonical /skills evidence remain unrecorded.",
+    freshness_state: "fresh",
+    host_profile_count: 1,
+    last_verified_at: "2026-04-05T12:28:24.545Z",
+    owner_id: "runtime-truth",
+    required_evidence_class: "live_verification",
+    deterministic_evidence_refs: [
+      "docs/runtime-mapping/pilot-acceptance.md",
+      "packages/tools/compat-lab/tests/acceptance.test.js",
+      "packages/tools/compat-lab/tests/matrix.test.js",
+    ],
+    shim_evidence_refs: [
+      "packages/tools/compat-lab/src/runtime-fixtures.js",
+      "packages/tools/compat-lab/src/acceptance.js",
+    ],
+    live_evidence_refs: [`${LIVE_RUNTIME_EVIDENCE_ROOT}/codex-cli-repo-windows.md`],
+    negative_evidence_refs: [],
+    claim_guard_refs: [
+      "docs/compatibility/runtime-verification.md",
+      "docs/releases/public-claim-policy.md",
+    ],
+    surface_verdicts: {
+      canonical_picker: "unrecorded",
+      direct_invocation: "not_recorded",
+      gh_availability: "not_applicable",
+      install_apply: "unrecorded",
+      preview_install: "pass",
+      runtime_available: "pass",
+    },
   },
   {
+    actual_evidence_class: "live_smoke",
+    canonical_entrypoint: "/skills",
     runtime: "GitHub Copilot CLI",
     runtime_id: "copilot_cli",
     target: "user",
     os_lane: "Windows",
+    lane_id: "copilot-cli-user-windows",
     support_level: "prep",
     recommended_version: "2.50.x",
     live_tested_range: "none recorded",
     deterministic_lab_baseline: "2.50.0",
     support_semantics:
-      "Doctor and preview are expected; install evidence remains prep-only until manual live verification is recorded.",
+      "A real Windows host probe was captured, but gh was unavailable locally and no canonical /skills or install proof exists. Keep this lane prep-only.",
     release_gate: "nightly-only",
-    evidence_source:
-      "docs/compatibility/compatibility-matrix.md; docs/compatibility/runtime-verification.md; docs/runtime-mapping/pilot-acceptance.md",
+    evidence_source: `${LIVE_RUNTIME_EVIDENCE_ROOT}/copilot-cli-user-windows.md`,
+    evidence_data_ref: `${LIVE_RUNTIME_EVIDENCE_ROOT}/copilot-cli-user-windows.yaml`,
+    evidence_summary:
+      "A real Windows host probe was recorded on 2026-04-05, but gh was unavailable locally and preview blocked explicitly.",
+    freshness_state: "fresh",
+    host_profile_count: 1,
+    last_verified_at: "2026-04-05T12:28:23.177Z",
+    owner_id: "runtime-truth",
+    required_evidence_class: "live_verification",
+    deterministic_evidence_refs: [
+      "docs/runtime-mapping/pilot-acceptance.md",
+      "packages/tools/compat-lab/tests/acceptance.test.js",
+      "packages/tools/compat-lab/tests/matrix.test.js",
+    ],
+    shim_evidence_refs: [
+      "packages/tools/compat-lab/src/runtime-fixtures.js",
+      "packages/tools/compat-lab/src/acceptance.js",
+    ],
+    live_evidence_refs: [`${LIVE_RUNTIME_EVIDENCE_ROOT}/copilot-cli-user-windows.md`],
+    negative_evidence_refs: [`${LIVE_RUNTIME_EVIDENCE_ROOT}/copilot-cli-user-windows.md`],
+    claim_guard_refs: [
+      "docs/compatibility/runtime-verification.md",
+      "docs/releases/public-claim-policy.md",
+    ],
+    surface_verdicts: {
+      canonical_picker: "unrecorded",
+      direct_invocation: "blocked",
+      gh_availability: "fail",
+      install_apply: "blocked",
+      preview_install: "fail",
+      runtime_available: "fail",
+    },
   },
 ]);
 
@@ -91,7 +243,7 @@ export const DEFAULT_PUBLIC_KNOWN_ISSUES = Object.freeze([
   {
     id: "K1",
     surface: "Copilot direct invocation with -p/--prompt",
-    status: "known-broken",
+    status: "blocked",
     affected_lanes: "GitHub Copilot CLI",
     details: "Use /skills as the canonical entrypoint. Prompt-mode direct invocation remains blocked.",
   },
@@ -152,6 +304,10 @@ function clone(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
+function isObject(value) {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
 function toPosixPath(value) {
   return value.replace(/\\/g, "/");
 }
@@ -162,6 +318,10 @@ function relativePosix(repoRoot, filePath) {
 
 function readYamlFile(filePath) {
   return YAML.parse(readFileSync(filePath, "utf8"));
+}
+
+function isLikelyRemoteRef(value) {
+  return typeof value === "string" && /^[a-z]+:\/\//i.test(value);
 }
 
 function discoverAdvancedManifestPaths(repoRoot) {
@@ -178,6 +338,16 @@ function normalizeSnapshotCollection(value) {
   return Array.isArray(value) ? clone(value) : [];
 }
 
+function splitEvidenceRefs(value) {
+  if (typeof value !== "string") {
+    return [];
+  }
+  return value
+    .split(";")
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+}
+
 function normalizeEvidenceScope(evidenceRef) {
   if (typeof evidenceRef !== "string" || evidenceRef.trim() === "") {
     return "missing";
@@ -191,6 +361,222 @@ function normalizeEvidenceScope(evidenceRef) {
     return fragment ? "shared-matrix-fragment" : "shared-matrix";
   }
   return "local-file";
+}
+
+function laneEvidenceDataRef(lane) {
+  if (typeof lane?.evidence_data_ref === "string" && lane.evidence_data_ref.trim() !== "") {
+    return lane.evidence_data_ref;
+  }
+  if (typeof lane?.evidence_source !== "string") {
+    return null;
+  }
+  return lane.evidence_source.endsWith(".md")
+    ? `${lane.evidence_source.slice(0, -3)}.yaml`
+    : null;
+}
+
+function validateEvidenceRefExists(repoRoot, evidenceRef, errorKey) {
+  if (typeof evidenceRef !== "string" || evidenceRef.trim() === "") {
+    throw new Error(`public-support-snapshot-invalid:${errorKey}`);
+  }
+  if (isLikelyRemoteRef(evidenceRef)) {
+    return;
+  }
+  const [pathPart] = evidenceRef.split("#", 1);
+  if (!exists(resolve(repoRoot, pathPart))) {
+    throw new Error(`public-support-snapshot-invalid:${errorKey}:${pathPart}`);
+  }
+}
+
+function validateEvidenceRefCollection(repoRoot, value, errorKey) {
+  if (value == null) {
+    return;
+  }
+  if (!Array.isArray(value)) {
+    throw new Error(`public-support-snapshot-invalid:${errorKey}`);
+  }
+  for (const evidenceRef of value) {
+    if (typeof evidenceRef !== "string" || evidenceRef.trim() === "") {
+      throw new Error(`public-support-snapshot-invalid:${errorKey}`);
+    }
+    validateEvidenceRefExists(repoRoot, evidenceRef, errorKey);
+  }
+}
+
+function validateLiveLaneRecordCollection(repoRoot, value, errorKey) {
+  if (!Array.isArray(value)) {
+    throw new Error(`public-support-snapshot-invalid:${errorKey}`);
+  }
+  for (const [index, record] of value.entries()) {
+    if (!isObject(record)) {
+      throw new Error(`public-support-snapshot-invalid:${errorKey}[${index}]`);
+    }
+    for (const field of ["evidence_id", "captured_at", "owner_id", "host_profile_id", "summary"]) {
+      if (typeof record[field] !== "string" || record[field].trim() === "") {
+        throw new Error(`public-support-snapshot-invalid:${errorKey}[${index}].${field}`);
+      }
+    }
+    const evidenceClassField = "evidence_class" in record ? "evidence_class" : null;
+    if (evidenceClassField && !ALLOWED_LIVE_EVIDENCE_CLASSES.has(record.evidence_class)) {
+      throw new Error(`public-support-snapshot-invalid:${errorKey}[${index}].evidence_class`);
+    }
+    if (!ALLOWED_FRESHNESS_STATES.has(record.freshness_state)) {
+      throw new Error(`public-support-snapshot-invalid:${errorKey}[${index}].freshness_state`);
+    }
+    if ("command_capture_refs" in record) {
+      validateEvidenceRefCollection(repoRoot, record.command_capture_refs, `${errorKey}[${index}].command_capture_refs`);
+    }
+    if ("refs" in record) {
+      validateEvidenceRefCollection(repoRoot, record.refs, `${errorKey}[${index}].refs`);
+    }
+  }
+}
+
+function validateLiveRuntimeLaneRecord(repoRoot, lane, index) {
+  const evidenceDataRef = laneEvidenceDataRef(lane);
+  if (typeof evidenceDataRef !== "string" || evidenceDataRef.trim() === "") {
+    throw new Error(`public-support-snapshot-invalid:runtime_lanes[${index}].evidence_data_ref`);
+  }
+  validateEvidenceRefExists(repoRoot, evidenceDataRef, `runtime_lanes[${index}].evidence_data_ref`);
+  const record = readYamlFile(resolve(repoRoot, evidenceDataRef));
+  if (!isObject(record)) {
+    throw new Error(`public-support-snapshot-invalid:runtime_lanes[${index}].evidence_record`);
+  }
+  if (record.kind !== LIVE_RUNTIME_LANE_RECORD_KIND) {
+    throw new Error(`public-support-snapshot-invalid:runtime_lanes[${index}].evidence_record.kind`);
+  }
+  if (record.schema_version !== LIVE_RUNTIME_LANE_RECORD_SCHEMA_VERSION) {
+    throw new Error(`public-support-snapshot-invalid:runtime_lanes[${index}].evidence_record.schema_version`);
+  }
+  const expectedLaneId = lane?.lane_id;
+  if (typeof expectedLaneId !== "string" || expectedLaneId.trim() === "") {
+    throw new Error(`public-support-snapshot-invalid:runtime_lanes[${index}].lane_id`);
+  }
+  if (record.lane_id !== expectedLaneId) {
+    throw new Error(`public-support-snapshot-invalid:runtime_lanes[${index}].evidence_record.lane_id`);
+  }
+  if (record.runtime_id !== lane.runtime_id) {
+    throw new Error(`public-support-snapshot-invalid:runtime_lanes[${index}].evidence_record.runtime_id`);
+  }
+  if (record.target !== lane.target) {
+    throw new Error(`public-support-snapshot-invalid:runtime_lanes[${index}].evidence_record.target`);
+  }
+  if (record.os_lane !== lane.os_lane) {
+    throw new Error(`public-support-snapshot-invalid:runtime_lanes[${index}].evidence_record.os_lane`);
+  }
+  if (record.canonical_entrypoint !== "/skills" || lane.canonical_entrypoint !== "/skills") {
+    throw new Error(`public-support-snapshot-invalid:runtime_lanes[${index}].canonical_entrypoint`);
+  }
+  if (!ALLOWED_PUBLIC_SUPPORT_LEVELS.has(lane.support_level)) {
+    throw new Error(`public-support-snapshot-invalid:runtime_lanes[${index}].support_level`);
+  }
+  if (record.current_public_support_level !== lane.support_level) {
+    throw new Error(`public-support-snapshot-invalid:runtime_lanes[${index}].evidence_record.current_public_support_level`);
+  }
+  if (!ALLOWED_LIVE_EVIDENCE_CLASSES.has(record.required_evidence_class)) {
+    throw new Error(`public-support-snapshot-invalid:runtime_lanes[${index}].evidence_record.required_evidence_class`);
+  }
+  if (lane.required_evidence_class !== record.required_evidence_class) {
+    throw new Error(`public-support-snapshot-invalid:runtime_lanes[${index}].required_evidence_class`);
+  }
+  if (
+    record.best_live_evidence_class !== null &&
+    !ALLOWED_LIVE_EVIDENCE_CLASSES.has(record.best_live_evidence_class)
+  ) {
+    throw new Error(`public-support-snapshot-invalid:runtime_lanes[${index}].evidence_record.best_live_evidence_class`);
+  }
+  if (lane.actual_evidence_class !== record.best_live_evidence_class) {
+    throw new Error(`public-support-snapshot-invalid:runtime_lanes[${index}].actual_evidence_class`);
+  }
+  if (!ALLOWED_FRESHNESS_STATES.has(record.freshness_state) || lane.freshness_state !== record.freshness_state) {
+    throw new Error(`public-support-snapshot-invalid:runtime_lanes[${index}].freshness_state`);
+  }
+  if (!Number.isInteger(record.host_profile_count) || record.host_profile_count < 0) {
+    throw new Error(`public-support-snapshot-invalid:runtime_lanes[${index}].evidence_record.host_profile_count`);
+  }
+  if (lane.host_profile_count !== record.host_profile_count) {
+    throw new Error(`public-support-snapshot-invalid:runtime_lanes[${index}].host_profile_count`);
+  }
+  if (lane.owner_id !== record.owner_id) {
+    throw new Error(`public-support-snapshot-invalid:runtime_lanes[${index}].owner_id`);
+  }
+  if (!isObject(record.surface_verdicts) || !isObject(lane.surface_verdicts)) {
+    throw new Error(`public-support-snapshot-invalid:runtime_lanes[${index}].surface_verdicts`);
+  }
+  if (stableYaml(record.surface_verdicts) !== stableYaml(lane.surface_verdicts)) {
+    throw new Error(`public-support-snapshot-invalid:runtime_lanes[${index}].surface_verdicts`);
+  }
+  if (typeof record.caveat_summary !== "string" || record.caveat_summary.trim() === "") {
+    throw new Error(`public-support-snapshot-invalid:runtime_lanes[${index}].evidence_record.caveat_summary`);
+  }
+  validateEvidenceRefCollection(
+    repoRoot,
+    record.deterministic_evidence_refs,
+    `runtime_lanes[${index}].evidence_record.deterministic_evidence_refs`,
+  );
+  validateEvidenceRefCollection(
+    repoRoot,
+    record.fake_acceptance_evidence_refs,
+    `runtime_lanes[${index}].evidence_record.fake_acceptance_evidence_refs`,
+  );
+  validateEvidenceRefCollection(
+    repoRoot,
+    record.shim_acceptance_evidence_refs,
+    `runtime_lanes[${index}].evidence_record.shim_acceptance_evidence_refs`,
+  );
+  validateEvidenceRefCollection(
+    repoRoot,
+    record.live_evidence_refs,
+    `runtime_lanes[${index}].evidence_record.live_evidence_refs`,
+  );
+  validateEvidenceRefCollection(
+    repoRoot,
+    record.negative_evidence_refs,
+    `runtime_lanes[${index}].evidence_record.negative_evidence_refs`,
+  );
+  validateEvidenceRefCollection(
+    repoRoot,
+    record.claim_guard_refs,
+    `runtime_lanes[${index}].evidence_record.claim_guard_refs`,
+  );
+  validateLiveLaneRecordCollection(repoRoot, record.live_records ?? [], `runtime_lanes[${index}].evidence_record.live_records`);
+  validateLiveLaneRecordCollection(
+    repoRoot,
+    record.negative_live_records ?? [],
+    `runtime_lanes[${index}].evidence_record.negative_live_records`,
+  );
+  if (
+    lane.support_level === "stable-tested" &&
+    (record.best_live_evidence_class !== "repeated_live_verification" ||
+      record.host_profile_count < 2 ||
+      record.freshness_state !== "fresh")
+  ) {
+    throw new Error(`public-support-snapshot-invalid:runtime_lanes[${index}].stable_tested_policy`);
+  }
+  if (
+    lane.support_level === "preview" &&
+    (!["live_verification", "repeated_live_verification"].includes(record.best_live_evidence_class) ||
+      record.surface_verdicts.canonical_picker !== "pass" ||
+      record.freshness_state !== "fresh")
+  ) {
+    throw new Error(`public-support-snapshot-invalid:runtime_lanes[${index}].preview_policy`);
+  }
+  if (
+    lane.support_level === "degraded" &&
+    !["live_smoke", "live_verification", "repeated_live_verification"].includes(record.best_live_evidence_class)
+  ) {
+    throw new Error(`public-support-snapshot-invalid:runtime_lanes[${index}].degraded_policy`);
+  }
+  if (
+    lane.support_level === "prep" &&
+    ["live_verification", "repeated_live_verification"].includes(record.best_live_evidence_class)
+  ) {
+    throw new Error(`public-support-snapshot-invalid:runtime_lanes[${index}].prep_policy`);
+  }
+  if (lane.support_level === "blocked" && (record.negative_live_records?.length ?? 0) === 0) {
+    throw new Error(`public-support-snapshot-invalid:runtime_lanes[${index}].blocked_policy`);
+  }
+  return record;
 }
 
 function isPromotionEvidenceReady(claim) {
@@ -537,6 +923,12 @@ export function loadPublicSupportSnapshot(repoRoot = null, { version = null } = 
   if (!parsed || typeof parsed !== "object") {
     throw new Error(`public-support-snapshot-invalid:${relativePosix(repoRoot, snapshotPath)}`);
   }
+  if (!parsed.evidence_policy || typeof parsed.evidence_policy !== "object") {
+    throw new Error(`public-support-snapshot-invalid:evidence_policy`);
+  }
+  if (parsed.evidence_policy.canonical_entrypoint !== "/skills") {
+    throw new Error(`public-support-snapshot-invalid:evidence_policy.canonical_entrypoint`);
+  }
   if (!parsed.support_policy || typeof parsed.support_policy !== "object") {
     throw new Error(`public-support-snapshot-invalid:support_policy`);
   }
@@ -549,7 +941,43 @@ export function loadPublicSupportSnapshot(repoRoot = null, { version = null } = 
   if (!Array.isArray(parsed.release_gates)) {
     throw new Error(`public-support-snapshot-invalid:release_gates`);
   }
+  for (const [index, lane] of parsed.runtime_lanes.entries()) {
+    const evidenceSources = splitEvidenceRefs(lane?.evidence_source);
+    if (evidenceSources.length === 0) {
+      throw new Error(`public-support-snapshot-invalid:runtime_lanes[${index}].evidence_source`);
+    }
+    for (const evidenceSource of evidenceSources) {
+      validateEvidenceRefExists(repoRoot, evidenceSource, `runtime_lanes[${index}].evidence_source`);
+    }
+    validateEvidenceRefCollection(
+      repoRoot,
+      lane?.deterministic_evidence_refs,
+      `runtime_lanes[${index}].deterministic_evidence_refs`,
+    );
+    validateEvidenceRefCollection(
+      repoRoot,
+      lane?.shim_evidence_refs,
+      `runtime_lanes[${index}].shim_evidence_refs`,
+    );
+    validateEvidenceRefCollection(
+      repoRoot,
+      lane?.live_evidence_refs,
+      `runtime_lanes[${index}].live_evidence_refs`,
+    );
+    validateEvidenceRefCollection(
+      repoRoot,
+      lane?.claim_guard_refs,
+      `runtime_lanes[${index}].claim_guard_refs`,
+    );
+    validateEvidenceRefCollection(
+      repoRoot,
+      lane?.negative_evidence_refs,
+      `runtime_lanes[${index}].negative_evidence_refs`,
+    );
+    validateLiveRuntimeLaneRecord(repoRoot, lane, index);
+  }
   return {
+    evidence_policy: clone(parsed.evidence_policy),
     version: version ?? parsed?.version ?? "0.4.0",
     support_policy: clone(parsed.support_policy),
     runtime_lanes: normalizeSnapshotCollection(parsed?.runtime_lanes),
@@ -589,7 +1017,7 @@ export function publicSupportLevelToDoctorLaneStatus(supportLevel) {
   if (supportLevel === "prep") {
     return "prep";
   }
-  if (supportLevel === "known-broken") {
+  if (supportLevel === "blocked" || supportLevel === "known-broken") {
     return "unsupported";
   }
   return "supported";

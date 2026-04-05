@@ -35,7 +35,7 @@ Status legend:
 - [ ] Block release if the current legal posture requires `NOTICE` and the file is absent
 - [ ] Block release if public docs imply product-validation exit while `docs/validation/phase-3-5/verdict.md` remains `Gate status: NO-GO`
 - [ ] Block release if `README.md`, `docs/phase-9/README.md`, or `docs/phase-9/onboarding-path.md` drift from the official phase sentence in `docs/phase-12/authoritative-program-charter.md`
-- [ ] Block release if docs claim live runtime compatibility beyond `docs/compatibility/runtime-verification.md` evidence
+- [ ] Block release if docs claim live runtime compatibility beyond `docs/compatibility/runtime-verification.md` and `docs/evidence/live-runtime/` evidence
 - [ ] Block release if a new runtime is mentioned outside Codex CLI and GitHub Copilot CLI
 - [ ] Block release if messaging drifts beyond `docs/validation/phase-3-5/messaging-narrative.md` or `docs/releases/public-claim-policy.md`
 - [ ] Block release if public install docs imply package-manager publication while root or workspace manifests remain `private: true`
@@ -61,11 +61,11 @@ Status legend:
 - [x] `npm run test:acceptance -- --lane linux`
 - [x] `npm run test:acceptance -- --lane windows-prep`
 - [x] `npm run sync:compat-lab -- --check`
-- [x] `npm run test:release`
-- [ ] `node packages/tools/cli/src/bin/pairslash.js doctor --runtime codex --target repo`
-- [ ] `node packages/tools/cli/src/bin/pairslash.js doctor --runtime copilot --target user`
-- [ ] `node packages/tools/cli/src/bin/pairslash.js preview install pairslash-plan --runtime codex --target repo`
-- [ ] `node packages/tools/cli/src/bin/pairslash.js preview install pairslash-plan --runtime copilot --target user`
+- [ ] `npm run test:release`
+- [x] `node packages/tools/cli/src/bin/pairslash.js doctor --runtime codex --target repo`
+- [x] `node packages/tools/cli/src/bin/pairslash.js doctor --runtime copilot --target user`
+- [x] `node packages/tools/cli/src/bin/pairslash.js preview install pairslash-plan --runtime codex --target repo`
+- [x] `node packages/tools/cli/src/bin/pairslash.js preview install pairslash-plan --runtime copilot --target user`
 
 ## Minimum docs that must ship
 
@@ -90,6 +90,7 @@ Status legend:
 - [x] `docs/compatibility/compatibility-matrix.md`
 - [x] `docs/compatibility/runtime-surface-matrix.yaml`
 - [x] `docs/compatibility/runtime-verification.md`
+- [x] `docs/evidence/live-runtime/README.md`
 - [x] `docs/troubleshooting/compat-lab-bug-repro.md`
 - [x] `docs/runtime-mapping/README.md`
 - [x] `docs/runtime-mapping/codex-cli.md`

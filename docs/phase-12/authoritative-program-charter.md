@@ -31,11 +31,11 @@ Public-claim truth is narrower than implementation truth. A public sentence is a
 
 ### Runtime-Support Truth
 
-Runtime-support truth is lane-specific, not product-global. The machine-readable runtime-support catalog is `docs/compatibility/runtime-surface-matrix.yaml`, and `docs/compatibility/compatibility-matrix.md` is its public markdown rendering. Promotion evidence is recorded through `docs/compatibility/runtime-verification.md` and the same runtime-surface matrix. Current public support reality remains narrow: Codex CLI repo on macOS is `stable-tested`, GitHub Copilot CLI user on Linux is `degraded`, Windows lanes are `prep`, and Copilot prompt-mode direct invocation is `known-broken`.
+Runtime-support truth is lane-specific, not product-global. The machine-readable runtime-support catalog is `docs/compatibility/runtime-surface-matrix.yaml`, and `docs/compatibility/compatibility-matrix.md` is its public markdown rendering. Lane-bound evidence records live under `docs/evidence/live-runtime/`, and promotion evidence is recorded through `docs/compatibility/runtime-verification.md` plus those lane records. Current public support reality remains narrow: Codex CLI repo on macOS is `degraded`, GitHub Copilot CLI user on Linux is `prep`, Windows lanes are `prep`, and Copilot prompt-mode direct invocation remains blocked.
 
 ### Release-Trust Truth
 
-Release-trust truth answers whether PairSlash can make a scoped installability claim without pretending product validation is complete. The authoritative files are `docs/releases/scoped-release-verdict.md`, `docs/releases/phase-5-shipped-scope.md`, and `docs/releases/release-checklist-0.4.0.md`. That layer is currently `GO` for a narrow technically shipped installability substrate and still `NO-GO` for product-validation exit. Legal and package publicness remain capped by current metadata in `package.json`, package-level `package.json` files, the absence or presence of `LICENSE` and `NOTICE`, and the current boundary recorded in `docs/releases/legal-packaging-status.md`.
+Release-trust truth answers whether PairSlash can make a scoped installability claim without pretending product validation is complete. The authoritative files are `docs/releases/scoped-release-verdict.md`, `docs/releases/phase-5-shipped-scope.md`, and `docs/releases/release-checklist-0.4.0.md`. That layer is currently `NO-GO` on the current branch because release-readiness is red, and still `NO-GO` for product-validation exit. Legal and package publicness remain capped by current metadata in `package.json`, package-level `package.json` files, the absence or presence of `LICENSE` and `NOTICE`, and the current boundary recorded in `docs/releases/legal-packaging-status.md`.
 
 ## 4. Official Phase Statement
 
@@ -58,7 +58,7 @@ What must not be overclaimed: that tests equal market validation, that preview o
 | Public claim policy | `docs/releases/public-claim-policy.md` | Owns allowed and forbidden public wording rules, not the phase statement. |
 | Runtime support policy | `docs/compatibility/runtime-surface-matrix.yaml` | Owns machine-readable lane labels and promotion inputs consumed by doctor and compat-lab. |
 | Runtime support markdown | `docs/compatibility/compatibility-matrix.md` | Public rendering of the runtime-support catalog; never a competing source. |
-| Runtime promotion evidence | `docs/compatibility/runtime-verification.md` and `docs/compatibility/runtime-surface-matrix.yaml` | Own evidence class and promotion/demotion inputs for runtime labels. |
+| Runtime promotion evidence | `docs/compatibility/runtime-verification.md`, `docs/evidence/live-runtime/`, and `docs/compatibility/runtime-surface-matrix.yaml` | Own evidence class and promotion/demotion inputs for runtime labels. |
 | Pack catalog truth | `packs/core/*/pack.manifest.yaml` | Own canonical core pack identity, maturity, support scope, runtime evidence mapping, and maintainer metadata. |
 | Pack catalog consumer API | `packages/core/spec-core/src/pack-catalog.js` | Resolves the authoritative pack catalog used by lint, doctor, docs rendering, and release-trust build. |
 | Pack catalog lifecycle conformance | `packages/core/spec-core/tests/manifest-v2.conformance.test.js` | Detects manifest/catalog drift, completeness regressions, and unsupported promotion claims. |
@@ -76,7 +76,7 @@ What must not be overclaimed: that tests equal market validation, that preview o
 | `implemented` | Source code, manifests, and generated assets exist in the repo. | "validated", "supported everywhere", "market-proven" | "implemented in the repo", "present in code/manifests" |
 | `repo-verified` | Current-branch command output or machine-readable report from the repo confirms the behavior. | "release-ready", "live runtime proven", "customer validated" | "verified on the current branch", "repo-verified" |
 | `deterministic-tested` | Repeatable automated tests or compat-lab gates pass for the surface. | "live evidence", "market validated", "broad runtime parity" | "deterministic tests pass", "covered by compat-lab or release gates" |
-| `live-evidence-backed` | Manual live runtime evidence is recorded in runtime verification artifacts with exact lane details. | "all lanes supported", "product validated", "phase advanced" | "live-evidence-backed for the documented lane", "supported at the documented lane level" |
+| `live-evidence-backed` | Manual live runtime evidence is recorded in lane-bound runtime verification artifacts with exact lane details. | "all lanes supported", "product validated", "phase advanced" | "live-evidence-backed for the documented lane", "supported at the documented lane level" |
 | `publicly claimable` | The statement is backed by the appropriate evidence above and is allowed by this charter, the public claim policy, the relevant verdict file, the compatibility boundary, and legal/package metadata. | Any broader wording than the governing evidence allows | "publicly claimable within the documented scope" |
 
 Rule: no claim may skip levels. Product-validation claims require the validation verdict. Runtime-support claims require the compatibility matrix. Release/installability claims require the scoped release verdict. Legal/package claims require legal/package metadata.
@@ -85,15 +85,16 @@ Rule: no claim may skip levels. Product-validation claims require the validation
 
 | Label | How to word it | What it means | Promotion / demotion rule |
 | --- | --- | --- | --- |
-| `stable-tested` | "stable-tested on the documented lane" | Deterministic coverage is green and matching live runtime evidence exists for that exact lane. | Runtime maintainer and release-truth owner update `runtime-surface-matrix.yaml`, `runtime-verification.md`, and `compatibility-matrix.md` together. |
-| `degraded` | "supported with documented caveats on the documented lane" | Deterministic coverage exists, but caveats or incomplete live evidence still cap confidence. | Same as `stable-tested`; caveat must be named explicitly. |
-| `prep` | "prep lane only" | Doctor, preview, or install-root expectations exist, but live install support is not yet claimable. | Same as `stable-tested`; doctor or preview alone cannot promote it. |
-| `known-broken` | "known-broken on the documented surface" | An explicit blocked surface exists; no silent fallback is allowed. | Same as `stable-tested`; demotion or recovery must update the same runtime sources. |
+| `stable-tested` | "stable-tested on the documented lane" | Repeated fresh canonical live verification exists for that exact lane. | Runtime maintainer and release-truth owner update `docs/evidence/live-runtime/`, `runtime-surface-matrix.yaml`, `runtime-verification.md`, and `compatibility-matrix.md` together. |
+| `preview` | "preview on the documented lane" | One fresh canonical live verification exists for that exact lane, but repeated live verification does not. | Same as `stable-tested`; one-off proof is not enough for stable. |
+| `degraded` | "supported with documented caveats on the documented lane" | Real runtime evidence exists, but canonical `/skills` proof is missing, partial, or caveated. | Same as `stable-tested`; caveat must be named explicitly. |
+| `prep` | "prep lane only" | Doctor, preview, or live smoke may exist, but canonical live verification is not yet claimable. | Same as `stable-tested`; doctor or preview alone cannot promote it. |
+| `blocked` | "blocked on the documented lane or surface" | Fresh negative live evidence blocks the surface or lane. No silent fallback is allowed. | Same as `stable-tested`; demotion or recovery must update the same runtime sources. |
 | `unsupported` | "unsupported" | The lane or surface is outside the documented support boundary. | Runtime maintainer or release-truth owner may demote to `unsupported`; promotion requires a full runtime-support update set. |
 | `docs-only` | "docs-only" | The item is documentation guidance, not support evidence. | Docs owner may apply or remove this label if no runtime claim is widened. |
 | `internal/helper` | "internal/helper" | The item is a maintainer or helper surface, not a public support guarantee. | Subsystem maintainer may apply or remove this label if no public support claim changes. |
 
-Rule: only `stable-tested`, `degraded`, `prep`, and `known-broken` are public runtime-lane words. `unsupported`, `docs-only`, and `internal/helper` are boundary controls and must not be laundered into public support claims.
+Rule: only `stable-tested`, `preview`, `degraded`, `prep`, and `blocked` are public runtime-lane words. `unsupported`, `docs-only`, and `internal/helper` are boundary controls and must not be laundered into public support claims.
 
 ## 8. Sync Policy
 
@@ -142,7 +143,7 @@ Rule: downstream files may restate the official phase sentence, but they must po
 | PairSlash dang o phase nao? | "PairSlash is currently at Phase 3.5 business validation on top of a technically shipped Phase 4 installability substrate with additional Phase 5/6 hardening in the repo." |
 | Nhung gi da that su ship? | "Da ship mot installability va trust substrate hep cho hai runtime loi, voi `/skills`, doctor, preview-first lifecycle, va explicit Global Project Memory writes." |
 | Nhung gi chua duoc phep noi manh? | "Chua duoc noi rang PairSlash da benchmark-validated, co broad runtime parity, co Windows live parity, hoac co hidden-write memory behavior." |
-| PairSlash support runtime nao toi muc nao? | "Public support van la lane-specific: Codex repo macOS `stable-tested`, Copilot user Linux `degraded`, Windows `prep`, va Copilot prompt-mode direct invocation `known-broken`." |
+| PairSlash support runtime nao toi muc nao? | "Public support van la lane-specific: Codex repo macOS `degraded`, Copilot user Linux `prep`, Windows `prep`, va Copilot prompt-mode direct invocation bi block." |
 | Vi sao `/skills` van la front door chuan? | "Vi do la runtime-native browse surface duoc PairSlash support tren ca hai runtime, va no giu workflow discovery explicit thay vi prompt-mode drift." |
 
 ## 11. Phase 12 Exit Gate

@@ -15,6 +15,21 @@ function formatTable(headers, rows) {
   return [headerLine, separatorLine, ...rowLines].join("\n");
 }
 
+function uniqueRefs(refs) {
+  if (!Array.isArray(refs)) {
+    return [];
+  }
+  return [...new Set(refs.filter((ref) => typeof ref === "string" && ref.trim() !== ""))];
+}
+
+function formatRefList(refs) {
+  const normalizedRefs = uniqueRefs(refs);
+  if (normalizedRefs.length === 0) {
+    return "none recorded";
+  }
+  return normalizedRefs.map((ref) => `\`${ref}\``).join("<br>");
+}
+
 export function buildCompatibilityMatrixArtifact({
   repoRoot = process.cwd(),
   version = "0.4.0",
@@ -29,6 +44,7 @@ export function buildCompatibilityMatrixArtifact({
       acceptance_lanes: DEFAULT_ACCEPTANCE_LANES.map((lane) => lane.id),
       evals: DEFAULT_COMPAT_EVALS.map((entry) => entry.id),
     },
+    evidence_policy: { ...supportSnapshot.evidence_policy },
     support_policy: { ...supportSnapshot.support_policy },
     runtime_lanes: supportSnapshot.runtime_lanes.map((lane) => ({ ...lane })),
     known_issues: supportSnapshot.known_issues.map((issue) => ({ ...issue })),
@@ -54,6 +70,10 @@ export function renderCompatibilityMatrixMarkdown({
       "Target",
       "OS lane",
       "Support level",
+      "Required evidence",
+      "Best live evidence",
+      "Freshness",
+      "Last verified",
       "Recommended version",
       "Live tested range",
       "Deterministic baseline",
@@ -64,6 +84,10 @@ export function renderCompatibilityMatrixMarkdown({
       lane.target,
       lane.os_lane,
       lane.support_level,
+      lane.required_evidence_class,
+      lane.actual_evidence_class ?? "none recorded",
+      lane.freshness_state,
+      lane.last_verified_at ?? "none recorded",
       lane.recommended_version,
       lane.live_tested_range,
       lane.deterministic_lab_baseline,
@@ -99,6 +123,16 @@ export function renderCompatibilityMatrixMarkdown({
       fixture.modeled_risks.join(", "),
     ]),
   );
+  const evidenceTable = formatTable(
+    ["Lane", "Deterministic evidence", "Fake/shim evidence", "Live evidence", "Evidence records / guard rails"],
+    artifact.runtime_lanes.map((lane) => [
+      `${lane.runtime} / ${lane.target} / ${lane.os_lane}`,
+      formatRefList(lane.deterministic_evidence_refs),
+      formatRefList(lane.shim_evidence_refs),
+      formatRefList([...(lane.live_evidence_refs ?? []), ...(lane.negative_evidence_refs ?? [])]),
+      formatRefList([lane.evidence_source, lane.evidence_data_ref, ...(lane.claim_guard_refs ?? [])]),
+    ]),
+  );
 
   return [
     "# PairSlash Compatibility Matrix",
@@ -123,12 +157,33 @@ export function renderCompatibilityMatrixMarkdown({
     "coverage outside the rows below do not widen public support, product-validation",
     "status, or release scope by themselves.",
     "",
+    "## Evidence classes",
+    "",
+    "- `deterministic evidence`: repeatable tests, release gates, and generated",
+    "  artifacts that prove implementation and regression control.",
+    "- `fake/shim evidence`: compat-lab coverage that uses fake runtime",
+    "  binaries or host overrides. Useful for regression control, never enough",
+    "  for live support promotion.",
+    "- `live evidence`: real runtime, target, OS, and version observations from",
+    "  `/skills` interaction or live install behavior on the documented lane.",
+    "",
+    "## Evidence policy",
+    "",
+    `- Canonical entrypoint: \`${artifact.evidence_policy.canonical_entrypoint}\``,
+    "- `live_smoke` can document feasibility or failure, but it cannot promote a",
+    "  lane beyond `degraded` or `prep`.",
+    "- `live_verification` is the minimum evidence for public lane claims on the",
+    "  exact lane.",
+    "- `repeated_live_verification` is the minimum evidence for `stable-tested`.",
+    "- One-off runs are not enough for `stable-tested`.",
+    "",
     "## Support semantics",
     "",
-    "- `stable-tested`: deterministic compat-lab gates are green and matching live runtime evidence exists.",
-    "- `degraded`: deterministic gates are green, but support has caveats or incomplete live evidence.",
-    "- `prep`: doctor and preview are expected, but install support is not yet claimed as live evidence.",
-    "- `known-broken`: PairSlash has an explicit blocked or broken surface. No silent fallback is allowed.",
+    "- `blocked`: fresh negative live evidence blocks the documented lane or surface until newer live verification supersedes it.",
+    "- `prep`: deterministic coverage or live smoke may exist, but canonical `/skills` verification is not yet recorded for the documented lane.",
+    "- `preview`: one fresh canonical live verification exists for the exact lane, but repeated live verification is not recorded yet.",
+    "- `degraded`: real runtime evidence exists, but the canonical `/skills` path is missing, partial, or caveated for the documented lane.",
+    "- `stable-tested`: repeated fresh canonical live verification exists for the exact lane.",
     "",
     "These labels are runtime-support truth only.",
     "They do not promote product-validation status, program phase, or release scope by themselves.",
@@ -145,6 +200,10 @@ export function renderCompatibilityMatrixMarkdown({
     "",
     issueTable,
     "",
+    "## Lane evidence records",
+    "",
+    evidenceTable,
+    "",
     "## Release-gating matrix",
     "",
     gateTable,
@@ -155,9 +214,9 @@ export function renderCompatibilityMatrixMarkdown({
     "",
     "## How to use this matrix",
     "",
-    "- Choose `stable-tested` when you need the strongest support claim for release or rollout decisions.",
-    "- Treat `degraded` as supported with caveats, not as a silent fallback lane.",
-    "- Treat `prep` as preview/doctor coverage only until live install evidence is recorded.",
+    "- Choose `stable-tested` only when repeated fresh canonical live verification is checked in.",
+    "- Treat `degraded` as supported with explicit caveats, not as a silent fallback lane.",
+    "- Treat `prep` as deterministic or smoke coverage only until canonical live verification is recorded.",
     "- Reproduce issues through compat-lab fixtures and behavior evals before broadening support claims.",
     "",
   ].join("\n");

@@ -1,0 +1,38 @@
+kind: live-runtime-lane-record
+schema_version: 1.0.0
+lane_id: copilot-cli-user-linux
+runtime_id: copilot_cli
+runtime: GitHub Copilot CLI
+target: user
+os_lane: Linux
+canonical_entrypoint: /skills
+owner_id: runtime-truth
+current_public_support_level: prep
+required_evidence_class: live_verification
+best_live_evidence_class: null
+freshness_state: none-recorded
+last_verified_at: null
+host_profile_count: 0
+caveat_summary: Deterministic acceptance coverage exists, but no checked-in Linux user /skills verification or live install record is present.
+surface_verdicts:
+  canonical_picker: unrecorded
+  direct_invocation: blocked
+  runtime_available: unrecorded
+  preview_install: unrecorded
+  install_apply: unrecorded
+  gh_availability: unrecorded
+deterministic_evidence_refs:
+  - docs/runtime-mapping/pilot-acceptance.md
+  - packages/tools/compat-lab/tests/acceptance.test.js
+  - packages/tools/compat-lab/tests/matrix.test.js
+fake_acceptance_evidence_refs:
+  - packages/tools/compat-lab/src/acceptance.js
+shim_acceptance_evidence_refs:
+  - packages/tools/compat-lab/src/runtime-fixtures.js
+live_evidence_refs: []
+negative_evidence_refs: []
+claim_guard_refs:
+  - docs/compatibility/runtime-verification.md
+  - docs/releases/public-claim-policy.md
+live_records: []
+negative_live_records: []

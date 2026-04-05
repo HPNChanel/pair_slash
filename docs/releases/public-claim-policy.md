@@ -1,6 +1,6 @@
 # PairSlash Public Claim Policy
 
-Last updated: 2026-04-03
+Last updated: 2026-04-05
 
 This file governs public wording only.
 The official phase statement, authority hierarchy, claim ladder, and support
@@ -57,6 +57,7 @@ boundary ladder live in `docs/phase-12/authoritative-program-charter.md`.
   - `docs/releases/legal-packaging-status.md`
   - `docs/compatibility/compatibility-matrix.md`
   - `docs/compatibility/runtime-verification.md`
+  - `docs/evidence/live-runtime/README.md`
 
 ## Safe public claims
 
@@ -70,8 +71,9 @@ boundary ladder live in `docs/phase-12/authoritative-program-charter.md`.
   runtimes.
 - The current supported install path is repo-local from this checkout; package-manager
   publication is not claimed today.
-- Runtime support claims must use only `stable-tested`, `degraded`, `prep`, or
-  `known-broken`, exactly as recorded in compatibility docs.
+- Runtime support claims must use only `stable-tested`, `preview`,
+  `degraded`, `prep`, or `blocked`, exactly as recorded in compatibility docs.
+- One-off live runs do not justify `stable-tested`.
 - Phase wording must reuse the official sentence in
   `docs/phase-12/authoritative-program-charter.md`.
 
@@ -124,6 +126,7 @@ Use an opening paragraph like this:
 - `deterministically covered`
 - `live-evidence-backed for the documented lane`
 - `publicly supported today only for the documented lanes`
+- `prep-only until canonical live verification exists`
 
 ## Forbidden maturity inflation
 

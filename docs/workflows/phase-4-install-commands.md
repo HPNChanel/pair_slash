@@ -20,8 +20,13 @@ node packages/tools/cli/src/bin/pairslash.js install pairslash-plan --runtime co
 node packages/tools/cli/src/bin/pairslash.js doctor --runtime codex --target repo
 ```
 
-Swap `--runtime codex` for `--runtime copilot` and `--target repo` for
-`--target user` when that is the lane you actually want.
+Use the exact lane from `docs/compatibility/compatibility-matrix.md` instead of
+assuming runtime parity.
+Today:
+
+- Codex CLI `repo` on macOS is currently `degraded`.
+- GitHub Copilot CLI `user` on Linux remains `prep`.
+- Windows remains `prep` and should stay on doctor/preview only.
 
 ## Command defaults
 
@@ -132,3 +137,4 @@ Doctor verdict meanings and common remediations live in
 - Install guide: `docs/workflows/install-guide.md`
 - Release gate: `docs/releases/release-checklist-0.4.0.md`
 - Runtime lane evidence: `docs/runtime-mapping/pilot-acceptance.md`
+- Live lane records: `docs/evidence/live-runtime/README.md`

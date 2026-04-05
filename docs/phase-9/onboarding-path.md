@@ -47,6 +47,11 @@ npm run pairslash -- install pairslash-plan --runtime codex --target repo --appl
 
 If you are on the Copilot lane, switch runtime and target:
 
+Keep the current lane label explicit: GitHub Copilot CLI `user` on Linux is
+currently `prep`, not parity with the Codex macOS lane. Use
+`docs/evidence/live-runtime/copilot-cli-user-linux.md` before widening support
+wording.
+
 ```bash
 npm run pairslash -- doctor --runtime copilot --target user
 npm run pairslash -- preview install pairslash-plan --runtime copilot --target user
@@ -120,7 +125,9 @@ Keep onboarding wording aligned to:
 - [Doctor Troubleshooting](../workflows/phase-4-doctor-troubleshooting.md)
 
 Do not flatten lane states into generic "supported."
-Respect `stable-tested`, `degraded`, `prep`, and `known-broken` exactly.
+Respect `stable-tested`, `preview`, `degraded`, `prep`, and `blocked` exactly.
+Use the lane records under `docs/evidence/live-runtime/` when support wording
+needs artifact-level backing.
 
 ## Proof assets for onboarding claims
 

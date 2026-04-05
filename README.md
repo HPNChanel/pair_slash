@@ -24,9 +24,11 @@ Phase 5/6 hardening in the repo. Public claims stay bounded by the
 Support boundary: public support is lane-specific, not product-global.
 Use the exact labels in the
 [compatibility matrix](docs/compatibility/compatibility-matrix.md) for
-`stable-tested`, `degraded`, `prep`, and `known-broken`.
+`stable-tested`, `preview`, `degraded`, `prep`, and `blocked`.
 Shipped code, doctor output, preview output, and deterministic gates do not by
 themselves widen runtime support or product-validation claims.
+Lane-bound evidence records live under
+[docs/evidence/live-runtime/](docs/evidence/live-runtime/).
 
 License and packaging status: the PairSlash source repository is licensed under
 [Apache-2.0](LICENSE). The current supported install path is repo-local from
@@ -46,8 +48,8 @@ Use one of these two runtime lanes:
 
 | Runtime | Target | Notes |
 | --- | --- | --- |
-| Codex CLI | `repo` | Strongest lane is macOS `stable-tested`; see support reality below. |
-| GitHub Copilot CLI | `user` | Current strongest public lane is Linux `degraded`; see support reality below. |
+| Codex CLI | `repo` | Strongest checked-in lane is macOS `degraded`; see support reality below. |
+| GitHub Copilot CLI | `user` | Current strongest public lane is Linux `prep`; see support reality below. |
 
 Install and run your first workflow with the repo-local CLI entrypoint:
 
@@ -59,6 +61,10 @@ npm run pairslash -- install pairslash-plan --runtime codex --target repo --appl
 ```
 
 If you are on the Copilot lane, switch runtime and target:
+
+Current caveat: the GitHub Copilot CLI `user` lane is currently `prep`, not
+`stable-tested` or `preview`. Its lane record is
+[docs/evidence/live-runtime/copilot-cli-user-linux.md](docs/evidence/live-runtime/copilot-cli-user-linux.md).
 
 ```bash
 npm run pairslash -- doctor --runtime copilot --target user
@@ -110,21 +116,24 @@ Then file with the matching issue template:
 
 ## Current support reality
 
-Status labels are strict: `stable-tested`, `degraded`, `prep`, `known-broken`.
+Status labels are strict: `stable-tested`, `preview`, `degraded`, `prep`, `blocked`.
 Source of truth: [docs/compatibility/compatibility-matrix.md](docs/compatibility/compatibility-matrix.md).
 
 | Runtime | Target | OS lane | Support level |
 | --- | --- | --- | --- |
-| Codex CLI | `repo` | macOS | `stable-tested` |
-| GitHub Copilot CLI | `user` | Linux | `degraded` |
+| Codex CLI | `repo` | macOS | `degraded` |
+| GitHub Copilot CLI | `user` | Linux | `prep` |
 | Codex CLI | `repo` | Windows | `prep` |
 | GitHub Copilot CLI | `user` | Windows | `prep` |
 
 Current caveats:
 
-- Copilot direct invocation with `-p` / `--prompt` is `known-broken`; use `/skills`.
+- Copilot direct invocation with `-p` / `--prompt` is `blocked`; use `/skills`.
+- The archived Codex macOS evidence is not `stable-tested` because no checked-in
+  canonical `/skills` picker capture exists yet.
 - Windows lanes are still `prep` and require live install evidence before stronger claims.
 - Codex read-only complex PowerShell flows remain degraded; prefer simple single-statement PowerShell commands.
+- Exact lane records live under `docs/evidence/live-runtime/`; doctor and compat-lab output do not replace them.
 
 ## Task-first workflow map
 

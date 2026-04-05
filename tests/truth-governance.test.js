@@ -127,11 +127,58 @@ test("compatibility matrix distinguishes implementation, deterministic, live, an
   for (const term of ["`implemented`", "`deterministic-tested`", "`live-evidence-backed`", "`publicly supported`"]) {
     assert.ok(contents.includes(term), `${matrixPath} should explain ${term}`);
   }
+  assert.ok(
+    contents.includes("`fake/shim evidence`"),
+    `${matrixPath} should explain fake/shim evidence separately from live proof`,
+  );
 
   assert.ok(
     contents.includes("do not change repository licensing"),
     `${matrixPath} should keep legal/package truth separate from support truth`,
   );
+});
+
+test("live runtime evidence index and lane records stay committed", () => {
+  const indexPath = "docs/evidence/live-runtime/README.md";
+  const contents = read(indexPath);
+
+  for (const laneFile of [
+    "codex-cli-repo-macos.md",
+    "codex-cli-repo-macos.yaml",
+    "copilot-cli-user-linux.md",
+    "copilot-cli-user-linux.yaml",
+    "codex-cli-repo-windows.md",
+    "codex-cli-repo-windows.yaml",
+    "copilot-cli-user-windows.md",
+    "copilot-cli-user-windows.yaml",
+  ]) {
+    assert.ok(contents.includes(laneFile), `${indexPath} should list ${laneFile}`);
+    assert.equal(existsSync(join(repoRoot, "docs", "evidence", "live-runtime", laneFile)), true);
+  }
+});
+
+test("runtime-facing install docs keep degraded and prep caveats explicit", () => {
+  for (const relativePath of [
+    "README.md",
+    "docs/workflows/install-guide.md",
+    "docs/workflows/phase-4-install-commands.md",
+    "docs/workflows/phase-4-quickstart.md",
+    "docs/phase-9/onboarding-path.md",
+  ]) {
+    const contents = read(relativePath);
+    assert.ok(contents.includes("compatibility-matrix.md"), `${relativePath} should point to the compatibility matrix`);
+    assert.ok(contents.includes("degraded"), `${relativePath} should keep degraded lane wording explicit`);
+    assert.ok(contents.includes("prep"), `${relativePath} should keep prep lane wording explicit`);
+  }
+});
+
+test("scoped release verdict keeps release language separate from validation language", () => {
+  const verdictPath = "docs/releases/scoped-release-verdict.md";
+  const contents = read(verdictPath);
+
+  assert.ok(contents.includes("Gate status: NO-GO"), `${verdictPath} should fail closed when release-readiness is red`);
+  assert.ok(contents.includes("Release-covered runtimes:"), `${verdictPath} should use release-covered wording`);
+  assert.equal(contents.includes("Validated runtimes:"), false, `${verdictPath} should avoid validation wording drift`);
 });
 
 test("charter system record points to the markdown charter and verdict sources", () => {

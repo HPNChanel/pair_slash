@@ -56,6 +56,41 @@ function copyAuthoritativeSupportCatalog({ workspaceRoot, tempRoot }) {
   cpSync(compatibilityRoot, join(tempRoot, "docs", "compatibility"), {
     recursive: true,
   });
+  const liveEvidenceRoot = join(workspaceRoot, "docs", "evidence", "live-runtime");
+  if (!exists(liveEvidenceRoot)) {
+    throw new Error("compat-lab requires docs/evidence/live-runtime as authoritative support input");
+  }
+  cpSync(liveEvidenceRoot, join(tempRoot, "docs", "evidence", "live-runtime"), {
+    recursive: true,
+  });
+  const runtimeMappingRoot = join(workspaceRoot, "docs", "runtime-mapping");
+  if (!exists(runtimeMappingRoot)) {
+    throw new Error("compat-lab requires docs/runtime-mapping as authoritative support input");
+  }
+  cpSync(runtimeMappingRoot, join(tempRoot, "docs", "runtime-mapping"), {
+    recursive: true,
+  });
+  const releasesRoot = join(workspaceRoot, "docs", "releases");
+  if (!exists(releasesRoot)) {
+    throw new Error("compat-lab requires docs/releases as authoritative support input");
+  }
+  cpSync(releasesRoot, join(tempRoot, "docs", "releases"), {
+    recursive: true,
+  });
+  const projectMemoryRoot = join(workspaceRoot, ".pairslash", "project-memory");
+  if (!exists(projectMemoryRoot)) {
+    throw new Error("compat-lab requires .pairslash/project-memory as authoritative support input");
+  }
+  cpSync(projectMemoryRoot, join(tempRoot, ".pairslash", "project-memory"), {
+    recursive: true,
+  });
+  const compatLabPackageRoot = join(workspaceRoot, "packages", "tools", "compat-lab");
+  if (!exists(compatLabPackageRoot)) {
+    throw new Error("compat-lab requires packages/tools/compat-lab as evidence input");
+  }
+  cpSync(compatLabPackageRoot, join(tempRoot, "packages", "tools", "compat-lab"), {
+    recursive: true,
+  });
 }
 
 function mutateManifestFiles({ fixture, tempRoot }) {

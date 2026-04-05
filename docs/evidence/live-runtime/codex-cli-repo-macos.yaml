@@ -1,0 +1,64 @@
+kind: live-runtime-lane-record
+schema_version: 1.0.0
+lane_id: codex-cli-repo-macos
+runtime_id: codex_cli
+runtime: Codex CLI
+target: repo
+os_lane: macOS
+canonical_entrypoint: /skills
+owner_id: runtime-truth
+current_public_support_level: degraded
+required_evidence_class: live_verification
+best_live_evidence_class: live_smoke
+freshness_state: fresh
+last_verified_at: "2026-03-21"
+host_profile_count: 1
+caveat_summary: Archived live behavior was observed via codex exec and direct invocation, but canonical /skills picker evidence was not captured.
+surface_verdicts:
+  canonical_picker: unrecorded
+  direct_invocation: pass
+  runtime_available: pass
+  preview_install: unrecorded
+  install_apply: unrecorded
+  gh_availability: not_applicable
+deterministic_evidence_refs:
+  - docs/runtime-mapping/pilot-acceptance.md
+  - packages/tools/compat-lab/tests/acceptance.test.js
+  - packages/tools/compat-lab/tests/matrix.test.js
+fake_acceptance_evidence_refs:
+  - packages/tools/compat-lab/src/acceptance.js
+shim_acceptance_evidence_refs:
+  - packages/tools/compat-lab/src/runtime-fixtures.js
+live_evidence_refs:
+  - docs/compatibility/phase-0-acceptance.md
+  - .pairslash/project-memory/60-architecture-decisions/phase-0-codex-cli-verification-on-v0-116-0.yaml
+negative_evidence_refs:
+  - .pairslash/project-memory/70-known-good-patterns/codex-exec-as-non-interactive-skill-testing-surface.yaml
+claim_guard_refs:
+  - docs/compatibility/runtime-verification.md
+  - docs/releases/public-claim-policy.md
+live_records:
+  - evidence_id: phase0-codex-exec-20260321
+    evidence_class: live_smoke
+    captured_at: "2026-03-21"
+    freshness_state: fresh
+    owner_id: phase-0-scaffold
+    host_profile_id: codex-cli.repo.macos.exec
+    runtime_version: 0.116.0
+    shell_family: codex-exec
+    verdict: partial
+    summary: Direct invocation and repo-grounded execution were observed on a real Codex CLI host, but interactive /skills picker capture was not possible from codex exec.
+    command_capture_refs:
+      - docs/compatibility/phase-0-acceptance.md
+      - .pairslash/project-memory/70-known-good-patterns/codex-exec-as-non-interactive-skill-testing-surface.yaml
+negative_live_records:
+  - evidence_id: phase0-canonical-picker-unrecorded-20260321
+    failure_type: canonical_picker_missing
+    captured_at: "2026-03-21"
+    freshness_state: fresh
+    owner_id: phase-0-scaffold
+    host_profile_id: codex-cli.repo.macos.exec
+    summary: Canonical /skills picker evidence remained unrecorded because codex exec is non-interactive.
+    refs:
+      - docs/compatibility/phase-0-acceptance.md
+      - .pairslash/project-memory/70-known-good-patterns/codex-exec-as-non-interactive-skill-testing-surface.yaml

@@ -33,6 +33,7 @@ The acceptance slice covers:
 
 The JSON report is an automation baseline for CI and reproducibility. It is not
 a substitute for live interactive runtime evidence.
+Lane-bound live evidence records live under `docs/evidence/live-runtime/`.
 
 ## Minimum commands
 

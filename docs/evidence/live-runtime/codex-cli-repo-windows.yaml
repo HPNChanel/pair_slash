@@ -1,0 +1,63 @@
+kind: live-runtime-lane-record
+schema_version: 1.0.0
+lane_id: codex-cli-repo-windows
+runtime_id: codex_cli
+runtime: Codex CLI
+target: repo
+os_lane: Windows
+canonical_entrypoint: /skills
+owner_id: runtime-truth
+current_public_support_level: prep
+required_evidence_class: live_verification
+best_live_evidence_class: live_smoke
+freshness_state: fresh
+last_verified_at: "2026-04-05T12:28:24.545Z"
+host_profile_count: 1
+caveat_summary: Real Windows doctor and preview smoke are recorded, but install apply and canonical /skills verification remain unrecorded.
+surface_verdicts:
+  canonical_picker: unrecorded
+  direct_invocation: not_recorded
+  runtime_available: pass
+  preview_install: pass
+  install_apply: unrecorded
+  gh_availability: not_applicable
+deterministic_evidence_refs:
+  - docs/runtime-mapping/pilot-acceptance.md
+  - packages/tools/compat-lab/tests/acceptance.test.js
+  - packages/tools/compat-lab/tests/matrix.test.js
+fake_acceptance_evidence_refs:
+  - packages/tools/compat-lab/src/acceptance.js
+shim_acceptance_evidence_refs:
+  - packages/tools/compat-lab/src/runtime-fixtures.js
+live_evidence_refs:
+  - docs/evidence/live-runtime/codex-cli-repo-windows.md
+negative_evidence_refs: []
+claim_guard_refs:
+  - docs/compatibility/runtime-verification.md
+  - docs/releases/public-claim-policy.md
+live_records:
+  - evidence_id: codex-windows-doctor-20260405
+    evidence_class: live_smoke
+    captured_at: "2026-04-05T12:28:24.545Z"
+    freshness_state: fresh
+    owner_id: runtime-truth
+    host_profile_id: codex-cli.repo.windows.cmd
+    runtime_version: 0.118.0
+    shell_family: cmd
+    verdict: pass
+    summary: pairslash doctor on the Windows repo lane detected a real Codex CLI host and kept the lane in prep.
+    command_capture_refs:
+      - docs/evidence/live-runtime/codex-cli-repo-windows.md
+  - evidence_id: codex-windows-preview-20260405
+    evidence_class: live_smoke
+    captured_at: "2026-04-05T12:28:31.982Z"
+    freshness_state: fresh
+    owner_id: runtime-truth
+    host_profile_id: codex-cli.repo.windows.cmd
+    runtime_version: 0.118.0
+    shell_family: cmd
+    verdict: pass
+    summary: preview install succeeded as a non-mutating Windows smoke run and preserved unmanaged overrides instead of silently taking ownership.
+    command_capture_refs:
+      - docs/evidence/live-runtime/codex-cli-repo-windows.md
+negative_live_records: []

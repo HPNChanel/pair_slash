@@ -573,7 +573,8 @@ function applyRuntimeSupportRule(entry, checks, target) {
         target,
         path: entry.manifestPath,
         message: `unverified runtime surfaces are missing support evidence_ref records: ${missingEvidence.join(", ")}`,
-        remediation: "Add support.runtime_support.<runtime>.evidence_ref for each runtime with unverified surfaces.",
+        remediation:
+          "Add support.runtime_support.<runtime>.evidence_ref for each runtime with unverified surfaces, and keep the referenced lane record under docs/evidence/live-runtime/ plus its YAML sidecar explicit about deterministic vs live proof.",
       }),
     );
   }
@@ -834,7 +835,8 @@ function applyTrustDescriptorRule(catalogEntry, entry, checks, target) {
         target,
         path: catalogEntry.trust_descriptor ?? entry.manifestPath,
         message: warnings.join("; "),
-        remediation: "Keep manifest support metadata authoritative, and keep pack.trust.yaml aligned if the shim is still committed.",
+        remediation:
+          "Keep manifest support metadata authoritative, keep pack.trust.yaml aligned if the shim is still committed, and do not widen runtime claims beyond the lane records and YAML sidecars under docs/evidence/live-runtime/.",
       }),
     );
   }

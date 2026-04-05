@@ -31,6 +31,7 @@ the Phase 6 compat-lab acceptance slice that backs `npm run test:acceptance`.
 - [ ] `docs/workflows/install-guide.md`
 - [ ] `docs/compatibility/compatibility-matrix.md`
 - [ ] `docs/compatibility/runtime-verification.md`
+- [ ] `docs/evidence/live-runtime/README.md`
 - [ ] `docs/troubleshooting/compat-lab-bug-repro.md`
 - [ ] `docs/runtime-mapping/pilot-acceptance.md`
 - [ ] `docs/releases/release-checklist-0.4.0.md`

@@ -58,6 +58,10 @@ function seedMemoryIndex(repoRoot) {
   );
 }
 
+function readOptionalFile(path) {
+  return existsSync(path) ? readFileSync(path, "utf8") : null;
+}
+
 test("pairslash preview install emits json plan", serial, async () => {
   const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
   let output = "";
@@ -867,6 +871,8 @@ test("pairslash preview memory-write-global emits preview without mutating memor
   let output = "";
   try {
     seedMemoryIndex(fixture.tempRoot);
+    const constraintsPath = join(fixture.tempRoot, ".pairslash", "project-memory", "50-constraints.yaml");
+    const beforeConstraints = readOptionalFile(constraintsPath);
     const exitCode = await runCli({
       argv: ["preview", "memory-write-global", ...buildMemoryWriteArgs(["--format", "json"])],
       cwd: fixture.tempRoot,
@@ -884,10 +890,7 @@ test("pairslash preview memory-write-global emits preview without mutating memor
       existsSync(join(fixture.tempRoot, payload.staging_artifact.path)),
       true,
     );
-    assert.equal(
-      existsSync(join(fixture.tempRoot, ".pairslash", "project-memory", "50-constraints.yaml")),
-      false,
-    );
+    assert.equal(readOptionalFile(constraintsPath), beforeConstraints);
   } finally {
     fixture.cleanup();
   }

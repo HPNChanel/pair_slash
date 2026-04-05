@@ -30,6 +30,7 @@ Use:
 For the shortest onboarding path, use `docs/workflows/phase-4-quickstart.md`.
 For the broader operations flow, use `docs/workflows/phase-2-operations.md`.
 For runtime evidence and guardrails, use `docs/compatibility/runtime-verification.md`.
+For lane-bound evidence records, use `docs/evidence/live-runtime/README.md`.
 For Phase 9 proof assets and evidence placeholders, use:
 
 - `docs/examples/README.md`
@@ -46,8 +47,15 @@ node packages/tools/cli/src/bin/pairslash.js install --runtime codex --target re
 node packages/tools/cli/src/bin/pairslash.js doctor --runtime codex --target repo
 ```
 
-Swap `--runtime codex` for `--runtime copilot` and `--target repo` for
-`--target user` when that is your lane.
+Use the exact lane from `docs/compatibility/compatibility-matrix.md`.
+Today that means:
+
+- Codex CLI `repo` on macOS is currently `degraded` because the archived live
+  record is direct-invocation-only and not a checked-in canonical `/skills`
+  proof.
+- GitHub Copilot CLI `user` on Linux is currently `prep`.
+- Windows remains `prep` and should stay on doctor/preview until real live
+  evidence is checked in.
 
 ## Default pack selection
 
@@ -66,6 +74,10 @@ node packages/tools/cli/src/bin/pairslash.js doctor --runtime codex --target rep
 ```
 
 ### Copilot user-scope bootstrap install
+
+This lane is currently `prep`.
+Use the lane record `docs/evidence/live-runtime/copilot-cli-user-linux.md`
+before widening any support wording.
 
 ```bash
 node packages/tools/cli/src/bin/pairslash.js preview install --runtime copilot --target user

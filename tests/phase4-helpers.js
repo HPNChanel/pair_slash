@@ -105,6 +105,26 @@ export function createTempRepo({ packs = ["pairslash-plan"] } = {}) {
       recursive: true,
     });
   }
+  if (existsSync(join(repoRoot, "docs", "runtime-mapping"))) {
+    cpSync(join(repoRoot, "docs", "runtime-mapping"), join(tempRoot, "docs", "runtime-mapping"), {
+      recursive: true,
+    });
+  }
+  if (existsSync(join(repoRoot, "docs", "releases"))) {
+    cpSync(join(repoRoot, "docs", "releases"), join(tempRoot, "docs", "releases"), {
+      recursive: true,
+    });
+  }
+  if (existsSync(join(repoRoot, "docs", "evidence", "live-runtime"))) {
+    cpSync(join(repoRoot, "docs", "evidence", "live-runtime"), join(tempRoot, "docs", "evidence", "live-runtime"), {
+      recursive: true,
+    });
+  }
+  if (existsSync(join(repoRoot, ".pairslash", "project-memory"))) {
+    cpSync(join(repoRoot, ".pairslash", "project-memory"), join(tempRoot, ".pairslash", "project-memory"), {
+      recursive: true,
+    });
+  }
   if (existsSync(join(repoRoot, "trust"))) {
     cpSync(join(repoRoot, "trust"), join(tempRoot, "trust"), {
       recursive: true,

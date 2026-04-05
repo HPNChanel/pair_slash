@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import YAML from "yaml";
 
@@ -29,6 +29,10 @@ function seedMemoryIndex(tempRoot) {
       { lineWidth: 0, simpleKeys: true },
     ),
   );
+}
+
+function readOptionalFile(path) {
+  return existsSync(path) ? readFileSync(path, "utf8") : null;
 }
 
 function previewFixturePath(name) {
@@ -71,6 +75,8 @@ test("preview memory-write-global shows patch details without committing", seria
   let output = "";
   try {
     seedMemoryIndex(fixture.tempRoot);
+    const constraintsPath = join(fixture.tempRoot, ".pairslash", "project-memory", "50-constraints.yaml");
+    const beforeConstraints = readOptionalFile(constraintsPath);
     const exitCode = await runCli({
       argv: [
         "preview",
@@ -99,10 +105,7 @@ test("preview memory-write-global shows patch details without committing", seria
     assert.equal(payload.record_disposition, "append");
     assert.equal(payload.request.record.scope, "whole-project");
     assert.equal(existsSync(join(fixture.tempRoot, payload.staging_artifact.path)), true);
-    assert.equal(
-      existsSync(join(fixture.tempRoot, ".pairslash", "project-memory", "50-constraints.yaml")),
-      false,
-    );
+    assert.equal(readOptionalFile(constraintsPath), beforeConstraints);
   } finally {
     fixture.cleanup();
   }
@@ -136,6 +139,8 @@ test("preview memory-write-global is blocked for invalid source payload", serial
   const fixture = createTempRepo({ packs: ["pairslash-memory-write-global"] });
   try {
     seedMemoryIndex(fixture.tempRoot);
+    const constraintsPath = join(fixture.tempRoot, ".pairslash", "project-memory", "50-constraints.yaml");
+    const beforeConstraints = readOptionalFile(constraintsPath);
     let output = "";
     const exitCode = await runCli({
       argv: [
@@ -162,10 +167,7 @@ test("preview memory-write-global is blocked for invalid source payload", serial
     assert.equal(payload.kind, "memory-write-preview-blocked");
     assert.equal(payload.blocked, true);
     assert.ok(payload.errors.some((entry) => entry.includes("record.evidence")));
-    assert.equal(
-      existsSync(join(fixture.tempRoot, ".pairslash", "project-memory", "50-constraints.yaml")),
-      false,
-    );
+    assert.equal(readOptionalFile(constraintsPath), beforeConstraints);
   } finally {
     fixture.cleanup();
   }

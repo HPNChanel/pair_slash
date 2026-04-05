@@ -65,9 +65,15 @@ function writeTaskRecord(repoRoot, relativePath, record) {
   writeFileSync(absolutePath, YAML.stringify(record, { lineWidth: 0, simpleKeys: true }));
 }
 
+function readOptionalFile(path) {
+  return existsSync(path) ? readFileSync(path, "utf8") : null;
+}
+
 test("previewMemoryWrite blocks hidden write, persists staging artifact, and keeps project-memory unchanged", serial, () => {
   const { fixture, appendRequest } = setupMemoryRepo();
   try {
+    const constraintsPath = join(fixture.tempRoot, ".pairslash", "project-memory", "50-constraints.yaml");
+    const beforeConstraints = readOptionalFile(constraintsPath);
     const preview = previewMemoryWrite({
       repoRoot: fixture.tempRoot,
       request: appendRequest,
@@ -79,10 +85,7 @@ test("previewMemoryWrite blocks hidden write, persists staging artifact, and kee
     });
     assert.equal(preview.policy_verdict.overall_verdict, "deny");
     assert.equal(preview.staging_artifact.exists, true);
-    assert.equal(
-      existsSync(join(fixture.tempRoot, ".pairslash", "project-memory", "50-constraints.yaml")),
-      false,
-    );
+    assert.equal(readOptionalFile(constraintsPath), beforeConstraints);
     assert.equal(existsSync(join(fixture.tempRoot, preview.staging_artifact.path)), true);
   } finally {
     fixture.cleanup();
@@ -92,6 +95,8 @@ test("previewMemoryWrite blocks hidden write, persists staging artifact, and kee
 test("applyMemoryWrite blocks direct authoritative write when preview artifact is missing", serial, () => {
   const { fixture, appendRequest } = setupMemoryRepo();
   try {
+    const constraintsPath = join(fixture.tempRoot, ".pairslash", "project-memory", "50-constraints.yaml");
+    const beforeConstraints = readOptionalFile(constraintsPath);
     const result = applyMemoryWrite({
       repoRoot: fixture.tempRoot,
       request: appendRequest,
@@ -100,10 +105,7 @@ test("applyMemoryWrite blocks direct authoritative write when preview artifact i
     });
     assert.equal(result.status, "denied");
     assert.ok(result.errors.some((entry) => entry.startsWith("preview-required:")));
-    assert.equal(
-      existsSync(join(fixture.tempRoot, ".pairslash", "project-memory", "50-constraints.yaml")),
-      false,
-    );
+    assert.equal(readOptionalFile(constraintsPath), beforeConstraints);
   } finally {
     fixture.cleanup();
   }

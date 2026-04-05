@@ -1,10 +1,10 @@
 # PairSlash Scoped Release Verdict
 
-Gate status: GO
-Last updated: 2026-04-03
+Gate status: NO-GO
+Last updated: 2026-04-05
 Truth class: scoped-release
 Claim scope: phase4-installability-substrate
-Validated runtimes: codex_cli, copilot_cli
+Release-covered runtimes: codex_cli, copilot_cli
 
 This file owns scoped release/installability truth only.
 It does not own the official phase statement, and it does not decide
@@ -17,12 +17,13 @@ claiming product-validation exit?
 
 ## Current decision
 
-Yes, for a scoped claim.
+Not on the current branch.
 
-PairSlash can publicly claim a technically shipped installability substrate for
-exactly two runtimes, with `/skills` as the canonical front door and explicit,
+PairSlash still has a technically shipped installability substrate for exactly
+two runtimes, with `/skills` as the canonical front door and explicit,
 preview-first managed commands (`doctor`, `preview`, `install`, `update`,
-`uninstall`).
+`uninstall`), but the current branch is not entitled to a scoped release claim
+while release-readiness is failing.
 
 ## What this verdict proves
 
@@ -33,7 +34,6 @@ preview-first managed commands (`doctor`, `preview`, `install`, `update`,
   checks, permission checks, support-lane reporting, and install blocking state.
 - Compatibility docs are generated from deterministic compat-lab metadata and
   kept in sync by tests.
-- `npm run test:release` passes on the current branch as of 2026-04-02.
 
 ## What this verdict does not prove
 
@@ -42,6 +42,7 @@ preview-first managed commands (`doctor`, `preview`, `install`, `update`,
 - Runtime parity beyond the exact lane evidence in compatibility and runtime
   verification docs.
 - Legal/package publicness beyond current repository metadata.
+- That the current branch is release-ready while `npm run test:release` fails.
 
 ## Required companion sources
 
@@ -55,6 +56,5 @@ preview-first managed commands (`doctor`, `preview`, `install`, `update`,
 
 ## Update rule
 
-Change this file back to `Gate status: NO-GO` if managed lifecycle trust
-guarantees regress, compatibility artifacts drift from generation, or release
-readiness stops passing.
+This file must stay `Gate status: NO-GO` until `npm run test:release` is green
+again and public support wording stays inside the checked-in live evidence.

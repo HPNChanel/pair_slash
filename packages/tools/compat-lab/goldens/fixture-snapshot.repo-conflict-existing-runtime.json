@@ -258,30 +258,30 @@
           {
             "blocking_for_install": false,
             "evidence": {
-              "runtime_version": "0.116.0",
-              "tested_version_range": "0.116.0"
+              "lane_status": "supported",
+              "runtime_version": "0.116.0"
             },
             "group": "runtime",
             "id": "runtime.tested_range",
-            "remediation": null,
-            "severity": "info",
-            "status": "pass",
-            "summary": "runtime version 0.116.0 matches recorded pilot evidence"
+            "remediation": "Proceed with preview/doctor evidence, but treat the lane as unrecorded until live pilot evidence is captured.",
+            "severity": "warn",
+            "status": "warn",
+            "summary": "no recorded tested runtime version exists for this lane yet"
           },
           {
             "blocking_for_install": false,
             "evidence": {
-              "evidence_source": "docs/compatibility/compatibility-matrix.md; docs/compatibility/runtime-verification.md; docs/runtime-mapping/pilot-acceptance.md",
+              "evidence_source": "docs/evidence/live-runtime/codex-cli-repo-macos.md",
               "lane_status": "supported",
-              "tested_range_status": "recorded",
-              "tested_version_range": "0.116.0"
+              "tested_range_status": "unrecorded",
+              "tested_version_range": null
             },
             "group": "platform",
             "id": "platform.support_lane",
             "remediation": null,
             "severity": "info",
             "status": "pass",
-            "summary": "Canonical release lane. Use this lane when you need the strongest PairSlash support claim."
+            "summary": "Real Codex CLI behavior was observed on macOS repo scope, but only through codex exec/direct invocation and not through a checked-in canonical /skills picker capture. Keep this lane degraded."
           },
           {
             "blocking_for_install": false,
@@ -563,6 +563,21 @@
         "issues": [
           {
             "blocking_for_install": false,
+            "check_id": "runtime.tested_range",
+            "code": "DOC-RUNTIME-TESTED_RANGE",
+            "evidence": {
+              "lane_status": "supported",
+              "runtime_version": "0.116.0"
+            },
+            "message": "no recorded tested runtime version exists for this lane yet",
+            "remediation": "Proceed with preview/doctor evidence, but treat the lane as unrecorded until live pilot evidence is captured.",
+            "severity": "warn",
+            "suggested_fix": "Proceed with preview/doctor evidence, but treat the lane as unrecorded until live pilot evidence is captured.",
+            "summary": "no recorded tested runtime version exists for this lane yet",
+            "verdict": "warn"
+          },
+          {
+            "blocking_for_install": false,
             "check_id": "filesystem.config_home",
             "code": "DOC-FILESYSTEM-CONFIG_HOME",
             "evidence": {
@@ -727,15 +742,22 @@
           }
         },
         "support_lane": {
+          "actual_evidence_class": "live_smoke",
           "blocking_for_install": false,
-          "evidence_source": "docs/compatibility/compatibility-matrix.md; docs/compatibility/runtime-verification.md; docs/runtime-mapping/pilot-acceptance.md",
+          "canonical_entrypoint": "/skills",
+          "claim_status": "degraded",
+          "evidence_data_ref": "docs/evidence/live-runtime/codex-cli-repo-macos.yaml",
+          "evidence_source": "docs/evidence/live-runtime/codex-cli-repo-macos.md",
+          "freshness_state": "fresh",
           "lane_status": "supported",
+          "last_verified_at": "2026-03-21",
           "os": "darwin",
+          "required_evidence_class": "live_verification",
           "runtime": "codex_cli",
-          "summary": "Canonical release lane. Use this lane when you need the strongest PairSlash support claim.",
+          "summary": "Real Codex CLI behavior was observed on macOS repo scope, but only through codex exec/direct invocation and not through a checked-in canonical /skills picker capture. Keep this lane degraded.",
           "target": "repo",
-          "tested_range_status": "recorded",
-          "tested_version_range": "0.116.0"
+          "tested_range_status": "unrecorded",
+          "tested_version_range": null
         },
         "support_verdict": "fail",
         "target": "repo"
@@ -1214,30 +1236,30 @@
           {
             "blocking_for_install": false,
             "evidence": {
-              "lane_status": "supported",
-              "runtime_version": "2.50.0"
+              "lane_status": "prep",
+              "tested_range_status": "prep_lane"
             },
             "group": "runtime",
             "id": "runtime.tested_range",
-            "remediation": "Proceed with preview/doctor evidence, but treat the lane as unrecorded until live pilot evidence is captured.",
-            "severity": "warn",
-            "status": "warn",
-            "summary": "no recorded tested runtime version exists for this lane yet"
+            "remediation": null,
+            "severity": "info",
+            "status": "skip",
+            "summary": "skipped because no tested runtime range is recorded for this support lane"
           },
           {
             "blocking_for_install": false,
             "evidence": {
-              "evidence_source": "docs/compatibility/compatibility-matrix.md; docs/compatibility/runtime-verification.md; docs/runtime-mapping/pilot-acceptance.md",
-              "lane_status": "supported",
-              "tested_range_status": "unrecorded",
+              "evidence_source": "docs/evidence/live-runtime/copilot-cli-user-<host-os>.md",
+              "lane_status": "prep",
+              "tested_range_status": "prep_lane",
               "tested_version_range": null
             },
             "group": "platform",
             "id": "platform.support_lane",
-            "remediation": null,
-            "severity": "info",
-            "status": "pass",
-            "summary": "Deterministically covered in compat-lab, but live runtime evidence is not yet bounded enough for stable-tested claims."
+            "remediation": "Use doctor and preview on Windows, but keep install support claims in prep status until live runtime evidence is recorded.",
+            "severity": "warn",
+            "status": "degraded",
+            "summary": "Deterministic coverage exists, but no checked-in canonical /skills verification or live install record exists for the Linux user lane. Keep this lane prep-only."
           },
           {
             "blocking_for_install": false,
@@ -1489,18 +1511,20 @@
         "issues": [
           {
             "blocking_for_install": false,
-            "check_id": "runtime.tested_range",
-            "code": "DOC-RUNTIME-TESTED_RANGE",
+            "check_id": "platform.support_lane",
+            "code": "DOC-PLATFORM-SUPPORT_LANE",
             "evidence": {
-              "lane_status": "supported",
-              "runtime_version": "2.50.0"
+              "evidence_source": "docs/evidence/live-runtime/copilot-cli-user-<host-os>.md",
+              "lane_status": "prep",
+              "tested_range_status": "prep_lane",
+              "tested_version_range": null
             },
-            "message": "no recorded tested runtime version exists for this lane yet",
-            "remediation": "Proceed with preview/doctor evidence, but treat the lane as unrecorded until live pilot evidence is captured.",
+            "message": "Deterministic coverage exists, but no checked-in canonical /skills verification or live install record exists for the Linux user lane. Keep this lane prep-only.",
+            "remediation": "Use doctor and preview on Windows, but keep install support claims in prep status until live runtime evidence is recorded.",
             "severity": "warn",
-            "suggested_fix": "Proceed with preview/doctor evidence, but treat the lane as unrecorded until live pilot evidence is captured.",
-            "summary": "no recorded tested runtime version exists for this lane yet",
-            "verdict": "warn"
+            "suggested_fix": "Use doctor and preview on Windows, but keep install support claims in prep status until live runtime evidence is recorded.",
+            "summary": "Deterministic coverage exists, but no checked-in canonical /skills verification or live install record exists for the Linux user lane. Keep this lane prep-only.",
+            "verdict": "degraded"
           },
           {
             "blocking_for_install": false,
@@ -1590,14 +1614,21 @@
           }
         },
         "support_lane": {
+          "actual_evidence_class": null,
           "blocking_for_install": false,
-          "evidence_source": "docs/compatibility/compatibility-matrix.md; docs/compatibility/runtime-verification.md; docs/runtime-mapping/pilot-acceptance.md",
-          "lane_status": "supported",
+          "canonical_entrypoint": "/skills",
+          "claim_status": "prep",
+          "evidence_data_ref": "docs/evidence/live-runtime/copilot-cli-user-linux.yaml",
+          "evidence_source": "docs/evidence/live-runtime/copilot-cli-user-<host-os>.md",
+          "freshness_state": "none-recorded",
+          "lane_status": "prep",
+          "last_verified_at": null,
           "os": "linux",
+          "required_evidence_class": "live_verification",
           "runtime": "copilot_cli",
-          "summary": "Deterministically covered in compat-lab, but live runtime evidence is not yet bounded enough for stable-tested claims.",
+          "summary": "Deterministic coverage exists, but no checked-in canonical /skills verification or live install record exists for the Linux user lane. Keep this lane prep-only.",
           "target": "user",
-          "tested_range_status": "unrecorded",
+          "tested_range_status": "prep_lane",
           "tested_version_range": null
         },
         "support_verdict": "fail",
@@ -1657,30 +1688,30 @@
           {
             "blocking_for_install": false,
             "evidence": {
-              "lane_status": "supported",
-              "runtime_version": "2.50.0"
+              "lane_status": "prep",
+              "tested_range_status": "prep_lane"
             },
             "group": "runtime",
             "id": "runtime.tested_range",
-            "remediation": "Proceed with preview/doctor evidence, but treat the lane as unrecorded until live pilot evidence is captured.",
-            "severity": "warn",
-            "status": "warn",
-            "summary": "no recorded tested runtime version exists for this lane yet"
+            "remediation": null,
+            "severity": "info",
+            "status": "skip",
+            "summary": "skipped because no tested runtime range is recorded for this support lane"
           },
           {
             "blocking_for_install": false,
             "evidence": {
-              "evidence_source": "docs/compatibility/compatibility-matrix.md; docs/compatibility/runtime-verification.md; docs/runtime-mapping/pilot-acceptance.md",
-              "lane_status": "supported",
-              "tested_range_status": "unrecorded",
+              "evidence_source": "docs/evidence/live-runtime/copilot-cli-user-<host-os>.md",
+              "lane_status": "prep",
+              "tested_range_status": "prep_lane",
               "tested_version_range": null
             },
             "group": "platform",
             "id": "platform.support_lane",
-            "remediation": null,
-            "severity": "info",
-            "status": "pass",
-            "summary": "Deterministically covered in compat-lab, but live runtime evidence is not yet bounded enough for stable-tested claims."
+            "remediation": "Use doctor and preview on Windows, but keep install support claims in prep status until live runtime evidence is recorded.",
+            "severity": "warn",
+            "status": "degraded",
+            "summary": "Deterministic coverage exists, but no checked-in canonical /skills verification or live install record exists for the Linux user lane. Keep this lane prep-only."
           },
           {
             "blocking_for_install": false,
@@ -1907,18 +1938,20 @@
         "issues": [
           {
             "blocking_for_install": false,
-            "check_id": "runtime.tested_range",
-            "code": "DOC-RUNTIME-TESTED_RANGE",
+            "check_id": "platform.support_lane",
+            "code": "DOC-PLATFORM-SUPPORT_LANE",
             "evidence": {
-              "lane_status": "supported",
-              "runtime_version": "2.50.0"
+              "evidence_source": "docs/evidence/live-runtime/copilot-cli-user-<host-os>.md",
+              "lane_status": "prep",
+              "tested_range_status": "prep_lane",
+              "tested_version_range": null
             },
-            "message": "no recorded tested runtime version exists for this lane yet",
-            "remediation": "Proceed with preview/doctor evidence, but treat the lane as unrecorded until live pilot evidence is captured.",
+            "message": "Deterministic coverage exists, but no checked-in canonical /skills verification or live install record exists for the Linux user lane. Keep this lane prep-only.",
+            "remediation": "Use doctor and preview on Windows, but keep install support claims in prep status until live runtime evidence is recorded.",
             "severity": "warn",
-            "suggested_fix": "Proceed with preview/doctor evidence, but treat the lane as unrecorded until live pilot evidence is captured.",
-            "summary": "no recorded tested runtime version exists for this lane yet",
-            "verdict": "warn"
+            "suggested_fix": "Use doctor and preview on Windows, but keep install support claims in prep status until live runtime evidence is recorded.",
+            "summary": "Deterministic coverage exists, but no checked-in canonical /skills verification or live install record exists for the Linux user lane. Keep this lane prep-only.",
+            "verdict": "degraded"
           },
           {
             "blocking_for_install": false,
@@ -1950,7 +1983,7 @@
           }
         ],
         "next_actions": [
-          "Proceed with preview/doctor evidence, but treat the lane as unrecorded until live pilot evidence is captured.",
+          "Use doctor and preview on Windows, but keep install support claims in prep status until live runtime evidence is recorded.",
           "Run install to create the runtime config home, or create the directory manually if policy requires it.",
           "Run install to create the runtime install root."
         ],
@@ -1992,17 +2025,24 @@
           }
         },
         "support_lane": {
+          "actual_evidence_class": null,
           "blocking_for_install": false,
-          "evidence_source": "docs/compatibility/compatibility-matrix.md; docs/compatibility/runtime-verification.md; docs/runtime-mapping/pilot-acceptance.md",
-          "lane_status": "supported",
+          "canonical_entrypoint": "/skills",
+          "claim_status": "prep",
+          "evidence_data_ref": "docs/evidence/live-runtime/copilot-cli-user-linux.yaml",
+          "evidence_source": "docs/evidence/live-runtime/copilot-cli-user-<host-os>.md",
+          "freshness_state": "none-recorded",
+          "lane_status": "prep",
+          "last_verified_at": null,
           "os": "linux",
+          "required_evidence_class": "live_verification",
           "runtime": "copilot_cli",
-          "summary": "Deterministically covered in compat-lab, but live runtime evidence is not yet bounded enough for stable-tested claims.",
+          "summary": "Deterministic coverage exists, but no checked-in canonical /skills verification or live install record exists for the Linux user lane. Keep this lane prep-only.",
           "target": "user",
-          "tested_range_status": "unrecorded",
+          "tested_range_status": "prep_lane",
           "tested_version_range": null
         },
-        "support_verdict": "warn",
+        "support_verdict": "degraded",
         "target": "user"
       },
       "install_preview": {

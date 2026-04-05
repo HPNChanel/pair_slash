@@ -107,6 +107,11 @@ test("doctor reports structured environment summary for codex repo lane", () => 
     assert.ok(report.checks.some((check) => check.id === "runtime.detect"));
     assert.ok(report.checks.some((check) => check.id === "filesystem.config_home"));
     assert.equal(report.support_verdict, "degraded");
+    assert.equal(report.support_lane.evidence_source, "docs/evidence/live-runtime/codex-cli-repo-windows.md");
+    assert.equal(report.support_lane.claim_status, "prep");
+    assert.equal(report.support_lane.required_evidence_class, "live_verification");
+    assert.equal(report.support_lane.actual_evidence_class, "live_smoke");
+    assert.equal(report.support_lane.freshness_state, "fresh");
   } finally {
     runtime.cleanup();
     fixture.cleanup();
@@ -497,7 +502,7 @@ test("doctor blocks explicit install intent when requested packs are already man
   }
 });
 
-test("doctor degrades when runtime version falls outside recorded pilot evidence", () => {
+test("doctor warns when runtime version falls outside recorded pilot evidence", () => {
   const fixture = createTempRepo();
   try {
     const report = runDoctor({
@@ -512,7 +517,8 @@ test("doctor degrades when runtime version falls outside recorded pilot evidence
       _shell_override: "zsh",
     });
     assert.equal(report.support_lane.lane_status, "supported");
-    assert.equal(report.support_verdict, "degraded");
+    assert.equal(report.support_lane.claim_status, "degraded");
+    assert.equal(report.support_verdict, "warn");
     assert.ok(report.issues.some((issue) => issue.check_id === "runtime.tested_range"));
   } finally {
     fixture.cleanup();
@@ -794,6 +800,9 @@ test("doctor supports copilot user scope smoke lane", () => {
     assert.ok(report.environment_summary.config_home.includes(".copilot"));
     assert.equal(report.scope_probes.user.selected, true);
     assert.ok(report.checks.some((check) => check.id === "runtime.detect"));
+    assert.equal(report.support_lane.evidence_source, "docs/evidence/live-runtime/copilot-cli-user-windows.md");
+    assert.equal(report.support_lane.claim_status, "prep");
+    assert.equal(report.support_lane.required_evidence_class, "live_verification");
   } finally {
     runtime.restoreHome();
     runtime.cleanup();

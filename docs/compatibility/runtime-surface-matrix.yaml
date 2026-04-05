@@ -1,3 +1,54 @@
+evidence_policy:
+  canonical_entrypoint: /skills
+  core_runtimes:
+    - codex_cli
+    - copilot_cli
+  evidence_classes:
+    deterministic_test: Regression confidence only. Never enough for public runtime promotion.
+    fake_acceptance: Regression confidence only. Never enough for public runtime promotion.
+    live_smoke: Real-host observation that can document feasibility or failure, but cannot by itself promote a lane beyond degraded or prep.
+    live_verification: Minimum live evidence for a public lane claim on the exact runtime, target, OS, and canonical /skills path.
+    repeated_live_verification: Minimum live evidence for stable-tested claims on the exact lane.
+    shim_acceptance: Regression confidence only. Never enough for public runtime promotion.
+  freshness:
+    live_smoke:
+      expire_after_days: 14
+      stale_after_days: 7
+    live_verification:
+      expire_after_days: 60
+      stale_after_days: 30
+    repeated_live_verification:
+      minimum_distinct_host_profiles: 2
+      minimum_distinct_run_dates: 2
+      newest_run_max_age_days: 30
+      supporting_run_max_age_days: 60
+  negative_failure_types:
+    - runtime_unavailable
+    - gh_unavailable
+    - canonical_picker_missing
+    - pack_not_visible
+    - preview_fail
+    - install_fail
+    - workflow_fail
+    - direct_invocation_fail
+    - outside_recorded_range
+  promotion_rules:
+    blocked:
+      requires_negative_live_evidence: true
+    degraded:
+      minimum_evidence_class: live_smoke
+      requires_documented_caveat: true
+    prep:
+      minimum_evidence_class: live_verification
+      promotion_blocked_without_live: true
+    preview:
+      minimum_evidence_class: live_verification
+      minimum_host_profiles: 1
+      requires_canonical_entrypoint: true
+    stable_tested:
+      minimum_evidence_class: repeated_live_verification
+      minimum_host_profiles: 2
+      requires_canonical_entrypoint: true
 fixture_catalog:
   - id: repo-basic-readonly
     modeled_risks:
@@ -131,7 +182,7 @@ known_issues:
   - affected_lanes: GitHub Copilot CLI
     details: Use /skills as the canonical entrypoint. Prompt-mode direct invocation remains blocked.
     id: K1
-    status: known-broken
+    status: blocked
     surface: Copilot direct invocation with -p/--prompt
   - affected_lanes: Codex CLI repo, GitHub Copilot CLI user
     details: Compat-lab covers doctor and preview; stable-tested claims require manual live install evidence.
@@ -179,53 +230,176 @@ release_gates:
     required_for_release: true
     trigger: manual pre-release gate
 runtime_lanes:
-  - deterministic_lab_baseline: 0.116.0
-    evidence_source: docs/compatibility/compatibility-matrix.md; docs/compatibility/runtime-verification.md; docs/runtime-mapping/pilot-acceptance.md
-    live_tested_range: 0.116.0
+  - actual_evidence_class: live_smoke
+    canonical_entrypoint: /skills
+    claim_guard_refs:
+      - docs/compatibility/runtime-verification.md
+      - docs/releases/public-claim-policy.md
+    deterministic_evidence_refs:
+      - docs/runtime-mapping/pilot-acceptance.md
+      - packages/tools/compat-lab/tests/acceptance.test.js
+      - packages/tools/compat-lab/tests/matrix.test.js
+    deterministic_lab_baseline: 0.116.0
+    evidence_data_ref: docs/evidence/live-runtime/codex-cli-repo-macos.yaml
+    evidence_source: docs/evidence/live-runtime/codex-cli-repo-macos.md
+    evidence_summary: Archived direct-invocation live smoke exists for Codex CLI 0.116.0 on macOS repo scope, but canonical /skills evidence is still unrecorded.
+    freshness_state: fresh
+    host_profile_count: 1
+    lane_id: codex-cli-repo-macos
+    last_verified_at: 2026-03-21
+    live_evidence_refs:
+      - docs/compatibility/phase-0-acceptance.md
+      - .pairslash/project-memory/60-architecture-decisions/phase-0-codex-cli-verification-on-v0-116-0.yaml
+    live_tested_range: none recorded
+    negative_evidence_refs:
+      - .pairslash/project-memory/70-known-good-patterns/codex-exec-as-non-interactive-skill-testing-surface.yaml
     os_lane: macOS
+    owner_id: runtime-truth
     recommended_version: 0.116.0
     release_gate: required
+    required_evidence_class: live_verification
     runtime: Codex CLI
     runtime_id: codex_cli
-    support_level: stable-tested
-    support_semantics: Canonical release lane. Use this lane when you need the strongest PairSlash support claim.
-    target: repo
-  - deterministic_lab_baseline: 2.50.0
-    evidence_source: docs/compatibility/compatibility-matrix.md; docs/compatibility/runtime-verification.md; docs/runtime-mapping/pilot-acceptance.md
-    live_tested_range: none recorded
-    os_lane: Linux
-    recommended_version: 2.50.x
-    release_gate: required
-    runtime: GitHub Copilot CLI
-    runtime_id: copilot_cli
+    shim_evidence_refs:
+      - packages/tools/compat-lab/src/runtime-fixtures.js
+      - packages/tools/compat-lab/src/acceptance.js
     support_level: degraded
-    support_semantics: Deterministically covered in compat-lab, but live runtime evidence is not yet bounded enough for stable-tested claims.
-    target: user
-  - deterministic_lab_baseline: 0.116.0
-    evidence_source: docs/compatibility/compatibility-matrix.md; docs/compatibility/runtime-verification.md; docs/runtime-mapping/pilot-acceptance.md
-    live_tested_range: none recorded
-    os_lane: Windows
-    recommended_version: 0.116.0
-    release_gate: nightly-only
-    runtime: Codex CLI
-    runtime_id: codex_cli
-    support_level: prep
-    support_semantics: Doctor and preview are expected; install evidence remains prep-only until manual live verification is recorded.
+    support_semantics: Real Codex CLI behavior was observed on macOS repo scope, but only through codex exec/direct invocation and not through a checked-in canonical /skills picker capture. Keep this lane degraded.
+    surface_verdicts:
+      canonical_picker: unrecorded
+      direct_invocation: pass
+      gh_availability: not_applicable
+      install_apply: unrecorded
+      preview_install: unrecorded
+      runtime_available: pass
     target: repo
-  - deterministic_lab_baseline: 2.50.0
-    evidence_source: docs/compatibility/compatibility-matrix.md; docs/compatibility/runtime-verification.md; docs/runtime-mapping/pilot-acceptance.md
+  - actual_evidence_class: null
+    canonical_entrypoint: /skills
+    claim_guard_refs:
+      - docs/compatibility/runtime-verification.md
+      - docs/releases/public-claim-policy.md
+    deterministic_evidence_refs:
+      - docs/runtime-mapping/pilot-acceptance.md
+      - packages/tools/compat-lab/tests/acceptance.test.js
+      - packages/tools/compat-lab/tests/matrix.test.js
+    deterministic_lab_baseline: 2.50.0
+    evidence_data_ref: docs/evidence/live-runtime/copilot-cli-user-linux.yaml
+    evidence_source: docs/evidence/live-runtime/copilot-cli-user-linux.md
+    evidence_summary: Deterministic installability coverage exists, but no checked-in Linux user /skills verification or live install record is present.
+    freshness_state: none-recorded
+    host_profile_count: 0
+    lane_id: copilot-cli-user-linux
+    last_verified_at: null
+    live_evidence_refs: []
     live_tested_range: none recorded
-    os_lane: Windows
+    negative_evidence_refs: []
+    os_lane: Linux
+    owner_id: runtime-truth
     recommended_version: 2.50.x
-    release_gate: nightly-only
+    release_gate: required
+    required_evidence_class: live_verification
     runtime: GitHub Copilot CLI
     runtime_id: copilot_cli
+    shim_evidence_refs:
+      - packages/tools/compat-lab/src/runtime-fixtures.js
+      - packages/tools/compat-lab/src/acceptance.js
     support_level: prep
-    support_semantics: Doctor and preview are expected; install evidence remains prep-only until manual live verification is recorded.
+    support_semantics: Deterministic coverage exists, but no checked-in canonical /skills verification or live install record exists for the Linux user lane. Keep this lane prep-only.
+    surface_verdicts:
+      canonical_picker: unrecorded
+      direct_invocation: blocked
+      gh_availability: unrecorded
+      install_apply: unrecorded
+      preview_install: unrecorded
+      runtime_available: unrecorded
+    target: user
+  - actual_evidence_class: live_smoke
+    canonical_entrypoint: /skills
+    claim_guard_refs:
+      - docs/compatibility/runtime-verification.md
+      - docs/releases/public-claim-policy.md
+    deterministic_evidence_refs:
+      - docs/runtime-mapping/pilot-acceptance.md
+      - packages/tools/compat-lab/tests/acceptance.test.js
+      - packages/tools/compat-lab/tests/matrix.test.js
+    deterministic_lab_baseline: 0.116.0
+    evidence_data_ref: docs/evidence/live-runtime/codex-cli-repo-windows.yaml
+    evidence_source: docs/evidence/live-runtime/codex-cli-repo-windows.md
+    evidence_summary: Real Windows doctor and preview smoke were recorded on 2026-04-05, but install apply and canonical /skills evidence remain unrecorded.
+    freshness_state: fresh
+    host_profile_count: 1
+    lane_id: codex-cli-repo-windows
+    last_verified_at: 2026-04-05T12:28:24.545Z
+    live_evidence_refs:
+      - docs/evidence/live-runtime/codex-cli-repo-windows.md
+    live_tested_range: none recorded
+    negative_evidence_refs: []
+    os_lane: Windows
+    owner_id: runtime-truth
+    recommended_version: 0.118.0
+    release_gate: nightly-only
+    required_evidence_class: live_verification
+    runtime: Codex CLI
+    runtime_id: codex_cli
+    shim_evidence_refs:
+      - packages/tools/compat-lab/src/runtime-fixtures.js
+      - packages/tools/compat-lab/src/acceptance.js
+    support_level: prep
+    support_semantics: Real Windows doctor and preview smoke are recorded, but install apply and canonical /skills verification remain unrecorded. Keep this lane prep-only.
+    surface_verdicts:
+      canonical_picker: unrecorded
+      direct_invocation: not_recorded
+      gh_availability: not_applicable
+      install_apply: unrecorded
+      preview_install: pass
+      runtime_available: pass
+    target: repo
+  - actual_evidence_class: live_smoke
+    canonical_entrypoint: /skills
+    claim_guard_refs:
+      - docs/compatibility/runtime-verification.md
+      - docs/releases/public-claim-policy.md
+    deterministic_evidence_refs:
+      - docs/runtime-mapping/pilot-acceptance.md
+      - packages/tools/compat-lab/tests/acceptance.test.js
+      - packages/tools/compat-lab/tests/matrix.test.js
+    deterministic_lab_baseline: 2.50.0
+    evidence_data_ref: docs/evidence/live-runtime/copilot-cli-user-windows.yaml
+    evidence_source: docs/evidence/live-runtime/copilot-cli-user-windows.md
+    evidence_summary: A real Windows host probe was recorded on 2026-04-05, but gh was unavailable locally and preview blocked explicitly.
+    freshness_state: fresh
+    host_profile_count: 1
+    lane_id: copilot-cli-user-windows
+    last_verified_at: 2026-04-05T12:28:23.177Z
+    live_evidence_refs:
+      - docs/evidence/live-runtime/copilot-cli-user-windows.md
+    live_tested_range: none recorded
+    negative_evidence_refs:
+      - docs/evidence/live-runtime/copilot-cli-user-windows.md
+    os_lane: Windows
+    owner_id: runtime-truth
+    recommended_version: 2.50.x
+    release_gate: nightly-only
+    required_evidence_class: live_verification
+    runtime: GitHub Copilot CLI
+    runtime_id: copilot_cli
+    shim_evidence_refs:
+      - packages/tools/compat-lab/src/runtime-fixtures.js
+      - packages/tools/compat-lab/src/acceptance.js
+    support_level: prep
+    support_semantics: A real Windows host probe was captured, but gh was unavailable locally and no canonical /skills or install proof exists. Keep this lane prep-only.
+    surface_verdicts:
+      canonical_picker: unrecorded
+      direct_invocation: blocked
+      gh_availability: fail
+      install_apply: blocked
+      preview_install: fail
+      runtime_available: fail
     target: user
 support_policy:
-  degraded: Deterministic compat-lab gates are green, but support is reduced by missing or partial live evidence or by documented caveats.
-  known_broken: PairSlash has an explicit known issue or blocked surface. No silent fallback is allowed.
-  prep: Doctor and preview are expected to work, but install claims are not yet recorded as live evidence.
-  stable_tested: Deterministic compat-lab gates are green and a matching live runtime lane has recorded evidence.
+  blocked: Fresh negative live evidence blocks the exact lane or documented surface until superseded by newer live verification.
+  degraded: Real runtime evidence exists, but the canonical /skills path is missing, partial, or caveated for the documented lane.
+  prep: Deterministic coverage and optional live smoke may exist, but canonical /skills verification is not yet recorded for the documented lane.
+  preview: One fresh canonical live verification exists for the exact lane, but repeated live verification is not recorded yet.
+  stable_tested: Repeated fresh canonical live verification exists for the exact runtime, target, OS, and lane scope.
 version: 0.4.0

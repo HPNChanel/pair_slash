@@ -24,6 +24,9 @@ In this repo, use the equivalent shorthand `npm run pairslash -- <args>`.
 
 ## Codex CLI on macOS repo scope
 
+This lane is currently `degraded`, not `stable-tested`, because the archived
+live record does not include a checked-in canonical `/skills` picker capture.
+
 ```bash
 node packages/tools/cli/src/bin/pairslash.js preview install pairslash-plan --runtime codex --target repo
 node packages/tools/cli/src/bin/pairslash.js install pairslash-plan --runtime codex --target repo --apply --yes
@@ -38,6 +41,12 @@ Then:
 4. Ask: `Create a repo plan from the current repo state.`
 
 ## GitHub Copilot CLI on Linux user scope
+
+This lane is intentionally `prep`.
+Deterministic coverage exists, but no checked-in live `/skills` record is
+present yet for this exact lane.
+Use `docs/evidence/live-runtime/copilot-cli-user-linux.md` before widening
+support wording.
 
 ```bash
 node packages/tools/cli/src/bin/pairslash.js preview install pairslash-plan --runtime copilot --target user

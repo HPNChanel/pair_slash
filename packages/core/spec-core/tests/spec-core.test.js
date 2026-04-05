@@ -82,6 +82,48 @@ test("public support snapshot fails closed when runtime support data is missing"
   }
 });
 
+test("public support snapshot fails closed when a lane evidence record is missing", () => {
+  const fixture = createTempRepo();
+  try {
+    unlinkSync(join(fixture.tempRoot, "docs", "evidence", "live-runtime", "codex-cli-repo-macos.md"));
+    assert.throws(
+      () => loadPublicSupportSnapshot(fixture.tempRoot),
+      /public-support-snapshot-invalid:runtime_lanes\[0\]\.evidence_source/,
+    );
+  } finally {
+    fixture.cleanup();
+  }
+});
+
+test("public support snapshot fails closed when a lane evidence data file is missing", () => {
+  const fixture = createTempRepo();
+  try {
+    unlinkSync(join(fixture.tempRoot, "docs", "evidence", "live-runtime", "codex-cli-repo-macos.yaml"));
+    assert.throws(
+      () => loadPublicSupportSnapshot(fixture.tempRoot),
+      /public-support-snapshot-invalid:runtime_lanes\[0\]\.evidence_data_ref/,
+    );
+  } finally {
+    fixture.cleanup();
+  }
+});
+
+test("public support snapshot fails closed when lane evidence record drifts from the matrix support level", () => {
+  const fixture = createTempRepo();
+  try {
+    const evidencePath = join(fixture.tempRoot, "docs", "evidence", "live-runtime", "codex-cli-repo-macos.yaml");
+    const record = YAML.parse(readFileSync(evidencePath, "utf8"));
+    record.current_public_support_level = "stable-tested";
+    writeFileSync(evidencePath, YAML.stringify(record, { lineWidth: 0, simpleKeys: true }));
+    assert.throws(
+      () => loadPublicSupportSnapshot(fixture.tempRoot),
+      /public-support-snapshot-invalid:runtime_lanes\[0\]\.evidence_record\.current_public_support_level/,
+    );
+  } finally {
+    fixture.cleanup();
+  }
+});
+
 test("pairslash-plan manifest v2 validates", () => {
   const manifest = loadPackManifest(join(repoRoot, "packs", "core", "pairslash-plan", "pack.manifest.yaml"));
   assert.deepEqual(validatePackManifestV2(manifest), []);
@@ -405,7 +447,7 @@ test("doctor report validator accepts phase 4 execution report shape", () => {
       lane_status: "prep",
       tested_range_status: "prep_lane",
       tested_version_range: null,
-      evidence_source: "docs/runtime-mapping/pilot-acceptance.md",
+      evidence_source: "docs/evidence/live-runtime/codex-cli-repo-windows.md",
       blocking_for_install: false,
       summary: "Windows is a prep lane for Phase 4 doctor and preview coverage.",
     },

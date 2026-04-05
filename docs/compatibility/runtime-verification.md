@@ -4,6 +4,12 @@ Use this checklist when you are collecting manual live evidence for the public
 compatibility matrix. Compat-lab automation is deterministic and release-gating,
 but it does not replace live `/skills` verification.
 
+Canonical lane records live under `docs/evidence/live-runtime/`.
+Each lane record must separate deterministic evidence, fake/shim evidence, and
+live evidence before the matrix is updated.
+Each lane also needs a YAML sidecar with freshness, required evidence class,
+host profile count, and negative evidence when present.
+
 Do not use this page as the install guide. Start with
 `docs/workflows/install-guide.md`.
 
@@ -25,7 +31,7 @@ or alter the repo-local packaging boundary recorded in
 - If a surface is degraded, prep-only, or blocked, record that explicitly. Do
   not infer success from deterministic compat-lab coverage alone.
 
-## Stable-tested or degraded lane verification
+## Preview, degraded, or stable-tested lane verification
 
 Run these steps inside the live runtime from repo root:
 
@@ -39,7 +45,13 @@ Run these steps inside the live runtime from repo root:
    - no hidden writes occur
    - rejected or blocked previews do not silently fall back
 5. Confirm read workflows do not mutate `.pairslash/project-memory/`.
-6. If the lane is degraded, record exactly which caveat still applies.
+6. Record whether the evidence class is `live_smoke`, `live_verification`, or
+   `repeated_live_verification`.
+7. If the lane is degraded, record exactly which caveat still applies.
+8. If the lane is preview, make sure the canonical `/skills` path is part of
+   the recorded proof.
+9. Only promote to `stable-tested` after repeated canonical live verification
+   exists on at least two distinct host profiles and two distinct dates.
 
 ## Prep lane verification
 
@@ -59,6 +71,7 @@ captured.
 
 When evidence changes, update:
 
+- `docs/evidence/live-runtime/<lane>.md`
 - `docs/compatibility/runtime-surface-matrix.yaml`
 - `docs/compatibility/compatibility-matrix.md`
 - `docs/troubleshooting/compat-lab-bug-repro.md` if a new repro path or caveat
@@ -66,7 +79,9 @@ When evidence changes, update:
 
 Keep manual evidence separate from deterministic compat-lab output. The matrix
 must tell users what is truly supported today.
+Do not flatten fake/shim acceptance into live evidence in the lane record.
 Do not use runtime verification results as package-publication evidence.
+One-off live runs do not justify `stable-tested`.
 
 ## Support capture
 
