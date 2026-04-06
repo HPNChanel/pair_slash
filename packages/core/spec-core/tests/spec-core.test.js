@@ -124,6 +124,86 @@ test("public support snapshot fails closed when lane evidence record drifts from
   }
 });
 
+test("public support snapshot fails closed when evidence policy schema ref is missing", () => {
+  const fixture = createTempRepo();
+  try {
+    const matrixPath = join(fixture.tempRoot, "docs", "compatibility", "runtime-surface-matrix.yaml");
+    const matrix = YAML.parse(readFileSync(matrixPath, "utf8"));
+    delete matrix.evidence_policy.registry_schema_ref;
+    writeFileSync(matrixPath, YAML.stringify(matrix, { lineWidth: 0, simpleKeys: true }));
+    assert.throws(
+      () => loadPublicSupportSnapshot(fixture.tempRoot),
+      /public-support-snapshot-invalid:evidence_policy\.registry_schema_ref/,
+    );
+  } finally {
+    fixture.cleanup();
+  }
+});
+
+test("public support snapshot fails closed when runbook policy is missing", () => {
+  const fixture = createTempRepo();
+  try {
+    const matrixPath = join(fixture.tempRoot, "docs", "compatibility", "runtime-surface-matrix.yaml");
+    const matrix = YAML.parse(readFileSync(matrixPath, "utf8"));
+    delete matrix.evidence_policy.runbook_policy;
+    writeFileSync(matrixPath, YAML.stringify(matrix, { lineWidth: 0, simpleKeys: true }));
+    assert.throws(
+      () => loadPublicSupportSnapshot(fixture.tempRoot),
+      /public-support-snapshot-invalid:evidence_policy\.runbook_policy/,
+    );
+  } finally {
+    fixture.cleanup();
+  }
+});
+
+test("public support snapshot fails closed when windows promotion gate weakens doctor and preview rule", () => {
+  const fixture = createTempRepo();
+  try {
+    const matrixPath = join(fixture.tempRoot, "docs", "compatibility", "runtime-surface-matrix.yaml");
+    const matrix = YAML.parse(readFileSync(matrixPath, "utf8"));
+    matrix.evidence_policy.runbook_policy.windows_promotion_gate.doctor_and_preview_never_enough = false;
+    writeFileSync(matrixPath, YAML.stringify(matrix, { lineWidth: 0, simpleKeys: true }));
+    assert.throws(
+      () => loadPublicSupportSnapshot(fixture.tempRoot),
+      /public-support-snapshot-invalid:evidence_policy\.runbook_policy\.windows_promotion_gate\.doctor_and_preview_never_enough/,
+    );
+  } finally {
+    fixture.cleanup();
+  }
+});
+
+test("public support snapshot fails closed when lane fake evidence refs are missing", () => {
+  const fixture = createTempRepo();
+  try {
+    const matrixPath = join(fixture.tempRoot, "docs", "compatibility", "runtime-surface-matrix.yaml");
+    const matrix = YAML.parse(readFileSync(matrixPath, "utf8"));
+    delete matrix.runtime_lanes[0].fake_evidence_refs;
+    writeFileSync(matrixPath, YAML.stringify(matrix, { lineWidth: 0, simpleKeys: true }));
+    assert.throws(
+      () => loadPublicSupportSnapshot(fixture.tempRoot),
+      /public-support-snapshot-invalid:runtime_lanes\[0\]\.fake_evidence_refs/,
+    );
+  } finally {
+    fixture.cleanup();
+  }
+});
+
+test("public support snapshot fails closed when a live run omits command metadata", () => {
+  const fixture = createTempRepo();
+  try {
+    const evidencePath = join(fixture.tempRoot, "docs", "evidence", "live-runtime", "codex-cli-repo-macos.yaml");
+    const record = YAML.parse(readFileSync(evidencePath, "utf8"));
+    delete record.live_records[0].command;
+    writeFileSync(evidencePath, YAML.stringify(record, { lineWidth: 0, simpleKeys: true }));
+    assert.throws(
+      () => loadPublicSupportSnapshot(fixture.tempRoot),
+      /public-support-snapshot-invalid:runtime_lanes\[0\]\.evidence_record\.live_records\[0\]\.command/,
+    );
+  } finally {
+    fixture.cleanup();
+  }
+});
+
 test("pairslash-plan manifest v2 validates", () => {
   const manifest = loadPackManifest(join(repoRoot, "packs", "core", "pairslash-plan", "pack.manifest.yaml"));
   assert.deepEqual(validatePackManifestV2(manifest), []);

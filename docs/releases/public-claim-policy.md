@@ -49,8 +49,6 @@ boundary ladder live in `docs/phase-12/authoritative-program-charter.md`.
   - `packages/core/memory-engine/`
 - Product-validation truth:
   - `docs/validation/phase-3-5/verdict.md`
-  - `docs/validation/phase-3-5/evidence-log.md`
-  - `docs/validation/phase-3-5/README.md`
 - Public-claim truth:
   - `docs/releases/scoped-release-verdict.md`
   - `docs/releases/phase-5-shipped-scope.md`

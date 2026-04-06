@@ -49,6 +49,113 @@ evidence_policy:
       minimum_evidence_class: repeated_live_verification
       minimum_host_profiles: 2
       requires_canonical_entrypoint: true
+  registry_schema_ref: docs/evidence/live-runtime/schema.live-runtime-lane-record.yaml
+  runbook_policy:
+    command_capture_requirements:
+      required_artifacts:
+        - doctor_report
+        - preview_plan_or_transcript
+        - install_apply_transcript
+        - canonical_picker_capture
+        - workflow_transcript
+        - registry_sidecar_update
+    host_profile_required_fields:
+      - host_profile_id
+      - os
+      - shell
+      - runtime_executable
+      - runtime_version
+      - target
+      - config_home
+      - install_root
+    live_verification_boundary:
+      repeated_live_verification_requires:
+        - distinct_host_profiles
+        - distinct_run_dates
+        - freshness_within_policy
+      required_for_public_lane_claim:
+        - real_host_runtime
+        - managed_install_apply
+        - canonical_picker_capture
+        - pairslash_plan_via_skills
+        - pairslash_memory_write_global_preview_gate
+        - registry_write_back
+    manual_vs_scripted_boundary:
+      forbidden_substitutions:
+        - compat_lab_as_live_proof
+        - fake_runtime_as_live_proof
+        - shim_acceptance_as_live_proof
+        - codex_exec_as_canonical_picker_proof
+      manual_steps_required:
+        - canonical_skills_listing
+        - workflow_selection_from_skills
+        - workflow_prompt_and_response_capture
+        - memory_write_preview_observation
+      scripted_steps_allowed:
+        - host_profile_capture
+        - runtime_version_capture
+        - doctor
+        - preview_install
+        - install_apply
+    runtime_runbooks:
+      codex_cli:
+        default_target: repo
+        direct_invocation:
+          codex_exec_max_evidence_class: live_smoke
+          promotion_requires_canonical_picker: true
+          public_claim: documented-supplement-only
+        minimum_capabilities_for_preview_lane:
+          - runtime_available
+          - install_apply
+          - canonical_picker
+          - workflow_execution
+          - memory_write_preview_gate
+        required_commands:
+          - npm run pairslash -- doctor --runtime codex --target repo --format json
+          - npm run pairslash -- preview install pairslash-plan --runtime codex --target repo --format json
+          - npm run pairslash -- install pairslash-plan --runtime codex --target repo --apply --yes
+        required_tool_presence:
+          - codex
+      copilot_cli:
+        default_target: user
+        direct_invocation:
+          promotion_requires_canonical_picker: true
+          public_claim: blocked
+        minimum_capabilities_for_preview_lane:
+          - gh_availability
+          - runtime_available
+          - install_apply
+          - canonical_picker
+          - workflow_execution
+          - memory_write_preview_gate
+        required_commands:
+          - gh --version
+          - gh copilot --help
+          - npm run pairslash -- doctor --runtime copilot --target user --format json
+          - npm run pairslash -- preview install pairslash-plan --runtime copilot --target user --format json
+          - npm run pairslash -- install pairslash-plan --runtime copilot --target user --apply --yes
+        required_tool_presence:
+          - gh
+          - gh_copilot_extension
+    smoke_boundary:
+      counts_as:
+        - runtime_version_capture
+        - doctor
+        - preview_install
+        - blocked_install
+        - blocked_runtime_probe
+        - partial_direct_invocation
+      never_sufficient_for:
+        - preview_lane_promotion
+        - stable_tested_promotion
+        - windows_promotion
+        - canonical_picker_claim
+    windows_promotion_gate:
+      doctor_and_preview_never_enough: true
+      requires:
+        - install_apply
+        - canonical_picker
+        - workflow_execution
 fixture_catalog:
   - id: repo-basic-readonly
     modeled_risks:
@@ -209,7 +316,7 @@ release_gates:
       - Linux Copilot acceptance
       - Windows prep acceptance
     id: cross-os-acceptance
-    notes: Cross-OS installability and doctor coverage with fake runtimes and deterministic lanes.
+    notes: Cross-OS installability and doctor coverage with fake acceptance plus shimmed runtime fixtures in deterministic lanes.
     required_for_release: true
     trigger: pull_request and push
   - checks:
@@ -243,12 +350,13 @@ runtime_lanes:
     evidence_data_ref: docs/evidence/live-runtime/codex-cli-repo-macos.yaml
     evidence_source: docs/evidence/live-runtime/codex-cli-repo-macos.md
     evidence_summary: Archived direct-invocation live smoke exists for Codex CLI 0.116.0 on macOS repo scope, but canonical /skills evidence is still unrecorded.
+    fake_evidence_refs:
+      - packages/tools/compat-lab/src/acceptance.js
     freshness_state: fresh
     host_profile_count: 1
     lane_id: codex-cli-repo-macos
     last_verified_at: 2026-03-21
     live_evidence_refs:
-      - docs/compatibility/phase-0-acceptance.md
       - .pairslash/project-memory/60-architecture-decisions/phase-0-codex-cli-verification-on-v0-116-0.yaml
     live_tested_range: none recorded
     negative_evidence_refs:
@@ -262,7 +370,6 @@ runtime_lanes:
     runtime_id: codex_cli
     shim_evidence_refs:
       - packages/tools/compat-lab/src/runtime-fixtures.js
-      - packages/tools/compat-lab/src/acceptance.js
     support_level: degraded
     support_semantics: Real Codex CLI behavior was observed on macOS repo scope, but only through codex exec/direct invocation and not through a checked-in canonical /skills picker capture. Keep this lane degraded.
     surface_verdicts:
@@ -286,6 +393,8 @@ runtime_lanes:
     evidence_data_ref: docs/evidence/live-runtime/copilot-cli-user-linux.yaml
     evidence_source: docs/evidence/live-runtime/copilot-cli-user-linux.md
     evidence_summary: Deterministic installability coverage exists, but no checked-in Linux user /skills verification or live install record is present.
+    fake_evidence_refs:
+      - packages/tools/compat-lab/src/acceptance.js
     freshness_state: none-recorded
     host_profile_count: 0
     lane_id: copilot-cli-user-linux
@@ -302,7 +411,6 @@ runtime_lanes:
     runtime_id: copilot_cli
     shim_evidence_refs:
       - packages/tools/compat-lab/src/runtime-fixtures.js
-      - packages/tools/compat-lab/src/acceptance.js
     support_level: prep
     support_semantics: Deterministic coverage exists, but no checked-in canonical /skills verification or live install record exists for the Linux user lane. Keep this lane prep-only.
     surface_verdicts:
@@ -326,6 +434,8 @@ runtime_lanes:
     evidence_data_ref: docs/evidence/live-runtime/codex-cli-repo-windows.yaml
     evidence_source: docs/evidence/live-runtime/codex-cli-repo-windows.md
     evidence_summary: Real Windows doctor and preview smoke were recorded on 2026-04-05, but install apply and canonical /skills evidence remain unrecorded.
+    fake_evidence_refs:
+      - packages/tools/compat-lab/src/acceptance.js
     freshness_state: fresh
     host_profile_count: 1
     lane_id: codex-cli-repo-windows
@@ -343,7 +453,6 @@ runtime_lanes:
     runtime_id: codex_cli
     shim_evidence_refs:
       - packages/tools/compat-lab/src/runtime-fixtures.js
-      - packages/tools/compat-lab/src/acceptance.js
     support_level: prep
     support_semantics: Real Windows doctor and preview smoke are recorded, but install apply and canonical /skills verification remain unrecorded. Keep this lane prep-only.
     surface_verdicts:
@@ -367,6 +476,8 @@ runtime_lanes:
     evidence_data_ref: docs/evidence/live-runtime/copilot-cli-user-windows.yaml
     evidence_source: docs/evidence/live-runtime/copilot-cli-user-windows.md
     evidence_summary: A real Windows host probe was recorded on 2026-04-05, but gh was unavailable locally and preview blocked explicitly.
+    fake_evidence_refs:
+      - packages/tools/compat-lab/src/acceptance.js
     freshness_state: fresh
     host_profile_count: 1
     lane_id: copilot-cli-user-windows
@@ -385,7 +496,6 @@ runtime_lanes:
     runtime_id: copilot_cli
     shim_evidence_refs:
       - packages/tools/compat-lab/src/runtime-fixtures.js
-      - packages/tools/compat-lab/src/acceptance.js
     support_level: prep
     support_semantics: A real Windows host probe was captured, but gh was unavailable locally and no canonical /skills or install proof exists. Keep this lane prep-only.
     surface_verdicts:

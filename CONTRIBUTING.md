@@ -63,7 +63,7 @@ Own docs clarity and claim accuracy under `docs/`.
 
 Own intake quality, reproducibility hygiene, and regression routing.
 
-- Follow `docs/support/triage-playbook.md`.
+- Follow `docs/reporting.md`.
 - Ask for the smallest useful artifact first.
 - Distinguish code bug vs docs drift vs evidence gap.
 - Keep support claims aligned with runtime verification evidence.

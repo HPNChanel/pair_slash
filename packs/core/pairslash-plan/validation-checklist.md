@@ -2,7 +2,7 @@
 
 Use this checklist to verify that a `pairslash-plan` invocation is working
 correctly. Each item maps to an acceptance gate in
-`docs/compatibility/acceptance-gates.yaml`.
+the maintainer-local compatibility acceptance gate tracker.
 
 ---
 
@@ -119,7 +119,7 @@ Update these files with evidence:
 2. `packages/core/spec-core/registry/packs.yaml`
    - confirm `pairslash-plan` version/path references stay correct after any move or rename
 
-3. `docs/compatibility/acceptance-gates.yaml`
+3. Maintainer-local compatibility acceptance gate tracker
    - G1, G3, G4, G10: update `status` to `pass` or `fail` with `evidence`
 
 4. If a MUST gate fails, open a new issue or task before claiming Phase 2 done.

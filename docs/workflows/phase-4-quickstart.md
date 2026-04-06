@@ -84,12 +84,7 @@ npm run test:acceptance -- --lane linux --report-out artifacts/compat-lab-accept
 npm run test:acceptance -- --lane windows-prep --report-out artifacts/compat-lab-acceptance-windows-prep.json
 ```
 
-## Phase 9 proof placeholders
+## More public references
 
-Use these docs for public proof scaffolding. They are placeholders until
-measurement fields and artifact references are filled:
-
-- `docs/benchmarks/README.md`
-- `docs/case-studies/onboard-repo-before-after.md`
-- `docs/case-studies/memory-write-global-trust-event.md`
-- `docs/case-studies/failure-mode-runtime-mismatch.md`
+- `docs/examples/README.md`
+- `docs/reporting.md`

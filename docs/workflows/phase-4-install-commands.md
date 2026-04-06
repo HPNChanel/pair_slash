@@ -135,6 +135,6 @@ Doctor verdict meanings and common remediations live in
 ## Related references
 
 - Install guide: `docs/workflows/install-guide.md`
-- Release gate: `docs/releases/release-checklist-0.4.0.md`
+- Release verdict: `docs/releases/scoped-release-verdict.md`
 - Runtime lane evidence: `docs/runtime-mapping/pilot-acceptance.md`
 - Live lane records: `docs/evidence/live-runtime/README.md`

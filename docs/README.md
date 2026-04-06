@@ -1,0 +1,24 @@
+# PairSlash Docs
+
+This directory is the public documentation surface for PairSlash.
+
+Start here:
+
+- [Onboarding path](phase-9/onboarding-path.md)
+- [Install guide](workflows/install-guide.md)
+- [Compatibility matrix](compatibility/compatibility-matrix.md)
+- [Reporting guide](reporting.md)
+
+Canonical public truth:
+
+- [Authoritative program charter](phase-12/authoritative-program-charter.md)
+- [Product-validation verdict](validation/phase-3-5/verdict.md)
+- [Public claim policy](releases/public-claim-policy.md)
+- [Legal and packaging status](releases/legal-packaging-status.md)
+
+Reference docs:
+
+- [Runtime mapping](runtime-mapping/README.md)
+- [Live runtime evidence](evidence/live-runtime/README.md)
+- [Examples](examples/README.md)
+- [Architecture](architecture/repo-structure.md)

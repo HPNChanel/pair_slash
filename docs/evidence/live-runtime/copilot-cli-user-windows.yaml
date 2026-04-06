@@ -1,5 +1,6 @@
 kind: live-runtime-lane-record
 schema_version: 1.0.0
+registry_schema_ref: docs/evidence/live-runtime/schema.live-runtime-lane-record.yaml
 lane_id: copilot-cli-user-windows
 runtime_id: copilot_cli
 runtime: GitHub Copilot CLI
@@ -11,8 +12,20 @@ current_public_support_level: prep
 required_evidence_class: live_verification
 best_live_evidence_class: live_smoke
 freshness_state: fresh
+stale_after_days: 7
+expire_after_days: 14
 last_verified_at: "2026-04-05T12:28:23.177Z"
 host_profile_count: 1
+pack_scope:
+  - pairslash-plan
+workflow_scope:
+  - pairslash-plan
+capability_scope:
+  - canonical_picker
+  - gh_availability
+  - doctor
+  - preview_install
+  - install_apply
 caveat_summary: A real Windows host probe was captured, but gh was unavailable locally and no canonical /skills or install proof exists.
 surface_verdicts:
   canonical_picker: unrecorded
@@ -41,12 +54,29 @@ live_records:
     evidence_class: live_smoke
     captured_at: "2026-04-05T12:28:23.177Z"
     freshness_state: fresh
+    stale_at: "2026-04-12T12:28:23.177Z"
+    expire_at: "2026-04-19T12:28:23.177Z"
     owner_id: runtime-truth
+    runtime_id: copilot_cli
+    target: user
+    os_lane: Windows
     host_profile_id: copilot-cli.user.windows.cmd
+    pack_scope:
+      - pairslash-plan
+    workflow_scope:
+      - pairslash-plan
+    capability_scope:
+      - doctor
+      - gh_availability
+      - runtime_available
+    entrypoint_path_used: /skills
+    command: npm run pairslash -- doctor --runtime copilot --target user --format json
     runtime_version: null
     shell_family: cmd
     verdict: partial
     summary: pairslash doctor recorded the Windows user lane on a real host, but gh was unavailable and install remained blocked.
+    artifact_paths:
+      - docs/evidence/live-runtime/copilot-cli-user-windows.md
     command_capture_refs:
       - docs/evidence/live-runtime/copilot-cli-user-windows.md
 negative_live_records:
@@ -54,17 +84,51 @@ negative_live_records:
     failure_type: runtime_unavailable
     captured_at: "2026-04-05T12:28:23.177Z"
     freshness_state: fresh
+    stale_at: "2026-04-12T12:28:23.177Z"
+    expire_at: "2026-04-19T12:28:23.177Z"
     owner_id: runtime-truth
+    runtime_id: copilot_cli
+    target: user
+    os_lane: Windows
     host_profile_id: copilot-cli.user.windows.cmd
+    pack_scope:
+      - pairslash-plan
+    workflow_scope:
+      - pairslash-plan
+    capability_scope:
+      - gh_availability
+      - runtime_available
+    entrypoint_path_used: /skills
+    command: npm run pairslash -- doctor --runtime copilot --target user --format json
+    verdict: fail
     summary: gh was unavailable on the host, so PairSlash could not verify canonical picker or install behavior.
+    artifact_paths:
+      - docs/evidence/live-runtime/copilot-cli-user-windows.md
     refs:
       - docs/evidence/live-runtime/copilot-cli-user-windows.md
   - evidence_id: copilot-windows-preview-blocked-20260405
     failure_type: preview_fail
     captured_at: "2026-04-05T12:28:38.519Z"
     freshness_state: fresh
+    stale_at: "2026-04-12T12:28:38.519Z"
+    expire_at: "2026-04-19T12:28:38.519Z"
     owner_id: runtime-truth
+    runtime_id: copilot_cli
+    target: user
+    os_lane: Windows
     host_profile_id: copilot-cli.user.windows.cmd
+    pack_scope:
+      - pairslash-plan
+    workflow_scope:
+      - pairslash-plan
+    capability_scope:
+      - preview_install
+      - install_apply
+    entrypoint_path_used: /skills
+    command: npm run pairslash -- preview install pairslash-plan --runtime copilot --target user --format json
+    verdict: fail
     summary: preview install blocked explicitly because gh was unavailable and no silent fallback is allowed.
+    artifact_paths:
+      - docs/evidence/live-runtime/copilot-cli-user-windows.md
     refs:
       - docs/evidence/live-runtime/copilot-cli-user-windows.md

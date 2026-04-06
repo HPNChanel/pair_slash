@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import YAML from "yaml";
 
@@ -19,6 +19,24 @@ function read(relativePath) {
 
 function normalizeWhitespace(value) {
   return String(value ?? "").replace(/\s+/g, " ").trim();
+}
+
+function collectMarkdownFiles(relativeDir) {
+  const rootDir = join(repoRoot, relativeDir);
+  const out = [];
+
+  for (const entry of readdirSync(rootDir, { withFileTypes: true })) {
+    const childRelativePath = join(relativeDir, entry.name);
+    if (entry.isDirectory()) {
+      out.push(...collectMarkdownFiles(childRelativePath));
+      continue;
+    }
+    if (entry.isFile() && entry.name.endsWith(".md")) {
+      out.push(childRelativePath.replaceAll("\\", "/"));
+    }
+  }
+
+  return out;
 }
 
 test("authoritative program charter exists with the required section contract", () => {
@@ -65,15 +83,35 @@ test("official stage sentence is synced into public entry docs", () => {
   }
 });
 
+test("public-facing markdown does not expose docs-private paths", () => {
+  const markdownFiles = [
+    "README.md",
+    "CONTRIBUTING.md",
+    "SECURITY.md",
+    ...collectMarkdownFiles("docs"),
+    ...collectMarkdownFiles("packages"),
+    ...collectMarkdownFiles("packs"),
+  ];
+
+  for (const relativePath of markdownFiles) {
+    const contents = read(relativePath);
+    assert.equal(
+      contents.includes("docs-private/"),
+      false,
+      `${relativePath} should not expose docs-private paths in public-facing markdown`,
+    );
+  }
+});
+
 test("phase 9 active docs point to the charter instead of the baseline reality lock", () => {
   const derivativeFiles = [
     "docs/phase-9/README.md",
     "docs/phase-9/onboarding-path.md",
-    "docs/phase-9/maintainer-playbook.md",
-    "docs/phase-9/issue-taxonomy.md",
-    "docs/phase-9/contributor-model.md",
-    "docs/phase-9/examples-and-benchmarks.md",
-    "docs/phase-9/oss-positioning.md",
+    "docs-private/phase-9/maintainer-playbook.md",
+    "docs-private/phase-9/issue-taxonomy.md",
+    "docs-private/phase-9/contributor-model.md",
+    "docs-private/phase-9/examples-and-benchmarks.md",
+    "docs-private/phase-9/oss-positioning.md",
   ];
 
   for (const relativePath of derivativeFiles) {
@@ -128,13 +166,25 @@ test("compatibility matrix distinguishes implementation, deterministic, live, an
     assert.ok(contents.includes(term), `${matrixPath} should explain ${term}`);
   }
   assert.ok(
-    contents.includes("`fake/shim evidence`"),
-    `${matrixPath} should explain fake/shim evidence separately from live proof`,
+    contents.includes("`fake acceptance evidence`"),
+    `${matrixPath} should explain fake acceptance evidence separately from live proof`,
+  );
+  assert.ok(
+    contents.includes("`shim acceptance evidence`"),
+    `${matrixPath} should explain shim acceptance evidence separately from live proof`,
   );
 
   assert.ok(
     contents.includes("do not change repository licensing"),
     `${matrixPath} should keep legal/package truth separate from support truth`,
+  );
+  assert.ok(
+    contents.includes("Manual live-run steps required"),
+    `${matrixPath} should render manual live verification guardrails`,
+  );
+  assert.ok(
+    contents.includes("Windows promotion gate requires"),
+    `${matrixPath} should render Windows promotion guardrails`,
   );
 });
 
@@ -151,6 +201,7 @@ test("live runtime evidence index and lane records stay committed", () => {
     "codex-cli-repo-windows.yaml",
     "copilot-cli-user-windows.md",
     "copilot-cli-user-windows.yaml",
+    "schema.live-runtime-lane-record.yaml",
   ]) {
     assert.ok(contents.includes(laneFile), `${indexPath} should list ${laneFile}`);
     assert.equal(existsSync(join(repoRoot, "docs", "evidence", "live-runtime", laneFile)), true);
@@ -194,7 +245,7 @@ test("charter system record points to the markdown charter and verdict sources",
 });
 
 test("release checklist requires the authoritative charter", () => {
-  const checklistPath = "docs/releases/release-checklist-0.4.0.md";
+  const checklistPath = "docs-private/releases/release-checklist-0.4.0.md";
   const contents = read(checklistPath);
 
   assert.ok(contents.includes(CHARTER_PATH), `${checklistPath} should require the authoritative charter`);
@@ -221,10 +272,10 @@ test("legal and packaging status is wired into current truth roots", () => {
     "docs/releases/public-claim-policy.md should point to the legal/package boundary",
   );
 
-  const releaseChecklist = read("docs/releases/release-checklist-0.4.0.md");
+  const releaseChecklist = read("docs-private/releases/release-checklist-0.4.0.md");
   assert.ok(
     releaseChecklist.includes(LEGAL_PACKAGING_STATUS_PATH),
-    "docs/releases/release-checklist-0.4.0.md should require the legal/package boundary doc",
+    "docs-private/releases/release-checklist-0.4.0.md should require the legal/package boundary doc",
   );
 
   const record = YAML.parse(read(".pairslash/project-memory/00-project-charter.yaml"));
@@ -309,14 +360,14 @@ test("contributor-facing docs distinguish source licensing from package publicat
   assert.ok(contents.includes("Apache-2.0"), "CONTRIBUTING.md should record the repository source license");
   assert.ok(contents.includes("remain `private`"), "CONTRIBUTING.md should keep package publication bounded");
 
-  const contributorModel = read("docs/phase-9/contributor-model.md");
+  const contributorModel = read("docs-private/phase-9/contributor-model.md");
   assert.ok(
     contributorModel.includes("Apache-2.0"),
-    "docs/phase-9/contributor-model.md should record the repository source license",
+    "docs-private/phase-9/contributor-model.md should record the repository source license",
   );
   assert.ok(
     contributorModel.includes(LEGAL_PACKAGING_STATUS_PATH),
-    "docs/phase-9/contributor-model.md should point to the legal/package boundary",
+    "docs-private/phase-9/contributor-model.md should point to the legal/package boundary",
   );
 });
 
@@ -326,6 +377,33 @@ test("compatibility, support, and issue triage docs keep legal/package truth sep
     verificationContents.includes("does not publish any `@pairslash/*` package"),
     "docs/compatibility/runtime-verification.md should keep package publication separate from support verification",
   );
+  for (const heading of [
+    "## A. Live Verification Philosophy",
+    "## B. Runbook - Codex CLI",
+    "## C. Runbook - GitHub Copilot CLI",
+    "## D. Artifact Checklist",
+    "## E. Verdict Assignment Rules",
+    "## F. Recertification Cadence",
+    "## G. Windows/Copilot Promotion Gate",
+    "## H. Failure And Rollback Communication Template",
+  ]) {
+    assert.ok(
+      verificationContents.includes(heading),
+      `docs/compatibility/runtime-verification.md should include ${heading}`,
+    );
+  }
+  assert.ok(
+    verificationContents.includes("Do not substitute compat-lab, fake runtimes, shim acceptance, or `codex exec`"),
+    "docs/compatibility/runtime-verification.md should keep fake and non-interactive substitutions explicit",
+  );
+  assert.ok(
+    verificationContents.includes("Copilot prompt-mode direct invocation remains blocked"),
+    "docs/compatibility/runtime-verification.md should keep the Copilot direct invocation block explicit",
+  );
+  assert.ok(
+    verificationContents.includes("Windows stays `prep` until a real Windows host records install apply"),
+    "docs/compatibility/runtime-verification.md should keep Windows promotion gates explicit",
+  );
 
   const doctorContents = read("docs/workflows/phase-4-doctor-troubleshooting.md");
   assert.ok(
@@ -333,16 +411,16 @@ test("compatibility, support, and issue triage docs keep legal/package truth sep
     "docs/workflows/phase-4-doctor-troubleshooting.md should keep package publicness separate from doctor verdicts",
   );
 
-  const supportOpsContents = read("docs/support/phase-7-support-ops.md");
+  const supportOpsContents = read("docs-private/support/phase-7-support-ops.md");
   assert.ok(
     normalizeWhitespace(supportOpsContents).includes("do not change repository licensing"),
-    "docs/support/phase-7-support-ops.md should keep legal/package truth separate from support artifacts",
+    "docs-private/support/phase-7-support-ops.md should keep legal/package truth separate from support artifacts",
   );
 
   for (const relativePath of [
-    "docs/support/triage-playbook.md",
-    "docs/phase-9/issue-taxonomy.md",
-    "docs/phase-9/maintainer-playbook.md",
+    "docs-private/support/triage-playbook.md",
+    "docs-private/phase-9/issue-taxonomy.md",
+    "docs-private/phase-9/maintainer-playbook.md",
   ]) {
     const contents = read(relativePath);
     assert.ok(
@@ -373,22 +451,22 @@ test("phase 9 public narrative docs keep repo source licensing separate from pac
     "docs/phase-9/onboarding-path.md should keep package publication bounded",
   );
 
-  const positioningContents = read("docs/phase-9/oss-positioning.md");
+  const positioningContents = read("docs-private/phase-9/oss-positioning.md");
   assert.ok(
     positioningContents.includes("current supported install path remains repo-local and non-published"),
-    "docs/phase-9/oss-positioning.md should keep source licensing separate from package publication",
+    "docs-private/phase-9/oss-positioning.md should keep source licensing separate from package publication",
   );
 
-  const messagingContents = read("docs/validation/phase-3-5/messaging-narrative.md");
+  const messagingContents = read("docs-private/validation/phase-3-5/messaging-narrative.md");
   assert.ok(
     messagingContents.includes("PairSlash is already a published npm package."),
-    "docs/validation/phase-3-5/messaging-narrative.md should block published-package overclaim wording",
+    "docs-private/validation/phase-3-5/messaging-narrative.md should block published-package overclaim wording",
   );
 });
 
 test("legacy planning and benchmark docs stay derivative instead of owning current truth", () => {
-  const positioningPath = "docs/phase-9/oss-positioning.md";
-  const benchmarkTasksPath = "docs/validation/phase-3-5/benchmark-tasks.md";
+  const positioningPath = "docs-private/phase-9/oss-positioning.md";
+  const benchmarkTasksPath = "docs-private/validation/phase-3-5/benchmark-tasks.md";
 
   const positioningContents = read(positioningPath);
   assert.equal(
@@ -437,7 +515,7 @@ test("resolved repo license does not flatten current truth roots into public pac
     "docs/phase-9/README.md",
     "docs/phase-9/onboarding-path.md",
     "docs/compatibility/compatibility-matrix.md",
-    "docs/support/triage-playbook.md",
+    "docs-private/support/triage-playbook.md",
     ".pairslash/project-memory/00-project-charter.yaml",
   ]) {
     const contents = read(relativePath);

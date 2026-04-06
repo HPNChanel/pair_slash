@@ -4,7 +4,7 @@
 
 - Existing source-pack users: no install-path change required
 - Tooling integrators that want formalized pack metadata: update discovery logic
-- Release operators: use `docs/releases/release-checklist-0.2.0.md`
+- Release boundary: use `docs/releases/scoped-release-verdict.md`
 
 ## What changed
 

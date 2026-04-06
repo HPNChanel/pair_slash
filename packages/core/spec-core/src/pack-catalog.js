@@ -15,6 +15,7 @@ const SHARED_RUNTIME_SURFACE_MATRIX = "docs/compatibility/runtime-surface-matrix
 const LIVE_RUNTIME_EVIDENCE_ROOT = "docs/evidence/live-runtime";
 const LIVE_RUNTIME_LANE_RECORD_KIND = "live-runtime-lane-record";
 const LIVE_RUNTIME_LANE_RECORD_SCHEMA_VERSION = "1.0.0";
+const LIVE_RUNTIME_LANE_RECORD_SCHEMA_REF = `${LIVE_RUNTIME_EVIDENCE_ROOT}/schema.live-runtime-lane-record.yaml`;
 const ALLOWED_PUBLIC_SUPPORT_LEVELS = new Set(["stable-tested", "preview", "degraded", "prep", "blocked"]);
 const ALLOWED_LIVE_EVIDENCE_CLASSES = new Set([
   "deterministic_test",
@@ -25,6 +26,7 @@ const ALLOWED_LIVE_EVIDENCE_CLASSES = new Set([
   "repeated_live_verification",
 ]);
 const ALLOWED_FRESHNESS_STATES = new Set(["none-recorded", "fresh", "stale", "expired"]);
+const ALLOWED_EVIDENCE_VERDICTS = new Set(["pass", "partial", "fail", "blocked", "unrecorded"]);
 
 export const DEFAULT_PUBLIC_SUPPORT_POLICY = Object.freeze({
   blocked:
@@ -69,12 +71,10 @@ export const DEFAULT_PUBLIC_COMPATIBILITY_LANES = Object.freeze([
       "packages/tools/compat-lab/tests/acceptance.test.js",
       "packages/tools/compat-lab/tests/matrix.test.js",
     ],
-    shim_evidence_refs: [
-      "packages/tools/compat-lab/src/runtime-fixtures.js",
-      "packages/tools/compat-lab/src/acceptance.js",
-    ],
+    fake_evidence_refs: ["packages/tools/compat-lab/src/acceptance.js"],
+    shim_evidence_refs: ["packages/tools/compat-lab/src/runtime-fixtures.js"],
     live_evidence_refs: [
-      "docs/compatibility/phase-0-acceptance.md",
+      "docs-private/compatibility/phase-0-acceptance.md",
       ".pairslash/project-memory/60-architecture-decisions/phase-0-codex-cli-verification-on-v0-116-0.yaml",
     ],
     negative_evidence_refs: [
@@ -122,10 +122,8 @@ export const DEFAULT_PUBLIC_COMPATIBILITY_LANES = Object.freeze([
       "packages/tools/compat-lab/tests/acceptance.test.js",
       "packages/tools/compat-lab/tests/matrix.test.js",
     ],
-    shim_evidence_refs: [
-      "packages/tools/compat-lab/src/runtime-fixtures.js",
-      "packages/tools/compat-lab/src/acceptance.js",
-    ],
+    fake_evidence_refs: ["packages/tools/compat-lab/src/acceptance.js"],
+    shim_evidence_refs: ["packages/tools/compat-lab/src/runtime-fixtures.js"],
     live_evidence_refs: [],
     negative_evidence_refs: [],
     claim_guard_refs: [
@@ -170,10 +168,8 @@ export const DEFAULT_PUBLIC_COMPATIBILITY_LANES = Object.freeze([
       "packages/tools/compat-lab/tests/acceptance.test.js",
       "packages/tools/compat-lab/tests/matrix.test.js",
     ],
-    shim_evidence_refs: [
-      "packages/tools/compat-lab/src/runtime-fixtures.js",
-      "packages/tools/compat-lab/src/acceptance.js",
-    ],
+    fake_evidence_refs: ["packages/tools/compat-lab/src/acceptance.js"],
+    shim_evidence_refs: ["packages/tools/compat-lab/src/runtime-fixtures.js"],
     live_evidence_refs: [`${LIVE_RUNTIME_EVIDENCE_ROOT}/codex-cli-repo-windows.md`],
     negative_evidence_refs: [],
     claim_guard_refs: [
@@ -218,10 +214,8 @@ export const DEFAULT_PUBLIC_COMPATIBILITY_LANES = Object.freeze([
       "packages/tools/compat-lab/tests/acceptance.test.js",
       "packages/tools/compat-lab/tests/matrix.test.js",
     ],
-    shim_evidence_refs: [
-      "packages/tools/compat-lab/src/runtime-fixtures.js",
-      "packages/tools/compat-lab/src/acceptance.js",
-    ],
+    fake_evidence_refs: ["packages/tools/compat-lab/src/acceptance.js"],
+    shim_evidence_refs: ["packages/tools/compat-lab/src/runtime-fixtures.js"],
     live_evidence_refs: [`${LIVE_RUNTIME_EVIDENCE_ROOT}/copilot-cli-user-windows.md`],
     negative_evidence_refs: [`${LIVE_RUNTIME_EVIDENCE_ROOT}/copilot-cli-user-windows.md`],
     claim_guard_refs: [
@@ -403,25 +397,208 @@ function validateEvidenceRefCollection(repoRoot, value, errorKey) {
   }
 }
 
-function validateLiveLaneRecordCollection(repoRoot, value, errorKey) {
+function validateRequiredEvidenceRefCollection(repoRoot, value, errorKey) {
+  if (!Array.isArray(value) || value.length === 0) {
+    throw new Error(`public-support-snapshot-invalid:${errorKey}`);
+  }
+  validateEvidenceRefCollection(repoRoot, value, errorKey);
+}
+
+function normalizeEvidenceRefCollectionForCompare(value) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value
+    .filter((entry) => typeof entry === "string" && entry.trim() !== "")
+    .map((entry) => entry.trim())
+    .sort((left, right) => left.localeCompare(right));
+}
+
+function validateEvidenceRefCollectionsMatch(laneRefs, recordRefs, errorKey) {
+  const left = normalizeEvidenceRefCollectionForCompare(laneRefs);
+  const right = normalizeEvidenceRefCollectionForCompare(recordRefs);
+  if (stableYaml(left) !== stableYaml(right)) {
+    throw new Error(`public-support-snapshot-invalid:${errorKey}`);
+  }
+}
+
+function validateStringArray(value, errorKey) {
+  if (!Array.isArray(value) || value.length === 0) {
+    throw new Error(`public-support-snapshot-invalid:${errorKey}`);
+  }
+  for (const entry of value) {
+    if (typeof entry !== "string" || entry.trim() === "") {
+      throw new Error(`public-support-snapshot-invalid:${errorKey}`);
+    }
+  }
+}
+
+function validateIsoTimestamp(value, errorKey) {
+  if (typeof value !== "string" || value.trim() === "") {
+    throw new Error(`public-support-snapshot-invalid:${errorKey}`);
+  }
+  if (Number.isNaN(Date.parse(value))) {
+    throw new Error(`public-support-snapshot-invalid:${errorKey}`);
+  }
+}
+
+function validateRunbookPolicy(value, errorKey) {
+  if (!isObject(value)) {
+    throw new Error(`public-support-snapshot-invalid:${errorKey}`);
+  }
+  validateStringArray(value.smoke_boundary?.counts_as, `${errorKey}.smoke_boundary.counts_as`);
+  validateStringArray(
+    value.smoke_boundary?.never_sufficient_for,
+    `${errorKey}.smoke_boundary.never_sufficient_for`,
+  );
+  validateStringArray(
+    value.live_verification_boundary?.required_for_public_lane_claim,
+    `${errorKey}.live_verification_boundary.required_for_public_lane_claim`,
+  );
+  validateStringArray(
+    value.live_verification_boundary?.repeated_live_verification_requires,
+    `${errorKey}.live_verification_boundary.repeated_live_verification_requires`,
+  );
+  validateStringArray(
+    value.manual_vs_scripted_boundary?.scripted_steps_allowed,
+    `${errorKey}.manual_vs_scripted_boundary.scripted_steps_allowed`,
+  );
+  validateStringArray(
+    value.manual_vs_scripted_boundary?.manual_steps_required,
+    `${errorKey}.manual_vs_scripted_boundary.manual_steps_required`,
+  );
+  validateStringArray(
+    value.manual_vs_scripted_boundary?.forbidden_substitutions,
+    `${errorKey}.manual_vs_scripted_boundary.forbidden_substitutions`,
+  );
+  validateStringArray(value.host_profile_required_fields, `${errorKey}.host_profile_required_fields`);
+  validateStringArray(
+    value.command_capture_requirements?.required_artifacts,
+    `${errorKey}.command_capture_requirements.required_artifacts`,
+  );
+  if (!isObject(value.runtime_runbooks)) {
+    throw new Error(`public-support-snapshot-invalid:${errorKey}.runtime_runbooks`);
+  }
+  for (const runtimeId of ["codex_cli", "copilot_cli"]) {
+    const runbook = value.runtime_runbooks[runtimeId];
+    if (!isObject(runbook)) {
+      throw new Error(`public-support-snapshot-invalid:${errorKey}.runtime_runbooks.${runtimeId}`);
+    }
+    if (typeof runbook.default_target !== "string" || runbook.default_target.trim() === "") {
+      throw new Error(`public-support-snapshot-invalid:${errorKey}.runtime_runbooks.${runtimeId}.default_target`);
+    }
+    validateStringArray(
+      runbook.required_tool_presence,
+      `${errorKey}.runtime_runbooks.${runtimeId}.required_tool_presence`,
+    );
+    validateStringArray(
+      runbook.required_commands,
+      `${errorKey}.runtime_runbooks.${runtimeId}.required_commands`,
+    );
+    validateStringArray(
+      runbook.minimum_capabilities_for_preview_lane,
+      `${errorKey}.runtime_runbooks.${runtimeId}.minimum_capabilities_for_preview_lane`,
+    );
+    if (!isObject(runbook.direct_invocation)) {
+      throw new Error(`public-support-snapshot-invalid:${errorKey}.runtime_runbooks.${runtimeId}.direct_invocation`);
+    }
+    if (
+      typeof runbook.direct_invocation.public_claim !== "string" ||
+      runbook.direct_invocation.public_claim.trim() === ""
+    ) {
+      throw new Error(
+        `public-support-snapshot-invalid:${errorKey}.runtime_runbooks.${runtimeId}.direct_invocation.public_claim`,
+      );
+    }
+    if (typeof runbook.direct_invocation.promotion_requires_canonical_picker !== "boolean") {
+      throw new Error(
+        `public-support-snapshot-invalid:${errorKey}.runtime_runbooks.${runtimeId}.direct_invocation.promotion_requires_canonical_picker`,
+      );
+    }
+    if (
+      runtimeId === "codex_cli" &&
+      runbook.direct_invocation.codex_exec_max_evidence_class !== "live_smoke"
+    ) {
+      throw new Error(
+        `public-support-snapshot-invalid:${errorKey}.runtime_runbooks.${runtimeId}.direct_invocation.codex_exec_max_evidence_class`,
+      );
+    }
+  }
+  validateStringArray(value.windows_promotion_gate?.requires, `${errorKey}.windows_promotion_gate.requires`);
+  if (value.windows_promotion_gate?.doctor_and_preview_never_enough !== true) {
+    throw new Error(`public-support-snapshot-invalid:${errorKey}.windows_promotion_gate.doctor_and_preview_never_enough`);
+  }
+}
+
+function validateLiveLaneRecordCollection(repoRoot, value, errorKey, lane = null) {
   if (!Array.isArray(value)) {
     throw new Error(`public-support-snapshot-invalid:${errorKey}`);
   }
+  const isNegativeCollection = errorKey.endsWith("negative_live_records");
   for (const [index, record] of value.entries()) {
     if (!isObject(record)) {
       throw new Error(`public-support-snapshot-invalid:${errorKey}[${index}]`);
     }
-    for (const field of ["evidence_id", "captured_at", "owner_id", "host_profile_id", "summary"]) {
+    for (const field of [
+      "evidence_id",
+      "captured_at",
+      "owner_id",
+      "host_profile_id",
+      "runtime_id",
+      "target",
+      "os_lane",
+      "entrypoint_path_used",
+      "command",
+      "summary",
+      "verdict",
+      "stale_at",
+      "expire_at",
+    ]) {
       if (typeof record[field] !== "string" || record[field].trim() === "") {
         throw new Error(`public-support-snapshot-invalid:${errorKey}[${index}].${field}`);
       }
     }
+    if (lane) {
+      if (record.runtime_id !== lane.runtime_id) {
+        throw new Error(`public-support-snapshot-invalid:${errorKey}[${index}].runtime_id`);
+      }
+      if (record.target !== lane.target) {
+        throw new Error(`public-support-snapshot-invalid:${errorKey}[${index}].target`);
+      }
+      if (record.os_lane !== lane.os_lane) {
+        throw new Error(`public-support-snapshot-invalid:${errorKey}[${index}].os_lane`);
+      }
+      if (
+        ["preview", "stable-tested"].includes(lane.support_level) &&
+        record.entrypoint_path_used !== lane.canonical_entrypoint
+      ) {
+        throw new Error(`public-support-snapshot-invalid:${errorKey}[${index}].entrypoint_path_used`);
+      }
+    }
+    validateIsoTimestamp(record.captured_at, `${errorKey}[${index}].captured_at`);
+    validateIsoTimestamp(record.stale_at, `${errorKey}[${index}].stale_at`);
+    validateIsoTimestamp(record.expire_at, `${errorKey}[${index}].expire_at`);
+    if (Date.parse(record.stale_at) > Date.parse(record.expire_at)) {
+      throw new Error(`public-support-snapshot-invalid:${errorKey}[${index}].stale_expiry_order`);
+    }
+    validateStringArray(record.pack_scope, `${errorKey}[${index}].pack_scope`);
+    validateStringArray(record.workflow_scope, `${errorKey}[${index}].workflow_scope`);
+    validateStringArray(record.capability_scope, `${errorKey}[${index}].capability_scope`);
+    validateEvidenceRefCollection(repoRoot, record.artifact_paths, `${errorKey}[${index}].artifact_paths`);
     const evidenceClassField = "evidence_class" in record ? "evidence_class" : null;
     if (evidenceClassField && !ALLOWED_LIVE_EVIDENCE_CLASSES.has(record.evidence_class)) {
       throw new Error(`public-support-snapshot-invalid:${errorKey}[${index}].evidence_class`);
     }
+    if (!ALLOWED_EVIDENCE_VERDICTS.has(record.verdict)) {
+      throw new Error(`public-support-snapshot-invalid:${errorKey}[${index}].verdict`);
+    }
     if (!ALLOWED_FRESHNESS_STATES.has(record.freshness_state)) {
       throw new Error(`public-support-snapshot-invalid:${errorKey}[${index}].freshness_state`);
+    }
+    if (isNegativeCollection) {
+      if (typeof record.failure_type !== "string" || record.failure_type.trim() === "") {
+        throw new Error(`public-support-snapshot-invalid:${errorKey}[${index}].failure_type`);
+      }
     }
     if ("command_capture_refs" in record) {
       validateEvidenceRefCollection(repoRoot, record.command_capture_refs, `${errorKey}[${index}].command_capture_refs`);
@@ -448,6 +625,14 @@ function validateLiveRuntimeLaneRecord(repoRoot, lane, index) {
   if (record.schema_version !== LIVE_RUNTIME_LANE_RECORD_SCHEMA_VERSION) {
     throw new Error(`public-support-snapshot-invalid:runtime_lanes[${index}].evidence_record.schema_version`);
   }
+  if (record.registry_schema_ref !== LIVE_RUNTIME_LANE_RECORD_SCHEMA_REF) {
+    throw new Error(`public-support-snapshot-invalid:runtime_lanes[${index}].evidence_record.registry_schema_ref`);
+  }
+  validateEvidenceRefExists(
+    repoRoot,
+    record.registry_schema_ref,
+    `runtime_lanes[${index}].evidence_record.registry_schema_ref`,
+  );
   const expectedLaneId = lane?.lane_id;
   if (typeof expectedLaneId !== "string" || expectedLaneId.trim() === "") {
     throw new Error(`public-support-snapshot-invalid:runtime_lanes[${index}].lane_id`);
@@ -509,6 +694,15 @@ function validateLiveRuntimeLaneRecord(repoRoot, lane, index) {
   if (typeof record.caveat_summary !== "string" || record.caveat_summary.trim() === "") {
     throw new Error(`public-support-snapshot-invalid:runtime_lanes[${index}].evidence_record.caveat_summary`);
   }
+  validateStringArray(record.pack_scope, `runtime_lanes[${index}].evidence_record.pack_scope`);
+  validateStringArray(record.workflow_scope, `runtime_lanes[${index}].evidence_record.workflow_scope`);
+  validateStringArray(record.capability_scope, `runtime_lanes[${index}].evidence_record.capability_scope`);
+  if (!Number.isInteger(record.stale_after_days) || record.stale_after_days < 0) {
+    throw new Error(`public-support-snapshot-invalid:runtime_lanes[${index}].evidence_record.stale_after_days`);
+  }
+  if (!Number.isInteger(record.expire_after_days) || record.expire_after_days < record.stale_after_days) {
+    throw new Error(`public-support-snapshot-invalid:runtime_lanes[${index}].evidence_record.expire_after_days`);
+  }
   validateEvidenceRefCollection(
     repoRoot,
     record.deterministic_evidence_refs,
@@ -539,11 +733,47 @@ function validateLiveRuntimeLaneRecord(repoRoot, lane, index) {
     record.claim_guard_refs,
     `runtime_lanes[${index}].evidence_record.claim_guard_refs`,
   );
-  validateLiveLaneRecordCollection(repoRoot, record.live_records ?? [], `runtime_lanes[${index}].evidence_record.live_records`);
+  validateEvidenceRefCollectionsMatch(
+    lane.deterministic_evidence_refs,
+    record.deterministic_evidence_refs,
+    `runtime_lanes[${index}].deterministic_evidence_refs`,
+  );
+  validateEvidenceRefCollectionsMatch(
+    lane.fake_evidence_refs,
+    record.fake_acceptance_evidence_refs,
+    `runtime_lanes[${index}].fake_evidence_refs`,
+  );
+  validateEvidenceRefCollectionsMatch(
+    lane.shim_evidence_refs,
+    record.shim_acceptance_evidence_refs,
+    `runtime_lanes[${index}].shim_evidence_refs`,
+  );
+  validateEvidenceRefCollectionsMatch(
+    lane.live_evidence_refs,
+    record.live_evidence_refs,
+    `runtime_lanes[${index}].live_evidence_refs`,
+  );
+  validateEvidenceRefCollectionsMatch(
+    lane.negative_evidence_refs,
+    record.negative_evidence_refs,
+    `runtime_lanes[${index}].negative_evidence_refs`,
+  );
+  validateEvidenceRefCollectionsMatch(
+    lane.claim_guard_refs,
+    record.claim_guard_refs,
+    `runtime_lanes[${index}].claim_guard_refs`,
+  );
+  validateLiveLaneRecordCollection(
+    repoRoot,
+    record.live_records ?? [],
+    `runtime_lanes[${index}].evidence_record.live_records`,
+    lane,
+  );
   validateLiveLaneRecordCollection(
     repoRoot,
     record.negative_live_records ?? [],
     `runtime_lanes[${index}].evidence_record.negative_live_records`,
+    lane,
   );
   if (
     lane.support_level === "stable-tested" &&
@@ -929,6 +1159,15 @@ export function loadPublicSupportSnapshot(repoRoot = null, { version = null } = 
   if (parsed.evidence_policy.canonical_entrypoint !== "/skills") {
     throw new Error(`public-support-snapshot-invalid:evidence_policy.canonical_entrypoint`);
   }
+  if (parsed.evidence_policy.registry_schema_ref !== LIVE_RUNTIME_LANE_RECORD_SCHEMA_REF) {
+    throw new Error(`public-support-snapshot-invalid:evidence_policy.registry_schema_ref`);
+  }
+  validateEvidenceRefExists(
+    repoRoot,
+    parsed.evidence_policy.registry_schema_ref,
+    "evidence_policy.registry_schema_ref",
+  );
+  validateRunbookPolicy(parsed.evidence_policy.runbook_policy, "evidence_policy.runbook_policy");
   if (!parsed.support_policy || typeof parsed.support_policy !== "object") {
     throw new Error(`public-support-snapshot-invalid:support_policy`);
   }
@@ -949,12 +1188,17 @@ export function loadPublicSupportSnapshot(repoRoot = null, { version = null } = 
     for (const evidenceSource of evidenceSources) {
       validateEvidenceRefExists(repoRoot, evidenceSource, `runtime_lanes[${index}].evidence_source`);
     }
-    validateEvidenceRefCollection(
+    validateRequiredEvidenceRefCollection(
       repoRoot,
       lane?.deterministic_evidence_refs,
       `runtime_lanes[${index}].deterministic_evidence_refs`,
     );
-    validateEvidenceRefCollection(
+    validateRequiredEvidenceRefCollection(
+      repoRoot,
+      lane?.fake_evidence_refs,
+      `runtime_lanes[${index}].fake_evidence_refs`,
+    );
+    validateRequiredEvidenceRefCollection(
       repoRoot,
       lane?.shim_evidence_refs,
       `runtime_lanes[${index}].shim_evidence_refs`,

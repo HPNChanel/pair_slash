@@ -10,7 +10,7 @@ This sample demonstrates strict extraction behavior with deterministic sections.
 - evidence_sources:
   - .pairslash/project-memory/90-memory-index.yaml
   - .pairslash/audit-log/
-  - docs/compatibility/acceptance-gates.yaml
+  - maintainer-local compatibility acceptance gates
 - candidate_count_estimate: 3
 - risk_notes:
   - Session artifacts are sparse; confidence may be capped at medium.

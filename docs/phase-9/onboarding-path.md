@@ -1,42 +1,31 @@
 ---
 title: Start Here Onboarding Path
 phase: 9
-status: active-draft
-owner_file: docs/phase-9/onboarding-path.md
+status: active-public-surface
 truth_source: docs/phase-12/authoritative-program-charter.md
 ---
 
 # Start Here Onboarding Path
 
-This page is the public first-run flow for PairSlash.
-It answers three questions fast: why install, where to start, and what to do when it fails.
+PairSlash is currently at Phase 3.5 business validation on top of a technically
+shipped Phase 4 installability substrate with additional Phase 5/6 hardening in
+the repo. Source of truth:
+[authoritative-program-charter.md](../phase-12/authoritative-program-charter.md).
 
-Official stage statement: PairSlash is currently at Phase 3.5 business
-validation on top of a technically shipped Phase 4 installability substrate
-with additional Phase 5/6 hardening in the repo. Source of truth:
-[../phase-12/authoritative-program-charter.md](../phase-12/authoritative-program-charter.md).
-
-This page covers the first public success path for the technically shipped
-installability substrate.
-It does not widen runtime support beyond the compatibility matrix or
-product-validation beyond the current Phase 3.5 verdict.
-The PairSlash source repository is licensed under Apache-2.0.
-The supported install path remains repo-local from this checkout;
-package-manager publication is not claimed today and is tracked in
-[Legal and Packaging Status](../releases/legal-packaging-status.md).
+This page covers the public first-run path only.
+It does not widen runtime support beyond the compatibility matrix or imply
+package-manager publication; package-manager publication is not claimed today.
 
 ## Runtime scope
 
 PairSlash supports exactly two runtimes:
 
-- Codex CLI (`--runtime codex`, recommended target `repo`)
-- GitHub Copilot CLI (`--runtime copilot`, recommended target `user`)
+- Codex CLI
+- GitHub Copilot CLI
 
 `/skills` is the canonical front door on both runtimes.
 
 ## First 90 seconds
-
-Use this exact path first:
 
 ```bash
 npm install
@@ -45,12 +34,7 @@ npm run pairslash -- preview install pairslash-plan --runtime codex --target rep
 npm run pairslash -- install pairslash-plan --runtime codex --target repo --apply --yes
 ```
 
-If you are on the Copilot lane, switch runtime and target:
-
-Keep the current lane label explicit: GitHub Copilot CLI `user` on Linux is
-currently `prep`, not parity with the Codex macOS lane. Use
-`docs/evidence/live-runtime/copilot-cli-user-linux.md` before widening support
-wording.
+For Copilot:
 
 ```bash
 npm run pairslash -- doctor --runtime copilot --target user
@@ -58,83 +42,32 @@ npm run pairslash -- preview install pairslash-plan --runtime copilot --target u
 npm run pairslash -- install pairslash-plan --runtime copilot --target user --apply --yes
 ```
 
-## First successful workflow experience
+Keep the current lane label explicit.
+Public support remains lane-specific; use the
+[compatibility matrix](../compatibility/compatibility-matrix.md) and
+[live runtime evidence](../evidence/live-runtime/README.md) before widening any
+support wording.
+Expect the current lane label to stay exact, including `publicly supported`,
+`degraded`, and `prep`.
 
-After install:
+## First workflow
 
-1. Start your runtime from repo root.
+1. Start the runtime from repo root.
 2. Run `/skills`.
 3. Select `pairslash-plan`.
 4. Ask: `Create a repo plan from the current repo state.`
 
-This is the current bootstrap success path.
+After first success, `pairslash-onboard-repo` remains the next repo re-entry
+workflow, and it should still be described conservatively when its release
+channel is narrower than `pairslash-plan`.
 
-## Public wedge after first success
+## If it fails
 
-Once `pairslash-plan` succeeds, use this visible adoption order:
+Use the [doctor troubleshooting guide](../workflows/phase-4-doctor-troubleshooting.md)
+first, then follow the [reporting guide](../reporting.md).
 
-1. `pairslash-onboard-repo`
-2. `pairslash-memory-candidate` -> `pairslash-memory-write-global`
-3. `pairslash-review` with explicit fix handoff
+## Boundaries
 
-Do not describe this wedge order as benchmark-proven market validation.
-Keep `pairslash-onboard-repo` and `pairslash-review` labeled as `canary` workflows in public wording.
-
-Advanced optional lanes are documented separately in
-[../phase-11/README.md](../phase-11/README.md).
-They are experimental, opt-in, and not part of this first-run path.
-
-## What `/skills` means in practice
-
-`/skills` is the runtime-native menu where users discover and run PairSlash workflows.
-Public onboarding should always route through `/skills` first, not direct prompt-mode invocation.
-
-## What happens when it fails
-
-Use doctor-first support and capture local evidence before filing:
-
-```bash
-npm run pairslash -- doctor --runtime codex --target repo
-npm run pairslash -- debug --latest --runtime codex --bundle --format text
-npm run pairslash -- trace export --session <session-id> --runtime codex --support-bundle --include-doctor --format text
-```
-
-Then file with:
-
-- Install bug: [../../.github/ISSUE_TEMPLATE/install-bug.md](../../.github/ISSUE_TEMPLATE/install-bug.md)
-- Runtime mismatch: [../../.github/ISSUE_TEMPLATE/runtime-mismatch.md](../../.github/ISSUE_TEMPLATE/runtime-mismatch.md)
-- Workflow bug: [../../.github/ISSUE_TEMPLATE/workflow-bug.md](../../.github/ISSUE_TEMPLATE/workflow-bug.md)
-- Memory bug: [../../.github/ISSUE_TEMPLATE/memory-bug.md](../../.github/ISSUE_TEMPLATE/memory-bug.md)
-- Pack request: [../../.github/ISSUE_TEMPLATE/pack-request.yml](../../.github/ISSUE_TEMPLATE/pack-request.yml)
-- Docs/problem report: [../../.github/ISSUE_TEMPLATE/docs-problem.yml](../../.github/ISSUE_TEMPLATE/docs-problem.yml)
-- If you already captured local artifacts, use: [../../.github/ISSUE_TEMPLATE/pairslash-support-bundle.md](../../.github/ISSUE_TEMPLATE/pairslash-support-bundle.md)
-
-## Current support reality for onboarding copy
-
-Keep onboarding wording aligned to:
-
-- [Authoritative Program Charter](../phase-12/authoritative-program-charter.md)
-- [Compatibility Matrix](../compatibility/compatibility-matrix.md)
-- [Product-Validation Verdict](../validation/phase-3-5/verdict.md)
-- [Scoped Release Verdict](../releases/scoped-release-verdict.md)
-- [Public Claim Policy](../releases/public-claim-policy.md)
-- [Legal and Packaging Status](../releases/legal-packaging-status.md)
-- [Phase 5 Shipped Scope](../releases/phase-5-shipped-scope.md)
-- [Install Guide](../workflows/install-guide.md)
-- [Phase 4 Quickstart](../workflows/phase-4-quickstart.md)
-- [Doctor Troubleshooting](../workflows/phase-4-doctor-troubleshooting.md)
-
-Do not flatten lane states into generic "supported."
-Respect `stable-tested`, `preview`, `degraded`, `prep`, and `blocked` exactly.
-Use the lane records under `docs/evidence/live-runtime/` when support wording
-needs artifact-level backing.
-
-## Proof assets for onboarding claims
-
-Use these when onboarding language needs evidence instead of narrative:
-
-- Examples index: [../examples/README.md](../examples/README.md)
-- Benchmark index: [../benchmarks/README.md](../benchmarks/README.md)
-- Case-study index: [../case-studies/README.md](../case-studies/README.md)
-- Onboarding before/after placeholder: [../case-studies/onboard-repo-before-after.md](../case-studies/onboard-repo-before-after.md)
-- Failure-mode placeholder: [../case-studies/failure-mode-runtime-mismatch.md](../case-studies/failure-mode-runtime-mismatch.md)
+- Legal/package boundary: [legal-packaging-status.md](../releases/legal-packaging-status.md)
+- Product-validation verdict: [verdict.md](../validation/phase-3-5/verdict.md)
+- Public claim policy: [public-claim-policy.md](../releases/public-claim-policy.md)

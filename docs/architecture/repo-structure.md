@@ -16,8 +16,8 @@ PairSlash keeps one logical product surface while using a layered physical works
   runtime/policy/preview/contract fixtures for JS regression coverage
 - `docs/examples/*`
   user-facing starter repos and walkthroughs
-- `docs/archive/research/phase-3.5/*`
-  archived research, benchmark, interview, and synthesis material kept for rationale
+- local-only archived research, benchmark, interview, and synthesis material
+  kept outside the public docs surface
 
 ## Dependency rules
 

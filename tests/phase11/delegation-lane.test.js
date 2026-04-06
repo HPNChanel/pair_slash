@@ -149,10 +149,10 @@ test("delegated result envelope stays non-authoritative and approval-gated", ser
     delegatedCapabilities: ["repo_read", "review_analysis"],
     callerAllowedPaths: ["docs", "packages/core"],
     workerAllowedPaths: ["docs"],
-    filesInspected: ["docs/phase-11/README.md"],
+    filesInspected: ["docs-private/phase-11/README.md"],
     evidence: [
       {
-        source: "docs/phase-11/README.md",
+        source: "docs-private/phase-11/README.md",
         anchor: "Allowed Scope",
         summary: "delegation stays bounded and explicit",
       },
@@ -169,7 +169,7 @@ test("delegated result envelope stays non-authoritative and approval-gated", ser
   assert.equal(result.result_envelope.scope.max_depth, 1);
   assert.equal(result.result_envelope.scope.max_fan_out, 1);
   assert.equal(result.result_envelope.evidence.length, 1);
-  assert.equal(result.result_envelope.evidence[0].source, "docs/phase-11/README.md");
+  assert.equal(result.result_envelope.evidence[0].source, "docs-private/phase-11/README.md");
 });
 
 test("delegation package absent does not break core lint command", serial, async () => {

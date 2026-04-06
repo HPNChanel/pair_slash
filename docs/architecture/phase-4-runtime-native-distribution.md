@@ -63,4 +63,4 @@ It does not add:
 - hardening automation beyond local bridge checks
 
 Internal release gating for this phase is tracked in
-`docs/releases/release-checklist-0.4.0.md`.
+the scoped release verdict and maintainer-local release-readiness records.

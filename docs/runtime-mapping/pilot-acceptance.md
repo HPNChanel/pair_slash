@@ -35,6 +35,15 @@ The JSON report is an automation baseline for CI and reproducibility. It is not
 a substitute for live interactive runtime evidence.
 Lane-bound live evidence records live under `docs/evidence/live-runtime/`.
 
+Each acceptance report must keep evidence classes explicit:
+
+- `acceptance_mode = deterministic_fake_shim_acceptance`
+- `evidence_partition.deterministic.evidence_class = deterministic_test`
+- `evidence_partition.fake.evidence_class = fake_acceptance`
+- `evidence_partition.shim.evidence_class = shim_acceptance`
+- `evidence_partition.live.evidence_class = live_verification` with no live refs
+- `support_claim_boundary.public_support_promotion_allowed = false`
+
 ## Minimum commands
 
 ```bash
@@ -52,5 +61,8 @@ node packages/tools/cli/src/bin/pairslash.js doctor --runtime copilot --target u
 - Record what runtime and OS were actually used.
 - Keep Windows as a prep lane until the runtime behavior is observed, not inferred.
 - Do not mark a lane supported only because fake-runtime tests passed.
+- Treat fake acceptance (`packages/tools/compat-lab/src/acceptance.js`) and shim
+  acceptance (`packages/tools/compat-lab/src/runtime-fixtures.js`) as separate
+  regression classes.
 - Treat `npm run test:acceptance` as installability evidence, not as a
   replacement for `/skills` interaction notes or live runtime verification.

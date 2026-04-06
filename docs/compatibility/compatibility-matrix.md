@@ -24,21 +24,29 @@ status, or release scope by themselves.
 
 - `deterministic evidence`: repeatable tests, release gates, and generated
   artifacts that prove implementation and regression control.
-- `fake/shim evidence`: compat-lab coverage that uses fake runtime
-  binaries or host overrides. Useful for regression control, never enough
-  for live support promotion.
+- `fake acceptance evidence`: deterministic compat-lab scenario outputs that
+  exercise install and doctor logic under fixture control.
+- `shim acceptance evidence`: fake runtime binaries and host overrides that
+  make deterministic compat-lab lanes reproducible.
+- `fake acceptance` and `shim acceptance` are regression confidence only.
+  They never widen public support claims.
 - `live evidence`: real runtime, target, OS, and version observations from
   `/skills` interaction or live install behavior on the documented lane.
 
 ## Evidence policy
 
 - Canonical entrypoint: `/skills`
+- Registry schema: `docs/evidence/live-runtime/schema.live-runtime-lane-record.yaml`
 - `live_smoke` can document feasibility or failure, but it cannot promote a
   lane beyond `degraded` or `prep`.
 - `live_verification` is the minimum evidence for public lane claims on the
   exact lane.
 - `repeated_live_verification` is the minimum evidence for `stable-tested`.
 - One-off runs are not enough for `stable-tested`.
+- Scripted live-run steps allowed: `host_profile_capture`, `runtime_version_capture`, `doctor`, `preview_install`, `install_apply`
+- Manual live-run steps required: `canonical_skills_listing`, `workflow_selection_from_skills`, `workflow_prompt_and_response_capture`, `memory_write_preview_observation`
+- Copilot required tool presence: `gh`, `gh_copilot_extension`
+- Windows promotion gate requires: `install_apply`, `canonical_picker`, `workflow_execution`
 
 ## Support semantics
 
@@ -74,19 +82,19 @@ and `NOTICE`.
 
 ## Lane evidence records
 
-| Lane | Deterministic evidence | Fake/shim evidence | Live evidence | Evidence records / guard rails |
-| --- | --- | --- | --- | --- |
-| Codex CLI / repo / macOS | `docs/runtime-mapping/pilot-acceptance.md`<br>`packages/tools/compat-lab/tests/acceptance.test.js`<br>`packages/tools/compat-lab/tests/matrix.test.js` | `packages/tools/compat-lab/src/runtime-fixtures.js`<br>`packages/tools/compat-lab/src/acceptance.js` | `docs/compatibility/phase-0-acceptance.md`<br>`.pairslash/project-memory/60-architecture-decisions/phase-0-codex-cli-verification-on-v0-116-0.yaml`<br>`.pairslash/project-memory/70-known-good-patterns/codex-exec-as-non-interactive-skill-testing-surface.yaml` | `docs/evidence/live-runtime/codex-cli-repo-macos.md`<br>`docs/evidence/live-runtime/codex-cli-repo-macos.yaml`<br>`docs/compatibility/runtime-verification.md`<br>`docs/releases/public-claim-policy.md` |
-| GitHub Copilot CLI / user / Linux | `docs/runtime-mapping/pilot-acceptance.md`<br>`packages/tools/compat-lab/tests/acceptance.test.js`<br>`packages/tools/compat-lab/tests/matrix.test.js` | `packages/tools/compat-lab/src/runtime-fixtures.js`<br>`packages/tools/compat-lab/src/acceptance.js` | none recorded | `docs/evidence/live-runtime/copilot-cli-user-linux.md`<br>`docs/evidence/live-runtime/copilot-cli-user-linux.yaml`<br>`docs/compatibility/runtime-verification.md`<br>`docs/releases/public-claim-policy.md` |
-| Codex CLI / repo / Windows | `docs/runtime-mapping/pilot-acceptance.md`<br>`packages/tools/compat-lab/tests/acceptance.test.js`<br>`packages/tools/compat-lab/tests/matrix.test.js` | `packages/tools/compat-lab/src/runtime-fixtures.js`<br>`packages/tools/compat-lab/src/acceptance.js` | `docs/evidence/live-runtime/codex-cli-repo-windows.md` | `docs/evidence/live-runtime/codex-cli-repo-windows.md`<br>`docs/evidence/live-runtime/codex-cli-repo-windows.yaml`<br>`docs/compatibility/runtime-verification.md`<br>`docs/releases/public-claim-policy.md` |
-| GitHub Copilot CLI / user / Windows | `docs/runtime-mapping/pilot-acceptance.md`<br>`packages/tools/compat-lab/tests/acceptance.test.js`<br>`packages/tools/compat-lab/tests/matrix.test.js` | `packages/tools/compat-lab/src/runtime-fixtures.js`<br>`packages/tools/compat-lab/src/acceptance.js` | `docs/evidence/live-runtime/copilot-cli-user-windows.md` | `docs/evidence/live-runtime/copilot-cli-user-windows.md`<br>`docs/evidence/live-runtime/copilot-cli-user-windows.yaml`<br>`docs/compatibility/runtime-verification.md`<br>`docs/releases/public-claim-policy.md` |
+| Lane | Deterministic evidence | Fake acceptance evidence | Shim acceptance evidence | Live evidence | Evidence records / guard rails |
+| --- | --- | --- | --- | --- | --- |
+| Codex CLI / repo / macOS | `docs/runtime-mapping/pilot-acceptance.md`<br>`packages/tools/compat-lab/tests/acceptance.test.js`<br>`packages/tools/compat-lab/tests/matrix.test.js` | `packages/tools/compat-lab/src/acceptance.js` | `packages/tools/compat-lab/src/runtime-fixtures.js` | `.pairslash/project-memory/60-architecture-decisions/phase-0-codex-cli-verification-on-v0-116-0.yaml`<br>`.pairslash/project-memory/70-known-good-patterns/codex-exec-as-non-interactive-skill-testing-surface.yaml` | `docs/evidence/live-runtime/codex-cli-repo-macos.md`<br>`docs/evidence/live-runtime/codex-cli-repo-macos.yaml`<br>`docs/compatibility/runtime-verification.md`<br>`docs/releases/public-claim-policy.md` |
+| GitHub Copilot CLI / user / Linux | `docs/runtime-mapping/pilot-acceptance.md`<br>`packages/tools/compat-lab/tests/acceptance.test.js`<br>`packages/tools/compat-lab/tests/matrix.test.js` | `packages/tools/compat-lab/src/acceptance.js` | `packages/tools/compat-lab/src/runtime-fixtures.js` | none recorded | `docs/evidence/live-runtime/copilot-cli-user-linux.md`<br>`docs/evidence/live-runtime/copilot-cli-user-linux.yaml`<br>`docs/compatibility/runtime-verification.md`<br>`docs/releases/public-claim-policy.md` |
+| Codex CLI / repo / Windows | `docs/runtime-mapping/pilot-acceptance.md`<br>`packages/tools/compat-lab/tests/acceptance.test.js`<br>`packages/tools/compat-lab/tests/matrix.test.js` | `packages/tools/compat-lab/src/acceptance.js` | `packages/tools/compat-lab/src/runtime-fixtures.js` | `docs/evidence/live-runtime/codex-cli-repo-windows.md` | `docs/evidence/live-runtime/codex-cli-repo-windows.md`<br>`docs/evidence/live-runtime/codex-cli-repo-windows.yaml`<br>`docs/compatibility/runtime-verification.md`<br>`docs/releases/public-claim-policy.md` |
+| GitHub Copilot CLI / user / Windows | `docs/runtime-mapping/pilot-acceptance.md`<br>`packages/tools/compat-lab/tests/acceptance.test.js`<br>`packages/tools/compat-lab/tests/matrix.test.js` | `packages/tools/compat-lab/src/acceptance.js` | `packages/tools/compat-lab/src/runtime-fixtures.js` | `docs/evidence/live-runtime/copilot-cli-user-windows.md` | `docs/evidence/live-runtime/copilot-cli-user-windows.md`<br>`docs/evidence/live-runtime/copilot-cli-user-windows.yaml`<br>`docs/compatibility/runtime-verification.md`<br>`docs/releases/public-claim-policy.md` |
 
 ## Release-gating matrix
 
 | Gate | Trigger | Checks | Required | Notes |
 | --- | --- | --- | --- | --- |
 | quick-pr | pull_request and push | lint, unit, compat goldens, matrix sync | yes | Fast deterministic gate that blocks obvious compiler/installer/docs regressions. |
-| cross-os-acceptance | pull_request and push | macOS Codex acceptance, Linux Copilot acceptance, Windows prep acceptance | yes | Cross-OS installability and doctor coverage with fake runtimes and deterministic lanes. |
+| cross-os-acceptance | pull_request and push | macOS Codex acceptance, Linux Copilot acceptance, Windows prep acceptance | yes | Cross-OS installability and doctor coverage with fake acceptance plus shimmed runtime fixtures in deterministic lanes. |
 | nightly-smoke | nightly schedule or workflow_dispatch | fixture smoke matrix, behavior evals, artifact regeneration check | yes | Deeper regression control without forcing the full cost into every PR. |
 | release-readiness | manual pre-release gate | full JS suite, compat-lab suite, public docs present, generated artifacts up to date | yes | Release promotion must not proceed unless this gate is green. |
 

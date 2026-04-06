@@ -257,7 +257,7 @@ npm run pairslash -- trace export --session <session-id> --runtime codex \
 | Pack request | [pack-request.yml](.github/ISSUE_TEMPLATE/pack-request.yml) |
 | Docs problem | [docs-problem.yml](.github/ISSUE_TEMPLATE/docs-problem.yml) |
 
-See also: [troubleshooting guide](docs/workflows/phase-4-doctor-troubleshooting.md) · [triage playbook](docs/support/triage-playbook.md)
+See also: [troubleshooting guide](docs/workflows/phase-4-doctor-troubleshooting.md) · [reporting guide](docs/reporting.md)
 
 ---
 
@@ -314,16 +314,15 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for contributor lanes, PR expectations, a
 
 | Resource | Link |
 | --- | --- |
+| Docs index | [docs/README.md](docs/README.md) |
 | Onboarding path | [docs/phase-9/onboarding-path.md](docs/phase-9/onboarding-path.md) |
 | Program charter | [docs/phase-12/authoritative-program-charter.md](docs/phase-12/authoritative-program-charter.md) |
 | Compatibility matrix | [docs/compatibility/compatibility-matrix.md](docs/compatibility/compatibility-matrix.md) |
 | Public claim policy | [docs/releases/public-claim-policy.md](docs/releases/public-claim-policy.md) |
+| Reporting guide | [docs/reporting.md](docs/reporting.md) |
 | Examples | [docs/examples/README.md](docs/examples/README.md) |
-| Benchmarks | [docs/benchmarks/README.md](docs/benchmarks/README.md) |
-| Case studies | [docs/case-studies/README.md](docs/case-studies/README.md) |
 | Security policy | [SECURITY.md](SECURITY.md) |
 | Contributor guide | [CONTRIBUTING.md](CONTRIBUTING.md) |
-| Maintainer playbook | [docs/maintainers/README.md](docs/maintainers/README.md) |
 
 ---
 

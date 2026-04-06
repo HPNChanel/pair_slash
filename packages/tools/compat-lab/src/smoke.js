@@ -5,7 +5,7 @@ import { runDoctor } from "@pairslash/doctor";
 import { discoverPackManifestPaths, loadPackManifest } from "@pairslash/spec-core";
 
 import { materializeCompatFixture } from "./materialize.js";
-import { installFakeRuntimes } from "./runtime-fixtures.js";
+import { installCompatRuntimeShims } from "./runtime-fixtures.js";
 
 export const DEFAULT_SMOKE_LANES = [
   {
@@ -115,7 +115,7 @@ function doctorLane({ tempRoot, lane, packIds }) {
 }
 
 export function runCompatSmoke({ repoRoot, lanes = DEFAULT_SMOKE_LANES } = {}) {
-  const runtimeHarness = installFakeRuntimes();
+  const runtimeHarness = installCompatRuntimeShims();
   const results = [];
 
   try {

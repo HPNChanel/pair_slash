@@ -13,7 +13,13 @@ import {
 import { runDoctor } from "@pairslash/doctor";
 
 import { materializeCompatFixture } from "./materialize.js";
-import { installFakeRuntimes } from "./runtime-fixtures.js";
+import {
+  COMPAT_RUNTIME_FIXTURE_BOUNDARY,
+  COMPAT_RUNTIME_FIXTURE_EVIDENCE_CLASSES,
+  COMPAT_RUNTIME_FIXTURE_MODE,
+  COMPAT_RUNTIME_FIXTURE_REFS,
+  installCompatRuntimeShims,
+} from "./runtime-fixtures.js";
 
 const SCHEMA_VERSION = "0.1.0";
 const PRIMARY_PACK_ID = "pairslash-plan";
@@ -53,6 +59,40 @@ const RUNTIME_VERSIONS = Object.freeze({
   codex_cli: "0.116.0",
   copilot_cli: "2.50.0",
 });
+
+function buildAcceptanceEvidencePartition() {
+  return {
+    deterministic: {
+      evidence_class: COMPAT_RUNTIME_FIXTURE_EVIDENCE_CLASSES.deterministic,
+      refs: COMPAT_RUNTIME_FIXTURE_REFS.deterministic_refs.slice(),
+      role: "regression-confidence-only",
+    },
+    fake: {
+      evidence_class: COMPAT_RUNTIME_FIXTURE_EVIDENCE_CLASSES.fake,
+      refs: COMPAT_RUNTIME_FIXTURE_REFS.fake_acceptance_refs.slice(),
+      role: "regression-confidence-only",
+    },
+    shim: {
+      evidence_class: COMPAT_RUNTIME_FIXTURE_EVIDENCE_CLASSES.shim,
+      refs: COMPAT_RUNTIME_FIXTURE_REFS.shim_acceptance_refs.slice(),
+      role: "regression-confidence-only",
+    },
+    live: {
+      evidence_class: COMPAT_RUNTIME_FIXTURE_EVIDENCE_CLASSES.live,
+      refs: COMPAT_RUNTIME_FIXTURE_REFS.live_evidence_refs.slice(),
+      role: "not-collected-by-compat-lab-acceptance",
+    },
+  };
+}
+
+function buildSupportClaimBoundary() {
+  return {
+    live_evidence_collected: COMPAT_RUNTIME_FIXTURE_BOUNDARY.live_evidence_collected,
+    public_support_promotion_allowed: COMPAT_RUNTIME_FIXTURE_BOUNDARY.public_support_promotion_allowed,
+    live_registry_root: COMPAT_RUNTIME_FIXTURE_BOUNDARY.live_registry_root,
+    live_runbook_ref: COMPAT_RUNTIME_FIXTURE_BOUNDARY.live_runbook_ref,
+  };
+}
 
 function uniqueSorted(values) {
   return [...new Set(values.filter(Boolean))].sort((left, right) => left.localeCompare(right));
@@ -974,6 +1014,7 @@ function buildLaneReport(lane, scenarios) {
   const installScenario = scenarios.find((scenario) => scenario.install_success !== null) ?? null;
   const doctorScenarios = scenarios.filter((scenario) => scenario.doctor_success !== null);
   const status = scenarios.every((scenario) => scenario.status === "pass") ? "pass" : "fail";
+  const supportClaimBoundary = buildSupportClaimBoundary();
   return {
     kind: "compat-lab-acceptance-report",
     schema_version: SCHEMA_VERSION,
@@ -981,7 +1022,10 @@ function buildLaneReport(lane, scenarios) {
     lane_key: lane.key,
     status,
     os_lane: lane.os_lane,
-    evidence_mode: "automation_baseline",
+    acceptance_mode: COMPAT_RUNTIME_FIXTURE_MODE,
+    evidence_mode: COMPAT_RUNTIME_FIXTURE_MODE,
+    evidence_partition: buildAcceptanceEvidencePartition(),
+    support_claim_boundary: supportClaimBoundary,
     runtime_versions: { ...RUNTIME_VERSIONS },
     install_success: installScenario?.install_success ?? null,
     doctor_success:
@@ -1013,7 +1057,7 @@ function resolveLane(laneInput) {
 }
 
 function runLaneReport({ repoRoot, lane }) {
-  const runtimeHarness = installFakeRuntimes({
+  const runtimeHarness = installCompatRuntimeShims({
     codexVersion: RUNTIME_VERSIONS.codex_cli,
     copilotVersion: RUNTIME_VERSIONS.copilot_cli,
   });
@@ -1038,10 +1082,14 @@ export function runCompatAcceptance({ repoRoot, lane = "all" } = {}) {
         lane: entry,
       }),
     );
+    const supportClaimBoundary = buildSupportClaimBoundary();
     return {
       kind: "compat-lab-acceptance-suite",
       schema_version: SCHEMA_VERSION,
       status: lanes.every((entry) => entry.status === "pass") ? "pass" : "fail",
+      acceptance_mode: COMPAT_RUNTIME_FIXTURE_MODE,
+      evidence_partition: buildAcceptanceEvidencePartition(),
+      support_claim_boundary: supportClaimBoundary,
       lanes,
       summary: {
         total_lanes: lanes.length,
@@ -1063,11 +1111,24 @@ function formatScenarioLine(scenario) {
   ].join("\n");
 }
 
+function formatEvidencePartitionSummary(partition) {
+  const evidencePartition = partition ?? buildAcceptanceEvidencePartition();
+  return [
+    evidencePartition.deterministic?.evidence_class ?? COMPAT_RUNTIME_FIXTURE_EVIDENCE_CLASSES.deterministic,
+    evidencePartition.fake?.evidence_class ?? COMPAT_RUNTIME_FIXTURE_EVIDENCE_CLASSES.fake,
+    evidencePartition.shim?.evidence_class ?? COMPAT_RUNTIME_FIXTURE_EVIDENCE_CLASSES.shim,
+  ].join(" + ");
+}
+
 export function formatCompatAcceptanceReportText(report) {
   if (report.kind === "compat-lab-acceptance-suite") {
+    const supportClaimBoundary = report.support_claim_boundary ?? buildSupportClaimBoundary();
     const lines = [
       "Compat lab acceptance suite",
       `Status: ${report.status.toUpperCase()}`,
+      `Acceptance mode: ${report.acceptance_mode ?? COMPAT_RUNTIME_FIXTURE_MODE}`,
+      `Evidence partition: ${formatEvidencePartitionSummary(report.evidence_partition)} (live evidence not collected)`,
+      `Support claim promotion allowed: ${supportClaimBoundary.public_support_promotion_allowed}`,
       `Lanes: ${report.summary.passed_lanes}/${report.summary.total_lanes} passing`,
       "",
     ];
@@ -1080,10 +1141,14 @@ export function formatCompatAcceptanceReportText(report) {
     return `${lines.join("\n")}\n`;
   }
 
+  const supportClaimBoundary = report.support_claim_boundary ?? buildSupportClaimBoundary();
   const lines = [
     `Compat lab acceptance lane: ${report.lane_id}`,
     `Status: ${report.status.toUpperCase()}`,
-    `Evidence mode: ${report.evidence_mode}`,
+    `Acceptance mode: ${report.acceptance_mode ?? report.evidence_mode ?? COMPAT_RUNTIME_FIXTURE_MODE}`,
+    `Evidence partition: ${formatEvidencePartitionSummary(report.evidence_partition)} (live evidence not collected)`,
+    `Support claim promotion allowed: ${supportClaimBoundary.public_support_promotion_allowed}`,
+    `Live registry for support promotion: ${supportClaimBoundary.live_registry_root}`,
     `Install success: ${report.install_success ?? "n/a"}`,
     `Doctor success: ${report.doctor_success ?? "n/a"}`,
     `Time to first success (ms): ${report.time_to_first_success_ms ?? "n/a"}`,

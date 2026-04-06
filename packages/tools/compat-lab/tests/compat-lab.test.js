@@ -87,13 +87,13 @@ test("compat-lab smoke lanes cover Phase 6 compile/install/doctor gates", () => 
   assert.equal(byId.get("compile.python-service.copilot").pack_count, 2);
 
   assert.equal(byId.get("install.docs-heavy.codex.repo").can_apply, true);
-  assert.equal(byId.get("install.docs-heavy.codex.repo").support_verdict, "warn");
+  assert.equal(byId.get("install.docs-heavy.codex.repo").support_verdict, "fail");
   assert.equal(byId.get("install.docs-heavy.codex.repo").lane_status, "supported");
   assert.equal(byId.get("install.docs-heavy.codex.repo").policy_summary.no_silent_fallback, true);
 
   assert.equal(byId.get("install.infra-repo.copilot.user").can_apply, true);
-  assert.equal(byId.get("install.infra-repo.copilot.user").support_verdict, "warn");
-  assert.equal(byId.get("install.infra-repo.copilot.user").lane_status, "supported");
+  assert.equal(byId.get("install.infra-repo.copilot.user").support_verdict, "fail");
+  assert.equal(byId.get("install.infra-repo.copilot.user").lane_status, "prep");
 
   assert.equal(byId.get("doctor.backend-mcp.codex.windows-prep").support_verdict, "degraded");
   assert.equal(byId.get("doctor.backend-mcp.codex.windows-prep").lane_status, "prep");

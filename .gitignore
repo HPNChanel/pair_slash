@@ -63,6 +63,7 @@ coverage/
 .eslintcache
 .parcel-cache/
 docs/audits/
+docs-private/
 
 # ─── Environment / secrets ────────────────────────────────────────────────────
 .env

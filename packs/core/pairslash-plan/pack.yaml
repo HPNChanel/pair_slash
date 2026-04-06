@@ -76,7 +76,7 @@ runtime_targets:
         invocation: $pairslash-plan
         status: supported
         evidence_refs:
-          - docs/compatibility/phase-0-acceptance.md
+          - docs-private/compatibility/phase-0-acceptance.md
           - docs/compatibility/runtime-surface-matrix.yaml
   - runtime: copilot_cli
     canonical_entrypoint: /skills
@@ -92,7 +92,7 @@ runtime_targets:
         invocation: /pairslash-plan
         status: unverified
         evidence_refs:
-          - docs/compatibility/phase-0-acceptance.md
+          - docs-private/compatibility/phase-0-acceptance.md
           - docs/compatibility/runtime-surface-matrix.yaml
       - id: direct-invocation-prompt-mode
         invocation: /pairslash-plan with -p/--prompt

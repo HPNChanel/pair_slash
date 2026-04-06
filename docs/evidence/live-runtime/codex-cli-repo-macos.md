@@ -22,7 +22,6 @@
 
 ## Live evidence
 
-- `docs/compatibility/phase-0-acceptance.md`
 - `.pairslash/project-memory/60-architecture-decisions/phase-0-codex-cli-verification-on-v0-116-0.yaml`
 - `.pairslash/project-memory/70-known-good-patterns/codex-exec-as-non-interactive-skill-testing-surface.yaml`
 - Machine-readable sidecar: `docs/evidence/live-runtime/codex-cli-repo-macos.yaml`

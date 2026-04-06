@@ -25,8 +25,8 @@ progress beyond Phase 3.5 business validation?
 No.
 
 PairSlash remains in Phase 3.5 business validation because the current
-benchmark system still has no official recorded runs under
-`docs/validation/phase-3-5/evidence-log.md`.
+benchmark system still has no official recorded runs under the current
+maintainer validation method.
 
 ## Why this remains NO-GO
 
@@ -50,6 +50,5 @@ benchmark system still has no official recorded runs under
 ## What would change this verdict
 
 Change this file only if the current benchmark system records official runs
-with evidence strong enough to satisfy the exit criteria in `README.md`,
-`scoring-rubric.md`, `runbook.md`, `evidence-log.md`, and
-`docs/phase-3.5/phase-exit/adoption-scorecard.md`.
+with evidence strong enough to satisfy the current maintainer validation
+criteria and the public claim boundary.

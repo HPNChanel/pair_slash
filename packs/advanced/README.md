@@ -18,4 +18,5 @@ Current advanced prototype:
 - `packs/advanced/delegation/pack.manifest.yaml` (lane-local, non-core)
 - `packs/advanced/retrieval/pack.manifest.yaml` (lane-local, non-core)
 
-Canonical public docs for these packs live in `docs/phase-11/`.
+Canonical maintainer-local docs for these packs live outside the public docs
+surface.

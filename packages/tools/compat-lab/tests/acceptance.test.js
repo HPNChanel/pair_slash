@@ -26,6 +26,12 @@ test("compat-lab acceptance macos lane reaches first workflow and keeps uninstal
   assert.equal(report.kind, "compat-lab-acceptance-report");
   assert.equal(report.lane_id, "macos.codex.repo");
   assert.equal(report.status, "pass");
+  assert.equal(report.acceptance_mode, "deterministic_fake_shim_acceptance");
+  assert.equal(report.evidence_partition.deterministic.evidence_class, "deterministic_test");
+  assert.equal(report.evidence_partition.fake.evidence_class, "fake_acceptance");
+  assert.equal(report.evidence_partition.shim.evidence_class, "shim_acceptance");
+  assert.equal(report.evidence_partition.live.evidence_class, "live_verification");
+  assert.equal(report.support_claim_boundary.public_support_promotion_allowed, false);
   assert.equal(report.install_success, true);
   assert.equal(report.doctor_success, true);
   assert.ok(report.time_to_first_success_ms > 0);
@@ -60,12 +66,14 @@ test("compat-lab acceptance linux lane stays usable despite copilot tested-range
   assert.equal(report.kind, "compat-lab-acceptance-report");
   assert.equal(report.lane_id, "linux.copilot.user");
   assert.equal(report.status, "pass");
+  assert.equal(report.acceptance_mode, "deterministic_fake_shim_acceptance");
+  assert.equal(report.support_claim_boundary.public_support_promotion_allowed, false);
   assert.equal(report.install_success, true);
   assert.equal(report.doctor_success, true);
   assert.ok(report.time_to_first_success_ms > 0);
   const freshInstall = report.scenarios.find((scenario) => scenario.id === "fresh-install.linux.copilot.user");
   assert.ok(freshInstall);
-  assert.equal(freshInstall.support_verdict, "warn");
+  assert.equal(freshInstall.support_verdict, "degraded");
   assert.ok(report.issue_codes.length > 0);
 });
 
@@ -77,6 +85,8 @@ test("compat-lab acceptance windows prep lane stays non-mutating and catches bro
   assert.equal(report.kind, "compat-lab-acceptance-report");
   assert.equal(report.lane_id, "windows.prep");
   assert.equal(report.status, "pass");
+  assert.equal(report.acceptance_mode, "deterministic_fake_shim_acceptance");
+  assert.equal(report.support_claim_boundary.public_support_promotion_allowed, false);
   assert.equal(report.install_success, null);
   assert.equal(report.doctor_success, true);
   assert.equal(report.time_to_first_success_ms, null);
@@ -98,10 +108,14 @@ test("compat-lab acceptance suite aggregates lane reports and formats text", ser
   });
   assert.equal(report.kind, "compat-lab-acceptance-suite");
   assert.equal(report.status, "pass");
+  assert.equal(report.acceptance_mode, "deterministic_fake_shim_acceptance");
+  assert.equal(report.support_claim_boundary.public_support_promotion_allowed, false);
   assert.equal(report.summary.total_lanes, 3);
   assert.equal(report.summary.failed_lanes, 0);
   const text = formatCompatAcceptanceText(report);
   assert.match(text, /Compat lab acceptance suite/);
+  assert.match(text, /Acceptance mode: deterministic_fake_shim_acceptance/);
+  assert.match(text, /Support claim promotion allowed: false/);
   assert.match(text, /macos\.codex\.repo/);
   assert.match(text, /linux\.copilot\.user/);
   assert.match(text, /windows\.prep/);

@@ -9,7 +9,7 @@ import { discoverPackManifestPaths, loadPackManifest, loadPackManifestRecords, s
 import { getCompatFixture } from "./fixtures.js";
 import { materializeCompatFixture } from "./materialize.js";
 import { buildPathMarkers, normalizeCompiledPack, normalizePreviewPlan } from "./normalize.js";
-import { installFakeRuntimes } from "./runtime-fixtures.js";
+import { installCompatRuntimeShims } from "./runtime-fixtures.js";
 
 const HIGH_SIGNAL_SURFACES = new Set(["metadata", "context", "config", "agent", "hook", "mcp"]);
 
@@ -229,7 +229,7 @@ export function buildPreviewNoSilentFallbackGolden({ repoRoot, fixtureId, runtim
     repoRoot,
     fixtureId,
   });
-  const runtimeHarness = installFakeRuntimes();
+  const runtimeHarness = installCompatRuntimeShims();
   try {
     mutateManifest(materialized.tempRoot, materialized.fixture.primary_pack_id, (manifest) => {
       manifest.runtime_bindings.copilot_cli.compatibility.direct_invocation = "blocked";

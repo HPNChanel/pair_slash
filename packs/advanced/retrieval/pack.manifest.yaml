@@ -40,4 +40,4 @@ runtime_support:
   copilot_cli: design-only
 docs_refs:
   contract: contract.md
-  usage: docs/phase-11/retrieval-addon-usage.md
+  usage: docs-private/phase-11/retrieval-addon-usage.md

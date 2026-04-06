@@ -28,6 +28,20 @@ test("compatibility matrix artifact exposes public support semantics", () => {
     artifact.runtime_lanes.every((lane) => lane.evidence_data_ref.startsWith("docs/evidence/live-runtime/")),
   );
   assert.ok(
+    artifact.runtime_lanes.every(
+      (lane) =>
+        Array.isArray(lane.fake_evidence_refs) &&
+        lane.fake_evidence_refs.includes("packages/tools/compat-lab/src/acceptance.js"),
+    ),
+  );
+  assert.ok(
+    artifact.runtime_lanes.every(
+      (lane) =>
+        Array.isArray(lane.shim_evidence_refs) &&
+        lane.shim_evidence_refs.includes("packages/tools/compat-lab/src/runtime-fixtures.js"),
+    ),
+  );
+  assert.ok(
     artifact.runtime_lanes.some(
       (lane) => lane.lane_id === "codex-cli-repo-macos" && lane.support_level === "degraded" && lane.actual_evidence_class === "live_smoke",
     ),
@@ -39,6 +53,12 @@ test("compatibility matrix artifact exposes public support semantics", () => {
   );
   assert.equal(artifact.release_gates.length, 4);
   assert.ok(artifact.generated_from.evals.length >= 6);
+  const markdown = renderCompatibilityMatrixMarkdown({
+    repoRoot,
+    version: "0.4.0",
+  });
+  assert.match(markdown, /Fake acceptance evidence/);
+  assert.match(markdown, /Shim acceptance evidence/);
 });
 
 test("generated compatibility docs stay in sync with committed artifacts", () => {

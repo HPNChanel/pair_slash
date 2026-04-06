@@ -2,7 +2,7 @@
 
 Use this checklist to verify that `pairslash-memory-write-global` is working
 correctly. Each item maps to an acceptance gate in
-`docs/compatibility/acceptance-gates.yaml`.
+the maintainer-local compatibility acceptance gate tracker.
 
 ---
 
@@ -144,7 +144,7 @@ Update these files with evidence:
    - V3: did the skill produce a YAML-formatted preview patch?
    - V6: did scripts in `scripts/` execute (if any were added)?
 
-2. `docs/compatibility/acceptance-gates.yaml`
+2. Maintainer-local compatibility acceptance gate tracker
    - G2, G5, G6, G7: update `status` to `pass` or `fail` with `evidence`
    - G12, G13: update `status` (SHOULD gates, non-blocking)
 

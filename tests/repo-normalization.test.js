@@ -13,7 +13,7 @@ test("root repo layout is normalized and legacy root buckets are removed", () =>
   assert.equal(existsSync(join(repoRoot, "templates")), false);
 
   assert.equal(existsSync(join(repoRoot, "docs", "examples")), true);
-  assert.equal(existsSync(join(repoRoot, "docs", "archive", "research", "phase-3.5")), true);
+  assert.equal(existsSync(join(repoRoot, "docs-private", "archive", "research", "phase-3.5")), true);
   assert.equal(existsSync(join(repoRoot, "tests", "fixtures", "phase5", "contracts")), true);
   assert.equal(existsSync(join(repoRoot, "packages", "core", "spec-core", "schemas", "contracts")), true);
 });
@@ -22,7 +22,7 @@ test("node-only docs and workflow references use the canonical npm validation co
   const files = [
     "README.md",
     "AGENTS.md",
-    "docs/workflows/phase-2-operations.md",
+    "docs-private/workflows/phase-2-operations.md",
     ".github/copilot-instructions.md",
     ".github/workflows/repo-checks.yml",
   ];

@@ -11,7 +11,7 @@
   confidence: high
 - command: `npm run test`
   rationale: Executes deterministic local regression tests.
-  source_memory: docs/workflows/phase-2-operations.md
+  source_memory: maintainer-local operations workflow notes
   confidence: high
 
 ## SAFETY_NOTES

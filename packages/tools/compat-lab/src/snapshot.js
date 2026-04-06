@@ -12,7 +12,7 @@ import {
   normalizeInstallState,
   normalizePreviewPlan,
 } from "./normalize.js";
-import { installFakeRuntimes } from "./runtime-fixtures.js";
+import { installCompatRuntimeShims } from "./runtime-fixtures.js";
 import { listCompatFixtures } from "./fixtures.js";
 
 function manifestPathsFor(tempRoot, packIds) {
@@ -129,7 +129,7 @@ export function buildCompatFixtureSnapshot({ repoRoot: workspaceRoot, fixtureId 
     repoRoot: workspaceRoot,
     fixtureId,
   });
-  const runtimeHarness = installFakeRuntimes();
+  const runtimeHarness = installCompatRuntimeShims();
 
   try {
     const runtimeBinRoot = runtimeHarness.binDir;

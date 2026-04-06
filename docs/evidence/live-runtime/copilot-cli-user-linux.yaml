@@ -1,5 +1,6 @@
 kind: live-runtime-lane-record
 schema_version: 1.0.0
+registry_schema_ref: docs/evidence/live-runtime/schema.live-runtime-lane-record.yaml
 lane_id: copilot-cli-user-linux
 runtime_id: copilot_cli
 runtime: GitHub Copilot CLI
@@ -11,8 +12,20 @@ current_public_support_level: prep
 required_evidence_class: live_verification
 best_live_evidence_class: null
 freshness_state: none-recorded
+stale_after_days: 30
+expire_after_days: 60
 last_verified_at: null
 host_profile_count: 0
+pack_scope:
+  - pairslash-plan
+workflow_scope:
+  - pairslash-plan
+capability_scope:
+  - canonical_picker
+  - gh_availability
+  - doctor
+  - preview_install
+  - install_apply
 caveat_summary: Deterministic acceptance coverage exists, but no checked-in Linux user /skills verification or live install record is present.
 surface_verdicts:
   canonical_picker: unrecorded

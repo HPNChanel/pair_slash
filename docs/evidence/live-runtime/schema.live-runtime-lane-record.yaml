@@ -1,0 +1,76 @@
+kind: schema-definition
+schema_name: live-runtime-lane-record
+schema_version: 1.0.0
+scope: phase-16-live-runtime-evidence
+description: Machine-readable contract for PairSlash live runtime lane evidence records.
+required_lane_fields:
+  - kind
+  - schema_version
+  - registry_schema_ref
+  - lane_id
+  - runtime_id
+  - target
+  - os_lane
+  - canonical_entrypoint
+  - owner_id
+  - current_public_support_level
+  - required_evidence_class
+  - best_live_evidence_class
+  - freshness_state
+  - stale_after_days
+  - expire_after_days
+  - host_profile_count
+  - pack_scope
+  - workflow_scope
+  - capability_scope
+  - surface_verdicts
+  - deterministic_evidence_refs
+  - fake_acceptance_evidence_refs
+  - shim_acceptance_evidence_refs
+  - live_evidence_refs
+  - negative_evidence_refs
+  - claim_guard_refs
+required_run_fields:
+  - evidence_id
+  - evidence_class
+  - captured_at
+  - runtime_id
+  - target
+  - os_lane
+  - owner_id
+  - host_profile_id
+  - pack_scope
+  - workflow_scope
+  - capability_scope
+  - command
+  - entrypoint_path_used
+  - verdict
+  - summary
+  - artifact_paths
+  - freshness_state
+  - stale_at
+  - expire_at
+required_negative_run_fields:
+  - evidence_id
+  - failure_type
+  - captured_at
+  - runtime_id
+  - target
+  - os_lane
+  - owner_id
+  - host_profile_id
+  - pack_scope
+  - workflow_scope
+  - capability_scope
+  - command
+  - entrypoint_path_used
+  - verdict
+  - summary
+  - artifact_paths
+  - freshness_state
+  - stale_at
+  - expire_at
+notes:
+  - Deterministic and fake/shim evidence are regression confidence only.
+  - Live records and negative live records must map to real host runs.
+  - Canonical front door remains /skills for support-claim promotion.

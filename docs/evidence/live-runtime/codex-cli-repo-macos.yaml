@@ -1,5 +1,6 @@
 kind: live-runtime-lane-record
 schema_version: 1.0.0
+registry_schema_ref: docs/evidence/live-runtime/schema.live-runtime-lane-record.yaml
 lane_id: codex-cli-repo-macos
 runtime_id: codex_cli
 runtime: Codex CLI
@@ -11,8 +12,20 @@ current_public_support_level: degraded
 required_evidence_class: live_verification
 best_live_evidence_class: live_smoke
 freshness_state: fresh
+stale_after_days: 7
+expire_after_days: 14
 last_verified_at: "2026-03-21"
 host_profile_count: 1
+pack_scope:
+  - pairslash-plan
+workflow_scope:
+  - pairslash-plan
+capability_scope:
+  - canonical_picker
+  - direct_invocation
+  - doctor
+  - preview_install
+  - install_apply
 caveat_summary: Archived live behavior was observed via codex exec and direct invocation, but canonical /skills picker evidence was not captured.
 surface_verdicts:
   canonical_picker: unrecorded
@@ -30,7 +43,6 @@ fake_acceptance_evidence_refs:
 shim_acceptance_evidence_refs:
   - packages/tools/compat-lab/src/runtime-fixtures.js
 live_evidence_refs:
-  - docs/compatibility/phase-0-acceptance.md
   - .pairslash/project-memory/60-architecture-decisions/phase-0-codex-cli-verification-on-v0-116-0.yaml
 negative_evidence_refs:
   - .pairslash/project-memory/70-known-good-patterns/codex-exec-as-non-interactive-skill-testing-surface.yaml
@@ -40,25 +52,56 @@ claim_guard_refs:
 live_records:
   - evidence_id: phase0-codex-exec-20260321
     evidence_class: live_smoke
-    captured_at: "2026-03-21"
+    captured_at: "2026-03-21T00:00:00.000Z"
     freshness_state: fresh
+    stale_at: "2026-03-28T00:00:00.000Z"
+    expire_at: "2026-04-04T00:00:00.000Z"
     owner_id: phase-0-scaffold
+    runtime_id: codex_cli
+    target: repo
+    os_lane: macOS
     host_profile_id: codex-cli.repo.macos.exec
+    pack_scope:
+      - pairslash-plan
+    workflow_scope:
+      - pairslash-plan
+    capability_scope:
+      - direct_invocation
+      - doctor
+      - preview_install
+    entrypoint_path_used: direct-invocation
+    command: codex exec "<phase-0-acceptance-sequence>"
     runtime_version: 0.116.0
     shell_family: codex-exec
     verdict: partial
     summary: Direct invocation and repo-grounded execution were observed on a real Codex CLI host, but interactive /skills picker capture was not possible from codex exec.
+    artifact_paths:
+      - .pairslash/project-memory/60-architecture-decisions/phase-0-codex-cli-verification-on-v0-116-0.yaml
     command_capture_refs:
-      - docs/compatibility/phase-0-acceptance.md
       - .pairslash/project-memory/70-known-good-patterns/codex-exec-as-non-interactive-skill-testing-surface.yaml
 negative_live_records:
   - evidence_id: phase0-canonical-picker-unrecorded-20260321
     failure_type: canonical_picker_missing
-    captured_at: "2026-03-21"
+    captured_at: "2026-03-21T00:00:00.000Z"
     freshness_state: fresh
+    stale_at: "2026-03-28T00:00:00.000Z"
+    expire_at: "2026-04-04T00:00:00.000Z"
     owner_id: phase-0-scaffold
+    runtime_id: codex_cli
+    target: repo
+    os_lane: macOS
     host_profile_id: codex-cli.repo.macos.exec
+    pack_scope:
+      - pairslash-plan
+    workflow_scope:
+      - pairslash-plan
+    capability_scope:
+      - canonical_picker
+    entrypoint_path_used: /skills
+    command: codex exec "<phase-0-canonical-picker-check>"
+    verdict: fail
     summary: Canonical /skills picker evidence remained unrecorded because codex exec is non-interactive.
+    artifact_paths:
+      - .pairslash/project-memory/70-known-good-patterns/codex-exec-as-non-interactive-skill-testing-surface.yaml
     refs:
-      - docs/compatibility/phase-0-acceptance.md
       - .pairslash/project-memory/70-known-good-patterns/codex-exec-as-non-interactive-skill-testing-surface.yaml

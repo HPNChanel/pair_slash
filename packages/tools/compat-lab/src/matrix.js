@@ -30,6 +30,33 @@ function formatRefList(refs) {
   return normalizedRefs.map((ref) => `\`${ref}\``).join("<br>");
 }
 
+function fakeEvidenceRefsForLane(lane) {
+  if (Array.isArray(lane.fake_evidence_refs)) {
+    return lane.fake_evidence_refs;
+  }
+  if (!Array.isArray(lane.shim_evidence_refs)) {
+    return [];
+  }
+  return lane.shim_evidence_refs.filter((ref) => typeof ref === "string" && ref.includes("acceptance.js"));
+}
+
+function shimEvidenceRefsForLane(lane) {
+  if (Array.isArray(lane.fake_evidence_refs)) {
+    return Array.isArray(lane.shim_evidence_refs) ? lane.shim_evidence_refs : [];
+  }
+  if (!Array.isArray(lane.shim_evidence_refs)) {
+    return [];
+  }
+  return lane.shim_evidence_refs.filter((ref) => typeof ref === "string" && !ref.includes("acceptance.js"));
+}
+
+function formatStringList(values) {
+  if (!Array.isArray(values) || values.length === 0) {
+    return "none recorded";
+  }
+  return values.map((value) => `\`${value}\``).join(", ");
+}
+
 export function buildCompatibilityMatrixArtifact({
   repoRoot = process.cwd(),
   version = "0.4.0",
@@ -124,11 +151,19 @@ export function renderCompatibilityMatrixMarkdown({
     ]),
   );
   const evidenceTable = formatTable(
-    ["Lane", "Deterministic evidence", "Fake/shim evidence", "Live evidence", "Evidence records / guard rails"],
+    [
+      "Lane",
+      "Deterministic evidence",
+      "Fake acceptance evidence",
+      "Shim acceptance evidence",
+      "Live evidence",
+      "Evidence records / guard rails",
+    ],
     artifact.runtime_lanes.map((lane) => [
       `${lane.runtime} / ${lane.target} / ${lane.os_lane}`,
       formatRefList(lane.deterministic_evidence_refs),
-      formatRefList(lane.shim_evidence_refs),
+      formatRefList(fakeEvidenceRefsForLane(lane)),
+      formatRefList(shimEvidenceRefsForLane(lane)),
       formatRefList([...(lane.live_evidence_refs ?? []), ...(lane.negative_evidence_refs ?? [])]),
       formatRefList([lane.evidence_source, lane.evidence_data_ref, ...(lane.claim_guard_refs ?? [])]),
     ]),
@@ -161,21 +196,37 @@ export function renderCompatibilityMatrixMarkdown({
     "",
     "- `deterministic evidence`: repeatable tests, release gates, and generated",
     "  artifacts that prove implementation and regression control.",
-    "- `fake/shim evidence`: compat-lab coverage that uses fake runtime",
-    "  binaries or host overrides. Useful for regression control, never enough",
-    "  for live support promotion.",
+    "- `fake acceptance evidence`: deterministic compat-lab scenario outputs that",
+    "  exercise install and doctor logic under fixture control.",
+    "- `shim acceptance evidence`: fake runtime binaries and host overrides that",
+    "  make deterministic compat-lab lanes reproducible.",
+    "- `fake acceptance` and `shim acceptance` are regression confidence only.",
+    "  They never widen public support claims.",
     "- `live evidence`: real runtime, target, OS, and version observations from",
     "  `/skills` interaction or live install behavior on the documented lane.",
     "",
     "## Evidence policy",
     "",
     `- Canonical entrypoint: \`${artifact.evidence_policy.canonical_entrypoint}\``,
+    `- Registry schema: \`${artifact.evidence_policy.registry_schema_ref}\``,
     "- `live_smoke` can document feasibility or failure, but it cannot promote a",
     "  lane beyond `degraded` or `prep`.",
     "- `live_verification` is the minimum evidence for public lane claims on the",
     "  exact lane.",
     "- `repeated_live_verification` is the minimum evidence for `stable-tested`.",
     "- One-off runs are not enough for `stable-tested`.",
+    `- Scripted live-run steps allowed: ${formatStringList(
+      artifact.evidence_policy.runbook_policy?.manual_vs_scripted_boundary?.scripted_steps_allowed,
+    )}`,
+    `- Manual live-run steps required: ${formatStringList(
+      artifact.evidence_policy.runbook_policy?.manual_vs_scripted_boundary?.manual_steps_required,
+    )}`,
+    `- Copilot required tool presence: ${formatStringList(
+      artifact.evidence_policy.runbook_policy?.runtime_runbooks?.copilot_cli?.required_tool_presence,
+    )}`,
+    `- Windows promotion gate requires: ${formatStringList(
+      artifact.evidence_policy.runbook_policy?.windows_promotion_gate?.requires,
+    )}`,
     "",
     "## Support semantics",
     "",

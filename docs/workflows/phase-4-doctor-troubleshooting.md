@@ -17,8 +17,8 @@ This page shows direct CLI invocation (`node packages/tools/cli/src/bin/pairslas
 In this repo, use the equivalent shorthand `npm run pairslash -- <args>`.
 
 When doctor surfaces a failure you cannot explain from the report alone, move
-to the support flow in `docs/support/phase-7-support-ops.md` and capture a
-debug report or support bundle instead of pasting raw logs.
+to `docs/reporting.md` and capture a debug report or support bundle instead of
+pasting raw logs.
 
 ## Verdicts
 

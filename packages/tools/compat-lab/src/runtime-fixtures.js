@@ -2,6 +2,32 @@ import { chmodSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { delimiter, join } from "node:path";
 
+export const COMPAT_RUNTIME_FIXTURE_MODE = "deterministic_fake_shim_acceptance";
+
+export const COMPAT_RUNTIME_FIXTURE_EVIDENCE_CLASSES = Object.freeze({
+  deterministic: "deterministic_test",
+  fake: "fake_acceptance",
+  shim: "shim_acceptance",
+  live: "live_verification",
+});
+
+export const COMPAT_RUNTIME_FIXTURE_BOUNDARY = Object.freeze({
+  live_evidence_collected: false,
+  public_support_promotion_allowed: false,
+  live_registry_root: "docs/evidence/live-runtime",
+  live_runbook_ref: "docs/compatibility/runtime-verification.md",
+});
+
+export const COMPAT_RUNTIME_FIXTURE_REFS = Object.freeze({
+  deterministic_refs: [
+    "packages/tools/compat-lab/tests/acceptance.test.js",
+    "packages/tools/compat-lab/tests/matrix.test.js",
+  ],
+  fake_acceptance_refs: ["packages/tools/compat-lab/src/acceptance.js"],
+  shim_acceptance_refs: ["packages/tools/compat-lab/src/runtime-fixtures.js"],
+  live_evidence_refs: [],
+});
+
 function writeExecutable(path, contents) {
   writeFileSync(path, contents, { mode: 0o755 });
   try {
@@ -83,7 +109,7 @@ function writeCopilotShim(binDir, version) {
   );
 }
 
-export function installFakeRuntimes({
+export function installCompatRuntimeShims({
   codexVersion = "0.116.0",
   copilotVersion = "2.50.0",
 } = {}) {
@@ -132,3 +158,5 @@ export function installFakeRuntimes({
     },
   };
 }
+
+export const installFakeRuntimes = installCompatRuntimeShims;

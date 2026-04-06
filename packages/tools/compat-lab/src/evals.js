@@ -7,7 +7,7 @@ import { runDoctor } from "@pairslash/doctor";
 import { loadPackManifestRecords, stableYaml, writeTextFile } from "@pairslash/spec-core";
 
 import { materializeCompatFixture } from "./materialize.js";
-import { installFakeRuntimes } from "./runtime-fixtures.js";
+import { installCompatRuntimeShims } from "./runtime-fixtures.js";
 
 const FIXED_MEMORY_REQUEST = Object.freeze({
   kind: "constraint",
@@ -345,7 +345,7 @@ function runNoSilentFallbackEval({ repoRoot, runtimeHarness }) {
 }
 
 export function runCompatBehaviorEvals({ repoRoot } = {}) {
-  const runtimeHarness = installFakeRuntimes();
+  const runtimeHarness = installCompatRuntimeShims();
   try {
     const results = [
       runWorkflowSelectionEval({ repoRoot, runtimeHarness }),

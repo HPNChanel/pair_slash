@@ -11,8 +11,8 @@ const docsUnderGuard = [
   "docs/workflows/phase-4-quickstart.md",
   "docs/compatibility/runtime-verification.md",
   "docs/runtime-mapping/pilot-acceptance.md",
-  "docs/releases/release-checklist-0.4.0.md",
-  "docs/releases/phase-4-acceptance-checklist.md",
+  "docs-private/releases/release-checklist-0.4.0.md",
+  "docs-private/releases/phase-4-acceptance-checklist.md",
   "packs/core/pairslash-plan/contract.md",
   "packs/core/pairslash-plan/example-invocation.md",
   "packs/core/pairslash-memory-write-global/contract.md",
@@ -43,8 +43,8 @@ test("release docs and shipped docs stay /skills-first without legacy invocation
 });
 
 const phase6StatusDocs = [
-  "docs/releases/release-checklist-0.4.0.md",
-  "docs/releases/phase-4-acceptance-checklist.md",
+  "docs-private/releases/release-checklist-0.4.0.md",
+  "docs-private/releases/phase-4-acceptance-checklist.md",
 ];
 
 const stalePhase6Patterns = [

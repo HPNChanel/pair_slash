@@ -28,15 +28,9 @@ Use:
 4. `/skills` -> first workflow
 
 For the shortest onboarding path, use `docs/workflows/phase-4-quickstart.md`.
-For the broader operations flow, use `docs/workflows/phase-2-operations.md`.
 For runtime evidence and guardrails, use `docs/compatibility/runtime-verification.md`.
 For lane-bound evidence records, use `docs/evidence/live-runtime/README.md`.
-For Phase 9 proof assets and evidence placeholders, use:
-
-- `docs/examples/README.md`
-- `docs/benchmarks/README.md`
-- `docs/case-studies/README.md`
-- `docs/case-studies/onboard-repo-before-after.md`
+For runnable public examples, use `docs/examples/README.md`.
 
 ## Managed lifecycle commands
 
@@ -101,4 +95,4 @@ After install:
 3. Select `pairslash-plan`.
 4. Ask: `Create a repo plan from the current repo state.`
 
-If setup problems appear, use `docs/workflows/phase-4-doctor-troubleshooting.md`.
+If setup problems appear, use `docs/workflows/phase-4-doctor-troubleshooting.md` and `docs/reporting.md`.

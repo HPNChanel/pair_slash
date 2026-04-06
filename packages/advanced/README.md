@@ -4,8 +4,8 @@ This directory is reserved for Phase 11 advanced optional lanes.
 
 Public release label for everything here: `experimental`.
 Runtime support expectation: `design-only` until live evidence exists.
-Canonical public docs start at `docs/phase-11/README.md`, not from this
-directory.
+Canonical maintainer-local docs for this slice live outside the public docs
+surface, not in this directory.
 
 Rules:
 

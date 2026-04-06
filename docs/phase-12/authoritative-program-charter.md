@@ -23,7 +23,7 @@ Implementation truth is what the repo actually ships today in code, manifests, a
 
 ### Product-Validation Truth
 
-Product-validation truth is governed only by `docs/validation/phase-3-5/verdict.md`, `docs/validation/phase-3-5/evidence-log.md`, `docs/validation/phase-3-5/benchmark-tasks.md`, `docs/validation/phase-3-5/scoring-rubric.md`, and `docs/validation/phase-3-5/runbook.md`. That layer is still `NO-GO`. No official benchmark runs are recorded under the current method, so PairSlash has not validated must-win workflow pull strongly enough to claim progress beyond Phase 3.5 business validation.
+Product-validation truth is governed publicly by `docs/validation/phase-3-5/verdict.md`. The detailed benchmark apparatus and raw logs are maintainer-local. That layer is still `NO-GO`. No official benchmark runs are recorded under the current method, so PairSlash has not validated must-win workflow pull strongly enough to claim progress beyond Phase 3.5 business validation.
 
 ### Public-Claim Truth
 
@@ -35,7 +35,7 @@ Runtime-support truth is lane-specific, not product-global. The machine-readable
 
 ### Release-Trust Truth
 
-Release-trust truth answers whether PairSlash can make a scoped installability claim without pretending product validation is complete. The authoritative files are `docs/releases/scoped-release-verdict.md`, `docs/releases/phase-5-shipped-scope.md`, and `docs/releases/release-checklist-0.4.0.md`. That layer is currently `NO-GO` on the current branch because release-readiness is red, and still `NO-GO` for product-validation exit. Legal and package publicness remain capped by current metadata in `package.json`, package-level `package.json` files, the absence or presence of `LICENSE` and `NOTICE`, and the current boundary recorded in `docs/releases/legal-packaging-status.md`.
+Release-trust truth answers whether PairSlash can make a scoped installability claim without pretending product validation is complete. The authoritative public files are `docs/releases/scoped-release-verdict.md` and `docs/releases/phase-5-shipped-scope.md`. Maintainer release-readiness runbooks remain local-only. That layer is currently `NO-GO` on the current branch because release-readiness is red, and still `NO-GO` for product-validation exit. Legal and package publicness remain capped by current metadata in `package.json`, package-level `package.json` files, the absence or presence of `LICENSE` and `NOTICE`, and the current boundary recorded in `docs/releases/legal-packaging-status.md`.
 
 ## 4. Official Phase Statement
 
@@ -64,7 +64,7 @@ What must not be overclaimed: that tests equal market validation, that preview o
 | Pack catalog lifecycle conformance | `packages/core/spec-core/tests/manifest-v2.conformance.test.js` | Detects manifest/catalog drift, completeness regressions, and unsupported promotion claims. |
 | Pack trust shim | `packs/core/*/pack.trust.yaml` | Optional compatibility shim only; may not become a competing truth root. |
 | Pack catalog index | `packages/core/spec-core/registry/packs.yaml` | Derived index of the canonical pack catalog; may not become a competing truth root. |
-| Release checklist truth | `docs/releases/release-checklist-0.4.0.md` | Owns scoped release checklist and blockers. |
+| Maintainer release-readiness records | Local-only maintainer docs | Track non-public release blockers and operational checklists without becoming public truth roots. |
 | Legal/package status boundary | `docs/releases/legal-packaging-status.md` | Summarizes the current legal/package publicness boundary from manifests and legal files without replacing them. |
 | Legal/package truth | `package.json`, `packages/*/*/package.json`, `LICENSE`, `NOTICE` | Own legal/package publicness; absence is part of the truth. |
 | Machine-readable charter pointer | `.pairslash/project-memory/00-project-charter.yaml` | Downstream identity and pointer record only. |
@@ -105,7 +105,6 @@ The following files sync from this charter:
 - `docs/phase-9/onboarding-path.md`
 - `docs/releases/public-claim-policy.md`
 - `.pairslash/project-memory/00-project-charter.yaml`
-- `docs/releases/release-checklist-0.4.0.md`
 
 The following files must never become competing truth roots for phase/governance wording:
 
@@ -117,9 +116,8 @@ The following files must never become competing truth roots for phase/governance
 - `docs/validation/phase-3-5/verdict.md`
 - `docs/compatibility/compatibility-matrix.md`
 - `docs/phase-9/oss-positioning.md`
-- `docs/validation/phase-3-5/benchmark-tasks.md`
 - `docs/phase-9/phase-9-baseline-reality-lock.md`
-- historical phase-exit and audit notes under `docs/phase-3.5/phase-exit/`
+- historical phase-exit and audit notes kept in local-only maintainer docs
 
 Rule: downstream files may restate the official phase sentence, but they must point back to this charter and must not redefine the authority hierarchy.
 
@@ -154,7 +152,6 @@ Rule: downstream files may restate the official phase sentence, but they must po
 - [ ] `docs/releases/public-claim-policy.md` no longer owns a competing stage root.
 - [ ] `docs/releases/scoped-release-verdict.md` and `docs/validation/phase-3-5/verdict.md` explicitly state their boundary and do not promote each other.
 - [ ] `docs/compatibility/compatibility-matrix.md` states that support labels are runtime-support truth only.
-- [ ] `docs/releases/release-checklist-0.4.0.md` treats this charter as a required release-truth input.
 - [ ] Truth-governance regression checks pass in `npm run test` and `npm run test:release`.
 
 ## "Founder/Maintainer Single Answer"
