@@ -589,6 +589,49 @@ export function formatMemoryWritePreviewBlockedText(blocked) {
   return `${lines.join("\n")}\n`;
 }
 
+export function formatMemoryCandidateReportText(report) {
+  const lines = [
+    "Action: memory.candidate",
+    `Runtime: ${report.runtime}`,
+    `Target: ${report.target}`,
+    `Task scope: ${report.task_scope}`,
+    `Read-only: ${report.read_only ? "yes" : "no"}`,
+    `Profile: ${report.read_profile_id}`,
+    `Precedence: ${(report.precedence_rule ?? []).join(" > ")}`,
+    `Candidates: ${report.candidates.length}`,
+    `Next action: ${report.next_action}`,
+  ];
+  if (report.reconciliation?.duplicates_found?.length > 0) {
+    lines.push(`Duplicates: ${report.reconciliation.duplicates_found.length}`);
+  }
+  if (report.reconciliation?.conflicts_found?.length > 0) {
+    lines.push(`Conflicts: ${report.reconciliation.conflicts_found.length}`);
+  }
+  if (report.reconciliation?.missing_evidence?.length > 0) {
+    lines.push(`Missing evidence: ${report.reconciliation.missing_evidence.length}`);
+  }
+  lines.push("", "Candidates:");
+  for (const candidate of report.candidates) {
+    lines.push(
+      `- ${candidate.id} :: ${candidate.source_layer} :: ${candidate.kind}/${candidate.title} :: ${candidate.classification}`,
+    );
+    lines.push(
+      `  suspicion duplicate=${candidate.suspicion.duplicate} conflict=${candidate.suspicion.conflict} supersede=${candidate.suspicion.supersede}`,
+    );
+    lines.push(`  recommend ${candidate.recommended_next_action}`);
+    if (candidate.matched_global_record) {
+      lines.push(`  global match ${candidate.matched_global_record.file}`);
+    }
+  }
+  if (report.reconciliation?.unresolved_context?.length > 0) {
+    lines.push("", "Unresolved context:");
+    for (const warning of report.reconciliation.unresolved_context) {
+      lines.push(`- ${warning}`);
+    }
+  }
+  return `${lines.join("\n")}\n`;
+}
+
 export function formatContextExplanationText(explanation) {
   const lines = [
     `Runtime: ${explanation.runtime}`,
@@ -622,32 +665,74 @@ export function formatContextExplanationText(explanation) {
       lines.push(`- ${tool.id}: ${tool.available ? "available" : "missing"}`);
     }
   }
+  if (explanation.memory_resolution) {
+    lines.push(
+      "",
+      "Memory authority resolution:",
+      `- Shared loader: ${explanation.memory_resolution.uses_shared_loader ? "yes" : "no"}`,
+      `- Profile: ${explanation.memory_resolution.profile_id}`,
+      `- Authoritative sources: ${(explanation.memory_resolution.authoritative_sources ?? []).length}`,
+    );
+    if ((explanation.memory_resolution.authoritative_sources ?? []).length === 0) {
+      lines.push("  none");
+    } else {
+      for (const path of explanation.memory_resolution.authoritative_sources) {
+        lines.push(`  ${path}`);
+      }
+    }
+    if ((explanation.memory_resolution.warnings ?? []).length > 0) {
+      lines.push("- Warnings:");
+      for (const warning of explanation.memory_resolution.warnings) {
+        lines.push(`  ${warning}`);
+      }
+    }
+    if ((explanation.memory_resolution.missing_paths ?? []).length > 0) {
+      lines.push("- Missing paths:");
+      for (const path of explanation.memory_resolution.missing_paths) {
+        lines.push(`  ${path}`);
+      }
+    }
+    lines.push("- Layers:");
+    for (const layer of explanation.memory_resolution.layers ?? []) {
+      lines.push(
+        `  ${layer.precedence}. ${layer.label} [${layer.authority}] :: ${layer.resolution_mode} :: ${layer.resolution_status}`,
+      );
+      lines.push(`     configured=${(layer.configured_paths ?? []).length} resolved=${(layer.resolved_paths ?? []).length} active_records=${(layer.resolved_records ?? []).length}`);
+      if ((layer.resolved_paths ?? []).length === 0) {
+        lines.push("     resolved paths: none");
+      } else {
+        for (const path of layer.resolved_paths) {
+          lines.push(`     ${path}`);
+        }
+      }
+      if ((layer.missing_paths ?? []).length > 0) {
+        lines.push("     missing:");
+        for (const path of layer.missing_paths) {
+          lines.push(`     ${path}`);
+        }
+      }
+      if ((layer.warnings ?? []).length > 0) {
+        lines.push("     warnings:");
+        for (const warning of layer.warnings) {
+          lines.push(`     ${warning}`);
+        }
+      }
+    }
+    if (explanation.memory_resolution.record_resolution) {
+      lines.push(
+        "- Claim resolution:",
+        `  precedence=${(explanation.memory_resolution.record_resolution.precedence_rule ?? []).join(" > ")}`,
+        `  resolved_claims=${(explanation.memory_resolution.record_resolution.resolved_claims ?? []).length}`,
+        `  conflicts=${(explanation.memory_resolution.record_resolution.conflicts ?? []).length}`,
+        `  supporting_gap_fills=${(explanation.memory_resolution.record_resolution.gap_fills ?? []).length}`,
+      );
+    }
+  }
   if (explanation.memory_reads) {
-    lines.push("", "Memory artifacts read:");
+    lines.push("", "Resolved read sets:");
     lines.push(`- Global Project Memory: ${(explanation.memory_reads.global_project_memory ?? []).length}`);
-    if ((explanation.memory_reads.global_project_memory ?? []).length === 0) {
-      lines.push("  none");
-    } else {
-      for (const path of explanation.memory_reads.global_project_memory) {
-        lines.push(`  ${path}`);
-      }
-    }
     lines.push(`- Task memory: ${(explanation.memory_reads.task_memory ?? []).length}`);
-    if ((explanation.memory_reads.task_memory ?? []).length === 0) {
-      lines.push("  none");
-    } else {
-      for (const path of explanation.memory_reads.task_memory) {
-        lines.push(`  ${path}`);
-      }
-    }
     lines.push(`- Session artifacts: ${(explanation.memory_reads.session_artifacts ?? []).length}`);
-    if ((explanation.memory_reads.session_artifacts ?? []).length === 0) {
-      lines.push("  none");
-    } else {
-      for (const path of explanation.memory_reads.session_artifacts) {
-        lines.push(`  ${path}`);
-      }
-    }
   }
   return `${lines.join("\n")}\n`;
 }

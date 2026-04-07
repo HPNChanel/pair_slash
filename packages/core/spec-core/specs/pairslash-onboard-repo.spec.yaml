@@ -50,6 +50,7 @@ contracts:
     reads:
       - layer: global-project-memory
         paths:
+          - .pairslash/project-memory/90-memory-index.yaml
           - .pairslash/project-memory/
       - layer: task-memory
         paths:
@@ -61,4 +62,3 @@ contracts:
     filesystem_writes: none
     git_mutation: none
     network_calls: none
-

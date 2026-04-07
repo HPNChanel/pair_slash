@@ -21,4 +21,5 @@ Reference docs:
 - [Runtime mapping](runtime-mapping/README.md)
 - [Live runtime evidence](evidence/live-runtime/README.md)
 - [Examples](examples/README.md)
+- [Phase 17 read authority charter](architecture/phase-17-read-authority-charter.md)
 - [Architecture](architecture/repo-structure.md)

@@ -7,6 +7,7 @@ export * from "./manifest-v2.normalize.js";
 export * from "./manifest-v2.schema.js";
 export * from "./pack-catalog.js";
 export * from "./project-memory.js";
+export * from "./read-authority.js";
 export * from "./release-trust.js";
 export * from "./runtime-support.js";
 export * from "./runtime-range.js";

@@ -18,6 +18,24 @@ This workflow is **audit-oriented** and defaults to **read-only**.
 3. ALWAYS separate audit findings from remediation proposals.
 4. If a fix requires memory mutation, route via `pairslash-memory-write-global`.
 
+## Load sources in precedence order
+
+Read memory sources in this order:
+
+1. `.pairslash/project-memory/90-memory-index.yaml`
+2. Active authoritative records in `.pairslash/project-memory/`
+3. `.pairslash/task-memory/`
+4. `.pairslash/audit-log/`
+
+Resolution rules:
+
+- Global Project Memory remains authoritative on read.
+- Task-memory and audit-log are supporting evidence only.
+- A lower-layer record must not be treated as an authoritative replacement for
+  a matching Global Project Memory claim.
+- If a lower-layer record contradicts an active project-memory claim, emit a
+  `conflict` finding instead of resolving the contradiction silently.
+
 ## Required output sections (fixed order)
 
 1. `## PLAN`
@@ -34,4 +52,3 @@ Allowed finding types:
 - schema-drift
 - index-gap
 - scope-error
-

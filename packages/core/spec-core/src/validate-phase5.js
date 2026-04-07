@@ -1,5 +1,6 @@
 import {
   AUDIT_LOG_ENTRY_SCHEMA_VERSION,
+  CANDIDATE_REPORT_SCHEMA_VERSION,
   CAPABILITY_FLAGS,
   CAPABILITY_NEGOTIATION_RESULTS,
   CONTRACT_ENVELOPE_SCHEMA_VERSION,
@@ -1034,5 +1035,210 @@ export function validateAuditLogEntry(record) {
   if ("notes" in (record ?? {}) && typeof record?.notes !== "string") {
     errors.push("notes must be string");
   }
+  return errors;
+}
+
+export function validateCandidateReport(record) {
+  const errors = [];
+  if (record?.kind !== "memory-candidate-report") {
+    errors.push("kind must be memory-candidate-report");
+  }
+  if (record?.schema_version !== CANDIDATE_REPORT_SCHEMA_VERSION) {
+    errors.push(`schema_version must be ${CANDIDATE_REPORT_SCHEMA_VERSION}`);
+  }
+  validateNonEmptyString(record?.generated_at, "generated_at", errors);
+  if (!SUPPORTED_RUNTIMES.includes(record?.runtime)) {
+    errors.push(`runtime must be one of ${SUPPORTED_RUNTIMES.join(", ")}`);
+  }
+  if (!SUPPORTED_TARGETS.includes(record?.target)) {
+    errors.push(`target must be one of ${SUPPORTED_TARGETS.join(", ")}`);
+  }
+  validateNonEmptyString(record?.task_scope, "task_scope", errors);
+  validateNonEmptyString(record?.strictness, "strictness", errors);
+  validateNonEmptyString(record?.read_profile_id, "read_profile_id", errors);
+  if (typeof record?.read_only !== "boolean") {
+    errors.push("read_only must be boolean");
+  } else if (record.read_only !== true) {
+    errors.push("read_only must be true");
+  }
+  const precedenceRule = validateStringArray(
+    record?.precedence_rule,
+    "precedence_rule",
+    errors,
+    { allowEmpty: false },
+  );
+  const expectedPrefix = ["global-project-memory", "task-memory", "session", "staging"];
+  for (let index = 0; index < expectedPrefix.length; index += 1) {
+    if (precedenceRule[index] !== expectedPrefix[index]) {
+      errors.push(`precedence_rule must start with ${expectedPrefix.join(" > ")}`);
+      break;
+    }
+  }
+
+  if (!isObject(record?.plan)) {
+    errors.push("plan must be an object");
+  } else {
+    validateNonEmptyString(record.plan?.task_scope, "plan.task_scope", errors);
+    validateStringArray(record.plan?.evidence_sources, "plan.evidence_sources", errors);
+    if (!Number.isInteger(record.plan?.candidate_count_estimate) || record.plan.candidate_count_estimate < 0) {
+      errors.push("plan.candidate_count_estimate must be a non-negative integer");
+    }
+    validateStringArray(record.plan?.risk_notes, "plan.risk_notes", errors);
+  }
+
+  if (!Array.isArray(record?.candidates) || record.candidates.length === 0) {
+    errors.push("candidates must be a non-empty list");
+  } else {
+    for (const candidate of record.candidates) {
+      if (!isObject(candidate)) {
+        errors.push("candidates[] must be an object");
+        continue;
+      }
+      validateNonEmptyString(candidate?.id, "candidates[].id", errors);
+      if (!["task-memory", "session", "staging"].includes(candidate?.source_layer)) {
+        errors.push("candidates[].source_layer must be one of task-memory, session, staging");
+      }
+      validateNonEmptyString(candidate?.source_file, "candidates[].source_file", errors);
+      validateNonEmptyString(candidate?.claim_key, "candidates[].claim_key", errors);
+      if (!MEMORY_RECORD_KINDS.includes(candidate?.kind)) {
+        errors.push(`candidates[].kind must be one of ${MEMORY_RECORD_KINDS.join(", ")}`);
+      }
+      validateNonEmptyString(candidate?.title, "candidates[].title", errors);
+      validateNonEmptyString(candidate?.statement, "candidates[].statement", errors);
+      if (!MEMORY_RECORD_SCOPES.includes(candidate?.scope)) {
+        errors.push(`candidates[].scope must be one of ${MEMORY_RECORD_SCOPES.join(", ")}`);
+      }
+      if (
+        "scope_detail" in candidate &&
+        candidate.scope_detail !== null &&
+        typeof candidate.scope_detail !== "string"
+      ) {
+        errors.push("candidates[].scope_detail must be string or null");
+      }
+      validateStringArray(candidate?.evidence ?? [], "candidates[].evidence", errors);
+      if (!MEMORY_RECORD_CONFIDENCE.includes(candidate?.confidence)) {
+        errors.push(`candidates[].confidence must be one of ${MEMORY_RECORD_CONFIDENCE.join(", ")}`);
+      }
+      validateNonEmptyString(candidate?.confidence_reason, "candidates[].confidence_reason", errors);
+      if (!["new", "duplicate", "supersede-candidate"].includes(candidate?.novelty)) {
+        errors.push("candidates[].novelty must be one of new, duplicate, supersede-candidate");
+      }
+      if (
+        ![
+          "keep-as-candidate",
+          "duplicate-existing",
+          "needs-supersede-review",
+          "too-weak-do-not-promote",
+        ].includes(candidate?.classification)
+      ) {
+        errors.push(
+          "candidates[].classification must be one of keep-as-candidate, duplicate-existing, needs-supersede-review, too-weak-do-not-promote",
+        );
+      }
+      validateNonEmptyString(candidate?.reason_to_promote, "candidates[].reason_to_promote", errors);
+      validateNonEmptyString(
+        candidate?.reason_not_to_promote_yet,
+        "candidates[].reason_not_to_promote_yet",
+        errors,
+      );
+      validateNonEmptyString(candidate?.target_file_hint, "candidates[].target_file_hint", errors);
+      if (
+        ![
+          "USE_PAIRSLASH_MEMORY_WRITE_GLOBAL",
+          "KEEP_IN_TASK_MEMORY",
+          "REJECT_CANDIDATES",
+        ].includes(candidate?.recommended_next_action)
+      ) {
+        errors.push(
+          "candidates[].recommended_next_action must be one of USE_PAIRSLASH_MEMORY_WRITE_GLOBAL, KEEP_IN_TASK_MEMORY, REJECT_CANDIDATES",
+        );
+      }
+      if (!isObject(candidate?.suspicion)) {
+        errors.push("candidates[].suspicion must be an object");
+      } else {
+        validateBoolean(candidate.suspicion?.duplicate, "candidates[].suspicion.duplicate", errors);
+        validateBoolean(candidate.suspicion?.conflict, "candidates[].suspicion.conflict", errors);
+        validateBoolean(candidate.suspicion?.supersede, "candidates[].suspicion.supersede", errors);
+        validateStringArray(candidate.suspicion?.reasons, "candidates[].suspicion.reasons", errors);
+      }
+      if (
+        "matched_global_record" in candidate &&
+        candidate.matched_global_record !== null &&
+        !isObject(candidate.matched_global_record)
+      ) {
+        errors.push("candidates[].matched_global_record must be object or null");
+      } else if (isObject(candidate?.matched_global_record)) {
+        if (candidate.matched_global_record.layer !== "global-project-memory") {
+          errors.push("candidates[].matched_global_record.layer must be global-project-memory");
+        }
+        validateNonEmptyString(candidate.matched_global_record?.file, "candidates[].matched_global_record.file", errors);
+        if (candidate.matched_global_record?.kind !== null) {
+          validateNonEmptyString(
+            candidate.matched_global_record?.kind,
+            "candidates[].matched_global_record.kind",
+            errors,
+          );
+        }
+        if (candidate.matched_global_record?.title !== null) {
+          validateNonEmptyString(
+            candidate.matched_global_record?.title,
+            "candidates[].matched_global_record.title",
+            errors,
+          );
+        }
+        if (candidate.matched_global_record?.scope !== null) {
+          validateNonEmptyString(
+            candidate.matched_global_record?.scope,
+            "candidates[].matched_global_record.scope",
+            errors,
+          );
+        }
+        if (
+          "scope_detail" in candidate.matched_global_record &&
+          candidate.matched_global_record.scope_detail !== null &&
+          typeof candidate.matched_global_record.scope_detail !== "string"
+        ) {
+          errors.push("candidates[].matched_global_record.scope_detail must be string or null");
+        }
+        if (
+          "statement" in candidate.matched_global_record &&
+          candidate.matched_global_record.statement !== null &&
+          typeof candidate.matched_global_record.statement !== "string"
+        ) {
+          errors.push("candidates[].matched_global_record.statement must be string or null");
+        }
+      }
+    }
+  }
+
+  if (!isObject(record?.reconciliation)) {
+    errors.push("reconciliation must be an object");
+  } else {
+    validateStringArray(
+      record.reconciliation?.existing_records_checked,
+      "reconciliation.existing_records_checked",
+      errors,
+    );
+    validateStringArray(record.reconciliation?.duplicates_found, "reconciliation.duplicates_found", errors);
+    validateStringArray(record.reconciliation?.conflicts_found, "reconciliation.conflicts_found", errors);
+    validateStringArray(
+      record.reconciliation?.supersede_review_needed,
+      "reconciliation.supersede_review_needed",
+      errors,
+    );
+    validateStringArray(record.reconciliation?.missing_evidence, "reconciliation.missing_evidence", errors);
+    validateStringArray(record.reconciliation?.unresolved_context, "reconciliation.unresolved_context", errors);
+  }
+
+  if (
+    ![
+      "USE_PAIRSLASH_MEMORY_WRITE_GLOBAL",
+      "KEEP_IN_TASK_MEMORY",
+      "REJECT_CANDIDATES",
+    ].includes(record?.next_action)
+  ) {
+    errors.push("next_action must be one of USE_PAIRSLASH_MEMORY_WRITE_GLOBAL, KEEP_IN_TASK_MEMORY, REJECT_CANDIDATES");
+  }
+
   return errors;
 }

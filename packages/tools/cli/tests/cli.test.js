@@ -1,11 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import YAML from "yaml";
 
 import { runCli } from "../src/bin/pairslash.js";
 import { listTraceIndexes, loadTraceEvents } from "@pairslash/trace";
+import { validateCandidateReport } from "@pairslash/spec-core";
 
 import {
   createTempRepo,
@@ -37,6 +38,20 @@ function buildMemoryWriteArgs(extra = []) {
     "high",
     "--action",
     "append",
+    ...extra,
+  ];
+}
+
+function buildMemoryCandidateArgs(extra = []) {
+  return [
+    "--runtime",
+    "codex",
+    "--target",
+    "repo",
+    "--task-scope",
+    "phase17-candidate-reconcile",
+    "--max-candidates",
+    "10",
     ...extra,
   ];
 }
@@ -1115,6 +1130,466 @@ test("pairslash memory write-global commits with --apply --yes after preview", s
   }
 });
 
+test("pairslash memory candidate emits schema-valid reconciliation report without mutating project-memory", serial, async () => {
+  const fixture = createTempRepo({ packs: ["pairslash-memory-candidate"] });
+  let output = "";
+  try {
+    mkdirSync(join(fixture.tempRoot, ".pairslash", "project-memory"), { recursive: true });
+    mkdirSync(join(fixture.tempRoot, ".pairslash", "task-memory"), { recursive: true });
+    mkdirSync(join(fixture.tempRoot, ".pairslash", "sessions"), { recursive: true });
+    mkdirSync(join(fixture.tempRoot, ".pairslash", "staging"), { recursive: true });
+
+    const globalPath = join(fixture.tempRoot, ".pairslash", "project-memory", "50-constraints.yaml");
+    const globalRecords = [
+      {
+        kind: "constraint",
+        title: "Candidate duplicate should match global",
+        statement: "Global duplicate statement.",
+        evidence: "global-evidence",
+        scope: "whole-project",
+        confidence: "high",
+        action: "append",
+        tags: [],
+        source_refs: [],
+        updated_by: "tests",
+        timestamp: "2026-04-07T01:00:00.000Z",
+      },
+      {
+        kind: "constraint",
+        title: "Candidate conflict needs supersede",
+        statement: "Global conflict baseline.",
+        evidence: "global-evidence",
+        scope: "whole-project",
+        confidence: "high",
+        action: "append",
+        tags: [],
+        source_refs: [],
+        updated_by: "tests",
+        timestamp: "2026-04-07T01:00:00.000Z",
+      },
+    ];
+    writeFileSync(
+      globalPath,
+      `${globalRecords.map((record) => YAML.stringify(record, { lineWidth: 0, simpleKeys: true }).trimEnd()).join("\n---\n")}\n`,
+    );
+    writeFileSync(
+      join(fixture.tempRoot, ".pairslash", "project-memory", "90-memory-index.yaml"),
+      YAML.stringify(
+        {
+          version: "0.1.0",
+          last_updated: "2026-04-07T01:00:00.000Z",
+          updated_by: "tests",
+          records: [
+            {
+              file: "50-constraints.yaml",
+              kind: "constraint",
+              title: "Candidate duplicate should match global",
+              scope: "whole-project",
+              status: "active",
+              record_family: "mutable",
+            },
+            {
+              file: "50-constraints.yaml",
+              kind: "constraint",
+              title: "Candidate conflict needs supersede",
+              scope: "whole-project",
+              status: "active",
+              record_family: "mutable",
+            },
+          ],
+        },
+        { lineWidth: 0, simpleKeys: true },
+      ),
+    );
+    writeFileSync(
+      join(fixture.tempRoot, ".pairslash", "task-memory", "candidate-input.yaml"),
+      [
+        "kind: constraint",
+        "title: Candidate duplicate should match global",
+        "statement: Global duplicate statement.",
+        "evidence: task evidence duplicate",
+        "scope: whole-project",
+        "---",
+        "kind: constraint",
+        "title: Candidate conflict needs supersede",
+        "statement: Task statement conflicts with global baseline.",
+        "evidence: task evidence conflict",
+        "scope: whole-project",
+      ].join("\n"),
+    );
+    writeFileSync(
+      join(fixture.tempRoot, ".pairslash", "sessions", "session-candidate.yaml"),
+      [
+        "kind: decision",
+        "title: Session-only candidate",
+        "statement: Session signal can become a candidate when global has no claim.",
+        "evidence: session evidence",
+        "scope: subsystem",
+        "scope_detail: memory-candidate",
+      ].join("\n"),
+    );
+    writeFileSync(
+      join(fixture.tempRoot, ".pairslash", "staging", "candidate-preview.yaml"),
+      [
+        "kind: memory-write-staging-artifact",
+        "schema_version: 1.0.0",
+        "runtime: codex_cli",
+        "target: repo",
+        "artifact_id: demo",
+        "request_key: demo",
+        "content_fingerprint: demo",
+        "path: .pairslash/staging/candidate-preview.yaml",
+        "request:",
+        "  kind: memory-write-request",
+        "  schema_version: 1.0.0",
+        "  runtime: codex_cli",
+        "  target: repo",
+        "  request_source: cli",
+        "  record:",
+        "    kind: pattern",
+        "    title: Staging candidate pattern",
+        "    statement: Staging candidate pending reconciliation.",
+        "    evidence: staging evidence",
+        "    scope: subsystem",
+        "    scope_detail: staging-candidate",
+        "    confidence: medium",
+        "    action: append",
+        "    tags: []",
+        "    source_refs: []",
+        "    updated_by: tests",
+        "    timestamp: 2026-04-07T01:00:00.000Z",
+      ].join("\n"),
+    );
+
+    const beforeGlobal = readFileSync(globalPath, "utf8");
+    const indexPath = join(fixture.tempRoot, ".pairslash", "project-memory", "90-memory-index.yaml");
+    const beforeIndex = readFileSync(indexPath, "utf8");
+    const exitCode = await runCli({
+      argv: ["memory", "candidate", ...buildMemoryCandidateArgs(["--format", "json"])],
+      cwd: fixture.tempRoot,
+      stdout: {
+        write(chunk) {
+          output += chunk;
+        },
+      },
+    });
+    assert.equal(exitCode, 0);
+    const payload = JSON.parse(output);
+    assert.deepEqual(validateCandidateReport(payload), []);
+    assert.equal(payload.kind, "memory-candidate-report");
+    assert.equal(payload.read_only, true);
+    assert.equal(payload.runtime, "codex_cli");
+    assert.deepEqual(payload.precedence_rule.slice(0, 4), [
+      "global-project-memory",
+      "task-memory",
+      "session",
+      "staging",
+    ]);
+    const duplicate = payload.candidates.find((entry) => entry.title === "Candidate duplicate should match global");
+    assert.ok(duplicate);
+    assert.equal(duplicate.suspicion.duplicate, true);
+    assert.equal(duplicate.suspicion.conflict, false);
+    assert.equal(duplicate.classification, "duplicate-existing");
+    assert.equal(duplicate.matched_global_record.layer, "global-project-memory");
+    const conflict = payload.candidates.find((entry) => entry.title === "Candidate conflict needs supersede");
+    assert.ok(conflict);
+    assert.equal(conflict.suspicion.conflict, true);
+    assert.equal(conflict.classification, "needs-supersede-review");
+    assert.equal(conflict.matched_global_record.layer, "global-project-memory");
+    assert.ok(payload.reconciliation.duplicates_found.includes(duplicate.id));
+    assert.ok(payload.reconciliation.conflicts_found.includes(conflict.id));
+    assert.equal(readFileSync(globalPath, "utf8"), beforeGlobal);
+    assert.equal(readFileSync(indexPath, "utf8"), beforeIndex);
+  } finally {
+    fixture.cleanup();
+  }
+});
+
+test("pairslash memory candidate fails clearly when task scope is missing", serial, async () => {
+  const fixture = createTempRepo({ packs: ["pairslash-memory-candidate"] });
+  try {
+    await assert.rejects(
+      () =>
+        runCli({
+          argv: ["memory", "candidate", "--runtime", "codex", "--format", "json"],
+          cwd: fixture.tempRoot,
+          stdout: {
+            write() {},
+          },
+        }),
+      /candidate-input-missing: --task-scope is required/,
+    );
+  } finally {
+    fixture.cleanup();
+  }
+});
+
+test("pairslash memory candidate fails clearly when task/session/staging context is empty", serial, async () => {
+  const fixture = createTempRepo({ packs: ["pairslash-memory-candidate"] });
+  try {
+    mkdirSync(join(fixture.tempRoot, ".pairslash", "task-memory"), { recursive: true });
+    mkdirSync(join(fixture.tempRoot, ".pairslash", "sessions"), { recursive: true });
+    mkdirSync(join(fixture.tempRoot, ".pairslash", "staging"), { recursive: true });
+    await assert.rejects(
+      () =>
+        runCli({
+          argv: ["memory", "candidate", ...buildMemoryCandidateArgs(["--format", "json"])],
+          cwd: fixture.tempRoot,
+          stdout: {
+            write() {},
+          },
+        }),
+      /candidate-context-insufficient: no candidate records found in task-memory\/session\/staging/,
+    );
+  } finally {
+    fixture.cleanup();
+  }
+});
+
+test("pairslash memory candidate fails clearly when source records are malformed", serial, async () => {
+  const fixture = createTempRepo({ packs: ["pairslash-memory-candidate"] });
+  try {
+    mkdirSync(join(fixture.tempRoot, ".pairslash", "task-memory"), { recursive: true });
+    mkdirSync(join(fixture.tempRoot, ".pairslash", "sessions"), { recursive: true });
+    mkdirSync(join(fixture.tempRoot, ".pairslash", "staging"), { recursive: true });
+    writeFileSync(
+      join(fixture.tempRoot, ".pairslash", "task-memory", "malformed.yaml"),
+      [
+        "kind: constraint",
+        "title: malformed-without-statement",
+        "evidence: task evidence",
+        "scope: whole-project",
+      ].join("\n"),
+    );
+    await assert.rejects(
+      () =>
+        runCli({
+          argv: ["memory", "candidate", ...buildMemoryCandidateArgs(["--format", "json"])],
+          cwd: fixture.tempRoot,
+          stdout: {
+            write() {},
+          },
+        }),
+      /candidate-context-insufficient: no candidate records found in task-memory\/session\/staging/,
+    );
+  } finally {
+    fixture.cleanup();
+  }
+});
+
+test("pairslash explain-context keeps read-authority resolution consistent across codex and copilot lanes", serial, async () => {
+  const fixture = createTempRepo({ packs: ["pairslash-memory-candidate"] });
+  const runtime = installFakeRuntime({ codexVersion: "0.116.0", copilotVersion: "2.50.0" });
+  let codexOutput = "";
+  let copilotOutput = "";
+  try {
+    mkdirSync(join(fixture.tempRoot, ".pairslash", "task-memory"), { recursive: true });
+    mkdirSync(join(fixture.tempRoot, ".pairslash", "sessions"), { recursive: true });
+    mkdirSync(join(fixture.tempRoot, ".pairslash", "staging"), { recursive: true });
+    mkdirSync(join(fixture.tempRoot, ".pairslash", "audit-log"), { recursive: true });
+    writeFileSync(
+      join(fixture.tempRoot, ".pairslash", "task-memory", "override.yaml"),
+      [
+        "kind: constraint",
+        "title: Codex CLI read-only sandbox blocks complex PowerShell patterns",
+        "statement: task conflict for cross-runtime parity check",
+        "evidence: task parity evidence",
+        "scope: subsystem",
+        "scope_detail: codex-cli",
+      ].join("\n"),
+    );
+    writeFileSync(
+      join(fixture.tempRoot, ".pairslash", "sessions", "override.yaml"),
+      [
+        "kind: constraint",
+        "title: Codex CLI read-only sandbox blocks complex PowerShell patterns",
+        "statement: session conflict for cross-runtime parity check",
+        "evidence: session parity evidence",
+        "scope: subsystem",
+        "scope_detail: codex-cli",
+      ].join("\n"),
+    );
+    writeFileSync(
+      join(fixture.tempRoot, ".pairslash", "staging", "override.yaml"),
+      [
+        "kind: constraint",
+        "title: Codex CLI read-only sandbox blocks complex PowerShell patterns",
+        "statement: staging conflict for cross-runtime parity check",
+        "evidence: staging parity evidence",
+        "scope: subsystem",
+        "scope_detail: codex-cli",
+      ].join("\n"),
+    );
+    writeFileSync(join(fixture.tempRoot, ".pairslash", "audit-log", "audit.jsonl"), "{\"kind\":\"memory-write-log\"}\n");
+
+    const codexExit = await runCli({
+      argv: ["explain-context", "pairslash-memory-candidate", "--runtime", "codex", "--format", "json"],
+      cwd: fixture.tempRoot,
+      stdout: {
+        write(chunk) {
+          codexOutput += chunk;
+        },
+      },
+    });
+    const copilotExit = await runCli({
+      argv: ["explain-context", "pairslash-memory-candidate", "--runtime", "copilot", "--target", "user", "--format", "json"],
+      cwd: fixture.tempRoot,
+      stdout: {
+        write(chunk) {
+          copilotOutput += chunk;
+        },
+      },
+    });
+    assert.equal(codexExit, 0);
+    assert.equal(copilotExit, 0);
+
+    const codexPayload = JSON.parse(codexOutput);
+    const copilotPayload = JSON.parse(copilotOutput);
+    const summarize = (payload) => {
+      const claim = payload.memory_resolution.record_resolution.resolved_claims.find(
+        (entry) =>
+          entry.kind === "constraint" &&
+          entry.title === "Codex CLI read-only sandbox blocks complex PowerShell patterns",
+      );
+      const conflictLayers = payload.memory_resolution.record_resolution.conflicts
+        .filter((entry) => entry.claim_key === claim.claim_key)
+        .map((entry) => entry.shadowed_layer)
+        .sort((left, right) => left.localeCompare(right));
+      return {
+        profile: payload.memory_resolution.profile_id,
+        precedence: payload.memory_resolution.record_resolution.precedence_rule.slice(0, 5),
+        selected_layer: claim.selected.layer,
+        selected_authority: claim.selected.authority,
+        conflict_layers: conflictLayers,
+      };
+    };
+
+    assert.equal(codexPayload.runtime, "codex_cli");
+    assert.equal(copilotPayload.runtime, "copilot_cli");
+    assert.deepEqual(summarize(codexPayload), summarize(copilotPayload));
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("authoritative read-path journey surfaces session conflict and keeps read workflows non-mutating", serial, async () => {
+  const fixture = createTempRepo({ packs: ["pairslash-memory-candidate"] });
+  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  let candidateOutput = "";
+  let explanationOutput = "";
+  try {
+    mkdirSync(join(fixture.tempRoot, ".pairslash", "task-memory"), { recursive: true });
+    mkdirSync(join(fixture.tempRoot, ".pairslash", "sessions"), { recursive: true });
+    mkdirSync(join(fixture.tempRoot, ".pairslash", "staging"), { recursive: true });
+    mkdirSync(join(fixture.tempRoot, ".pairslash", "audit-log"), { recursive: true });
+    writeFileSync(
+      join(fixture.tempRoot, ".pairslash", "task-memory", "candidate.yaml"),
+      [
+        "kind: constraint",
+        "title: Codex CLI read-only sandbox blocks complex PowerShell patterns",
+        "statement: task conflict for read-path journey",
+        "evidence: task journey evidence",
+        "scope: subsystem",
+        "scope_detail: codex-cli",
+      ].join("\n"),
+    );
+    writeFileSync(
+      join(fixture.tempRoot, ".pairslash", "sessions", "session-conflict.yaml"),
+      [
+        "kind: constraint",
+        "title: Codex CLI read-only sandbox blocks complex PowerShell patterns",
+        "statement: session conflict for read-path journey",
+        "evidence: session journey evidence",
+        "scope: subsystem",
+        "scope_detail: codex-cli",
+      ].join("\n"),
+    );
+    writeFileSync(
+      join(fixture.tempRoot, ".pairslash", "staging", "journey.yaml"),
+      [
+        "kind: pattern",
+        "title: Journey staging candidate",
+        "statement: staging candidate remains read-only until explicit write workflow",
+        "evidence: staging journey evidence",
+        "scope: subsystem",
+        "scope_detail: journey",
+      ].join("\n"),
+    );
+    writeFileSync(join(fixture.tempRoot, ".pairslash", "audit-log", "journey.log"), "baseline-audit\n");
+
+    const globalPath = join(fixture.tempRoot, ".pairslash", "project-memory", "50-constraints.yaml");
+    const indexPath = join(fixture.tempRoot, ".pairslash", "project-memory", "90-memory-index.yaml");
+    const stagingRoot = join(fixture.tempRoot, ".pairslash", "staging");
+    const auditPath = join(fixture.tempRoot, ".pairslash", "audit-log", "journey.log");
+    const beforeGlobal = readFileSync(globalPath, "utf8");
+    const beforeIndex = readFileSync(indexPath, "utf8");
+    const beforeAudit = readFileSync(auditPath, "utf8");
+    const beforeStaging = readdirSync(stagingRoot).sort((left, right) => left.localeCompare(right));
+
+    const candidateExit = await runCli({
+      argv: ["memory", "candidate", ...buildMemoryCandidateArgs(["--format", "json"])],
+      cwd: fixture.tempRoot,
+      stdout: {
+        write(chunk) {
+          candidateOutput += chunk;
+        },
+      },
+    });
+    assert.equal(candidateExit, 0);
+    const candidatePayload = JSON.parse(candidateOutput);
+    assert.deepEqual(validateCandidateReport(candidatePayload), []);
+    assert.equal(candidatePayload.read_only, true);
+    assert.equal(candidatePayload.next_action, "USE_PAIRSLASH_MEMORY_WRITE_GLOBAL");
+    assert.ok(
+      candidatePayload.candidates.some(
+        (entry) =>
+          entry.title === "Codex CLI read-only sandbox blocks complex PowerShell patterns" &&
+          entry.suspicion.conflict,
+      ),
+    );
+
+    const explainExit = await runCli({
+      argv: ["explain-context", "pairslash-memory-candidate", "--runtime", "codex", "--format", "json"],
+      cwd: fixture.tempRoot,
+      stdout: {
+        write(chunk) {
+          explanationOutput += chunk;
+        },
+      },
+    });
+    assert.equal(explainExit, 0);
+    const explanationPayload = JSON.parse(explanationOutput);
+    const resolvedClaim = explanationPayload.memory_resolution.record_resolution.resolved_claims.find(
+      (entry) =>
+        entry.kind === "constraint" &&
+        entry.title === "Codex CLI read-only sandbox blocks complex PowerShell patterns",
+    );
+    assert.equal(resolvedClaim.selected.layer, "global-project-memory");
+    assert.equal(resolvedClaim.selected.authority, "authoritative");
+    assert.ok(
+      explanationPayload.memory_resolution.record_resolution.conflicts.some(
+        (entry) =>
+          entry.claim_key === resolvedClaim.claim_key &&
+          entry.selected_layer === "global-project-memory" &&
+          entry.shadowed_layer === "session",
+      ),
+    );
+    assert.deepEqual(
+      explanationPayload.memory_resolution.record_resolution.precedence_rule.slice(0, 4),
+      ["global-project-memory", "task-memory", "session", "staging"],
+    );
+
+    assert.equal(readFileSync(globalPath, "utf8"), beforeGlobal);
+    assert.equal(readFileSync(indexPath, "utf8"), beforeIndex);
+    assert.equal(readFileSync(auditPath, "utf8"), beforeAudit);
+    assert.deepEqual(readdirSync(stagingRoot).sort((left, right) => left.localeCompare(right)), beforeStaging);
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
 test("pairslash explain-context emits structured json report", serial, async () => {
   const fixture = createTempRepo();
   const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
@@ -1129,7 +1604,7 @@ test("pairslash explain-context emits structured json report", serial, async () 
     );
     writeFileSync(
       join(fixture.tempRoot, ".pairslash", "task-memory", "task.yaml"),
-      "kind: decision\ntitle: task\n",
+      "kind: decision\ntitle: task-only-candidate\n",
     );
     writeFileSync(
       join(fixture.tempRoot, ".pairslash", "sessions", "session-note.yaml"),
@@ -1150,9 +1625,118 @@ test("pairslash explain-context emits structured json report", serial, async () 
     assert.equal(payload.runtime, "codex_cli");
     assert.equal(payload.pack_id, "pairslash-plan");
     assert.equal(payload.telemetry_mode, "off");
+    assert.equal(payload.schema_version, "1.1.0");
     assert.ok(payload.memory_reads.global_project_memory.includes(".pairslash/project-memory/50-constraints.yaml"));
     assert.ok(payload.memory_reads.task_memory.includes(".pairslash/task-memory/task.yaml"));
+    assert.deepEqual(payload.memory_reads.session_artifacts, []);
+    assert.equal(payload.memory_resolution.profile_id, "pairslash-plan");
+    assert.equal(payload.memory_resolution.uses_shared_loader, true);
+    assert.ok(payload.memory_resolution.authoritative_sources.includes(".pairslash/project-memory/90-memory-index.yaml"));
+    assert.deepEqual(payload.memory_resolution.record_resolution.precedence_rule.slice(0, 2), [
+      "global-project-memory",
+      "task-memory",
+    ]);
+    assert.ok(payload.memory_resolution.record_resolution.resolved_claims.length > 0);
+    const globalLayer = payload.memory_resolution.layers.find((layer) => layer.layer === "global-project-memory");
+    assert.equal(globalLayer.resolution_mode, "explicit-paths");
+    assert.equal(globalLayer.resolution_status, "resolved");
+    assert.ok(globalLayer.resolved_paths.includes(".pairslash/project-memory/50-constraints.yaml"));
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("pairslash explain-context resolves candidate read authority with authoritative and supporting layers", serial, async () => {
+  const fixture = createTempRepo({ packs: ["pairslash-plan", "pairslash-memory-candidate"] });
+  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  let output = "";
+  try {
+    mkdirSync(join(fixture.tempRoot, ".pairslash", "task-memory"), { recursive: true });
+    mkdirSync(join(fixture.tempRoot, ".pairslash", "sessions"), { recursive: true });
+    mkdirSync(join(fixture.tempRoot, ".pairslash", "staging"), { recursive: true });
+    mkdirSync(join(fixture.tempRoot, ".pairslash", "audit-log"), { recursive: true });
+    writeFileSync(
+      join(fixture.tempRoot, ".pairslash", "task-memory", "task.yaml"),
+      "kind: decision\ntitle: task-only-candidate\n",
+    );
+    writeFileSync(
+      join(fixture.tempRoot, ".pairslash", "task-memory", "override.yaml"),
+      [
+        "kind: constraint",
+        "title: Codex CLI read-only sandbox blocks complex PowerShell patterns",
+        "statement: task override should stay shadowed",
+        "scope: subsystem",
+        "scope_detail: codex-cli",
+      ].join("\n"),
+    );
+    writeFileSync(
+      join(fixture.tempRoot, ".pairslash", "sessions", "session-note.yaml"),
+      "kind: note\ntitle: session\n",
+    );
+    writeFileSync(
+      join(fixture.tempRoot, ".pairslash", "staging", "candidate-preview.yaml"),
+      "kind: constraint\ntitle: preview\n",
+    );
+    writeFileSync(
+      join(fixture.tempRoot, ".pairslash", "audit-log", "audit.jsonl"),
+      "{\"kind\":\"memory-write-log\"}\n",
+    );
+    const exitCode = await runCli({
+      argv: ["explain-context", "pairslash-memory-candidate", "--runtime", "codex", "--format", "json"],
+      cwd: fixture.tempRoot,
+      stdout: {
+        write(chunk) {
+          output += chunk;
+        },
+      },
+    });
+    assert.equal(exitCode, 0);
+    const payload = JSON.parse(output);
+    assert.equal(payload.pack_id, "pairslash-memory-candidate");
+    assert.equal(payload.memory_resolution.profile_id, "pairslash-memory-candidate");
+    assert.ok(payload.memory_resolution.authoritative_sources.includes(".pairslash/project-memory/90-memory-index.yaml"));
+    assert.ok(payload.memory_resolution.authoritative_sources.includes(".pairslash/project-memory/50-constraints.yaml"));
+    assert.deepEqual(payload.memory_resolution.record_resolution.precedence_rule.slice(0, 4), [
+      "global-project-memory",
+      "task-memory",
+      "session",
+      "staging",
+    ]);
+    assert.ok(payload.memory_reads.task_memory.includes(".pairslash/task-memory/task.yaml"));
     assert.ok(payload.memory_reads.session_artifacts.includes(".pairslash/sessions/session-note.yaml"));
+    assert.ok(payload.memory_reads.session_artifacts.includes(".pairslash/staging/candidate-preview.yaml"));
+    const auditLayer = payload.memory_resolution.layers.find((layer) => layer.layer === "audit-log");
+    const globalLayer = payload.memory_resolution.layers.find((layer) => layer.layer === "global-project-memory");
+    const sessionLayer = payload.memory_resolution.layers.find((layer) => layer.layer === "session");
+    assert.equal(globalLayer.resolution_mode, "project-memory-index");
+    assert.equal(globalLayer.resolution_status, "resolved");
+    assert.ok(globalLayer.precedence < sessionLayer.precedence);
+    assert.ok(globalLayer.resolved_records.length > 0);
+    assert.ok(auditLayer.resolved_paths.includes(".pairslash/audit-log/audit.jsonl"));
+    const overriddenClaim = payload.memory_resolution.record_resolution.resolved_claims.find(
+      (claim) =>
+        claim.kind === "constraint" &&
+        claim.title === "Codex CLI read-only sandbox blocks complex PowerShell patterns",
+    );
+    assert.equal(overriddenClaim.selected.layer, "global-project-memory");
+    assert.ok(
+      overriddenClaim.shadowed.some((entry) => entry.layer === "task-memory"),
+    );
+    assert.ok(
+      payload.memory_resolution.record_resolution.conflicts.some(
+        (entry) =>
+          entry.claim_key === overriddenClaim.claim_key &&
+          entry.selected_layer === "global-project-memory" &&
+          entry.shadowed_layer === "task-memory",
+      ),
+    );
+    const taskOnlyClaim = payload.memory_resolution.record_resolution.resolved_claims.find(
+      (claim) => claim.title === "task-only-candidate",
+    );
+    assert.equal(taskOnlyClaim.selected.layer, "task-memory");
+    assert.equal(taskOnlyClaim.selected.authority, "supporting");
+    assert.equal(taskOnlyClaim.resolution_type, "supporting-gap-fill");
   } finally {
     runtime.cleanup();
     fixture.cleanup();

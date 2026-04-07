@@ -48,8 +48,10 @@ contracts:
       strictness: strict-gate-fail-fast
       max_candidates: 20
     scope_assumption: >-
-      If evidence_sources is omitted, inspect project-memory, task-memory,
-      session artifacts, docs, and audit logs in that order.
+      If evidence_sources is omitted, resolve authoritative Global Project
+      Memory first via 90-memory-index.yaml plus active project-memory
+      records, then inspect task-memory, session artifacts, staging, docs,
+      and audit logs as supporting evidence.
 
   output:
     format: structured-markdown
@@ -109,7 +111,8 @@ contracts:
           - .pairslash/project-memory/90-memory-index.yaml
           - .pairslash/project-memory/
         purpose: >-
-          Authoritative duplicate/supersede reconciliation and scope checks.
+          Resolve authoritative active records for duplicate/supersede
+          reconciliation and scope checks.
       - layer: task-memory
         paths:
           - .pairslash/task-memory/
@@ -130,6 +133,10 @@ contracts:
     audit: none
     invariant: >-
       This workflow MUST NOT write to .pairslash/project-memory/.
+      Global Project Memory remains authoritative on read.
+      Task-memory, sessions, staging, and audit-log may fill missing context
+      only when no active project-memory claim exists for the same claim key.
+      Lower layers must not silently override Global Project Memory.
       It MUST NOT promote candidates implicitly.
 
   side_effect:
@@ -185,6 +192,7 @@ contracts:
 
   safety_rules:
     - Global Project Memory is authoritative.
+    - Lower layers may fill gaps but must not silently override Global Project Memory.
     - No speculation. No hidden promotion.
     - Every candidate must carry evidence.
     - Reconciliation against project-memory is mandatory.

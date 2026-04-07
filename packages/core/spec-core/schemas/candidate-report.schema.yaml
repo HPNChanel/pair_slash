@@ -1,22 +1,62 @@
-# PairSlash Candidate Extractor Report Schema
-# JSON Schema expressed as YAML.
-# Defines strict output for pairslash-memory-candidate.
-
 $schema: "https://json-schema.org/draft/2020-12/schema"
-$id: "https://pairslash.dev/schemas/candidate-report/0.1.0"
-title: PairSlash Candidate Extractor Report
+$id: "https://pairslash.dev/schemas/candidate-report/0.2.0"
+title: PairSlash Memory Candidate Report
 description: >-
-  Schema for the structured report produced by pairslash-memory-candidate.
-  This report is non-authoritative and must not mutate Global Project Memory.
+  Machine-readable, read-only candidate reconciliation report emitted by
+  `pairslash memory candidate`.
 
 type: object
 required:
+  - kind
+  - schema_version
+  - generated_at
+  - runtime
+  - target
+  - task_scope
+  - strictness
+  - read_profile_id
+  - read_only
+  - precedence_rule
   - plan
   - candidates
   - reconciliation
   - next_action
-
 properties:
+  kind:
+    const: memory-candidate-report
+  schema_version:
+    const: "0.2.0"
+  generated_at:
+    type: string
+    minLength: 1
+  runtime:
+    type: string
+    enum:
+      - codex_cli
+      - copilot_cli
+  target:
+    type: string
+    enum:
+      - repo
+      - user
+  task_scope:
+    type: string
+    minLength: 1
+  strictness:
+    type: string
+    minLength: 1
+  read_profile_id:
+    type: string
+    minLength: 1
+  read_only:
+    type: boolean
+    const: true
+  precedence_rule:
+    type: array
+    minItems: 4
+    items:
+      type: string
+      minLength: 1
   plan:
     type: object
     required:
@@ -30,7 +70,6 @@ properties:
         minLength: 1
       evidence_sources:
         type: array
-        minItems: 1
         items:
           type: string
           minLength: 1
@@ -41,27 +80,47 @@ properties:
         type: array
         items:
           type: string
+          minLength: 1
     additionalProperties: false
-
   candidates:
     type: array
+    minItems: 1
     items:
       type: object
       required:
         - id
+        - source_layer
+        - source_file
+        - claim_key
         - kind
         - title
         - statement
         - scope
         - evidence
         - confidence
+        - confidence_reason
         - novelty
         - classification
         - reason_to_promote
         - reason_not_to_promote_yet
         - target_file_hint
+        - matched_global_record
+        - suspicion
+        - recommended_next_action
       properties:
         id:
+          type: string
+          minLength: 1
+        source_layer:
+          type: string
+          enum:
+            - task-memory
+            - session
+            - staging
+        source_file:
+          type: string
+          minLength: 1
+        claim_key:
           type: string
           minLength: 1
         kind:
@@ -77,19 +136,20 @@ properties:
         title:
           type: string
           minLength: 3
-          maxLength: 200
         statement:
           type: string
-          minLength: 10
         scope:
           type: string
           enum:
             - whole-project
             - subsystem
             - path-prefix
+        scope_detail:
+          type:
+            - string
+            - "null"
         evidence:
           type: array
-          minItems: 1
           items:
             type: string
             minLength: 1
@@ -99,6 +159,9 @@ properties:
             - low
             - medium
             - high
+        confidence_reason:
+          type: string
+          minLength: 1
         novelty:
           type: string
           enum:
@@ -114,52 +177,126 @@ properties:
             - too-weak-do-not-promote
         reason_to_promote:
           type: string
+          minLength: 1
         reason_not_to_promote_yet:
           type: string
+          minLength: 1
         target_file_hint:
           type: string
           minLength: 1
+        matched_global_record:
+          type:
+            - object
+            - "null"
+          properties:
+            layer:
+              type: string
+              const: global-project-memory
+            file:
+              type: string
+              minLength: 1
+            kind:
+              type:
+                - string
+                - "null"
+            title:
+              type:
+                - string
+                - "null"
+            scope:
+              type:
+                - string
+                - "null"
+            scope_detail:
+              type:
+                - string
+                - "null"
+            statement:
+              type:
+                - string
+                - "null"
+          required:
+            - layer
+            - file
+            - kind
+            - title
+            - scope
+            - scope_detail
+            - statement
+          additionalProperties: false
+        suspicion:
+          type: object
+          required:
+            - duplicate
+            - conflict
+            - supersede
+            - reasons
+          properties:
+            duplicate:
+              type: boolean
+            conflict:
+              type: boolean
+            supersede:
+              type: boolean
+            reasons:
+              type: array
+              minItems: 1
+              items:
+                type: string
+                minLength: 1
+          additionalProperties: false
+        recommended_next_action:
+          type: string
+          enum:
+            - USE_PAIRSLASH_MEMORY_WRITE_GLOBAL
+            - KEEP_IN_TASK_MEMORY
+            - REJECT_CANDIDATES
       additionalProperties: false
-
   reconciliation:
     type: object
     required:
       - existing_records_checked
       - duplicates_found
+      - conflicts_found
       - supersede_review_needed
       - missing_evidence
+      - unresolved_context
     properties:
       existing_records_checked:
         type: array
         items:
           type: string
+          minLength: 1
       duplicates_found:
         type: array
         items:
           type: string
+          minLength: 1
+      conflicts_found:
+        type: array
+        items:
+          type: string
+          minLength: 1
       supersede_review_needed:
         type: array
         items:
           type: string
+          minLength: 1
       missing_evidence:
         type: array
         items:
           type: string
+          minLength: 1
+      unresolved_context:
+        type: array
+        items:
+          type: string
+          minLength: 1
     additionalProperties: false
-
   next_action:
     type: string
     enum:
       - USE_PAIRSLASH_MEMORY_WRITE_GLOBAL
       - KEEP_IN_TASK_MEMORY
       - REJECT_CANDIDATES
-
 additionalProperties: false
-
-# Rules not fully expressible by schema:
-#
-# 1. Each evidence entry should include a source location (path and anchor).
-# 2. classification must match novelty and reconciliation outcome:
-#    - duplicate-existing -> novelty=duplicate
-#    - needs-supersede-review -> novelty=supersede-candidate
-# 3. keep-as-candidate requires reconciliation to have no unresolved conflict.

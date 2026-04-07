@@ -31,6 +31,9 @@ boundary ladder live in `docs/phase-12/authoritative-program-charter.md`.
 - Describe Global Project Memory as the authoritative project memory layer with
   explicit write authority. Do not imply that every read path is authoritative
   or that memory updates happen automatically.
+- Do not claim authoritative read-path completion unless the shared loader,
+  resolved `explain-context` view, and acceptance coverage in
+  `docs/architecture/phase-17-read-authority-charter.md` are present.
 - Keep workflow language explicit. Do not imply auto-triggered flows, hidden
   writes, implicit memory promotion, or generic agent-platform breadth.
 - If evidence is weaker than the sentence, downgrade the sentence.
@@ -42,6 +45,7 @@ boundary ladder live in `docs/phase-12/authoritative-program-charter.md`.
 - Implementation truth:
   - `packs/core/*/pack.manifest.yaml`
   - `packages/core/spec-core/src/pack-catalog.js`
+  - `docs/architecture/phase-17-read-authority-charter.md`
   - `packages/core/spec-core/registry/packs.yaml` (derived index only)
   - `packages/tools/installer/`
   - `packages/tools/doctor/`
@@ -65,6 +69,9 @@ boundary ladder live in `docs/phase-12/authoritative-program-charter.md`.
 - The PairSlash source repository is licensed under Apache-2.0.
 - Global Project Memory is the authoritative project memory layer, and
   authoritative writes stay explicit, previewable, and auditable.
+- Global Project Memory stays authoritative on read through the documented
+  shared loader precedence contract; task, session, and staging layers remain
+  supporting only.
 - PairSlash ships a scoped managed installability substrate for the two core
   runtimes.
 - The current supported install path is repo-local from this checkout; package-manager
@@ -150,6 +157,9 @@ Use an opening paragraph like this:
   canonical front door.
 - Any statement that implies hidden writes, implicit memory promotion, or
   autonomous fix application.
+- Any statement that claims authoritative read-path completion without the
+  shared loader, resolved `explain-context` view, and required acceptance
+  coverage recorded in `docs/architecture/phase-17-read-authority-charter.md`.
 - Any package-manager publication or package-surface claim not supported by
   current legal/package metadata.
 - Any statement that treats Apache-2.0 repo source licensing as proof that a

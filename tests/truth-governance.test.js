@@ -8,6 +8,7 @@ import { repoRoot } from "./phase4-helpers.js";
 
 const CHARTER_PATH = "docs/phase-12/authoritative-program-charter.md";
 const CHARTER_FILE = "authoritative-program-charter.md";
+const READ_AUTHORITY_CHARTER_PATH = "docs/architecture/phase-17-read-authority-charter.md";
 const LEGAL_PACKAGING_STATUS_PATH = "docs/releases/legal-packaging-status.md";
 const LICENSE_PATH = "LICENSE";
 const OFFICIAL_STAGE_SENTENCE =
@@ -67,6 +68,42 @@ test("authoritative program charter exists with the required section contract", 
     normalizeWhitespace(contents).includes(OFFICIAL_STAGE_SENTENCE),
     `${CHARTER_PATH} should contain the official stage sentence`,
   );
+});
+
+test("phase 17 read authority charter exists with the required contract sections", () => {
+  const absolutePath = join(repoRoot, READ_AUTHORITY_CHARTER_PATH);
+  assert.equal(existsSync(absolutePath), true);
+
+  const contents = read(READ_AUTHORITY_CHARTER_PATH);
+  for (const heading of [
+    "## Precedence Contract",
+    "## Explain-Context Contract",
+    "## Conflict Taxonomy",
+    "## Policy Notes for Global / Task / Session / Staging",
+    "## Acceptance Matrix",
+    "## Out-of-Scope Decisions",
+  ]) {
+    assert.ok(contents.includes(heading), `${READ_AUTHORITY_CHARTER_PATH} should include ${heading}`);
+  }
+  assert.ok(
+    contents.includes("global-project-memory > task-memory > session > staging > audit-log"),
+    `${READ_AUTHORITY_CHARTER_PATH} should state the official precedence rule`,
+  );
+  for (const workflowId of [
+    "`explain-context`",
+    "`pairslash-plan`",
+    "`pairslash-memory-candidate`",
+    "`pairslash-memory-audit`",
+  ]) {
+    assert.ok(contents.includes(workflowId), `${READ_AUTHORITY_CHARTER_PATH} should include ${workflowId}`);
+  }
+  for (const label of [
+    "Authoritative statement:",
+    "Anti-overclaim statement:",
+    "Exit gate sentence:",
+  ]) {
+    assert.ok(contents.includes(label), `${READ_AUTHORITY_CHARTER_PATH} should include ${label}`);
+  }
 });
 
 test("official stage sentence is synced into public entry docs", () => {
@@ -139,6 +176,38 @@ test("public claim policy points to the charter instead of owning stage truth", 
     false,
     `${policyPath} should not restate the official phase sentence as its own truth root`,
   );
+});
+
+test("phase 17 read authority charter is wired into phase truth and claim guardrails", () => {
+  const charterContents = read(CHARTER_PATH);
+  assert.ok(
+    charterContents.includes(READ_AUTHORITY_CHARTER_PATH),
+    `${CHARTER_PATH} should point to the read-authority charter`,
+  );
+
+  const publicClaimPolicy = read("docs/releases/public-claim-policy.md");
+  assert.ok(
+    publicClaimPolicy.includes(READ_AUTHORITY_CHARTER_PATH),
+    "docs/releases/public-claim-policy.md should point to the read-authority charter",
+  );
+  assert.ok(
+    publicClaimPolicy.includes("Do not claim authoritative read-path completion unless the shared loader"),
+    "docs/releases/public-claim-policy.md should keep the authoritative read-path overclaim guardrail explicit",
+  );
+});
+
+test("phase 17 read workflow skills keep authoritative read-path guardrails explicit", () => {
+  const planSkill = normalizeWhitespace(read("packs/core/pairslash-plan/SKILL.md"));
+  assert.ok(planSkill.includes("Global Project Memory is authoritative on read."));
+  assert.ok(planSkill.includes("must not silently override a matching Global Project Memory claim"));
+
+  const candidateSkill = normalizeWhitespace(read("packs/core/pairslash-memory-candidate/SKILL.md"));
+  assert.ok(candidateSkill.includes("Resolve memory context in this precedence order:"));
+  assert.ok(candidateSkill.includes("Lower layers must not silently override Global Project Memory."));
+
+  const auditSkill = normalizeWhitespace(read("packs/core/pairslash-memory-audit/SKILL.md"));
+  assert.ok(auditSkill.includes("## Load sources in precedence order"));
+  assert.ok(auditSkill.includes("Global Project Memory remains authoritative on read."));
 });
 
 test("public claim policy keeps narrative guardrails and release wording templates", () => {

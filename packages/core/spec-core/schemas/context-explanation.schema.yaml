@@ -1,5 +1,5 @@
 $schema: "https://json-schema.org/draft/2020-12/schema"
-$id: "https://pairslash.dev/schemas/context-explanation/1.0.0"
+$id: "https://pairslash.dev/schemas/context-explanation/1.1.0"
 title: PairSlash Context Explanation
 type: object
 required:
@@ -15,11 +15,12 @@ required:
   - trace_root
   - telemetry_mode
   - memory_reads
+  - memory_resolution
 properties:
   kind:
     const: context-explanation
   schema_version:
-    const: "1.0.0"
+    const: "1.1.0"
   generated_at:
     type: string
   runtime:
@@ -57,3 +58,230 @@ properties:
         type: array
         items:
           type: string
+  memory_resolution:
+    type: object
+    required:
+      - profile_id
+      - uses_shared_loader
+      - authoritative_sources
+      - missing_paths
+      - warnings
+      - layers
+      - record_resolution
+    properties:
+      profile_id:
+        type: string
+      uses_shared_loader:
+        type: boolean
+      authoritative_sources:
+        type: array
+        items:
+          type: string
+      missing_paths:
+        type: array
+        items:
+          type: string
+      warnings:
+        type: array
+        items:
+          type: string
+      record_resolution:
+        type: object
+        required:
+          - precedence_rule
+          - resolved_claims
+          - conflicts
+          - gap_fills
+        properties:
+          precedence_rule:
+            type: array
+            items:
+              type: string
+          resolved_claims:
+            type: array
+            items:
+              type: object
+              required:
+                - claim_key
+                - kind
+                - title
+                - selected
+                - resolution_type
+                - shadowed
+              properties:
+                claim_key:
+                  type: string
+                kind:
+                  type: string
+                title:
+                  type: string
+                scope:
+                  type:
+                    - string
+                    - "null"
+                scope_detail:
+                  type:
+                    - string
+                    - "null"
+                selected:
+                  type: object
+                  required:
+                    - layer
+                    - authority
+                    - file
+                  properties:
+                    layer:
+                      type: string
+                    authority:
+                      type: string
+                    file:
+                      type: string
+                resolution_type:
+                  type: string
+                shadowed:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - layer
+                      - authority
+                      - file
+                      - reason
+                    properties:
+                      layer:
+                        type: string
+                      authority:
+                        type: string
+                      file:
+                        type: string
+                      reason:
+                        type: string
+          conflicts:
+            type: array
+            items:
+              type: object
+              required:
+                - claim_key
+                - selected_layer
+                - selected_authority
+                - selected_file
+                - shadowed_layer
+                - shadowed_authority
+                - shadowed_file
+                - reason
+              properties:
+                claim_key:
+                  type: string
+                selected_layer:
+                  type: string
+                selected_authority:
+                  type: string
+                selected_file:
+                  type: string
+                shadowed_layer:
+                  type: string
+                shadowed_authority:
+                  type: string
+                shadowed_file:
+                  type: string
+                reason:
+                  type: string
+          gap_fills:
+            type: array
+            items:
+              type: object
+              required:
+                - claim_key
+                - kind
+                - title
+                - selected_layer
+                - selected_file
+              properties:
+                claim_key:
+                  type: string
+                kind:
+                  type: string
+                title:
+                  type: string
+                selected_layer:
+                  type: string
+                selected_file:
+                  type: string
+      layers:
+        type: array
+        items:
+          type: object
+          required:
+            - layer
+            - label
+            - precedence
+            - authority
+            - resolution_mode
+            - resolution_status
+            - configured_paths
+            - resolved_paths
+            - missing_paths
+            - warnings
+            - resolved_records
+          properties:
+            layer:
+              type: string
+            label:
+              type: string
+            precedence:
+              type: integer
+            authority:
+              type: string
+            resolution_mode:
+              type: string
+            resolution_status:
+              type: string
+            configured_paths:
+              type: array
+              items:
+                type: string
+            resolved_paths:
+              type: array
+              items:
+                type: string
+            missing_paths:
+              type: array
+              items:
+                type: string
+            warnings:
+              type: array
+              items:
+                type: string
+            resolved_records:
+              type: array
+              items:
+                type: object
+                required:
+                  - file
+                  - kind
+                  - title
+                  - status
+                  - scope
+                properties:
+                  file:
+                    type: string
+                  kind:
+                    type:
+                      - string
+                      - "null"
+                  title:
+                    type:
+                      - string
+                      - "null"
+                  status:
+                    type:
+                      - string
+                      - "null"
+                  scope:
+                    type:
+                      - string
+                      - "null"
+                  scope_detail:
+                    type:
+                      - string
+                      - "null"

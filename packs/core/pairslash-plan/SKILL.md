@@ -32,6 +32,17 @@ If `.pairslash/project-memory/` does not exist at all, warn the user:
 
 If the memory index lists additional active records, read those too.
 
+Resolution rules:
+
+- Global Project Memory is authoritative on read.
+- Read project-memory seed files first, then any indexed active records, then
+  `.pairslash/task-memory/` as supporting context.
+- Task-memory may add missing initiative context, but it must not silently
+  override a matching Global Project Memory claim.
+- If task-memory conflicts with a project-memory claim, keep the
+  project-memory claim authoritative and surface the conflict in the plan as a
+  risk, constraint caveat, or open question.
+
 ## Step 2: Understand the goal
 
 Ask the user what they want to accomplish if no goal was provided in the prompt.

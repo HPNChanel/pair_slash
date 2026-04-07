@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { join } from "node:path";
 import { readFileSync } from "node:fs";
 
-import { loadPackManifest } from "@pairslash/spec-core";
+import { listReadWorkflowPaths, loadPackManifest } from "@pairslash/spec-core";
 import {
   buildContractEnvelope,
   parseContractEnvelope,
@@ -55,7 +55,11 @@ test("Phase 8 read workflows expose workflow-specific input, output, and memory 
         "risks_and_gaps",
         "recommended_next_workflows",
       ],
-      readPaths: [".pairslash/project-memory/", ".pairslash/task-memory/"],
+      readPaths: [
+        ".pairslash/project-memory/90-memory-index.yaml",
+        ".pairslash/project-memory/",
+        ".pairslash/task-memory/",
+      ],
     },
     "pairslash-plan": {
       requiredFields: ["goal"],
@@ -83,7 +87,11 @@ test("Phase 8 read workflows expose workflow-specific input, output, and memory 
       requiredFields: ["review_subject", "diff_source"],
       optionalFields: ["scope_hint", "strictness"],
       sections: ["summary", "findings", "missing_tests", "open_questions", "recommendation"],
-      readPaths: [".pairslash/project-memory/", ".pairslash/task-memory/"],
+      readPaths: [
+        ".pairslash/project-memory/90-memory-index.yaml",
+        ".pairslash/project-memory/",
+        ".pairslash/task-memory/",
+      ],
     },
     "pairslash-command-suggest": {
       requiredFields: ["intent"],
@@ -93,6 +101,7 @@ test("Phase 8 read workflows expose workflow-specific input, output, and memory 
         ".pairslash/project-memory/10-stack-profile.yaml",
         ".pairslash/project-memory/20-commands.yaml",
         ".pairslash/project-memory/50-constraints.yaml",
+        ".pairslash/project-memory/90-memory-index.yaml",
       ],
     },
     "pairslash-memory-candidate": {
@@ -100,11 +109,22 @@ test("Phase 8 read workflows expose workflow-specific input, output, and memory 
       optionalFields: ["evidence_sources", "strictness", "max_candidates"],
       sections: ["plan", "candidates", "reconciliation", "next_action"],
       readPaths: [
-        ".pairslash/project-memory/",
         ".pairslash/project-memory/90-memory-index.yaml",
+        ".pairslash/project-memory/",
         ".pairslash/task-memory/",
         ".pairslash/sessions/",
         ".pairslash/staging/",
+        ".pairslash/audit-log/",
+      ],
+    },
+    "pairslash-memory-audit": {
+      requiredFields: ["audit_scope"],
+      optionalFields: ["mode", "focus"],
+      sections: ["plan", "findings", "summary", "remediation_order", "next_action"],
+      readPaths: [
+        ".pairslash/project-memory/90-memory-index.yaml",
+        ".pairslash/project-memory/",
+        ".pairslash/task-memory/",
         ".pairslash/audit-log/",
       ],
     },
@@ -125,6 +145,10 @@ test("Phase 8 read workflows expose workflow-specific input, output, and memory 
       expectation.sections,
     );
     assert.deepEqual(contract.memory_contract.read_paths, expectation.readPaths);
+    assert.deepEqual(
+      contract.memory_contract.read_paths,
+      listReadWorkflowPaths(packId, { includeFallback: true }),
+    );
     assert.equal(contract.memory_contract.authoritative_write_allowed, false);
     assert.equal(contract.memory_contract.no_hidden_write, true);
   }

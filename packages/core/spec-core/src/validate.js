@@ -2888,6 +2888,342 @@ export function validateContextExplanation(record) {
       }
     }
   }
+  if (!isObject(record?.memory_resolution)) {
+    errors.push("memory_resolution must be an object");
+  } else {
+    const validAuthorities = ["authoritative", "supporting"];
+    const validResolutionModes = ["explicit-paths", "project-memory-index", "filesystem-scan"];
+    const validResolutionStatuses = ["resolved", "partial", "missing"];
+    validateNonEmptyString(record.memory_resolution?.profile_id, "memory_resolution.profile_id", errors, "CTX001");
+    validateBoolean(record.memory_resolution?.uses_shared_loader, "memory_resolution.uses_shared_loader", errors, "CTX001");
+    validateStringArray(
+      record.memory_resolution?.authoritative_sources,
+      "memory_resolution.authoritative_sources",
+      errors,
+      "CTX001",
+      { allowEmpty: true },
+    );
+    validateStringArray(
+      record.memory_resolution?.missing_paths,
+      "memory_resolution.missing_paths",
+      errors,
+      "CTX001",
+      { allowEmpty: true },
+    );
+    validateStringArray(
+      record.memory_resolution?.warnings,
+      "memory_resolution.warnings",
+      errors,
+      "CTX001",
+      { allowEmpty: true },
+    );
+    if (!isObject(record.memory_resolution?.record_resolution)) {
+      errors.push("memory_resolution.record_resolution must be an object");
+    } else {
+      const validResolutionTypes = ["authoritative-selected", "supporting-gap-fill"];
+      const validShadowReasons = [
+        "shadowed-by-authoritative",
+        "shadowed-by-authoritative-conflict",
+        "shadowed-by-lower-authority-fill",
+        "shadowed-by-lower-authority-fill-conflict",
+      ];
+      validateStringArray(
+        record.memory_resolution.record_resolution?.precedence_rule,
+        "memory_resolution.record_resolution.precedence_rule",
+        errors,
+        "CTX001",
+        { allowEmpty: false },
+      );
+      if (!Array.isArray(record.memory_resolution.record_resolution?.resolved_claims)) {
+        errors.push("memory_resolution.record_resolution.resolved_claims must be a list");
+      } else {
+        for (const claim of record.memory_resolution.record_resolution.resolved_claims) {
+          if (!isObject(claim)) {
+            errors.push("memory_resolution.record_resolution.resolved_claims[] must be an object");
+            continue;
+          }
+          validateNonEmptyString(
+            claim?.claim_key,
+            "memory_resolution.record_resolution.resolved_claims[].claim_key",
+            errors,
+            "CTX001",
+          );
+          validateNonEmptyString(
+            claim?.kind,
+            "memory_resolution.record_resolution.resolved_claims[].kind",
+            errors,
+            "CTX001",
+          );
+          validateNonEmptyString(
+            claim?.title,
+            "memory_resolution.record_resolution.resolved_claims[].title",
+            errors,
+            "CTX001",
+          );
+          if (claim?.scope !== null && "scope" in claim && typeof claim?.scope !== "string") {
+            errors.push("memory_resolution.record_resolution.resolved_claims[].scope must be string or null");
+          }
+          if (
+            claim?.scope_detail !== null &&
+            "scope_detail" in claim &&
+            typeof claim?.scope_detail !== "string"
+          ) {
+            errors.push(
+              "memory_resolution.record_resolution.resolved_claims[].scope_detail must be string or null",
+            );
+          }
+          if (!isObject(claim?.selected)) {
+            errors.push("memory_resolution.record_resolution.resolved_claims[].selected must be an object");
+          } else {
+            validateNonEmptyString(
+              claim.selected?.layer,
+              "memory_resolution.record_resolution.resolved_claims[].selected.layer",
+              errors,
+              "CTX001",
+            );
+            if (!validAuthorities.includes(claim.selected?.authority)) {
+              errors.push(
+                `memory_resolution.record_resolution.resolved_claims[].selected.authority must be one of ${validAuthorities.join(", ")}`,
+              );
+            }
+            validateNonEmptyString(
+              claim.selected?.file,
+              "memory_resolution.record_resolution.resolved_claims[].selected.file",
+              errors,
+              "CTX001",
+            );
+          }
+          if (!validResolutionTypes.includes(claim?.resolution_type)) {
+            errors.push(
+              `memory_resolution.record_resolution.resolved_claims[].resolution_type must be one of ${validResolutionTypes.join(", ")}`,
+            );
+          }
+          if (!Array.isArray(claim?.shadowed)) {
+            errors.push("memory_resolution.record_resolution.resolved_claims[].shadowed must be a list");
+          } else {
+            for (const shadowedEntry of claim.shadowed) {
+              if (!isObject(shadowedEntry)) {
+                errors.push(
+                  "memory_resolution.record_resolution.resolved_claims[].shadowed[] must be an object",
+                );
+                continue;
+              }
+              validateNonEmptyString(
+                shadowedEntry?.layer,
+                "memory_resolution.record_resolution.resolved_claims[].shadowed[].layer",
+                errors,
+                "CTX001",
+              );
+              if (!validAuthorities.includes(shadowedEntry?.authority)) {
+                errors.push(
+                  `memory_resolution.record_resolution.resolved_claims[].shadowed[].authority must be one of ${validAuthorities.join(", ")}`,
+                );
+              }
+              validateNonEmptyString(
+                shadowedEntry?.file,
+                "memory_resolution.record_resolution.resolved_claims[].shadowed[].file",
+                errors,
+                "CTX001",
+              );
+              if (!validShadowReasons.includes(shadowedEntry?.reason)) {
+                errors.push(
+                  `memory_resolution.record_resolution.resolved_claims[].shadowed[].reason must be one of ${validShadowReasons.join(", ")}`,
+                );
+              }
+            }
+          }
+        }
+      }
+      if (!Array.isArray(record.memory_resolution.record_resolution?.conflicts)) {
+        errors.push("memory_resolution.record_resolution.conflicts must be a list");
+      } else {
+        for (const conflict of record.memory_resolution.record_resolution.conflicts) {
+          if (!isObject(conflict)) {
+            errors.push("memory_resolution.record_resolution.conflicts[] must be an object");
+            continue;
+          }
+          validateNonEmptyString(
+            conflict?.claim_key,
+            "memory_resolution.record_resolution.conflicts[].claim_key",
+            errors,
+            "CTX001",
+          );
+          validateNonEmptyString(
+            conflict?.selected_layer,
+            "memory_resolution.record_resolution.conflicts[].selected_layer",
+            errors,
+            "CTX001",
+          );
+          if (!validAuthorities.includes(conflict?.selected_authority)) {
+            errors.push(
+              `memory_resolution.record_resolution.conflicts[].selected_authority must be one of ${validAuthorities.join(", ")}`,
+            );
+          }
+          validateNonEmptyString(
+            conflict?.selected_file,
+            "memory_resolution.record_resolution.conflicts[].selected_file",
+            errors,
+            "CTX001",
+          );
+          validateNonEmptyString(
+            conflict?.shadowed_layer,
+            "memory_resolution.record_resolution.conflicts[].shadowed_layer",
+            errors,
+            "CTX001",
+          );
+          if (!validAuthorities.includes(conflict?.shadowed_authority)) {
+            errors.push(
+              `memory_resolution.record_resolution.conflicts[].shadowed_authority must be one of ${validAuthorities.join(", ")}`,
+            );
+          }
+          validateNonEmptyString(
+            conflict?.shadowed_file,
+            "memory_resolution.record_resolution.conflicts[].shadowed_file",
+            errors,
+            "CTX001",
+          );
+          if (!validShadowReasons.includes(conflict?.reason)) {
+            errors.push(
+              `memory_resolution.record_resolution.conflicts[].reason must be one of ${validShadowReasons.join(", ")}`,
+            );
+          }
+        }
+      }
+      if (!Array.isArray(record.memory_resolution.record_resolution?.gap_fills)) {
+        errors.push("memory_resolution.record_resolution.gap_fills must be a list");
+      } else {
+        for (const gapFill of record.memory_resolution.record_resolution.gap_fills) {
+          if (!isObject(gapFill)) {
+            errors.push("memory_resolution.record_resolution.gap_fills[] must be an object");
+            continue;
+          }
+          validateNonEmptyString(
+            gapFill?.claim_key,
+            "memory_resolution.record_resolution.gap_fills[].claim_key",
+            errors,
+            "CTX001",
+          );
+          validateNonEmptyString(
+            gapFill?.kind,
+            "memory_resolution.record_resolution.gap_fills[].kind",
+            errors,
+            "CTX001",
+          );
+          validateNonEmptyString(
+            gapFill?.title,
+            "memory_resolution.record_resolution.gap_fills[].title",
+            errors,
+            "CTX001",
+          );
+          validateNonEmptyString(
+            gapFill?.selected_layer,
+            "memory_resolution.record_resolution.gap_fills[].selected_layer",
+            errors,
+            "CTX001",
+          );
+          validateNonEmptyString(
+            gapFill?.selected_file,
+            "memory_resolution.record_resolution.gap_fills[].selected_file",
+            errors,
+            "CTX001",
+          );
+        }
+      }
+    }
+    if (!Array.isArray(record.memory_resolution?.layers) || record.memory_resolution.layers.length === 0) {
+      errors.push("memory_resolution.layers must be a non-empty list");
+    } else {
+      for (const layer of record.memory_resolution.layers) {
+        if (!isObject(layer)) {
+          errors.push("memory_resolution.layers[] must be an object");
+          continue;
+        }
+        validateNonEmptyString(layer?.layer, "memory_resolution.layers[].layer", errors, "CTX001");
+        validateNonEmptyString(layer?.label, "memory_resolution.layers[].label", errors, "CTX001");
+        if (!Number.isInteger(layer?.precedence) || layer.precedence < 1) {
+          errors.push("memory_resolution.layers[].precedence must be a positive integer");
+        }
+        if (!validAuthorities.includes(layer?.authority)) {
+          errors.push(
+            `memory_resolution.layers[].authority must be one of ${validAuthorities.join(", ")}`,
+          );
+        }
+        if (!validResolutionModes.includes(layer?.resolution_mode)) {
+          errors.push(
+            `memory_resolution.layers[].resolution_mode must be one of ${validResolutionModes.join(", ")}`,
+          );
+        }
+        if (!validResolutionStatuses.includes(layer?.resolution_status)) {
+          errors.push(
+            `memory_resolution.layers[].resolution_status must be one of ${validResolutionStatuses.join(", ")}`,
+          );
+        }
+        validateStringArray(
+          layer?.configured_paths,
+          "memory_resolution.layers[].configured_paths",
+          errors,
+          "CTX001",
+          { allowEmpty: true },
+        );
+        validateStringArray(
+          layer?.resolved_paths,
+          "memory_resolution.layers[].resolved_paths",
+          errors,
+          "CTX001",
+          { allowEmpty: true },
+        );
+        validateStringArray(
+          layer?.missing_paths,
+          "memory_resolution.layers[].missing_paths",
+          errors,
+          "CTX001",
+          { allowEmpty: true },
+        );
+        validateStringArray(
+          layer?.warnings,
+          "memory_resolution.layers[].warnings",
+          errors,
+          "CTX001",
+          { allowEmpty: true },
+        );
+        if (!Array.isArray(layer?.resolved_records)) {
+          errors.push("memory_resolution.layers[].resolved_records must be a list");
+          continue;
+        }
+        for (const resolvedRecord of layer.resolved_records) {
+          if (!isObject(resolvedRecord)) {
+            errors.push("memory_resolution.layers[].resolved_records[] must be an object");
+            continue;
+          }
+          validateNonEmptyString(
+            resolvedRecord?.file,
+            "memory_resolution.layers[].resolved_records[].file",
+            errors,
+            "CTX001",
+          );
+          if (resolvedRecord?.kind !== null && typeof resolvedRecord?.kind !== "string") {
+            errors.push("memory_resolution.layers[].resolved_records[].kind must be string or null");
+          }
+          if (resolvedRecord?.title !== null && typeof resolvedRecord?.title !== "string") {
+            errors.push("memory_resolution.layers[].resolved_records[].title must be string or null");
+          }
+          if (resolvedRecord?.status !== null && typeof resolvedRecord?.status !== "string") {
+            errors.push("memory_resolution.layers[].resolved_records[].status must be string or null");
+          }
+          if (resolvedRecord?.scope !== null && typeof resolvedRecord?.scope !== "string") {
+            errors.push("memory_resolution.layers[].resolved_records[].scope must be string or null");
+          }
+          if (
+            "scope_detail" in resolvedRecord &&
+            resolvedRecord?.scope_detail !== null &&
+            typeof resolvedRecord?.scope_detail !== "string"
+          ) {
+            errors.push("memory_resolution.layers[].resolved_records[].scope_detail must be string or null");
+          }
+        }
+      }
+    }
+  }
   return errors;
 }
 

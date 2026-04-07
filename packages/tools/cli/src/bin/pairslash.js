@@ -9,14 +9,13 @@ import {
   loadPackManifestRecords,
   normalizeRuntime,
   normalizeTarget,
-  relativeFrom,
+  resolveReadAuthority,
   selectDefaultCatalogPack,
   selectPackManifestRecords,
   stableJson,
   SUPPORTED_RUNTIMES,
   validateContextExplanation,
   validatePolicyExplanation,
-  walkFiles,
   writeTextFile,
 } from "@pairslash/spec-core";
 import { buildContractEnvelope, buildMemoryWriteContract } from "@pairslash/contract-engine";
@@ -33,6 +32,7 @@ import {
 } from "@pairslash/installer";
 import {
   applyMemoryWrite,
+  buildMemoryCandidateReport,
   loadRequestFile,
   loadStagedMemoryWritePreview,
   previewMemoryWrite,
@@ -62,6 +62,7 @@ import {
   formatInstallResult,
   formatLintText,
   formatMemoryWritePreviewBlockedText,
+  formatMemoryCandidateReportText,
   formatMemoryWritePreviewText,
   formatMemoryWriteResultText,
   formatPolicyExplanationText,
@@ -89,6 +90,7 @@ function printUsage(stdout) {
       "  pairslash doctor [--runtime <codex|copilot|auto>] [--target repo|user] [--packs a,b] [--format text|json] [--strict]",
       "  pairslash lint [pack-id...] [--runtime <codex|copilot|auto|all>] [--target repo|user] [--packs a,b] [--format text|json] [--strict]",
       "  pairslash memory write-global [--request path] [--kind <kind>] [--title text] [--statement text] [--evidence text] [--scope <whole-project|subsystem|path-prefix>] [--scope-detail text] [--confidence <low|medium|high>] [--action <append|supersede|reject-candidate-if-conflict>] [--tags a,b] [--source-refs a,b] [--supersedes kind/title] [--updated-by text] [--format text|json] [--apply] [--yes]",
+      "  pairslash memory candidate --task-scope <text> [--runtime <codex|copilot|auto>] [--target repo|user] [--evidence-sources a,b] [--strictness <strict-gate-fail-fast|balanced|lenient>] [--max-candidates <n>] [--format text|json]",
       "  pairslash explain-context [pack-id] [--runtime <codex|copilot|auto>] [--target repo|user] [--format text|json]",
       "  pairslash explain-policy [pack-id] [--runtime <codex|copilot|auto>] [--target repo|user] [--apply] [--preview] [--surface <canonical_skill|direct_invocation|hook>] [--format text|json]",
       "  pairslash debug [--latest] [--session <id>] [--runtime <codex|copilot>] [--target repo|user] [--bundle] [--out path] [--format text|json]",
@@ -98,6 +100,7 @@ function printUsage(stdout) {
       "Defaults:",
       "  install/update/uninstall preview by default; add --apply to mutate.",
       "  memory write-global previews by default; add --apply and explicit approval to commit.",
+      "  memory candidate is read-only and never writes project-memory, index, audit, or staging.",
       "  debug/trace export select the latest matching recorded session unless --session is provided.",
       "  install with no pack-id selects bootstrap pack-set (pairslash-plan).",
       "  use --pack-set core or --all to select all valid manifests under packs/core.",
@@ -141,6 +144,10 @@ function parseOptions(argv) {
     sourceRefs: [],
     supersedes: null,
     updatedBy: null,
+    taskScope: null,
+    evidenceSources: [],
+    strictness: "strict-gate-fail-fast",
+    maxCandidates: 20,
     sessionId: null,
     latest: false,
     out: null,
@@ -309,6 +316,33 @@ function parseOptions(argv) {
       index += 1;
       continue;
     }
+    if (token === "--task-scope") {
+      options.taskScope = argv[index + 1];
+      index += 1;
+      continue;
+    }
+    if (token === "--evidence-sources") {
+      options.evidenceSources = argv[index + 1]
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean);
+      index += 1;
+      continue;
+    }
+    if (token === "--strictness") {
+      options.strictness = argv[index + 1];
+      index += 1;
+      continue;
+    }
+    if (token === "--max-candidates") {
+      const parsed = Number.parseInt(argv[index + 1], 10);
+      if (!Number.isInteger(parsed) || parsed < 1) {
+        throw new Error("invalid --max-candidates value: expected integer >= 1");
+      }
+      options.maxCandidates = parsed;
+      index += 1;
+      continue;
+    }
     if (token === "--session") {
       options.sessionId = argv[index + 1];
       index += 1;
@@ -441,29 +475,16 @@ function deriveToolAvailability(report, packId, manifest) {
   }));
 }
 
-function listContextArtifacts(repoRoot, relativeRoot) {
-  const absoluteRoot = resolve(repoRoot, relativeRoot);
-  if (!exists(absoluteRoot)) {
-    return [];
-  }
-  return walkFiles(absoluteRoot)
-    .map((path) => {
-      const relativePath = relativeFrom(repoRoot, path);
-      return relativePath.startsWith(".")
-        ? relativePath
-        : `.${relativePath.startsWith("/") ? "" : "/"}${relativePath}`;
-    })
-    .sort((left, right) => left.localeCompare(right));
-}
-
-function buildMemoryReadArtifacts(repoRoot) {
+function buildMemoryReadArtifacts(resolution) {
+  const collectLayerPaths = (...layerIds) =>
+    (resolution.layers ?? [])
+      .filter((layer) => layerIds.includes(layer.layer))
+      .flatMap((layer) => layer.resolved_paths ?? [])
+      .sort((left, right) => left.localeCompare(right));
   return {
-    global_project_memory: listContextArtifacts(repoRoot, ".pairslash/project-memory"),
-    task_memory: listContextArtifacts(repoRoot, ".pairslash/task-memory"),
-    session_artifacts: [
-      ...listContextArtifacts(repoRoot, ".pairslash/sessions"),
-      ...listContextArtifacts(repoRoot, ".pairslash/staging"),
-    ].sort((left, right) => left.localeCompare(right)),
+    global_project_memory: collectLayerPaths("global-project-memory"),
+    task_memory: collectLayerPaths("task-memory"),
+    session_artifacts: collectLayerPaths("session", "staging"),
   };
 }
 
@@ -478,9 +499,14 @@ function buildContextExplanationArtifact({ repoRoot, options }) {
   });
   const adapter = getRuntimeAdapter(report.runtime);
   const manifest = record?.manifest ?? null;
+  const memoryResolution = resolveReadAuthority({
+    repoRoot,
+    packId,
+    manifest,
+  });
   const artifact = {
     kind: "context-explanation",
-    schema_version: "1.0.0",
+    schema_version: "1.1.0",
     generated_at: new Date().toISOString(),
     runtime: report.runtime,
     target: report.target,
@@ -502,7 +528,8 @@ function buildContextExplanationArtifact({ repoRoot, options }) {
     os: report.environment_summary.os,
     shell: report.environment_summary.shell,
     tool_availability: deriveToolAvailability(report, packId, manifest),
-    memory_reads: buildMemoryReadArtifacts(repoRoot),
+    memory_reads: buildMemoryReadArtifacts(memoryResolution),
+    memory_resolution: memoryResolution,
   };
   const validationErrors = validateContextExplanation(artifact);
   if (validationErrors.length > 0) {
@@ -892,6 +919,15 @@ function buildMemoryRequest(repoRoot, options) {
   };
 }
 
+function buildMemoryCandidateInput(options) {
+  return {
+    taskScope: options.taskScope,
+    evidenceSources: options.evidenceSources,
+    strictness: options.strictness,
+    maxCandidates: options.maxCandidates,
+  };
+}
+
 function buildLifecycleEnvelope(action, repoRoot, options) {
   assertLifecycleAction(action, { command: "preview" });
   if (action !== "install" && options.packSetProvided) {
@@ -1117,6 +1153,32 @@ async function handleMemoryWrite(repoRoot, options, stdout, stdin, { forcePrevie
   };
 }
 
+function handleMemoryCandidate(repoRoot, options, stdout) {
+  if (options.apply || options.preview || options.dryRun) {
+    throw new Error("unsupported-flag: memory candidate is read-only and does not support --apply/--preview/--dry-run");
+  }
+  const runtime = resolveExecutionRuntime(repoRoot, options.runtime, options.target);
+  const target = options.target;
+  const input = buildMemoryCandidateInput(options);
+  const report = buildMemoryCandidateReport({
+    repoRoot,
+    runtime,
+    target,
+    ...input,
+  });
+  emit(stdout, report, {
+    format: options.format,
+    text: formatMemoryCandidateReportText,
+  });
+  return {
+    exitCode: 0,
+    artifact: report,
+    runtime: report.runtime,
+    target: report.target,
+    summary: `memory candidate generated ${report.candidates.length} item(s)`,
+  };
+}
+
 export async function runCli({
   argv = process.argv.slice(2),
   cwd = process.cwd(),
@@ -1150,10 +1212,13 @@ export async function runCli({
           ? await handleMemoryWrite(repoRoot, options, stdout, stdin, { forcePreview: true })
           : handlePreview(action, repoRoot, options, stdout);
     } else if (command === "memory") {
-      if (argv[1] !== "write-global") {
+      if (argv[1] === "write-global") {
+        result = await handleMemoryWrite(repoRoot, options, stdout, stdin);
+      } else if (argv[1] === "candidate") {
+        result = handleMemoryCandidate(repoRoot, options, stdout);
+      } else {
         throw new Error(`unknown memory command: ${argv[1] ?? "(missing)"}`);
       }
-      result = await handleMemoryWrite(repoRoot, options, stdout, stdin);
     } else if (command === "install" || command === "update" || command === "uninstall") {
       result = await handleApply(command, repoRoot, options, stdout, stdin);
     } else if (command === "doctor") {

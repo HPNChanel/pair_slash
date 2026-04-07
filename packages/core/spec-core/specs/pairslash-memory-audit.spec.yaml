@@ -9,7 +9,9 @@ workflow:
 
   purpose: >-
     Audit Global Project Memory for duplicates, stale/conflicting facts,
-    orphan references, schema drift, and index gaps. Default mode is read-only.
+    orphan references, schema drift, and index gaps. Treat Global Project
+    Memory as authoritative on read and lower layers as supporting audit
+    evidence only. Default mode is read-only.
 
   canonical_invocation:
     primary: /skills -> select pairslash-memory-audit
@@ -63,6 +65,7 @@ contracts:
     reads:
       - layer: global-project-memory
         paths:
+          - .pairslash/project-memory/90-memory-index.yaml
           - .pairslash/project-memory/
       - layer: task-memory
         paths:
@@ -73,11 +76,14 @@ contracts:
     writes: none
     invariant: >-
       This workflow is read-oriented by default and must not mutate Global
-      Project Memory. Any proposed fix requiring writes must route through
+      Project Memory. Global Project Memory remains authoritative on read.
+      Task-memory and audit-log inputs are supporting evidence only and must
+      not be treated as authoritative replacements for project-memory claims.
+      Any contradictory lower-layer claim must be emitted as an audit finding.
+      Any proposed fix requiring writes must route through
       pairslash-memory-write-global.
 
   side_effect:
     filesystem_writes: none
     git_mutation: none
     network_calls: none
-

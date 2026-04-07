@@ -1386,3 +1386,4 @@ export function rejectMemoryWrite({
 }
 
 export { loadRequestFile };
+export { buildMemoryCandidateReport } from "./candidate.js";

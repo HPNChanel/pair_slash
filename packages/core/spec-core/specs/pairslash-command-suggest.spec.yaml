@@ -57,6 +57,7 @@ contracts:
           - .pairslash/project-memory/10-stack-profile.yaml
           - .pairslash/project-memory/20-commands.yaml
           - .pairslash/project-memory/50-constraints.yaml
+          - .pairslash/project-memory/90-memory-index.yaml
     writes: none
     invariant: Suggestion workflow is advisory only and must not write memory.
 
@@ -64,4 +65,3 @@ contracts:
     filesystem_writes: none
     git_mutation: none
     network_calls: none
-

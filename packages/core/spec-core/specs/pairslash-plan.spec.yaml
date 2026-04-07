@@ -11,6 +11,7 @@ workflow:
   purpose: >-
     Create a structured execution plan before code changes.
     Incorporate stable project conventions from Global Project Memory.
+    Keep Global Project Memory authoritative on read.
     Separate facts from assumptions.
     Include tests and rollback thinking.
 
@@ -41,8 +42,9 @@ contracts:
           Any explicit constraints the user wants the plan to respect
           beyond what Global Project Memory already declares.
     scope_assumption: >-
-      If no scope_hint is provided, the workflow reads all project-memory
-      files and infers scope from the goal description.
+      If no scope_hint is provided, the workflow reads the authoritative
+      project-memory seed set (charter, stack profile, constraints, memory
+      index) and task-memory, then infers scope from the goal description.
 
   output:
     format: structured-markdown
@@ -110,6 +112,12 @@ contracts:
     audit: none
     invariant: >-
       This workflow MUST NOT write to any memory layer.
+      Global Project Memory remains authoritative on read.
+      Task-memory may add supporting initiative context only when it does not
+      silently override a matching project-memory claim.
+      If lower-layer evidence conflicts with project-memory, the workflow must
+      surface that conflict as context risk instead of treating the lower-layer
+      value as project truth.
       It MUST NOT propose memory writes as a side effect.
       If the plan reveals knowledge worth persisting, it should recommend
       the user invoke pairslash-memory-write-global separately.

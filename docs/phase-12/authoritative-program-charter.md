@@ -19,7 +19,7 @@ PairSlash is the trust layer for terminal-native AI workflows on exactly two run
 
 ### Implementation Truth
 
-Implementation truth is what the repo actually ships today in code, manifests, and deterministic checks. The authoritative implementation surfaces are `packs/core/*/pack.manifest.yaml`, `packages/core/spec-core/src/pack-catalog.js`, `packages/tools/installer/`, `packages/tools/doctor/`, `packages/core/memory-engine/`, and `packages/tools/compat-lab/`. The optional compatibility shim at `packs/core/*/pack.trust.yaml` is downstream only, and the derived pack index at `packages/core/spec-core/registry/packs.yaml` is downstream only. This layer proves that PairSlash has a narrow two-runtime installability and trust substrate with `/skills`, preview-first lifecycle commands, explicit memory write authority, and no-silent-fallback discipline.
+Implementation truth is what the repo actually ships today in code, manifests, and deterministic checks. The authoritative implementation surfaces are `packs/core/*/pack.manifest.yaml`, `packages/core/spec-core/src/pack-catalog.js`, `packages/tools/installer/`, `packages/tools/doctor/`, `packages/core/memory-engine/`, and `packages/tools/compat-lab/`. The read-path authority contract for Global Project Memory is fixed separately in `docs/architecture/phase-17-read-authority-charter.md` and implemented through the shared resolver, contract engine, and `explain-context` surface. The optional compatibility shim at `packs/core/*/pack.trust.yaml` is downstream only, and the derived pack index at `packages/core/spec-core/registry/packs.yaml` is downstream only. This layer proves that PairSlash has a narrow two-runtime installability and trust substrate with `/skills`, preview-first lifecycle commands, explicit memory write authority, no-silent-fallback discipline, and a shared read-authority contract.
 
 ### Product-Validation Truth
 
@@ -59,6 +59,7 @@ What must not be overclaimed: that tests equal market validation, that preview o
 | Runtime support policy | `docs/compatibility/runtime-surface-matrix.yaml` | Owns machine-readable lane labels and promotion inputs consumed by doctor and compat-lab. |
 | Runtime support markdown | `docs/compatibility/compatibility-matrix.md` | Public rendering of the runtime-support catalog; never a competing source. |
 | Runtime promotion evidence | `docs/compatibility/runtime-verification.md`, `docs/evidence/live-runtime/`, and `docs/compatibility/runtime-surface-matrix.yaml` | Own evidence class and promotion/demotion inputs for runtime labels. |
+| Read-authority contract | `docs/architecture/phase-17-read-authority-charter.md` | Owns authoritative read-path precedence, explain-context resolution contract, conflict surfacing, and the Phase 17 exit gate. |
 | Pack catalog truth | `packs/core/*/pack.manifest.yaml` | Own canonical core pack identity, maturity, support scope, runtime evidence mapping, and maintainer metadata. |
 | Pack catalog consumer API | `packages/core/spec-core/src/pack-catalog.js` | Resolves the authoritative pack catalog used by lint, doctor, docs rendering, and release-trust build. |
 | Pack catalog lifecycle conformance | `packages/core/spec-core/tests/manifest-v2.conformance.test.js` | Detects manifest/catalog drift, completeness regressions, and unsupported promotion claims. |

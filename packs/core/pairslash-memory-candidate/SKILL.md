@@ -30,21 +30,30 @@ If no concrete scope exists, ask for it and stop.
 
 ## Step 2: Load evidence sources
 
-Read relevant sources in this order:
+Resolve memory context in this precedence order:
 
-1. `.pairslash/task-memory/`
-2. `.pairslash/sessions/`
-3. `.pairslash/staging/`
-4. `.pairslash/audit-log/`
-5. Relevant docs/specs/logs mentioned by the task
-
-Then read authoritative reconciliation sources:
-
-- `.pairslash/project-memory/90-memory-index.yaml`
-- Active records in `.pairslash/project-memory/`
+1. `.pairslash/project-memory/90-memory-index.yaml`
+2. Active authoritative records in `.pairslash/project-memory/`
+3. `.pairslash/task-memory/`
+4. `.pairslash/sessions/`
+5. `.pairslash/staging/`
+6. `.pairslash/audit-log/`
+7. Relevant docs/specs/logs mentioned by the task
 
 Track each evidence item with a concrete source anchor
 (file path plus line/section identifier when available).
+
+Resolution rules:
+
+- Global Project Memory is authoritative on read.
+- `.pairslash/task-memory/`, `.pairslash/sessions/`, `.pairslash/staging/`,
+  and `.pairslash/audit-log/` are supporting layers only.
+- Lower layers may fill missing context when no matching Global claim exists.
+- Lower layers must not silently override Global Project Memory.
+- If a lower-layer claim contradicts an active Global claim, surface that
+  contradiction in `RECONCILIATION` and classify it as
+  `needs-supersede-review` or `duplicate-existing`, never as an authoritative
+  override.
 
 ## Step 3: Derive fact claims
 
