@@ -1,6 +1,6 @@
 # PairSlash Public Claim Policy
 
-Last updated: 2026-04-05
+Last updated: 2026-04-10
 
 This file governs public wording only.
 The official phase statement, authority hierarchy, claim ladder, and support
@@ -25,9 +25,15 @@ boundary ladder live in `docs/phase-12/authoritative-program-charter.md`.
 - Keep scope inside exactly two runtimes: Codex CLI and GitHub Copilot CLI.
 - Keep `/skills` as the canonical front door in onboarding, support, and
   release wording.
-- Separate `implemented`, `deterministic-tested`, `live-evidence-backed`, and
-  `publicly supported` claims instead of flattening them into one maturity
-  story.
+- Separate implementation truth, workflow maturity (`canary`, `preview`,
+  `beta`, `stable`, `deprecated`), and runtime public-support claims instead of
+  flattening them into one maturity story.
+- Workflow maturity claims must follow
+  `docs/architecture/phase-18-workflow-maturity-charter.md`; runtime-lane
+  labels and release-channel labels must not be reused as workflow maturity
+  shortcuts.
+- Public wording patterns for workflow labels must follow
+  `docs/architecture/phase-18-workflow-maturity-wording-system.md`.
 - Describe Global Project Memory as the authoritative project memory layer with
   explicit write authority. Do not imply that every read path is authoritative
   or that memory updates happen automatically.
@@ -46,6 +52,8 @@ boundary ladder live in `docs/phase-12/authoritative-program-charter.md`.
   - `packs/core/*/pack.manifest.yaml`
   - `packages/core/spec-core/src/pack-catalog.js`
   - `docs/architecture/phase-17-read-authority-charter.md`
+  - `docs/architecture/phase-18-workflow-maturity-charter.md`
+  - `docs/architecture/phase-18-workflow-maturity-wording-system.md`
   - `docs/architecture/phase-17-read-authority-matrix.md`
   - `packages/core/spec-core/registry/packs.yaml` (derived index only)
   - `packages/tools/installer/`
@@ -80,9 +88,32 @@ boundary ladder live in `docs/phase-12/authoritative-program-charter.md`.
   publication is not claimed today.
 - Runtime support claims must use only `stable-tested`, `preview`,
   `degraded`, `prep`, or `blocked`, exactly as recorded in compatibility docs.
+- Workflow maturity claims must use only `canary`, `preview`, `beta`,
+  `stable`, or `deprecated`, exactly as allowed by the Phase 18 workflow
+  maturity charter and canonical pack manifests.
+- Keep `implemented`, `verified`, `supported`, and `recommended` distinct in
+  public wording.
 - One-off live runs do not justify `stable-tested`.
 - Phase wording must reuse the official sentence in
   `docs/phase-12/authoritative-program-charter.md`.
+
+## Workflow Wording System
+
+- `implemented`: shipped in code, manifests, or generated assets
+- `verified`: deterministically covered and, when stated, live-workflow
+  verified on the documented lane
+- `supported`: runtime-lane support only
+- `recommended`: workflow-choice guidance only
+
+Rules:
+
+- Do not use `supported` as a workflow-maturity synonym.
+- Do not use `recommended` unless the workflow label and documented lane
+  support both justify it.
+- Do not use runtime-lane labels such as `prep`, `degraded`, `preview`, or
+  `stable-tested` as workflow labels.
+- Do not use release-channel labels such as `canary`, `preview`, or `stable`
+  unless the context is explicitly workflow maturity.
 
 ## Release notes opening template
 
@@ -131,7 +162,12 @@ Use an opening paragraph like this:
 - `currently`
 - `technically shipped`
 - `deterministically covered`
-- `live-evidence-backed for the documented lane`
+- `implemented in the repo`
+- `canary workflow`
+- `preview workflow on documented lanes`
+- `beta workflow on documented default lanes`
+- `stable workflow on documented lanes`
+- `deprecated workflow with migration guidance`
 - `publicly supported today only for the documented lanes`
 - `prep-only until canonical live verification exists`
 
@@ -153,10 +189,14 @@ Use an opening paragraph like this:
 - Any statement that product validation is complete or benchmark-proven.
 - Any statement that deterministic tests or acceptance slices equal market
   validation.
+- Any statement that runtime-lane support labels or release-channel labels are
+  interchangeable with workflow maturity labels.
 - Any statement that Windows live install parity or broad runtime parity is
   already proven.
 - Any statement that introduces a third runtime or weakens `/skills` as the
   canonical front door.
+- Any workflow-promotion statement that exceeds the current scoped release
+  verdict or the Phase 18 workflow maturity charter.
 - Any statement that implies hidden writes, implicit memory promotion, or
   autonomous fix application.
 - Any statement that claims authoritative read-path completion without the

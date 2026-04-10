@@ -20,6 +20,8 @@ import {
   SUPPORTED_RUNTIMES,
   SUPPORTED_TARGETS,
   UNINSTALL_BEHAVIORS,
+  WORKFLOW_DEMOTION_TRIGGER_CODES,
+  WORKFLOW_MATURITY_LEVELS,
   WORKFLOW_CLASSES,
 } from "./constants.js";
 
@@ -221,6 +223,15 @@ function deriveSupport(record, packName, runtimeBindings, memoryPermissions) {
   const supportLevelClaim =
     pickFirstString(support.support_level_claim) ??
     (packName === "pairslash-plan" ? "core-supported" : "official-preview");
+  const workflowMaturity =
+    pickFirstString(support.workflow_maturity) ??
+    (packName === "pairslash-plan" ? "preview" : "canary");
+  const liveWorkflowRefs = isObject(support.workflow_evidence?.live_workflow_refs)
+    ? support.workflow_evidence.live_workflow_refs
+    : {};
+  const checklistClaimedLanes = isObject(support.promotion_checklist?.claimed_lanes)
+    ? support.promotion_checklist.claimed_lanes
+    : {};
   const runtimeSupport = Object.fromEntries(
     SUPPORTED_RUNTIMES.map((runtime) => {
       const runtimeSupportRecord = isObject(support.runtime_support?.[runtime]) ? support.runtime_support[runtime] : {};
@@ -254,6 +265,8 @@ function deriveSupport(record, packName, runtimeBindings, memoryPermissions) {
     tier_claim: PACK_TRUST_TIERS.includes(tierClaim) ? tierClaim : "first-party-official",
     support_level_claim:
       PACK_SUPPORT_LEVELS.includes(supportLevelClaim) ? supportLevelClaim : "official-preview",
+    workflow_maturity:
+      WORKFLOW_MATURITY_LEVELS.includes(workflowMaturity) ? workflowMaturity : "canary",
     signature: {
       required:
         typeof support.signature?.required === "boolean" ? support.signature.required : true,
@@ -282,6 +295,72 @@ function deriveSupport(record, packName, runtimeBindings, memoryPermissions) {
         ];
       }),
     ),
+    workflow_transition: {
+      from:
+        support.workflow_transition?.from == null
+          ? WORKFLOW_MATURITY_LEVELS.includes(workflowMaturity)
+            ? workflowMaturity
+            : "canary"
+          : WORKFLOW_MATURITY_LEVELS.includes(support.workflow_transition?.from)
+            ? support.workflow_transition.from
+            : "canary",
+      reason:
+        pickFirstString(support.workflow_transition?.reason) ??
+        "phase-18-workflow-promotion-bootstrap",
+    },
+    workflow_evidence: {
+      deterministic_refs: sortStrings(support.workflow_evidence?.deterministic_refs ?? [
+        "docs/compatibility/runtime-surface-matrix.yaml",
+      ]),
+      live_workflow_refs: Object.fromEntries(
+        SUPPORTED_RUNTIMES.map((runtime) => [
+          runtime,
+          sortStrings(liveWorkflowRefs?.[runtime] ?? []),
+        ]),
+      ),
+      operational_safety_refs: sortStrings(support.workflow_evidence?.operational_safety_refs ?? []),
+      migration_refs: sortStrings(support.workflow_evidence?.migration_refs ?? []),
+    },
+    promotion_checklist: {
+      required_for_label:
+        WORKFLOW_MATURITY_LEVELS.includes(support.promotion_checklist?.required_for_label)
+          ? support.promotion_checklist.required_for_label
+          : WORKFLOW_MATURITY_LEVELS.includes(workflowMaturity)
+            ? workflowMaturity
+            : "canary",
+      claimed_lanes: Object.fromEntries(
+        SUPPORTED_RUNTIMES.map((runtime) => [
+          runtime,
+          sortStrings(checklistClaimedLanes?.[runtime] ?? []),
+        ]),
+      ),
+      canonical_entrypoint_verified:
+        typeof support.promotion_checklist?.canonical_entrypoint_verified === "boolean"
+          ? support.promotion_checklist.canonical_entrypoint_verified
+          : true,
+      wording_verified:
+        typeof support.promotion_checklist?.wording_verified === "boolean"
+          ? support.promotion_checklist.wording_verified
+          : false,
+      docs_synced:
+        typeof support.promotion_checklist?.docs_synced === "boolean"
+          ? support.promotion_checklist.docs_synced
+          : false,
+    },
+    demotion_policy: {
+      owner:
+        pickFirstString(support.demotion_policy?.owner, support.maintainers?.owner) ??
+        "pairslash",
+      fallback_maturity:
+        WORKFLOW_MATURITY_LEVELS.includes(support.demotion_policy?.fallback_maturity)
+          ? support.demotion_policy.fallback_maturity
+          : "canary",
+      trigger_codes: sortStrings(
+        (support.demotion_policy?.trigger_codes ?? WORKFLOW_DEMOTION_TRIGGER_CODES).filter(
+          (triggerCode) => WORKFLOW_DEMOTION_TRIGGER_CODES.includes(triggerCode),
+        ),
+      ),
+    },
     policy_requirements: {
       no_silent_fallback: true,
       preview_required_for_mutation: true,

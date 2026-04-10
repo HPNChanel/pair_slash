@@ -3,6 +3,18 @@ export type PairSlashTarget = "repo" | "user";
 export type PairSlashReleaseChannel = "stable" | "preview" | "canary";
 export type PairSlashWorkflowClass = "read-oriented" | "dual-mode" | "write-authority";
 export type PairSlashRiskLevel = "low" | "medium" | "high" | "critical";
+export type PairSlashWorkflowMaturity =
+  | "canary"
+  | "preview"
+  | "beta"
+  | "stable"
+  | "deprecated";
+export type PairSlashWorkflowDemotionTrigger =
+  | "evidence-stale"
+  | "runtime-regression"
+  | "release-no-go"
+  | "docs-drift"
+  | "write-safety-regression";
 
 export interface RuntimeCompatibility {
   canonical_picker: "supported" | "unverified" | "blocked";
@@ -119,6 +131,82 @@ export interface PackManifestV2 {
     example_invocation: string;
     example_output: string;
     validation_checklist: string;
+  };
+  catalog: {
+    pack_class: "core" | "advanced" | "docs-only";
+    maturity: PairSlashReleaseChannel;
+    docs_visibility: "public" | "maintainer" | "hidden";
+    default_discovery: boolean;
+    default_recommendation: boolean;
+    release_visibility: "public" | "appendix" | "hidden";
+    deprecation_status: "active" | "deprecated" | "archived";
+    replacement_pack?: string | null;
+    backward_compatibility_notes?: string[];
+  };
+  support: {
+    publisher: {
+      publisher_id: string;
+      display_name: string;
+      publisher_class: "core-product" | "first-party" | "external";
+      contact: string;
+    };
+    tier_claim:
+      | "core-maintained"
+      | "first-party-official"
+      | "verified-external"
+      | "local-dev"
+      | "unverified-external";
+    support_level_claim:
+      | "core-supported"
+      | "official-preview"
+      | "publisher-verified"
+      | "local-dev"
+      | "unsupported";
+    workflow_maturity: PairSlashWorkflowMaturity;
+    signature: {
+      required: boolean;
+      allow_local_unsigned: boolean;
+    };
+    runtime_support: Record<
+      PairSlashRuntime,
+      {
+        status: "supported" | "partial" | "unverified" | "blocked";
+        evidence_ref: string | null;
+        evidence_kind: "lane-matrix" | "pack-runtime-live" | "deterministic" | "docs-only";
+        required_for_promotion: boolean;
+      }
+    >;
+    workflow_transition: {
+      from: PairSlashWorkflowMaturity | null;
+      reason: string;
+    };
+    workflow_evidence: {
+      deterministic_refs: string[];
+      live_workflow_refs: Record<PairSlashRuntime, string[]>;
+      operational_safety_refs: string[];
+      migration_refs: string[];
+    };
+    promotion_checklist: {
+      required_for_label: PairSlashWorkflowMaturity;
+      claimed_lanes: Record<PairSlashRuntime, string[]>;
+      canonical_entrypoint_verified: boolean;
+      wording_verified: boolean;
+      docs_synced: boolean;
+    };
+    demotion_policy: {
+      owner: string;
+      fallback_maturity: PairSlashWorkflowMaturity;
+      trigger_codes: PairSlashWorkflowDemotionTrigger[];
+    };
+    policy_requirements: {
+      no_silent_fallback: true;
+      preview_required_for_mutation: true;
+      explicit_write_only_memory: true;
+    };
+    maintainers: {
+      owner: string;
+      contact: string;
+    };
   };
   trust_descriptor?: string;
 }

@@ -321,8 +321,13 @@ properties:
       - publisher
       - tier_claim
       - support_level_claim
+      - workflow_maturity
       - signature
       - runtime_support
+      - workflow_transition
+      - workflow_evidence
+      - promotion_checklist
+      - demotion_policy
       - policy_requirements
       - maintainers
     properties:
@@ -366,6 +371,14 @@ properties:
           - publisher-verified
           - local-dev
           - unsupported
+      workflow_maturity:
+        type: string
+        enum:
+          - canary
+          - preview
+          - beta
+          - stable
+          - deprecated
       signature:
         type: object
         additionalProperties: false
@@ -388,6 +401,139 @@ properties:
             $ref: "#/$defs/supportRuntime"
           copilot_cli:
             $ref: "#/$defs/supportRuntime"
+      workflow_transition:
+        type: object
+        additionalProperties: false
+        required:
+          - from
+          - reason
+        properties:
+          from:
+            type:
+              - string
+              - "null"
+            enum:
+              - canary
+              - preview
+              - beta
+              - stable
+              - deprecated
+              - null
+          reason:
+            type: string
+            minLength: 1
+      workflow_evidence:
+        type: object
+        additionalProperties: false
+        required:
+          - deterministic_refs
+          - live_workflow_refs
+          - operational_safety_refs
+          - migration_refs
+        properties:
+          deterministic_refs:
+            type: array
+            items:
+              type: string
+              minLength: 1
+          live_workflow_refs:
+            type: object
+            additionalProperties: false
+            required:
+              - codex_cli
+              - copilot_cli
+            properties:
+              codex_cli:
+                type: array
+                items:
+                  type: string
+                  minLength: 1
+              copilot_cli:
+                type: array
+                items:
+                  type: string
+                  minLength: 1
+          operational_safety_refs:
+            type: array
+            items:
+              type: string
+              minLength: 1
+          migration_refs:
+            type: array
+            items:
+              type: string
+              minLength: 1
+      promotion_checklist:
+        type: object
+        additionalProperties: false
+        required:
+          - required_for_label
+          - claimed_lanes
+          - canonical_entrypoint_verified
+          - wording_verified
+          - docs_synced
+        properties:
+          required_for_label:
+            type: string
+            enum:
+              - canary
+              - preview
+              - beta
+              - stable
+              - deprecated
+          claimed_lanes:
+            type: object
+            additionalProperties: false
+            required:
+              - codex_cli
+              - copilot_cli
+            properties:
+              codex_cli:
+                type: array
+                items:
+                  type: string
+                  minLength: 1
+              copilot_cli:
+                type: array
+                items:
+                  type: string
+                  minLength: 1
+          canonical_entrypoint_verified:
+            type: boolean
+          wording_verified:
+            type: boolean
+          docs_synced:
+            type: boolean
+      demotion_policy:
+        type: object
+        additionalProperties: false
+        required:
+          - owner
+          - fallback_maturity
+          - trigger_codes
+        properties:
+          owner:
+            type: string
+            minLength: 1
+          fallback_maturity:
+            type: string
+            enum:
+              - canary
+              - preview
+              - beta
+              - stable
+              - deprecated
+          trigger_codes:
+            type: array
+            minItems: 1
+            items:
+              type: string
+              enum:
+                - evidence-stale
+                - runtime-regression
+                - release-no-go
+                - docs-drift
+                - write-safety-regression
       policy_requirements:
         type: object
         additionalProperties: false

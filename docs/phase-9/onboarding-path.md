@@ -49,8 +49,22 @@ Public support remains lane-specific; use the
 support wording.
 Expect the current lane label to stay exact, including `publicly supported`,
 `degraded`, and `prep`.
+Workflow label wording must follow the
+[Phase 18 wording system](../architecture/phase-18-workflow-maturity-wording-system.md).
 
-## First workflow
+## Workflow labels
+
+- `canary`: current example path or maintainer-guided path only; not a default recommendation
+- `preview`: available for the documented lane with explicit caveats
+- `beta`: recommended with caveats on documented default lanes
+- `stable`: default recommended workflow on documented lanes
+- `deprecated`: do not start here; use the replacement guidance
+
+Use `recommended` only when workflow maturity and lane support both justify it.
+If a `canary` workflow appears on this page, treat it as the current example
+path, not as a broad default recommendation.
+
+## Current example first workflow
 
 1. Start the runtime from repo root.
 2. Run `/skills`.
@@ -60,6 +74,11 @@ Expect the current lane label to stay exact, including `publicly supported`,
 After first success, `pairslash-onboard-repo` remains the next repo re-entry
 workflow, and it should still be described conservatively when its release
 channel is narrower than `pairslash-plan`.
+
+This is the current example path because it is the clearest repo-entry flow in
+the shipped product surface today.
+It is not a blanket recommendation beyond the documented lanes, workflow label,
+and compatibility boundary.
 
 ## If it fails
 

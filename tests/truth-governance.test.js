@@ -9,6 +9,8 @@ import { repoRoot } from "./phase4-helpers.js";
 const CHARTER_PATH = "docs/phase-12/authoritative-program-charter.md";
 const CHARTER_FILE = "authoritative-program-charter.md";
 const READ_AUTHORITY_CHARTER_PATH = "docs/architecture/phase-17-read-authority-charter.md";
+const WORKFLOW_MATURITY_CHARTER_PATH = "docs/architecture/phase-18-workflow-maturity-charter.md";
+const WORKFLOW_MATURITY_WORDING_SYSTEM_PATH = "docs/architecture/phase-18-workflow-maturity-wording-system.md";
 const LEGAL_PACKAGING_STATUS_PATH = "docs/releases/legal-packaging-status.md";
 const LICENSE_PATH = "LICENSE";
 const OFFICIAL_STAGE_SENTENCE =
@@ -106,6 +108,55 @@ test("phase 17 read authority charter exists with the required contract sections
   }
 });
 
+test("phase 18 workflow maturity charter exists with the required contract sections", () => {
+  const absolutePath = join(repoRoot, WORKFLOW_MATURITY_CHARTER_PATH);
+  assert.equal(existsSync(absolutePath), true);
+
+  const contents = read(WORKFLOW_MATURITY_CHARTER_PATH);
+  for (const heading of [
+    "## 1. Phase Intent",
+    "## 2. Scope",
+    "## 3. Non-Goals",
+    "## 4. Guardrails",
+    "## 5. Taxonomy",
+    "## 6. Promotion Rules",
+    "## 7. Demotion Rules",
+    "## 8. Evidence Policy",
+    "## 9. Public Wording Policy",
+    "## 10. Exit Gates",
+    "## 11. Failure Conditions",
+    "## 12. Sequencing Notes",
+  ]) {
+    assert.ok(contents.includes(heading), `${WORKFLOW_MATURITY_CHARTER_PATH} should include ${heading}`);
+  }
+  assert.ok(contents.includes("support.workflow_maturity"));
+  assert.ok(contents.includes("`/skills` remains the canonical front door"));
+});
+
+test("phase 18 workflow maturity wording system exists with the required wording blocks", () => {
+  const absolutePath = join(repoRoot, WORKFLOW_MATURITY_WORDING_SYSTEM_PATH);
+  assert.equal(existsSync(absolutePath), true);
+
+  const contents = read(WORKFLOW_MATURITY_WORDING_SYSTEM_PATH);
+  for (const heading of [
+    "## 1. Usage Rules",
+    "## 2. Core Terminology Block",
+    "## 3. Workflow Maturity Legend",
+    "## 5. Onboarding Labels And Legend",
+    "## 6. Compatibility-Page Label Conventions",
+    "## 8. Demotion Wording Conventions",
+    "## 9. Memory-Write Vs Read-Only Wording",
+    "## 10. Advanced-Lane Quarantine Wording",
+    "## 11. Current-State PairSlash Caveat Block",
+    "## 12. Release Notes Block",
+  ]) {
+    assert.ok(contents.includes(heading), `${WORKFLOW_MATURITY_WORDING_SYSTEM_PATH} should include ${heading}`);
+  }
+  for (const term of ["`implemented`", "`verified`", "`supported`", "`recommended`"]) {
+    assert.ok(contents.includes(term), `${WORKFLOW_MATURITY_WORDING_SYSTEM_PATH} should define ${term}`);
+  }
+});
+
 test("official stage sentence is synced into public entry docs", () => {
   const mirroredFiles = [
     "README.md",
@@ -170,6 +221,8 @@ test("public claim policy points to the charter instead of owning stage truth", 
   const contents = read(policyPath);
 
   assert.ok(contents.includes(CHARTER_PATH), `${policyPath} should point to the authoritative charter`);
+  assert.ok(contents.includes(WORKFLOW_MATURITY_CHARTER_PATH), `${policyPath} should point to the workflow maturity charter`);
+  assert.ok(contents.includes(WORKFLOW_MATURITY_WORDING_SYSTEM_PATH), `${policyPath} should point to the workflow maturity wording system`);
   assert.equal(contents.includes("## Current stage"), false, `${policyPath} should not own a current-stage section`);
   assert.equal(
     normalizeWhitespace(contents).includes(OFFICIAL_STAGE_SENTENCE),
@@ -225,13 +278,16 @@ test("public claim policy keeps narrative guardrails and release wording templat
   ]) {
     assert.ok(contents.includes(heading), `${policyPath} should include ${heading}`);
   }
+  for (const term of ["`implemented`", "`verified`", "`supported`", "`recommended`"]) {
+    assert.ok(contents.includes(term), `${policyPath} should keep ${term} wording explicit`);
+  }
 });
 
 test("compatibility matrix distinguishes implementation, deterministic, live, and public support truth", () => {
   const matrixPath = "docs/compatibility/compatibility-matrix.md";
   const contents = read(matrixPath);
 
-  for (const term of ["`implemented`", "`deterministic-tested`", "`live-evidence-backed`", "`publicly supported`"]) {
+  for (const term of ["`canary`", "`preview`", "`beta`", "`stable`", "`deprecated`", "`publicly supported`"]) {
     assert.ok(contents.includes(term), `${matrixPath} should explain ${term}`);
   }
   assert.ok(
@@ -254,6 +310,14 @@ test("compatibility matrix distinguishes implementation, deterministic, live, an
   assert.ok(
     contents.includes("Windows promotion gate requires"),
     `${matrixPath} should render Windows promotion guardrails`,
+  );
+  assert.ok(
+    contents.includes(WORKFLOW_MATURITY_WORDING_SYSTEM_PATH),
+    `${matrixPath} should point to the workflow maturity wording system`,
+  );
+  assert.ok(
+    contents.includes("## Workflow label display convention"),
+    `${matrixPath} should keep workflow label display rules explicit`,
   );
 });
 
@@ -311,6 +375,8 @@ test("charter system record points to the markdown charter and verdict sources",
   assert.equal(record.truth_sources.scoped_release_verdict, "docs/releases/scoped-release-verdict.md");
   assert.equal(record.truth_sources.public_claim_policy, "docs/releases/public-claim-policy.md");
   assert.equal(record.truth_sources.runtime_support_matrix, "docs/compatibility/compatibility-matrix.md");
+  assert.equal(record.truth_sources.workflow_maturity_charter, WORKFLOW_MATURITY_CHARTER_PATH);
+  assert.equal(record.truth_sources.workflow_maturity_wording_system, WORKFLOW_MATURITY_WORDING_SYSTEM_PATH);
 });
 
 test("release checklist requires the authoritative charter", () => {
@@ -446,6 +512,10 @@ test("compatibility, support, and issue triage docs keep legal/package truth sep
     verificationContents.includes("does not publish any `@pairslash/*` package"),
     "docs/compatibility/runtime-verification.md should keep package publication separate from support verification",
   );
+  assert.ok(
+    verificationContents.includes(WORKFLOW_MATURITY_CHARTER_PATH),
+    "docs/compatibility/runtime-verification.md should point to the workflow maturity charter",
+  );
   for (const heading of [
     "## A. Live Verification Philosophy",
     "## B. Runbook - Codex CLI",
@@ -497,6 +567,43 @@ test("compatibility, support, and issue triage docs keep legal/package truth sep
       `${relativePath} should point to the legal/package boundary`,
     );
   }
+});
+
+test("workflow maturity truth stays separate from runtime support truth in phase and compatibility docs", () => {
+  const charterContents = read(CHARTER_PATH);
+  assert.ok(
+    charterContents.includes(WORKFLOW_MATURITY_CHARTER_PATH),
+    `${CHARTER_PATH} should point to the workflow maturity charter`,
+  );
+  assert.ok(
+    charterContents.includes(WORKFLOW_MATURITY_WORDING_SYSTEM_PATH),
+    `${CHARTER_PATH} should point to the workflow maturity wording system`,
+  );
+
+  const compatibilityMatrix = read("docs/compatibility/compatibility-matrix.md");
+  assert.ok(
+    compatibilityMatrix.includes(WORKFLOW_MATURITY_CHARTER_PATH),
+    "docs/compatibility/compatibility-matrix.md should point to the workflow maturity charter",
+  );
+  assert.ok(
+    compatibilityMatrix.includes("They do not promote workflow maturity"),
+    "docs/compatibility/compatibility-matrix.md should keep workflow maturity separate from lane support labels",
+  );
+});
+
+test("onboarding path keeps workflow labels and recommendation boundaries explicit", () => {
+  const contents = read("docs/phase-9/onboarding-path.md");
+  assert.ok(
+    contents.includes("phase-18-workflow-maturity-wording-system.md"),
+    "docs/phase-9/onboarding-path.md should point to the workflow maturity wording system",
+  );
+  for (const label of ["`canary`", "`preview`", "`beta`", "`stable`", "`deprecated`"]) {
+    assert.ok(contents.includes(label), `docs/phase-9/onboarding-path.md should include ${label}`);
+  }
+  assert.ok(
+    contents.includes("current example path"),
+    "docs/phase-9/onboarding-path.md should distinguish the example path from a default recommendation",
+  );
 });
 
 test("phase 9 public narrative docs keep repo source licensing separate from package publication", () => {

@@ -208,7 +208,7 @@
               ],
               "id": "pairslash-frontend",
               "install_dir": "<repo>\\.agents\\skills\\pairslash-frontend",
-              "manifest_digest": "844b50a7797ac83f8d99e4e446a818cf8210f669bf2eb30341cc55b8a1a279b2",
+              "manifest_digest": "e40f391bb56ea85b52366c7eb81b50c5b868f53cba425c79018ca1c735c4c3e1",
               "previous_version": null,
               "version": "0.2.0"
             },
@@ -398,7 +398,7 @@
               ],
               "id": "pairslash-plan",
               "install_dir": "<repo>\\.agents\\skills\\pairslash-plan",
-              "manifest_digest": "30db5437aa01f3839caf5f27a419b0df010ec142dcda25b29965f47a7d8e22e1",
+              "manifest_digest": "d8ddb32a03d00513ab2ded6f32e2bebd6e2812d2bd8b28c886dd69c748dfecb5",
               "previous_version": null,
               "version": "0.2.0"
             }
@@ -425,7 +425,7 @@
         {
           "bundle_kind": "codex-skill-bundle",
           "canonical_entrypoint": "/skills",
-          "digest": "764e52e9de443e13e2c2b54f80daf4654e1dab6c2eeff6153654b2f2601402d8",
+          "digest": "fbfd94f6dd377149f3e09b03641838ac932ab7790098a68fdd0097bf1044d6c9",
           "direct_invocation": "$pairslash-frontend",
           "files": [
             {
@@ -544,7 +544,7 @@
               "relative_path": "pairslash.install.json",
               "required": true,
               "runtime_selector": "shared",
-              "sha256": "c6093aeff1fac0f22719c79ca31543888d623135507b7afdb4ef5291e30ac30c",
+              "sha256": "edc15468963754f870a74f7f997fbd1f18172bb6bb95a00f059be3690918d9c6",
               "uninstall_behavior": "remove_if_unmodified",
               "write_authority_guarded": false
             },
@@ -579,7 +579,7 @@
               "write_authority_guarded": false
             }
           ],
-          "normalized_ir_digest": "2ea1211b6e2fa69b3f81b7e458ddaa353138d095c4cd2060318c8dd8ad85836d",
+          "normalized_ir_digest": "e9df3cdbe51dcdb1edfd7bce403e8fcb129e0143ce6616d745e3e6d33d831aa7",
           "output_dir": "<repo>\\dist\\compiled\\codex\\pairslash-frontend",
           "pack_id": "pairslash-frontend",
           "runtime": "codex_cli",
@@ -588,7 +588,7 @@
         {
           "bundle_kind": "codex-skill-bundle",
           "canonical_entrypoint": "/skills",
-          "digest": "e08e3a23616a6434dc92a304adb0c7087543d84cc66bcbbaf2b62f4b9bec4e29",
+          "digest": "01d300c7114d951aabe0b8f142ed5ac9ed6072ca8c98b37c11708827edd8220e",
           "direct_invocation": "$pairslash-plan",
           "files": [
             {
@@ -707,7 +707,7 @@
               "relative_path": "pairslash.install.json",
               "required": true,
               "runtime_selector": "shared",
-              "sha256": "e23ba7e2c8408de09f28af5e2c7a64e9b7bc8b39e26b704629781c2c7a417032",
+              "sha256": "fd194435322087a833ed7295ff519c9d898bba1690bfb868afeb380301b6dad4",
               "uninstall_behavior": "remove_if_unmodified",
               "write_authority_guarded": false
             },
@@ -742,7 +742,7 @@
               "write_authority_guarded": false
             }
           ],
-          "normalized_ir_digest": "4c695a24fba173f0d871669f4dd9902eef2a7495bd871b2c1b7507366d3d534d",
+          "normalized_ir_digest": "9f3da0790c568be1e6ac61fce8776a6cb6f99ee66635d1c597f42575235c34ad",
           "output_dir": "<repo>\\dist\\compiled\\codex\\pairslash-plan",
           "pack_id": "pairslash-plan",
           "runtime": "codex_cli",
@@ -2122,7 +2122,7 @@
               ],
               "id": "pairslash-frontend",
               "install_dir": "<repo>\\.compat-home\\.copilot\\skills\\pairslash-frontend",
-              "manifest_digest": "844b50a7797ac83f8d99e4e446a818cf8210f669bf2eb30341cc55b8a1a279b2",
+              "manifest_digest": "e40f391bb56ea85b52366c7eb81b50c5b868f53cba425c79018ca1c735c4c3e1",
               "previous_version": null,
               "version": "0.2.0"
             },
@@ -2294,7 +2294,7 @@
               ],
               "id": "pairslash-plan",
               "install_dir": "<repo>\\.compat-home\\.copilot\\skills\\pairslash-plan",
-              "manifest_digest": "30db5437aa01f3839caf5f27a419b0df010ec142dcda25b29965f47a7d8e22e1",
+              "manifest_digest": "d8ddb32a03d00513ab2ded6f32e2bebd6e2812d2bd8b28c886dd69c748dfecb5",
               "previous_version": null,
               "version": "0.2.0"
             }
@@ -2321,7 +2321,7 @@
         {
           "bundle_kind": "copilot-package-bundle",
           "canonical_entrypoint": "/skills",
-          "digest": "65a9be91802f343e10a14c2fc87e18dbacfdd8a124c5ccdac1f2631130226756",
+          "digest": "314da6b6858775a6c1f6057117d2f288c8f67f36dd5ad458c9a272a45ebc7dc0",
           "direct_invocation": "/pairslash-frontend",
           "files": [
             {
@@ -2425,7 +2425,7 @@
               "relative_path": "pairslash.install.json",
               "required": true,
               "runtime_selector": "shared",
-              "sha256": "3f62e935256a6d3b24a4e6f4890352db042fe5f268938ae118cde87c8d35f86d",
+              "sha256": "b53125c76e31ee60bbeee1274b83ba8d9a0019aeeb73bf3bfcbdb6e0de8d088e",
               "uninstall_behavior": "remove_if_unmodified",
               "write_authority_guarded": false
             },
@@ -2460,7 +2460,7 @@
               "write_authority_guarded": false
             }
           ],
-          "normalized_ir_digest": "2ea1211b6e2fa69b3f81b7e458ddaa353138d095c4cd2060318c8dd8ad85836d",
+          "normalized_ir_digest": "e9df3cdbe51dcdb1edfd7bce403e8fcb129e0143ce6616d745e3e6d33d831aa7",
           "output_dir": "<repo>\\dist\\compiled\\copilot\\pairslash-frontend",
           "pack_id": "pairslash-frontend",
           "runtime": "copilot_cli",
@@ -2469,7 +2469,7 @@
         {
           "bundle_kind": "copilot-package-bundle",
           "canonical_entrypoint": "/skills",
-          "digest": "15e1683ae6ddfb8f4ab508031b70071a36e778529f66d89d8260278a763384c2",
+          "digest": "66e69dc80eb5262a0810612c9ea64dd36273d6563c4ae4b69463a97e66042c4c",
           "direct_invocation": "/pairslash-plan",
           "files": [
             {
@@ -2573,7 +2573,7 @@
               "relative_path": "pairslash.install.json",
               "required": true,
               "runtime_selector": "shared",
-              "sha256": "1bf829b1bf93bc528f19fbbf45cb0f661323f3c067d086dfacd100923fc33d03",
+              "sha256": "48584d94e6d74593d9ee1012ccda61ad6016cf71bbe96487c3209eaeb732bf8f",
               "uninstall_behavior": "remove_if_unmodified",
               "write_authority_guarded": false
             },
@@ -2608,7 +2608,7 @@
               "write_authority_guarded": false
             }
           ],
-          "normalized_ir_digest": "4c695a24fba173f0d871669f4dd9902eef2a7495bd871b2c1b7507366d3d534d",
+          "normalized_ir_digest": "9f3da0790c568be1e6ac61fce8776a6cb6f99ee66635d1c597f42575235c34ad",
           "output_dir": "<repo>\\dist\\compiled\\copilot\\pairslash-plan",
           "pack_id": "pairslash-plan",
           "runtime": "copilot_cli",

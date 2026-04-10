@@ -45,6 +45,8 @@ truth_sources:
   runtime_support_matrix: docs/compatibility/compatibility-matrix.md
   runtime_support_evidence: docs/compatibility/runtime-verification.md
   runtime_support_data: docs/compatibility/runtime-surface-matrix.yaml
+  workflow_maturity_charter: docs/architecture/phase-18-workflow-maturity-charter.md
+  workflow_maturity_wording_system: docs/architecture/phase-18-workflow-maturity-wording-system.md
   legal_package_status: docs/releases/legal-packaging-status.md
   pack_catalog_source: packs/core/*/pack.manifest.yaml
   pack_catalog_index: packages/core/spec-core/registry/packs.yaml

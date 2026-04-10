@@ -167,6 +167,54 @@ test("lint bridge warns when pack trust descriptor shim drifts from authoritativ
   }
 });
 
+test("lint bridge fails when workflow maturity exceeds the evidence ceiling", serial, () => {
+  const fixture = createTempRepo({ packs: ["pairslash-plan"] });
+  try {
+    updatePackManifest({
+      repoRoot: fixture.tempRoot,
+      packId: "pairslash-plan",
+      mutate(manifest) {
+        manifest.support.workflow_maturity = "preview";
+        manifest.support.workflow_transition.from = "canary";
+        manifest.support.workflow_transition.reason = "lint-overclaim-check";
+        manifest.support.workflow_evidence.live_workflow_refs.codex_cli = [
+          "docs/evidence/live-runtime/codex-cli-repo-macos.md",
+        ];
+        manifest.support.workflow_evidence.live_workflow_refs.copilot_cli = [
+          "docs/evidence/live-runtime/copilot-cli-user-linux.md",
+        ];
+        manifest.support.promotion_checklist.required_for_label = "preview";
+        return manifest;
+      },
+    });
+
+    const report = runLintBridge({
+      repoRoot: fixture.tempRoot,
+      runtime: "all",
+      target: "repo",
+      packs: ["pairslash-plan"],
+    });
+    assert.equal(report.ok, false);
+    assert.ok(
+      report.issues.some(
+        (issue) =>
+          issue.code === "LINT-TRUST-004" &&
+          issue.result === "error" &&
+          issue.message.includes("workflow maturity preview exceeds effective evidence-backed level canary"),
+      ),
+    );
+    assert.ok(
+      report.issues.some(
+        (issue) =>
+          issue.code === "LINT-TRUST-004" &&
+          issue.message.includes("workflow-maturity-pack-runtime-live-required:codex_cli:lane-matrix"),
+      ),
+    );
+  } finally {
+    fixture.cleanup();
+  }
+});
+
 test("lint bridge errors when manifest support claim exceeds blocked runtime surface", serial, () => {
   const fixture = createTempRepo({ packs: ["pairslash-plan"] });
   try {

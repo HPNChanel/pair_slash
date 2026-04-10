@@ -50,7 +50,7 @@ test("derived pack registry stays aligned with canonical core manifests", () => 
 
   assert.deepEqual(registry, derivedIndex);
   assert.ok(
-    registry.packs.every((entry) => entry.release_channel && entry.support_scope),
+    registry.packs.every((entry) => entry.release_channel && entry.workflow_maturity && entry.support_scope),
   );
 });
 
@@ -61,9 +61,13 @@ test("pack catalog records include core metadata and excluded advanced inventory
 
   assert.ok(planRecord);
   assert.equal(planRecord.maturity, "preview");
+  assert.equal(planRecord.workflow_maturity, "canary");
+  assert.equal(planRecord.effective_workflow_maturity, "canary");
   assert.equal(planRecord.support_scope, "core-supported");
   assert.equal(planRecord.runtime_support.codex_cli.evidence_scope, "shared-matrix");
   assert.equal(planRecord.promotion_ready, false);
+  assert.equal(planRecord.workflow_promotion_ready, false);
+  assert.equal(planRecord.scoped_release_gate_status, "NO-GO");
   assert.ok(advancedRecord);
   assert.equal(advancedRecord.catalog_scope, "advanced");
   assert.equal(advancedRecord.catalog_status, "excluded");
@@ -386,6 +390,98 @@ test("validator rejects invalid runtime range formats", () => {
       error.includes("supported_runtime_ranges.codex_cli must use exact x.y.z or >=x.y.z semver format"),
     ),
   );
+});
+
+test("validator rejects unsupported workflow maturity labels", () => {
+  const manifest = loadManifestFixture("pack.manifest.v2.core.sample.yaml");
+  manifest.support.workflow_maturity = "live-evidence-backed";
+  const errors = validatePackManifestV2(manifest);
+  assert.ok(
+    errors.some((error) =>
+      error.includes("support.workflow_maturity") &&
+      error.includes("canary") &&
+      error.includes("preview") &&
+      error.includes("beta") &&
+      error.includes("stable") &&
+      error.includes("deprecated"),
+    ),
+  );
+  assert.ok(hasCode(errors, "PSM000"));
+});
+
+test("workflow maturity promotion claims demote when live evidence and release truth are missing", () => {
+  const fixture = createTempRepo({ packs: ["pairslash-plan"] });
+  try {
+    updatePackManifest({
+      repoRoot: fixture.tempRoot,
+      packId: "pairslash-plan",
+      mutate(manifest) {
+        manifest.support.workflow_maturity = "stable";
+        manifest.support.workflow_transition.from = "beta";
+        manifest.support.workflow_transition.reason = "phase-18-regression-check";
+        manifest.support.workflow_evidence.live_workflow_refs.codex_cli = [
+          "docs/evidence/live-runtime/codex-cli-repo-macos.md",
+          "docs/evidence/live-runtime/codex-cli-repo-windows.md",
+        ];
+        manifest.support.workflow_evidence.live_workflow_refs.copilot_cli = [
+          "docs/evidence/live-runtime/copilot-cli-user-linux.md",
+          "docs/evidence/live-runtime/copilot-cli-user-windows.md",
+        ];
+        manifest.support.promotion_checklist.required_for_label = "stable";
+        manifest.support.promotion_checklist.docs_synced = true;
+        manifest.support.promotion_checklist.wording_verified = true;
+        return manifest;
+      },
+    });
+    const records = loadPackCatalogRecords(fixture.tempRoot, { includeAdvanced: false });
+    const planRecord = records.find((record) => record.id === "pairslash-plan");
+    assert.ok(planRecord);
+    assert.equal(planRecord.workflow_maturity, "stable");
+    assert.equal(planRecord.effective_workflow_maturity, "canary");
+    assert.equal(planRecord.workflow_promotion_ready, false);
+    assert.ok(
+      planRecord.workflow_maturity_blockers.includes(
+        "workflow-maturity-pack-runtime-live-required:codex_cli:lane-matrix",
+      ),
+    );
+    assert.ok(
+      planRecord.workflow_maturity_blockers.includes("workflow-maturity-release-gate:no-go"),
+    );
+  } finally {
+    fixture.cleanup();
+  }
+});
+
+test("validator rejects illegal workflow maturity transitions", () => {
+  const manifest = loadManifestFixture("pack.manifest.v2.core.sample.yaml");
+  manifest.support.workflow_maturity = "canary";
+  manifest.support.workflow_transition.from = "stable";
+  manifest.support.workflow_transition.reason = "illegal-test";
+  const errors = validatePackManifestV2(manifest);
+  assert.ok(
+    errors.some((error) =>
+      error.includes("support.workflow_transition.from stable -> canary is not allowed"),
+    ),
+  );
+  assert.ok(hasCode(errors, "PSM065"));
+});
+
+test("validator requires migration guidance for deprecated workflows", () => {
+  const manifest = loadManifestFixture("pack.manifest.v2.core.sample.yaml");
+  manifest.status = "deprecated";
+  manifest.catalog.deprecation_status = "deprecated";
+  manifest.support.workflow_maturity = "deprecated";
+  manifest.support.workflow_transition.from = "beta";
+  manifest.support.workflow_transition.reason = "sunset";
+  manifest.catalog.replacement_pack = null;
+  manifest.support.workflow_evidence.migration_refs = [];
+  const errors = validatePackManifestV2(manifest);
+  assert.ok(
+    errors.some((error) =>
+      error.includes("deprecated workflows require catalog.replacement_pack or support.workflow_evidence.migration_refs"),
+    ),
+  );
+  assert.ok(hasCode(errors, "PSM065"));
 });
 
 test("validator rejects low-risk manifests with write capabilities", () => {

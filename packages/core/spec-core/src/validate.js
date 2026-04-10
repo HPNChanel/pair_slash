@@ -72,6 +72,8 @@ import {
   UNINSTALL_STRATEGY_MODES,
   UPDATE_NON_OVERRIDE_POLICIES,
   UPDATE_STRATEGY_MODES,
+  WORKFLOW_DEMOTION_TRIGGER_CODES,
+  WORKFLOW_MATURITY_LEVELS,
   WORKFLOW_CLASSES,
 } from "./constants.js";
 import { safeParsePackManifestV2 } from "./manifest-v2.schema.js";
@@ -94,6 +96,35 @@ function sortStable(values) {
 
 function isObject(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+const WORKFLOW_MATURITY_ORDER = Object.freeze(
+  WORKFLOW_MATURITY_LEVELS.reduce((accumulator, level, index) => {
+    accumulator[level] = index;
+    return accumulator;
+  }, {}),
+);
+
+const WORKFLOW_TRANSITION_MAP = Object.freeze({
+  canary: new Set(["canary", "preview", "deprecated"]),
+  preview: new Set(["preview", "canary", "beta", "deprecated"]),
+  beta: new Set(["beta", "preview", "stable", "deprecated"]),
+  stable: new Set(["stable", "beta", "deprecated"]),
+  deprecated: new Set(["deprecated"]),
+});
+
+function workflowMaturityRank(level) {
+  if (!WORKFLOW_MATURITY_LEVELS.includes(level)) {
+    return -1;
+  }
+  return WORKFLOW_MATURITY_ORDER[level];
+}
+
+function isLegalWorkflowTransition(from, to) {
+  if (!WORKFLOW_MATURITY_LEVELS.includes(from) || !WORKFLOW_MATURITY_LEVELS.includes(to)) {
+    return false;
+  }
+  return WORKFLOW_TRANSITION_MAP[from]?.has(to) ?? false;
 }
 
 function validateObject(value, field, errors, code) {
@@ -1052,6 +1083,14 @@ function validateCanonicalSupport(canonical, errors) {
       `support.support_level_claim must be one of ${PACK_SUPPORT_LEVELS.join(", ")}`,
     );
   }
+  if (!WORKFLOW_MATURITY_LEVELS.includes(canonical.support?.workflow_maturity)) {
+    push(
+      errors,
+      "PSM065",
+      `support.workflow_maturity must be one of ${WORKFLOW_MATURITY_LEVELS.join(", ")}`,
+    );
+  }
+  const workflowMaturity = canonical.support?.workflow_maturity;
   if (!validateObject(canonical.support?.signature, "support.signature", errors, "PSM065")) {
     return;
   }
@@ -1102,6 +1141,225 @@ function validateCanonicalSupport(canonical, errors) {
       push(errors, "PSM065", `support.runtime_support.${runtime}.status cannot exceed unverified manifest compatibility`);
     }
   }
+
+  if (!validateObject(canonical.support?.workflow_transition, "support.workflow_transition", errors, "PSM065")) {
+    return;
+  }
+  const transitionFrom = canonical.support.workflow_transition?.from;
+  if (
+    transitionFrom !== null &&
+    !WORKFLOW_MATURITY_LEVELS.includes(transitionFrom)
+  ) {
+    push(
+      errors,
+      "PSM065",
+      `support.workflow_transition.from must be one of ${WORKFLOW_MATURITY_LEVELS.join(", ")} or null`,
+    );
+  }
+  validateNonEmptyString(canonical.support.workflow_transition?.reason, "support.workflow_transition.reason", errors, "PSM065");
+  if (WORKFLOW_MATURITY_LEVELS.includes(workflowMaturity)) {
+    const transitionSource = transitionFrom ?? workflowMaturity;
+    if (!isLegalWorkflowTransition(transitionSource, workflowMaturity)) {
+      push(errors, "PSM065", `support.workflow_transition.from ${transitionSource} -> ${workflowMaturity} is not allowed`);
+    }
+  }
+
+  if (!validateObject(canonical.support?.workflow_evidence, "support.workflow_evidence", errors, "PSM065")) {
+    return;
+  }
+  const deterministicRefs = validateStringArray(
+    canonical.support.workflow_evidence?.deterministic_refs,
+    "support.workflow_evidence.deterministic_refs",
+    errors,
+    "PSM065",
+  );
+  if (!validateObject(canonical.support.workflow_evidence?.live_workflow_refs, "support.workflow_evidence.live_workflow_refs", errors, "PSM065")) {
+    return;
+  }
+  const liveWorkflowRefs = Object.fromEntries(
+    SUPPORTED_RUNTIMES.map((runtime) => [
+      runtime,
+      validateStringArray(
+        canonical.support.workflow_evidence.live_workflow_refs?.[runtime],
+        `support.workflow_evidence.live_workflow_refs.${runtime}`,
+        errors,
+        "PSM065",
+        { allowEmpty: true },
+      ),
+    ]),
+  );
+  const operationalSafetyRefs = validateStringArray(
+    canonical.support.workflow_evidence?.operational_safety_refs,
+    "support.workflow_evidence.operational_safety_refs",
+    errors,
+    "PSM065",
+    { allowEmpty: true },
+  );
+  const migrationRefs = validateStringArray(
+    canonical.support.workflow_evidence?.migration_refs,
+    "support.workflow_evidence.migration_refs",
+    errors,
+    "PSM065",
+    { allowEmpty: true },
+  );
+
+  if (workflowMaturity !== "deprecated" && deterministicRefs.length === 0) {
+    push(errors, "PSM065", "support.workflow_evidence.deterministic_refs must include at least one reference for non-deprecated workflows");
+  }
+  if (["preview", "beta", "stable"].includes(workflowMaturity)) {
+    for (const runtime of SUPPORTED_RUNTIMES) {
+      if (liveWorkflowRefs[runtime].length === 0) {
+        push(errors, "PSM065", `support.workflow_evidence.live_workflow_refs.${runtime} requires at least one reference for ${workflowMaturity}`);
+      }
+    }
+  }
+  if (["beta", "stable"].includes(workflowMaturity)) {
+    for (const runtime of SUPPORTED_RUNTIMES) {
+      if (liveWorkflowRefs[runtime].length < 2) {
+        push(errors, "PSM065", `support.workflow_evidence.live_workflow_refs.${runtime} requires repeated evidence for ${workflowMaturity}`);
+      }
+    }
+  }
+
+  if (!validateObject(canonical.support?.promotion_checklist, "support.promotion_checklist", errors, "PSM065")) {
+    return;
+  }
+  if (!WORKFLOW_MATURITY_LEVELS.includes(canonical.support.promotion_checklist?.required_for_label)) {
+    push(
+      errors,
+      "PSM065",
+      `support.promotion_checklist.required_for_label must be one of ${WORKFLOW_MATURITY_LEVELS.join(", ")}`,
+    );
+  }
+  if (
+    WORKFLOW_MATURITY_LEVELS.includes(workflowMaturity) &&
+    canonical.support.promotion_checklist?.required_for_label !== workflowMaturity
+  ) {
+    push(errors, "PSM065", "support.promotion_checklist.required_for_label must match support.workflow_maturity");
+  }
+  if (!validateObject(canonical.support.promotion_checklist?.claimed_lanes, "support.promotion_checklist.claimed_lanes", errors, "PSM065")) {
+    return;
+  }
+  for (const runtime of SUPPORTED_RUNTIMES) {
+    validateStringArray(
+      canonical.support.promotion_checklist.claimed_lanes?.[runtime],
+      `support.promotion_checklist.claimed_lanes.${runtime}`,
+      errors,
+      "PSM065",
+      { allowEmpty: true },
+    );
+  }
+  for (const field of ["canonical_entrypoint_verified", "wording_verified", "docs_synced"]) {
+    if (typeof canonical.support.promotion_checklist?.[field] !== "boolean") {
+      push(errors, "PSM065", `support.promotion_checklist.${field} must be boolean`);
+    }
+  }
+  if (
+    ["preview", "beta", "stable"].includes(workflowMaturity) &&
+    canonical.support.promotion_checklist?.canonical_entrypoint_verified !== true
+  ) {
+    push(errors, "PSM065", "support.promotion_checklist.canonical_entrypoint_verified must be true for preview/beta/stable");
+  }
+  if (
+    ["beta", "stable"].includes(workflowMaturity) &&
+    canonical.support.promotion_checklist?.docs_synced !== true
+  ) {
+    push(errors, "PSM065", "support.promotion_checklist.docs_synced must be true for beta/stable");
+  }
+  if (
+    workflowMaturity === "stable" &&
+    canonical.support.promotion_checklist?.wording_verified !== true
+  ) {
+    push(errors, "PSM065", "support.promotion_checklist.wording_verified must be true for stable");
+  }
+
+  if (!validateObject(canonical.support?.demotion_policy, "support.demotion_policy", errors, "PSM065")) {
+    return;
+  }
+  validateNonEmptyString(canonical.support.demotion_policy?.owner, "support.demotion_policy.owner", errors, "PSM065");
+  if (!WORKFLOW_MATURITY_LEVELS.includes(canonical.support.demotion_policy?.fallback_maturity)) {
+    push(
+      errors,
+      "PSM065",
+      `support.demotion_policy.fallback_maturity must be one of ${WORKFLOW_MATURITY_LEVELS.join(", ")}`,
+    );
+  }
+  const demotionTriggerCodes = validateStringArray(
+    canonical.support.demotion_policy?.trigger_codes,
+    "support.demotion_policy.trigger_codes",
+    errors,
+    "PSM065",
+  );
+  for (const triggerCode of demotionTriggerCodes) {
+    if (!WORKFLOW_DEMOTION_TRIGGER_CODES.includes(triggerCode)) {
+      push(
+        errors,
+        "PSM065",
+        `support.demotion_policy.trigger_codes contains unsupported code ${triggerCode}`,
+      );
+    }
+  }
+  if (
+    WORKFLOW_MATURITY_LEVELS.includes(workflowMaturity) &&
+    WORKFLOW_MATURITY_LEVELS.includes(canonical.support.demotion_policy?.fallback_maturity) &&
+    workflowMaturity !== "deprecated" &&
+    workflowMaturityRank(canonical.support.demotion_policy.fallback_maturity) > workflowMaturityRank(workflowMaturity)
+  ) {
+    push(errors, "PSM065", "support.demotion_policy.fallback_maturity must not be stronger than support.workflow_maturity");
+  }
+
+  if (workflowMaturity === "deprecated") {
+    if (canonical.status !== "deprecated") {
+      push(errors, "PSM065", "support.workflow_maturity deprecated requires manifest status deprecated");
+    }
+    if (!["deprecated", "archived"].includes(canonical.catalog?.deprecation_status)) {
+      push(errors, "PSM065", "support.workflow_maturity deprecated requires catalog.deprecation_status deprecated or archived");
+    }
+    if (
+      (typeof canonical.catalog?.replacement_pack !== "string" || canonical.catalog.replacement_pack.trim() === "") &&
+      migrationRefs.length === 0
+    ) {
+      push(errors, "PSM065", "deprecated workflows require catalog.replacement_pack or support.workflow_evidence.migration_refs");
+    }
+  }
+  if (
+    canonical.status === "deprecated" &&
+    workflowMaturity !== "deprecated"
+  ) {
+    push(errors, "PSM065", "manifest status deprecated requires support.workflow_maturity deprecated");
+  }
+  if (
+    ["deprecated", "archived"].includes(canonical.catalog?.deprecation_status) &&
+    workflowMaturity !== "deprecated"
+  ) {
+    push(errors, "PSM065", "catalog.deprecation_status deprecated/archived requires support.workflow_maturity deprecated");
+  }
+
+  const isWriteAuthorityWorkflow =
+    canonical.workflow_class === "write-authority" ||
+    canonical.memory_permissions?.global_project_memory === "write" ||
+    (canonical.capabilities ?? []).includes("memory_write_global");
+  if (isWriteAuthorityWorkflow && ["preview", "beta", "stable"].includes(workflowMaturity) && operationalSafetyRefs.length === 0) {
+    push(errors, "PSM065", "write-authority workflows at preview/beta/stable require support.workflow_evidence.operational_safety_refs");
+  }
+  if (isWriteAuthorityWorkflow && workflowMaturity === "stable" && operationalSafetyRefs.length < 2) {
+    push(errors, "PSM065", "write-authority workflows at stable require repeated operational safety evidence");
+  }
+  if (isWriteAuthorityWorkflow && workflowMaturity === "stable") {
+    for (const runtime of SUPPORTED_RUNTIMES) {
+      const runtimeSupport = canonical.support.runtime_support?.[runtime];
+      if (runtimeSupport?.required_for_promotion === false) {
+        continue;
+      }
+      if (runtimeSupport?.evidence_kind !== "pack-runtime-live") {
+        push(errors, "PSM065", `write-authority stable workflows require support.runtime_support.${runtime}.evidence_kind pack-runtime-live`);
+      }
+      if (["blocked", "unverified"].includes(runtimeSupport?.status)) {
+        push(errors, "PSM065", `write-authority stable workflows require support.runtime_support.${runtime}.status supported or partial`);
+      }
+    }
+  }
+
   if (!validateObject(canonical.support?.policy_requirements, "support.policy_requirements", errors, "PSM065")) {
     return;
   }

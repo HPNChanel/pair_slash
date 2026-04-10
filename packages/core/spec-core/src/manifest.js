@@ -210,6 +210,7 @@ export function buildManifestTemplate({
   supportLevelClaim = id === "pairslash-plan" ? "core-supported" : "official-preview",
   tierClaim = id === "pairslash-plan" ? "core-maintained" : "first-party-official",
   publisherClass = id === "pairslash-plan" ? "core-product" : "first-party",
+  workflowMaturity = id === "pairslash-plan" ? "preview" : "canary",
 }) {
   const sortedInclude = include.slice().sort((left, right) => left.localeCompare(right));
   const sortedOverridePaths = overridePaths.slice().sort((left, right) => left.localeCompare(right));
@@ -327,6 +328,7 @@ export function buildManifestTemplate({
       },
       tier_claim: tierClaim,
       support_level_claim: supportLevelClaim,
+      workflow_maturity: workflowMaturity,
       signature: {
         required: true,
         allow_local_unsigned: true,
@@ -351,6 +353,40 @@ export function buildManifestTemplate({
           },
         ]),
       ),
+      workflow_transition: {
+        from: workflowMaturity,
+        reason: "phase-18-workflow-promotion-bootstrap",
+      },
+      workflow_evidence: {
+        deterministic_refs: ["docs/compatibility/runtime-surface-matrix.yaml"],
+        live_workflow_refs: {
+          codex_cli: [],
+          copilot_cli: [],
+        },
+        operational_safety_refs: [],
+        migration_refs: [],
+      },
+      promotion_checklist: {
+        required_for_label: workflowMaturity,
+        claimed_lanes: {
+          codex_cli: [],
+          copilot_cli: [],
+        },
+        canonical_entrypoint_verified: true,
+        wording_verified: false,
+        docs_synced: false,
+      },
+      demotion_policy: {
+        owner: "pairslash",
+        fallback_maturity: "canary",
+        trigger_codes: [
+          "evidence-stale",
+          "runtime-regression",
+          "release-no-go",
+          "docs-drift",
+          "write-safety-regression",
+        ],
+      },
       policy_requirements: {
         no_silent_fallback: true,
         preview_required_for_mutation: true,

@@ -3,7 +3,7 @@ import { basename, join, resolve } from "node:path";
 
 import YAML from "yaml";
 
-import { SUPPORTED_RUNTIMES } from "./constants.js";
+import { SUPPORTED_RUNTIMES, WORKFLOW_MATURITY_LEVELS } from "./constants.js";
 import { loadPackManifestRecords } from "./manifest.js";
 import {
   evaluateRuntimeSupportClaim,
@@ -12,6 +12,7 @@ import {
 import { exists, relativeFrom, stableYaml, walkFiles } from "./utils.js";
 
 const SHARED_RUNTIME_SURFACE_MATRIX = "docs/compatibility/runtime-surface-matrix.yaml";
+const SCOPED_RELEASE_VERDICT_PATH = "docs/releases/scoped-release-verdict.md";
 const LIVE_RUNTIME_EVIDENCE_ROOT = "docs/evidence/live-runtime";
 const LIVE_RUNTIME_LANE_RECORD_KIND = "live-runtime-lane-record";
 const LIVE_RUNTIME_LANE_RECORD_SCHEMA_VERSION = "1.0.0";
@@ -27,6 +28,12 @@ const ALLOWED_LIVE_EVIDENCE_CLASSES = new Set([
 ]);
 const ALLOWED_FRESHNESS_STATES = new Set(["none-recorded", "fresh", "stale", "expired"]);
 const ALLOWED_EVIDENCE_VERDICTS = new Set(["pass", "partial", "fail", "blocked", "unrecorded"]);
+const WORKFLOW_MATURITY_ORDER = Object.freeze(
+  WORKFLOW_MATURITY_LEVELS.reduce((accumulator, level, index) => {
+    accumulator[level] = index;
+    return accumulator;
+  }, {}),
+);
 
 export const DEFAULT_PUBLIC_SUPPORT_POLICY = Object.freeze({
   blocked:
@@ -412,6 +419,337 @@ function normalizeEvidenceRefCollectionForCompare(value) {
     .filter((entry) => typeof entry === "string" && entry.trim() !== "")
     .map((entry) => entry.trim())
     .sort((left, right) => left.localeCompare(right));
+}
+
+function normalizeWorkflowMaturity(level) {
+  return WORKFLOW_MATURITY_LEVELS.includes(level) ? level : "canary";
+}
+
+function workflowMaturityRank(level) {
+  return WORKFLOW_MATURITY_ORDER[normalizeWorkflowMaturity(level)] ?? 0;
+}
+
+function pickWeakerWorkflowMaturity(left, right) {
+  return workflowMaturityRank(left) <= workflowMaturityRank(right)
+    ? normalizeWorkflowMaturity(left)
+    : normalizeWorkflowMaturity(right);
+}
+
+const WORKFLOW_TRANSITION_MAP = Object.freeze({
+  canary: new Set(["canary", "preview", "deprecated"]),
+  preview: new Set(["preview", "canary", "beta", "deprecated"]),
+  beta: new Set(["beta", "preview", "stable", "deprecated"]),
+  stable: new Set(["stable", "beta", "deprecated"]),
+  deprecated: new Set(["deprecated"]),
+});
+
+const STABLE_WORKFLOW_LANE_SUPPORT_LEVELS = new Set(["stable-tested"]);
+
+function readScopedReleaseGateStatus(repoRoot) {
+  const verdictPath = resolve(repoRoot, SCOPED_RELEASE_VERDICT_PATH);
+  if (!exists(verdictPath)) {
+    return "UNKNOWN";
+  }
+  const match = readFileSync(verdictPath, "utf8").match(/Gate status:\s*([A-Z-]+)/i);
+  return match?.[1]?.toUpperCase() ?? "UNKNOWN";
+}
+
+function supportedWorkflowRuntimes(manifest) {
+  const runtimes = Array.isArray(manifest?.supported_runtimes)
+    ? manifest.supported_runtimes.filter((runtime) => SUPPORTED_RUNTIMES.includes(runtime))
+    : [];
+  return runtimes.length > 0 ? runtimes : SUPPORTED_RUNTIMES.slice();
+}
+
+function workflowSmokeCoverageRuntimes(manifest) {
+  return new Set(
+    Array.isArray(manifest?.smoke_checks)
+      ? manifest.smoke_checks
+        .map((check) => check?.runtime)
+        .filter((runtime) => SUPPORTED_RUNTIMES.includes(runtime))
+      : [],
+  );
+}
+
+function collectCanaryWorkflowMaturityBlockers(manifest) {
+  const blockers = [];
+  if (manifest?.canonical_entrypoint !== "/skills") {
+    blockers.push("workflow-maturity-canonical-entrypoint-missing:/skills");
+  }
+  if (manifest?.status !== "active") {
+    blockers.push(`workflow-maturity-pack-inactive:${manifest?.status ?? "unknown"}`);
+  }
+  if (manifest?.catalog?.pack_class !== "core") {
+    blockers.push(`workflow-maturity-pack-class-not-core:${manifest?.catalog?.pack_class ?? "unknown"}`);
+  }
+  const deterministicRefs = manifest?.support?.workflow_evidence?.deterministic_refs ?? [];
+  if (!Array.isArray(deterministicRefs) || deterministicRefs.length === 0) {
+    blockers.push("workflow-maturity-deterministic-evidence-missing");
+  }
+  return blockers.sort((left, right) => left.localeCompare(right));
+}
+
+function collectPreviewWorkflowMaturityBlockers(manifest, runtimeSupport) {
+  const blockers = [];
+  const runtimes = supportedWorkflowRuntimes(manifest);
+  const smokeCoverage = workflowSmokeCoverageRuntimes(manifest);
+  for (const runtime of runtimes) {
+    if (!smokeCoverage.has(runtime)) {
+      blockers.push(`workflow-maturity-preview-deterministic-coverage-missing:${runtime}`);
+    }
+    const liveRefs = manifest?.support?.workflow_evidence?.live_workflow_refs?.[runtime];
+    if (!Array.isArray(liveRefs) || liveRefs.length === 0) {
+      blockers.push(`workflow-maturity-preview-live-workflow-evidence-missing:${runtime}`);
+    }
+    const claim = runtimeSupport?.[runtime];
+    if (claim?.required_for_promotion === false) {
+      continue;
+    }
+    if (claim?.declared_status === "blocked") {
+      blockers.push(`workflow-maturity-runtime-support-blocked:${runtime}`);
+    }
+    if (claim?.declared_status === "unverified") {
+      blockers.push(`workflow-maturity-runtime-support-unverified:${runtime}`);
+    }
+    if (claim?.evidence_kind !== "pack-runtime-live") {
+      blockers.push(`workflow-maturity-pack-runtime-live-required:${runtime}:${claim?.evidence_kind ?? "missing"}`);
+    }
+    if (!claim?.evidence_present) {
+      blockers.push(`workflow-maturity-live-evidence-missing:${runtime}:${claim?.evidence_scope ?? "missing"}`);
+    }
+  }
+  if (manifest?.support?.promotion_checklist?.canonical_entrypoint_verified !== true) {
+    blockers.push("workflow-maturity-preview-checklist-canonical-entrypoint-unverified");
+  }
+  return blockers.sort((left, right) => left.localeCompare(right));
+}
+
+function collectBetaWorkflowMaturityBlockers(manifest) {
+  const blockers = [];
+  for (const runtime of supportedWorkflowRuntimes(manifest)) {
+    const liveRefs = manifest?.support?.workflow_evidence?.live_workflow_refs?.[runtime] ?? [];
+    if (!Array.isArray(liveRefs) || liveRefs.length < 2) {
+      blockers.push(`workflow-maturity-beta-repeated-live-evidence-required:${runtime}`);
+    }
+  }
+  if (manifest?.support?.promotion_checklist?.docs_synced !== true) {
+    blockers.push("workflow-maturity-beta-checklist-docs-unsynced");
+  }
+  return blockers.sort((left, right) => left.localeCompare(right));
+}
+
+function findDefaultPromotionLanes(publicSupport, runtime) {
+  const defaultTarget =
+    publicSupport?.evidence_policy?.runbook_policy?.runtime_runbooks?.[runtime]?.default_target ?? null;
+  return (publicSupport?.runtime_lanes ?? [])
+    .filter((lane) =>
+      lane.runtime_id === runtime &&
+      lane.target === defaultTarget &&
+      lane.release_gate === "required")
+    .slice()
+    .sort((left, right) => left.lane_id.localeCompare(right.lane_id));
+}
+
+function findClaimedOrDefaultLanes(manifest, publicSupport, runtime) {
+  const claimedLaneIds = Array.isArray(manifest?.support?.promotion_checklist?.claimed_lanes?.[runtime])
+    ? manifest.support.promotion_checklist.claimed_lanes[runtime]
+    : [];
+  const runtimeLanes = (publicSupport?.runtime_lanes ?? []).filter((lane) => lane.runtime_id === runtime);
+  if (claimedLaneIds.length > 0) {
+    return claimedLaneIds
+      .map((laneId) => runtimeLanes.find((lane) => lane.lane_id === laneId) ?? null)
+      .filter(Boolean)
+      .sort((left, right) => left.lane_id.localeCompare(right.lane_id));
+  }
+  return findDefaultPromotionLanes(publicSupport, runtime);
+}
+
+function collectStableWorkflowMaturityBlockers(manifest, runtimeSupport, publicSupport, releaseGateStatus) {
+  const blockers = [];
+  if (releaseGateStatus !== "GO") {
+    blockers.push(`workflow-maturity-release-gate:${releaseGateStatus.toLowerCase()}`);
+  }
+  if (manifest?.support?.promotion_checklist?.wording_verified !== true) {
+    blockers.push("workflow-maturity-stable-checklist-wording-unverified");
+  }
+  for (const runtime of supportedWorkflowRuntimes(manifest)) {
+    const claim = runtimeSupport?.[runtime];
+    if (claim?.required_for_promotion === false) {
+      continue;
+    }
+    const lanes = findClaimedOrDefaultLanes(manifest, publicSupport, runtime);
+    if (lanes.length === 0) {
+      blockers.push(`workflow-maturity-public-lane-missing:${runtime}`);
+      continue;
+    }
+    for (const lane of lanes) {
+      if (lane.freshness_state !== "fresh") {
+        blockers.push(
+          `workflow-maturity-public-lane-not-fresh:${runtime}:${lane.lane_id}:${lane.freshness_state ?? "unknown"}`,
+        );
+      }
+      if (!STABLE_WORKFLOW_LANE_SUPPORT_LEVELS.has(lane.support_level)) {
+        blockers.push(
+          `workflow-maturity-public-lane-not-stable:${runtime}:${lane.lane_id}:${lane.support_level ?? "unknown"}`,
+        );
+      }
+    }
+  }
+  return blockers.sort((left, right) => left.localeCompare(right));
+}
+
+function collectDeprecatedWorkflowMaturityBlockers(manifest) {
+  const blockers = [];
+  if (manifest?.status !== "deprecated") {
+    blockers.push(`workflow-maturity-deprecated-status-required:${manifest?.status ?? "unknown"}`);
+  }
+  if (!["deprecated", "archived"].includes(manifest?.catalog?.deprecation_status)) {
+    blockers.push(
+      `workflow-maturity-deprecated-catalog-status-required:${manifest?.catalog?.deprecation_status ?? "unknown"}`,
+    );
+  }
+  const hasReplacement =
+    typeof manifest?.catalog?.replacement_pack === "string" &&
+    manifest.catalog.replacement_pack.trim() !== "";
+  const migrationRefs = manifest?.support?.workflow_evidence?.migration_refs ?? [];
+  if (!hasReplacement && (!Array.isArray(migrationRefs) || migrationRefs.length === 0)) {
+    blockers.push("workflow-maturity-deprecated-migration-guidance-missing");
+  }
+  return blockers.sort((left, right) => left.localeCompare(right));
+}
+
+function deriveDemotionTriggersFromBlockers(blockers) {
+  const triggerCodes = new Set();
+  for (const blocker of blockers) {
+    if (blocker.startsWith("workflow-maturity-release-gate:")) {
+      triggerCodes.add("release-no-go");
+      continue;
+    }
+    if (
+      blocker.includes("not-fresh") ||
+      blocker.includes("live-evidence-missing") ||
+      blocker.includes("repeated-live-evidence")
+    ) {
+      triggerCodes.add("evidence-stale");
+      continue;
+    }
+    if (
+      blocker.includes("runtime-support-") ||
+      blocker.includes("public-lane-") ||
+      blocker.includes("pack-runtime-live-required")
+    ) {
+      triggerCodes.add("runtime-regression");
+      continue;
+    }
+    if (blocker.includes("checklist-docs") || blocker.includes("checklist-wording")) {
+      triggerCodes.add("docs-drift");
+      continue;
+    }
+    if (blocker.includes("write-authority")) {
+      triggerCodes.add("write-safety-regression");
+    }
+  }
+  return [...triggerCodes].sort((left, right) => left.localeCompare(right));
+}
+
+function normalizeWorkflowTransitionFrom(manifest, assigned) {
+  const transitionFrom = manifest?.support?.workflow_transition?.from;
+  return WORKFLOW_MATURITY_LEVELS.includes(transitionFrom) ? transitionFrom : assigned;
+}
+
+function isWorkflowTransitionLegal(transitionFrom, assigned) {
+  if (!WORKFLOW_MATURITY_LEVELS.includes(transitionFrom) || !WORKFLOW_MATURITY_LEVELS.includes(assigned)) {
+    return false;
+  }
+  return WORKFLOW_TRANSITION_MAP[transitionFrom]?.has(assigned) ?? false;
+}
+
+function promotionChecklistReady(manifest) {
+  const checklist = manifest?.support?.promotion_checklist;
+  if (!isObject(checklist)) {
+    return false;
+  }
+  return (
+    checklist.required_for_label === manifest?.support?.workflow_maturity &&
+    checklist.canonical_entrypoint_verified === true
+  );
+}
+
+function resolveWorkflowMaturity({ repoRoot, manifest, runtimeSupport, publicSupport }) {
+  const assigned = normalizeWorkflowMaturity(manifest?.support?.workflow_maturity);
+  const transitionFrom = normalizeWorkflowTransitionFrom(manifest, assigned);
+  const transitionLegal = isWorkflowTransitionLegal(transitionFrom, assigned);
+  const canaryBlockers = collectCanaryWorkflowMaturityBlockers(manifest);
+  const previewBlockers = canaryBlockers.length === 0
+    ? collectPreviewWorkflowMaturityBlockers(manifest, runtimeSupport)
+    : [];
+  const betaBlockers = previewBlockers.length === 0
+    ? collectBetaWorkflowMaturityBlockers(manifest)
+    : [];
+  const releaseGateStatus = readScopedReleaseGateStatus(repoRoot);
+  const stableBlockers = betaBlockers.length === 0
+    ? collectStableWorkflowMaturityBlockers(
+      manifest,
+      runtimeSupport,
+      publicSupport,
+      releaseGateStatus,
+    )
+    : [];
+  const deprecatedBlockers = collectDeprecatedWorkflowMaturityBlockers(manifest);
+  const transitionBlockers = transitionLegal ? [] : [
+    `workflow-maturity-transition-illegal:${transitionFrom}->${assigned}`,
+  ];
+  const checklistBlockers = promotionChecklistReady(manifest)
+    ? []
+    : ["workflow-maturity-promotion-checklist-incomplete"];
+  let maxSupported = "canary";
+  if (previewBlockers.length === 0 && canaryBlockers.length === 0) {
+    maxSupported = "preview";
+  }
+  if (betaBlockers.length === 0 && maxSupported === "preview") {
+    maxSupported = "beta";
+  }
+  if (stableBlockers.length === 0 && maxSupported === "beta") {
+    maxSupported = "stable";
+  }
+  if (assigned === "deprecated") {
+    maxSupported = "deprecated";
+  }
+  const blockers = [...transitionBlockers, ...checklistBlockers];
+  if (assigned === "deprecated") {
+    blockers.push(...deprecatedBlockers);
+  } else {
+    if (workflowMaturityRank(assigned) >= workflowMaturityRank("canary")) {
+      blockers.push(...canaryBlockers);
+    }
+    if (workflowMaturityRank(assigned) >= workflowMaturityRank("preview")) {
+      blockers.push(...previewBlockers);
+    }
+    if (workflowMaturityRank(assigned) >= workflowMaturityRank("beta")) {
+      blockers.push(...betaBlockers);
+    }
+    if (workflowMaturityRank(assigned) >= workflowMaturityRank("stable")) {
+      blockers.push(...stableBlockers);
+    }
+  }
+  const effective = assigned === "deprecated"
+    ? "deprecated"
+    : pickWeakerWorkflowMaturity(assigned, maxSupported);
+  const dedupedBlockers = [...new Set(blockers)].sort((left, right) => left.localeCompare(right));
+  return {
+    assigned,
+    effective,
+    blockers: dedupedBlockers,
+    blocked:
+      runtimeSupport?.codex_cli?.declared_status === "blocked" ||
+      runtimeSupport?.copilot_cli?.declared_status === "blocked",
+    promotion_ready: effective === "stable" && dedupedBlockers.length === 0,
+    release_gate_status: releaseGateStatus,
+    transition_from: transitionFrom,
+    transition_legal: transitionLegal,
+    checklist_ready: promotionChecklistReady(manifest),
+    demotion_triggers_active: deriveDemotionTriggersFromBlockers(dedupedBlockers),
+  };
 }
 
 function validateEvidenceRefCollectionsMatch(laneRefs, recordRefs, errorKey) {
@@ -872,7 +1210,7 @@ function resolvePackDocPath(sourceRoot, relativePath) {
     : null;
 }
 
-function buildCoreCatalogRecord(repoRoot, record) {
+function buildCoreCatalogRecord(repoRoot, record, { publicSupport }) {
   const descriptorRecord = loadPackTrustDescriptorRecord({
     manifestPath: record.manifestPath,
     manifest: record.manifest,
@@ -884,7 +1222,14 @@ function buildCoreCatalogRecord(repoRoot, record) {
   });
   const sourceRoot = toPosixPath(record.manifest.runtime_assets?.source_root ?? `packs/core/${record.packId}`);
   const supportScope = record.manifest.support?.support_level_claim ?? descriptorRecord.descriptor?.support_level_claim ?? null;
-  const maturity = record.manifest.catalog?.maturity ?? record.manifest.release_channel ?? null;
+  const releaseChannel = record.manifest.release_channel ?? null;
+  const maturity = record.manifest.catalog?.maturity ?? releaseChannel;
+  const workflowMaturity = resolveWorkflowMaturity({
+    repoRoot,
+    manifest: record.manifest,
+    runtimeSupport,
+    publicSupport,
+  });
   return {
     id: record.packId,
     catalog_scope: "core",
@@ -901,10 +1246,33 @@ function buildCoreCatalogRecord(repoRoot, record) {
     workflow_class: record.manifest.workflow_class ?? null,
     display_name: record.manifest.display_name ?? record.manifest.pack?.display_name ?? record.packId,
     summary: record.manifest.summary ?? record.manifest.pack?.summary ?? null,
-    release_channel: maturity,
+    release_channel: releaseChannel,
     maturity,
+    workflow_maturity: workflowMaturity.assigned,
+    effective_workflow_maturity: workflowMaturity.effective,
+    workflow_transition_from: workflowMaturity.transition_from,
+    workflow_transition_reason: record.manifest.support?.workflow_transition?.reason ?? null,
+    workflow_transition_legal: workflowMaturity.transition_legal,
+    workflow_maturity_blocked: workflowMaturity.blocked,
+    workflow_maturity_blockers: workflowMaturity.blockers,
+    workflow_promotion_ready: workflowMaturity.promotion_ready,
+    workflow_promotion_checklist_ready: workflowMaturity.checklist_ready,
+    workflow_demotion_triggers_active: workflowMaturity.demotion_triggers_active,
+    workflow_promotion_checklist: record.manifest.support?.promotion_checklist ?? null,
+    workflow_demotion_policy: record.manifest.support?.demotion_policy ?? null,
+    workflow_evidence: record.manifest.support?.workflow_evidence ?? null,
+    scoped_release_gate_status: workflowMaturity.release_gate_status,
     support_scope: supportScope,
-    support_metadata_complete: Boolean(maturity && supportScope),
+    support_metadata_complete: Boolean(
+      releaseChannel &&
+      maturity &&
+      workflowMaturity.assigned &&
+      supportScope &&
+      record.manifest.support?.workflow_transition &&
+      record.manifest.support?.workflow_evidence &&
+      record.manifest.support?.promotion_checklist &&
+      record.manifest.support?.demotion_policy
+    ),
     docs_visibility: record.manifest.catalog?.docs_visibility ?? null,
     default_discovery: record.manifest.catalog?.default_discovery ?? true,
     default_recommendation: record.manifest.catalog?.default_recommendation ?? false,
@@ -940,7 +1308,9 @@ function buildInvalidCoreCatalogRecord(repoRoot, record) {
   const sourceRoot = toPosixPath(manifest.runtime_assets?.source_root ?? `packs/core/${record.packId}`);
   const descriptorPath = resolve(record.manifestPath, "..", "pack.trust.yaml");
   const supportScope = manifest.support?.support_level_claim ?? null;
-  const maturity = manifest.catalog?.maturity ?? manifest.release_channel ?? null;
+  const releaseChannel = manifest.release_channel ?? null;
+  const maturity = manifest.catalog?.maturity ?? releaseChannel;
+  const workflowMaturity = manifest.support?.workflow_maturity ?? null;
   const descriptorErrors = [
     ...(record.parseError ? [`manifest-parse:${record.parseError}`] : []),
     ...(record.validationErrors ?? []).map((error) => `manifest-validate:${error}`),
@@ -959,10 +1329,24 @@ function buildInvalidCoreCatalogRecord(repoRoot, record) {
     workflow_class: manifest.workflow_class ?? null,
     display_name: manifest.display_name ?? manifest.pack?.display_name ?? record.packId,
     summary: manifest.summary ?? manifest.pack?.summary ?? null,
-    release_channel: maturity,
+    release_channel: releaseChannel,
     maturity,
+    workflow_maturity: workflowMaturity,
+    effective_workflow_maturity: null,
+    workflow_transition_from: manifest.support?.workflow_transition?.from ?? null,
+    workflow_transition_reason: manifest.support?.workflow_transition?.reason ?? null,
+    workflow_transition_legal: false,
+    workflow_maturity_blocked: false,
+    workflow_maturity_blockers: ["invalid-core-manifest"],
+    workflow_promotion_ready: false,
+    workflow_promotion_checklist_ready: false,
+    workflow_demotion_triggers_active: [],
+    workflow_promotion_checklist: manifest.support?.promotion_checklist ?? null,
+    workflow_demotion_policy: manifest.support?.demotion_policy ?? null,
+    workflow_evidence: manifest.support?.workflow_evidence ?? null,
+    scoped_release_gate_status: null,
     support_scope: supportScope,
-    support_metadata_complete: Boolean(maturity && supportScope),
+    support_metadata_complete: Boolean(releaseChannel && maturity && workflowMaturity && supportScope),
     docs_visibility: manifest.catalog?.docs_visibility ?? null,
     default_discovery: manifest.catalog?.default_discovery ?? true,
     default_recommendation: manifest.catalog?.default_recommendation ?? false,
@@ -1032,6 +1416,20 @@ function readAdvancedManifestRecord(repoRoot, manifestPath) {
       summary: manifest?.pack?.summary ?? null,
       release_channel: null,
       maturity: null,
+      workflow_maturity: null,
+      effective_workflow_maturity: null,
+      workflow_transition_from: null,
+      workflow_transition_reason: null,
+      workflow_transition_legal: false,
+      workflow_maturity_blocked: false,
+      workflow_maturity_blockers: ["advanced-pack:excluded-from-core-catalog"],
+      workflow_promotion_ready: false,
+      workflow_promotion_checklist_ready: false,
+      workflow_demotion_triggers_active: [],
+      workflow_promotion_checklist: null,
+      workflow_demotion_policy: null,
+      workflow_evidence: null,
+      scoped_release_gate_status: null,
       support_scope: "excluded-advanced-surface",
       support_metadata_complete: false,
       canonical_entrypoint: manifest?.canonical_entrypoint ?? null,
@@ -1087,6 +1485,20 @@ function readAdvancedManifestRecord(repoRoot, manifestPath) {
       summary: null,
       release_channel: null,
       maturity: null,
+      workflow_maturity: null,
+      effective_workflow_maturity: null,
+      workflow_transition_from: null,
+      workflow_transition_reason: null,
+      workflow_transition_legal: false,
+      workflow_maturity_blocked: false,
+      workflow_maturity_blockers: [`advanced-pack:parse-error:${error.message}`],
+      workflow_promotion_ready: false,
+      workflow_promotion_checklist_ready: false,
+      workflow_demotion_triggers_active: [],
+      workflow_promotion_checklist: null,
+      workflow_demotion_policy: null,
+      workflow_evidence: null,
+      scoped_release_gate_status: null,
       support_scope: "excluded-advanced-surface",
       support_metadata_complete: false,
       canonical_entrypoint: null,
@@ -1128,9 +1540,10 @@ export function loadPackCatalogRecords(
   repoRoot,
   { includeAdvanced = true } = {},
 ) {
+  const publicSupport = loadPublicSupportSnapshot(repoRoot);
   const coreRecords = loadPackManifestRecords(repoRoot).map((record) =>
     record.isValid
-      ? buildCoreCatalogRecord(repoRoot, record)
+      ? buildCoreCatalogRecord(repoRoot, record, { publicSupport })
       : buildInvalidCoreCatalogRecord(repoRoot, record));
   const advancedRecords = includeAdvanced
     ? discoverAdvancedManifestPaths(repoRoot).map((manifestPath) =>
@@ -1297,6 +1710,7 @@ export function selectDefaultCatalogPack(records) {
     .sort((left, right) =>
       [
         left.default_recommendation ? "0" : "1",
+        `${9 - workflowMaturityRank(left.effective_workflow_maturity)}`,
         left.maturity === "stable" ? "0" : left.maturity === "preview" ? "1" : "2",
         left.id,
       ]
@@ -1304,6 +1718,7 @@ export function selectDefaultCatalogPack(records) {
         .localeCompare(
           [
             right.default_recommendation ? "0" : "1",
+            `${9 - workflowMaturityRank(right.effective_workflow_maturity)}`,
             right.maturity === "stable" ? "0" : right.maturity === "preview" ? "1" : "2",
             right.id,
           ].join("\u0000"),
@@ -1340,6 +1755,20 @@ export function buildPackCatalogIndex(
       pack_class: record.pack_class,
       category: record.category,
       release_channel: record.release_channel,
+      workflow_maturity: record.workflow_maturity,
+      effective_workflow_maturity: record.effective_workflow_maturity,
+      workflow_transition_from: record.workflow_transition_from,
+      workflow_transition_reason: record.workflow_transition_reason,
+      workflow_transition_legal: record.workflow_transition_legal,
+      workflow_maturity_blocked: record.workflow_maturity_blocked,
+      workflow_maturity_blockers: record.workflow_maturity_blockers,
+      workflow_promotion_ready: record.workflow_promotion_ready,
+      workflow_promotion_checklist_ready: record.workflow_promotion_checklist_ready,
+      workflow_demotion_triggers_active: record.workflow_demotion_triggers_active,
+      workflow_promotion_checklist: record.workflow_promotion_checklist,
+      workflow_demotion_policy: record.workflow_demotion_policy,
+      workflow_evidence: record.workflow_evidence,
+      scoped_release_gate_status: record.scoped_release_gate_status,
       support_scope: record.support_scope,
       trust_tier: record.trust_tier,
       docs_visibility: record.docs_visibility,

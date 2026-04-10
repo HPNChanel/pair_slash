@@ -20,6 +20,8 @@ Live runtime verification can widen support truth only.
 It does not publish any `@pairslash/*` package, change `NOTICE` requirements,
 or alter the repo-local packaging boundary recorded in
 `docs/releases/legal-packaging-status.md`.
+It also does not assign workflow maturity on its own; workflow maturity remains
+governed by `docs/architecture/phase-18-workflow-maturity-charter.md`.
 
 ## A. Live Verification Philosophy
 

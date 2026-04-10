@@ -26,6 +26,7 @@ import {
   selectPackManifestRecords,
   validateRuntimeRange,
   validateLintReport,
+  WORKFLOW_MATURITY_LEVELS,
 } from "@pairslash/spec-core";
 
 const ISSUE_RESULTS = new Set(["error", "warning", "note"]);
@@ -75,6 +76,20 @@ const WORKSPACE_BOUNDARY_ROOTS = [
   { root: ["packages", "runtimes", "copilot"], boundary: "runtime-copilot" },
   { root: ["packages", "tools"], boundary: "tools" },
 ];
+const WORKFLOW_MATURITY_ORDER = Object.freeze(
+  WORKFLOW_MATURITY_LEVELS.reduce((accumulator, level, index) => {
+    accumulator[level] = index;
+    return accumulator;
+  }, {}),
+);
+
+function normalizeWorkflowMaturity(level) {
+  return WORKFLOW_MATURITY_LEVELS.includes(level) ? level : "canary";
+}
+
+function workflowMaturityRank(level) {
+  return WORKFLOW_MATURITY_ORDER[normalizeWorkflowMaturity(level)] ?? 0;
+}
 
 function normalizeRuntimeScope(requestedRuntime) {
   if (!requestedRuntime || requestedRuntime === "all" || requestedRuntime === "auto") {
@@ -745,8 +760,8 @@ function applyTrustDescriptorRule(catalogEntry, entry, checks, target) {
         packId: entry.packId,
         target,
         path: entry.manifestPath,
-        message: "pack manifest is missing authoritative maturity or support metadata",
-        remediation: "Populate manifest catalog/support metadata before shipping the pack.",
+        message: "pack manifest is missing authoritative release, workflow maturity, or support metadata",
+        remediation: "Populate manifest catalog/support.workflow_maturity metadata before shipping the pack.",
       }),
     );
     return;
@@ -811,17 +826,55 @@ function applyTrustDescriptorRule(catalogEntry, entry, checks, target) {
   if ((catalogEntry.descriptor_shim_errors ?? []).length > 0) {
     warnings.push(`pack.trust.yaml shim drift: ${catalogEntry.descriptor_shim_errors.join("; ")}`);
   }
+  if (catalogEntry.workflow_transition_legal === false) {
+    issues.push(
+      `workflow maturity transition is illegal: ${catalogEntry.workflow_transition_from ?? "unknown"} -> ${catalogEntry.workflow_maturity ?? "unknown"}`,
+    );
+  }
+  if (
+    ["preview", "beta", "stable"].includes(catalogEntry.workflow_maturity) &&
+    catalogEntry.workflow_promotion_checklist_ready !== true
+  ) {
+    issues.push(`workflow promotion checklist is incomplete for ${catalogEntry.workflow_maturity}`);
+  }
+  if (
+    catalogEntry.workflow_maturity === "deprecated" &&
+    (catalogEntry.workflow_maturity_blockers ?? []).some((blocker) =>
+      blocker.includes("workflow-maturity-deprecated-migration-guidance-missing"))
+  ) {
+    issues.push("deprecated workflow is missing migration or replacement guidance");
+  }
+  if (
+    workflowMaturityRank(catalogEntry.workflow_maturity) >
+    workflowMaturityRank(catalogEntry.effective_workflow_maturity)
+  ) {
+    issues.push(
+      `workflow maturity ${catalogEntry.workflow_maturity} exceeds effective evidence-backed level ${catalogEntry.effective_workflow_maturity}`,
+    );
+  }
+  if ((catalogEntry.workflow_maturity_blockers ?? []).length > 0) {
+    const blockerMessage = `workflow maturity blockers: ${catalogEntry.workflow_maturity_blockers.join("; ")}`;
+    if (
+      workflowMaturityRank(catalogEntry.workflow_maturity) >
+      workflowMaturityRank(catalogEntry.effective_workflow_maturity)
+    ) {
+      issues.push(blockerMessage);
+    } else {
+      warnings.push(blockerMessage);
+    }
+  }
 
   if (issues.length > 0) {
     checks.push(
       createCheck({
-        code: "LINT-TRUST-002",
+        code: "LINT-TRUST-004",
         result: "error",
         packId: entry.packId,
         target,
         path: entry.manifestPath,
         message: issues.join("; "),
-        remediation: "Lower the trust/support claim or add the missing evidence before shipping the pack.",
+        remediation:
+          "Lower the trust/support/workflow maturity claim or add the missing deterministic, live, or release evidence before shipping the pack.",
       }),
     );
     return;
@@ -836,7 +889,7 @@ function applyTrustDescriptorRule(catalogEntry, entry, checks, target) {
         path: catalogEntry.trust_descriptor ?? entry.manifestPath,
         message: warnings.join("; "),
         remediation:
-          "Keep manifest support metadata authoritative, keep pack.trust.yaml aligned if the shim is still committed, and do not widen runtime claims beyond the lane records and YAML sidecars under docs/evidence/live-runtime/.",
+          "Keep manifest support/workflow metadata authoritative, keep pack.trust.yaml aligned if the shim is still committed, and do not widen runtime or workflow claims beyond the checked-in evidence and release verdict.",
       }),
     );
   }

@@ -321,3 +321,17 @@ export const PACK_RUNTIME_EVIDENCE_KINDS = [
   "deterministic",
   "docs-only",
 ];
+export const WORKFLOW_MATURITY_LEVELS = [
+  "canary",
+  "preview",
+  "beta",
+  "stable",
+  "deprecated",
+];
+export const WORKFLOW_DEMOTION_TRIGGER_CODES = [
+  "evidence-stale",
+  "runtime-regression",
+  "release-no-go",
+  "docs-drift",
+  "write-safety-regression",
+];

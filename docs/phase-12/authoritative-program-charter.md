@@ -33,6 +33,18 @@ Public-claim truth is narrower than implementation truth. A public sentence is a
 
 Runtime-support truth is lane-specific, not product-global. The machine-readable runtime-support catalog is `docs/compatibility/runtime-surface-matrix.yaml`, and `docs/compatibility/compatibility-matrix.md` is its public markdown rendering. Lane-bound evidence records live under `docs/evidence/live-runtime/`, and promotion evidence is recorded through `docs/compatibility/runtime-verification.md` plus those lane records. Current public support reality remains narrow: Codex CLI repo on macOS is `degraded`, GitHub Copilot CLI user on Linux is `prep`, Windows lanes are `prep`, and Copilot prompt-mode direct invocation remains blocked.
 
+### Workflow-Maturity Truth
+
+Workflow-maturity truth is workflow-specific, not a release-channel alias and
+not a runtime-lane alias. The authoritative policy is
+`docs/architecture/phase-18-workflow-maturity-charter.md`, and the canonical
+assigned labels live in `packs/core/*/pack.manifest.yaml` under
+`support.workflow_maturity`. `packages/core/spec-core/src/pack-catalog.js`
+computes the effective ceiling from deterministic coverage, pack-scoped live
+evidence, default public runtime lanes, and the scoped release verdict. This
+layer may demote or block an overclaimed workflow, but it does not widen
+runtime-lane support truth or product-validation truth.
+
 ### Release-Trust Truth
 
 Release-trust truth answers whether PairSlash can make a scoped installability claim without pretending product validation is complete. The authoritative public files are `docs/releases/scoped-release-verdict.md` and `docs/releases/phase-5-shipped-scope.md`. Maintainer release-readiness runbooks remain local-only. That layer is currently `NO-GO` on the current branch because release-readiness is red, and still `NO-GO` for product-validation exit. Legal and package publicness remain capped by current metadata in `package.json`, package-level `package.json` files, the absence or presence of `LICENSE` and `NOTICE`, and the current boundary recorded in `docs/releases/legal-packaging-status.md`.
@@ -59,8 +71,10 @@ What must not be overclaimed: that tests equal market validation, that preview o
 | Runtime support policy | `docs/compatibility/runtime-surface-matrix.yaml` | Owns machine-readable lane labels and promotion inputs consumed by doctor and compat-lab. |
 | Runtime support markdown | `docs/compatibility/compatibility-matrix.md` | Public rendering of the runtime-support catalog; never a competing source. |
 | Runtime promotion evidence | `docs/compatibility/runtime-verification.md`, `docs/evidence/live-runtime/`, and `docs/compatibility/runtime-surface-matrix.yaml` | Own evidence class and promotion/demotion inputs for runtime labels. |
+| Workflow maturity policy | `docs/architecture/phase-18-workflow-maturity-charter.md` | Owns workflow maturity taxonomy, promotion/demotion policy, public wording limits, and the separation from release channel plus runtime-lane truth. |
+| Workflow maturity wording system | `docs/architecture/phase-18-workflow-maturity-wording-system.md` | Owns reusable wording blocks for `implemented`, `verified`, `supported`, `recommended`, and workflow-label language across public plus maintainer-facing docs. |
 | Read-authority contract | `docs/architecture/phase-17-read-authority-charter.md` | Owns authoritative read-path precedence, explain-context resolution contract, conflict surfacing, and the Phase 17 exit gate. |
-| Pack catalog truth | `packs/core/*/pack.manifest.yaml` | Own canonical core pack identity, maturity, support scope, runtime evidence mapping, and maintainer metadata. |
+| Pack catalog truth | `packs/core/*/pack.manifest.yaml` | Own canonical core pack identity, release channel, workflow maturity assignment, support scope, runtime evidence mapping, and maintainer metadata. |
 | Pack catalog consumer API | `packages/core/spec-core/src/pack-catalog.js` | Resolves the authoritative pack catalog used by lint, doctor, docs rendering, and release-trust build. |
 | Pack catalog lifecycle conformance | `packages/core/spec-core/tests/manifest-v2.conformance.test.js` | Detects manifest/catalog drift, completeness regressions, and unsupported promotion claims. |
 | Pack trust shim | `packs/core/*/pack.trust.yaml` | Optional compatibility shim only; may not become a competing truth root. |
@@ -76,8 +90,8 @@ What must not be overclaimed: that tests equal market validation, that preview o
 | --- | --- | --- | --- |
 | `implemented` | Source code, manifests, and generated assets exist in the repo. | "validated", "supported everywhere", "market-proven" | "implemented in the repo", "present in code/manifests" |
 | `repo-verified` | Current-branch command output or machine-readable report from the repo confirms the behavior. | "release-ready", "live runtime proven", "customer validated" | "verified on the current branch", "repo-verified" |
-| `deterministic-tested` | Repeatable automated tests or compat-lab gates pass for the surface. | "live evidence", "market validated", "broad runtime parity" | "deterministic tests pass", "covered by compat-lab or release gates" |
-| `live-evidence-backed` | Manual live runtime evidence is recorded in lane-bound runtime verification artifacts with exact lane details. | "all lanes supported", "product validated", "phase advanced" | "live-evidence-backed for the documented lane", "supported at the documented lane level" |
+| `deterministic-covered` | Repeatable automated tests or compat-lab gates pass for the surface. | "live evidence", "market validated", "broad runtime parity" | "deterministic tests pass", "covered by compat-lab or release gates" |
+| `lane-live-verified` | Manual live runtime evidence is recorded in lane-bound runtime verification artifacts with exact lane details. | "all lanes supported", "product validated", "phase advanced" | "live-verified for the documented lane", "supported at the documented lane level" |
 | `publicly claimable` | The statement is backed by the appropriate evidence above and is allowed by this charter, the public claim policy, the relevant verdict file, the compatibility boundary, and legal/package metadata. | Any broader wording than the governing evidence allows | "publicly claimable within the documented scope" |
 
 Rule: no claim may skip levels. Product-validation claims require the validation verdict. Runtime-support claims require the compatibility matrix. Release/installability claims require the scoped release verdict. Legal/package claims require legal/package metadata.
@@ -129,6 +143,7 @@ Rule: downstream files may restate the official phase sentence, but they must po
 - README and install docs must not imply package-manager publication while the repository and workspace manifests remain `private: true`.
 - Release checklist must not treat deterministic tests, preview output, or doctor output as product-validation proof or live runtime support by themselves.
 - Compatibility wording must stay lane-specific and must not imply that support labels promote program phase or product maturity.
+- Workflow maturity wording must not flatten release channel, runtime-lane support, or product-validation status into one label.
 - Validation docs must not become release verdicts, and release docs must not become product-validation verdicts.
 - Pack catalog or pack count changes must not widen public support wording unless the canonical manifests, runtime-support catalog, optional trust shims, derived registry, and release docs all stay aligned.
 - `docs/releases/legal-packaging-status.md` must stay aligned with package metadata and the current presence or absence of `LICENSE` and `NOTICE`.

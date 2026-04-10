@@ -33,6 +33,8 @@ import {
   UNINSTALL_STRATEGY_MODES,
   UPDATE_NON_OVERRIDE_POLICIES,
   UPDATE_STRATEGY_MODES,
+  WORKFLOW_DEMOTION_TRIGGER_CODES,
+  WORKFLOW_MATURITY_LEVELS,
   WORKFLOW_CLASSES,
 } from "./constants.js";
 
@@ -157,6 +159,42 @@ const supportRuntimeSchema = v.object({
   required_for_promotion: v.boolean(),
 });
 
+const workflowTransitionSchema = v.object({
+  from: v.nullable(v.picklist(WORKFLOW_MATURITY_LEVELS)),
+  reason: nonEmptyString("support.workflow_transition.reason must be a non-empty string"),
+});
+
+const workflowEvidenceRuntimeRefsSchema = v.object({
+  codex_cli: v.array(nonEmptyString("support.workflow_evidence.live_workflow_refs.codex_cli[] must be non-empty")),
+  copilot_cli: v.array(nonEmptyString("support.workflow_evidence.live_workflow_refs.copilot_cli[] must be non-empty")),
+});
+
+const workflowEvidenceSchema = v.object({
+  deterministic_refs: v.array(nonEmptyString("support.workflow_evidence.deterministic_refs[] must be non-empty")),
+  live_workflow_refs: workflowEvidenceRuntimeRefsSchema,
+  operational_safety_refs: v.array(
+    nonEmptyString("support.workflow_evidence.operational_safety_refs[] must be non-empty"),
+  ),
+  migration_refs: v.array(nonEmptyString("support.workflow_evidence.migration_refs[] must be non-empty")),
+});
+
+const promotionChecklistSchema = v.object({
+  required_for_label: v.picklist(WORKFLOW_MATURITY_LEVELS),
+  claimed_lanes: v.object({
+    codex_cli: v.array(nonEmptyString("support.promotion_checklist.claimed_lanes.codex_cli[] must be non-empty")),
+    copilot_cli: v.array(nonEmptyString("support.promotion_checklist.claimed_lanes.copilot_cli[] must be non-empty")),
+  }),
+  canonical_entrypoint_verified: v.boolean(),
+  wording_verified: v.boolean(),
+  docs_synced: v.boolean(),
+});
+
+const demotionPolicySchema = v.object({
+  owner: nonEmptyString("support.demotion_policy.owner must be a non-empty string"),
+  fallback_maturity: v.picklist(WORKFLOW_MATURITY_LEVELS),
+  trigger_codes: v.pipe(v.array(v.picklist(WORKFLOW_DEMOTION_TRIGGER_CODES)), v.nonEmpty()),
+});
+
 const supportSchema = v.object({
   publisher: v.object({
     publisher_id: nonEmptyString("support.publisher.publisher_id must be a non-empty string"),
@@ -166,6 +204,7 @@ const supportSchema = v.object({
   }),
   tier_claim: v.picklist(PACK_TRUST_TIERS),
   support_level_claim: v.picklist(PACK_SUPPORT_LEVELS),
+  workflow_maturity: v.picklist(WORKFLOW_MATURITY_LEVELS),
   signature: v.object({
     required: v.boolean(),
     allow_local_unsigned: v.boolean(),
@@ -174,6 +213,10 @@ const supportSchema = v.object({
     codex_cli: supportRuntimeSchema,
     copilot_cli: supportRuntimeSchema,
   }),
+  workflow_transition: workflowTransitionSchema,
+  workflow_evidence: workflowEvidenceSchema,
+  promotion_checklist: promotionChecklistSchema,
+  demotion_policy: demotionPolicySchema,
   policy_requirements: v.object({
     no_silent_fallback: v.literal(true),
     preview_required_for_mutation: v.literal(true),

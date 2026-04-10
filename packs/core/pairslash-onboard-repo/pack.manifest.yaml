@@ -245,6 +245,7 @@ support:
     contact: SECURITY.md
   tier_claim: first-party-official
   support_level_claim: official-preview
+  workflow_maturity: canary
   signature:
     required: true
     allow_local_unsigned: true
@@ -266,4 +267,32 @@ support:
   maintainers:
     owner: pairslash
     contact: SECURITY.md
+  workflow_transition:
+    from: canary
+    reason: phase-18-workflow-promotion-migration
+  workflow_evidence:
+    deterministic_refs:
+      - docs/compatibility/runtime-surface-matrix.yaml
+    live_workflow_refs:
+      codex_cli: []
+      copilot_cli: []
+    operational_safety_refs: []
+    migration_refs: []
+  promotion_checklist:
+    required_for_label: canary
+    claimed_lanes:
+      codex_cli: []
+      copilot_cli: []
+    canonical_entrypoint_verified: true
+    wording_verified: false
+    docs_synced: false
+  demotion_policy:
+    owner: pairslash
+    fallback_maturity: canary
+    trigger_codes:
+      - evidence-stale
+      - runtime-regression
+      - release-no-go
+      - docs-drift
+      - write-safety-regression
 trust_descriptor: pack.trust.yaml
