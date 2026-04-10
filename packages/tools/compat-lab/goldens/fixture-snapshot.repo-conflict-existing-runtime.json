@@ -42,7 +42,7 @@
         {
           "bundle_kind": "codex-skill-bundle",
           "canonical_entrypoint": "/skills",
-          "digest": "2fe9bfcf1242e43344e2e7f44acd8ce9b35cc5f2bf87267222fe5f402e131819",
+          "digest": "e08e3a23616a6434dc92a304adb0c7087543d84cc66bcbbaf2b62f4b9bec4e29",
           "direct_invocation": "$pairslash-plan",
           "files": [
             {
@@ -86,7 +86,7 @@
               "relative_path": "example-invocation.md",
               "required": true,
               "runtime_selector": "shared",
-              "sha256": "26b1126cc04fca90ef71cb66acb2ba120d3799ac27ce8e3a586307250d605f4c",
+              "sha256": "398079e3d109e2312ccf467a33b0446b9792c716c5f321caa9105d2b7b89d4d8",
               "uninstall_behavior": "detach_if_modified",
               "write_authority_guarded": false
             },
@@ -146,7 +146,7 @@
               "relative_path": "pack.yaml",
               "required": true,
               "runtime_selector": "shared",
-              "sha256": "9f39ddee6879ab83df65b8408b2b875012f10a368d13af0e755d912716a83d95",
+              "sha256": "d6ee33197fb5e187cf2c07743d1b36b75c924f75752e43c1de6acec956ebf50c",
               "uninstall_behavior": "detach_if_modified",
               "write_authority_guarded": false
             },
@@ -161,7 +161,7 @@
               "relative_path": "pairslash.install.json",
               "required": true,
               "runtime_selector": "shared",
-              "sha256": "de70b8df0fb5dd4d867ac0e3cb9a7034e4c9c563efdf58ad75d41926b30ee628",
+              "sha256": "e23ba7e2c8408de09f28af5e2c7a64e9b7bc8b39e26b704629781c2c7a417032",
               "uninstall_behavior": "remove_if_unmodified",
               "write_authority_guarded": false
             },
@@ -176,7 +176,7 @@
               "relative_path": "SKILL.md",
               "required": true,
               "runtime_selector": "shared",
-              "sha256": "98a944847094200dabeabf4cadd93a114f62590be0f7fb3618d1d4a64dcfcfff",
+              "sha256": "e2d7488c6a3a46aee537c4370f097b50da50abb8ab9826bae07e4d7f0545a26e",
               "uninstall_behavior": "detach_if_modified",
               "write_authority_guarded": false
             },
@@ -191,12 +191,12 @@
               "relative_path": "validation-checklist.md",
               "required": true,
               "runtime_selector": "shared",
-              "sha256": "3f7fc4b62c77fc7d2792abae82ad2e42ee9d09b69b49c5b4de941c5f48bfd09a",
+              "sha256": "7268061ff50d80e3eb157a29f7d102d28ee7f8c2634228ae39854b3ad96b4663",
               "uninstall_behavior": "detach_if_modified",
               "write_authority_guarded": false
             }
           ],
-          "normalized_ir_digest": "0ac58b35f777858dcca2fbe64d6d04a6a4d1daa6ebe67267b1a90d4a80380086",
+          "normalized_ir_digest": "4c695a24fba173f0d871669f4dd9902eef2a7495bd871b2c1b7507366d3d534d",
           "output_dir": "<repo>\\dist\\compiled\\codex\\pairslash-plan",
           "pack_id": "pairslash-plan",
           "runtime": "codex_cli",
@@ -1036,7 +1036,7 @@
         {
           "bundle_kind": "copilot-package-bundle",
           "canonical_entrypoint": "/skills",
-          "digest": "2d7def17c88dd3167bcb2c70505f2139cccb12aa27b4466be61ead3c5e68441d",
+          "digest": "15e1683ae6ddfb8f4ab508031b70071a36e778529f66d89d8260278a763384c2",
           "direct_invocation": "/pairslash-plan",
           "files": [
             {
@@ -1080,7 +1080,7 @@
               "relative_path": "example-invocation.md",
               "required": true,
               "runtime_selector": "shared",
-              "sha256": "26b1126cc04fca90ef71cb66acb2ba120d3799ac27ce8e3a586307250d605f4c",
+              "sha256": "398079e3d109e2312ccf467a33b0446b9792c716c5f321caa9105d2b7b89d4d8",
               "uninstall_behavior": "detach_if_modified",
               "write_authority_guarded": false
             },
@@ -1110,7 +1110,7 @@
               "relative_path": "pack.yaml",
               "required": true,
               "runtime_selector": "shared",
-              "sha256": "9f39ddee6879ab83df65b8408b2b875012f10a368d13af0e755d912716a83d95",
+              "sha256": "d6ee33197fb5e187cf2c07743d1b36b75c924f75752e43c1de6acec956ebf50c",
               "uninstall_behavior": "detach_if_modified",
               "write_authority_guarded": false
             },
@@ -1140,7 +1140,7 @@
               "relative_path": "pairslash.install.json",
               "required": true,
               "runtime_selector": "shared",
-              "sha256": "e00300ceae803669111bf5ee191c60737266646a388fd021dd60fee75f450b3f",
+              "sha256": "1bf829b1bf93bc528f19fbbf45cb0f661323f3c067d086dfacd100923fc33d03",
               "uninstall_behavior": "remove_if_unmodified",
               "write_authority_guarded": false
             },
@@ -1155,7 +1155,7 @@
               "relative_path": "SKILL.md",
               "required": true,
               "runtime_selector": "shared",
-              "sha256": "98a944847094200dabeabf4cadd93a114f62590be0f7fb3618d1d4a64dcfcfff",
+              "sha256": "e2d7488c6a3a46aee537c4370f097b50da50abb8ab9826bae07e4d7f0545a26e",
               "uninstall_behavior": "detach_if_modified",
               "write_authority_guarded": false
             },
@@ -1170,12 +1170,12 @@
               "relative_path": "validation-checklist.md",
               "required": true,
               "runtime_selector": "shared",
-              "sha256": "3f7fc4b62c77fc7d2792abae82ad2e42ee9d09b69b49c5b4de941c5f48bfd09a",
+              "sha256": "7268061ff50d80e3eb157a29f7d102d28ee7f8c2634228ae39854b3ad96b4663",
               "uninstall_behavior": "detach_if_modified",
               "write_authority_guarded": false
             }
           ],
-          "normalized_ir_digest": "0ac58b35f777858dcca2fbe64d6d04a6a4d1daa6ebe67267b1a90d4a80380086",
+          "normalized_ir_digest": "4c695a24fba173f0d871669f4dd9902eef2a7495bd871b2c1b7507366d3d534d",
           "output_dir": "<repo>\\dist\\compiled\\copilot\\pairslash-plan",
           "pack_id": "pairslash-plan",
           "runtime": "copilot_cli",

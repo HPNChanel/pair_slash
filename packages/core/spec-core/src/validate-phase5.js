@@ -12,6 +12,7 @@ import {
   CONTRACT_OUTPUT_SHAPES,
   CONTRACT_RUNTIME_SCOPES,
   MEMORY_ACCESS_LEVELS,
+  MEMORY_AUDIT_REPORT_SCHEMA_VERSION,
   MEMORY_AUTHORITY_MODES,
   MEMORY_RECORD_ACTIONS,
   MEMORY_RECORD_CONFIDENCE,
@@ -1238,6 +1239,258 @@ export function validateCandidateReport(record) {
     ].includes(record?.next_action)
   ) {
     errors.push("next_action must be one of USE_PAIRSLASH_MEMORY_WRITE_GLOBAL, KEEP_IN_TASK_MEMORY, REJECT_CANDIDATES");
+  }
+
+  return errors;
+}
+
+export function validateMemoryAuditReport(record) {
+  const errors = [];
+  const validModes = ["report-only", "fix-proposal"];
+  const validScopes = ["full", "project-memory-only", "index-only"];
+  const validTypes = [
+    "duplicate",
+    "stale",
+    "conflict",
+    "orphan-ref",
+    "schema-drift",
+    "index-gap",
+    "scope-error",
+  ];
+  const validNextActions = ["KEEP_AS_REPORT", "FIX_INDEX_AND_RERUN", "USE_PAIRSLASH_MEMORY_WRITE_GLOBAL"];
+  const validSeverities = ["low", "medium", "high", "critical"];
+  const validResolutionModes = ["explicit-paths", "project-memory-index", "filesystem-scan"];
+  const validResolutionStatuses = ["resolved", "partial", "missing"];
+  const validResolutionTypes = ["authoritative-selected", "supporting-gap-fill"];
+  const validShadowReasons = [
+    "shadowed-by-authoritative",
+    "shadowed-by-authoritative-conflict",
+    "shadowed-by-lower-authority-fill",
+    "shadowed-by-lower-authority-fill-conflict",
+  ];
+  const validAuthorities = ["authoritative", "supporting"];
+  const validReadLayers = ["global-project-memory", "task-memory", "session", "staging", "audit-log"];
+
+  if (record?.kind !== "memory-audit-report") {
+    errors.push("kind must be memory-audit-report");
+  }
+  if (record?.schema_version !== MEMORY_AUDIT_REPORT_SCHEMA_VERSION) {
+    errors.push(`schema_version must be ${MEMORY_AUDIT_REPORT_SCHEMA_VERSION}`);
+  }
+  validateNonEmptyString(record?.generated_at, "generated_at", errors);
+  if (!SUPPORTED_RUNTIMES.includes(record?.runtime)) {
+    errors.push(`runtime must be one of ${SUPPORTED_RUNTIMES.join(", ")}`);
+  }
+  if (!SUPPORTED_TARGETS.includes(record?.target)) {
+    errors.push(`target must be one of ${SUPPORTED_TARGETS.join(", ")}`);
+  }
+  if (!validScopes.includes(record?.audit_scope)) {
+    errors.push(`audit_scope must be one of ${validScopes.join(", ")}`);
+  }
+  if (!validModes.includes(record?.mode)) {
+    errors.push(`mode must be one of ${validModes.join(", ")}`);
+  }
+  validateNonEmptyString(record?.read_profile_id, "read_profile_id", errors);
+  if (typeof record?.read_only !== "boolean") {
+    errors.push("read_only must be boolean");
+  } else if (record.read_only !== true) {
+    errors.push("read_only must be true");
+  }
+  validateStringArray(record?.focus, "focus", errors);
+  validateStringArray(record?.precedence_rule, "precedence_rule", errors, { allowEmpty: false });
+
+  if (!isObject(record?.plan)) {
+    errors.push("plan must be an object");
+  } else {
+    if (!validScopes.includes(record.plan?.audit_scope)) {
+      errors.push(`plan.audit_scope must be one of ${validScopes.join(", ")}`);
+    }
+    if (!validModes.includes(record.plan?.mode)) {
+      errors.push(`plan.mode must be one of ${validModes.join(", ")}`);
+    }
+    validateStringArray(record.plan?.focus, "plan.focus", errors);
+    validateStringArray(record.plan?.files_checked, "plan.files_checked", errors);
+    validateStringArray(record.plan?.authoritative_sources, "plan.authoritative_sources", errors);
+    validateStringArray(record.plan?.risk_notes, "plan.risk_notes", errors);
+  }
+
+  if (!Array.isArray(record?.findings)) {
+    errors.push("findings must be a list");
+  } else {
+    for (const finding of record.findings) {
+      if (!isObject(finding)) {
+        errors.push("findings[] must be an object");
+        continue;
+      }
+      validateNonEmptyString(finding?.id, "findings[].id", errors);
+      if (!validSeverities.includes(finding?.severity)) {
+        errors.push(`findings[].severity must be one of ${validSeverities.join(", ")}`);
+      }
+      if (!validTypes.includes(finding?.type)) {
+        errors.push(`findings[].type must be one of ${validTypes.join(", ")}`);
+      }
+      validateNonEmptyString(finding?.file_or_record, "findings[].file_or_record", errors);
+      validateNonEmptyString(finding?.explanation, "findings[].explanation", errors);
+      validateStringArray(finding?.evidence, "findings[].evidence", errors, { allowEmpty: false });
+      validateNonEmptyString(finding?.recommended_fix, "findings[].recommended_fix", errors);
+      validateBoolean(finding?.write_workflow_needed, "findings[].write_workflow_needed", errors);
+      if ("claim_key" in finding && finding.claim_key !== null && typeof finding.claim_key !== "string") {
+        errors.push("findings[].claim_key must be string or null");
+      }
+      if ("selected_layer" in finding && finding.selected_layer !== null && !validReadLayers.includes(finding.selected_layer)) {
+        errors.push(`findings[].selected_layer must be one of ${validReadLayers.join(", ")} or null`);
+      }
+      if ("shadowed_layer" in finding && finding.shadowed_layer !== null && !validReadLayers.includes(finding.shadowed_layer)) {
+        errors.push(`findings[].shadowed_layer must be one of ${validReadLayers.join(", ")} or null`);
+      }
+    }
+  }
+
+  if (!isObject(record?.summary)) {
+    errors.push("summary must be an object");
+  } else {
+    validateNonNegativeInteger(record.summary?.total_findings, "summary.total_findings", errors);
+    validateStringArray(record.summary?.unresolved_context, "summary.unresolved_context", errors);
+    validateNonNegativeInteger(record.summary?.hard_conflict_count, "summary.hard_conflict_count", errors);
+    validateNonNegativeInteger(record.summary?.write_handoff_count, "summary.write_handoff_count", errors);
+    if (!isObject(record.summary?.severity_counts)) {
+      errors.push("summary.severity_counts must be an object");
+    } else {
+      for (const severity of validSeverities) {
+        validateNonNegativeInteger(record.summary.severity_counts?.[severity], `summary.severity_counts.${severity}`, errors);
+      }
+    }
+    if (!isObject(record.summary?.type_counts)) {
+      errors.push("summary.type_counts must be an object");
+    } else {
+      for (const type of validTypes) {
+        validateNonNegativeInteger(record.summary.type_counts?.[type], `summary.type_counts.${type}`, errors);
+      }
+    }
+  }
+
+  validateStringArray(record?.remediation_order, "remediation_order", errors);
+
+  if (!validNextActions.includes(record?.next_action)) {
+    errors.push(`next_action must be one of ${validNextActions.join(", ")}`);
+  }
+
+  if (!isObject(record?.resolution)) {
+    errors.push("resolution must be an object");
+  } else {
+    validateNonEmptyString(record.resolution?.profile_id, "resolution.profile_id", errors);
+    validateBoolean(record.resolution?.uses_shared_loader, "resolution.uses_shared_loader", errors);
+    validateStringArray(record.resolution?.authoritative_sources, "resolution.authoritative_sources", errors);
+    validateStringArray(record.resolution?.missing_paths, "resolution.missing_paths", errors);
+    validateStringArray(record.resolution?.warnings, "resolution.warnings", errors);
+    if (!Array.isArray(record.resolution?.layers) || record.resolution.layers.length === 0) {
+      errors.push("resolution.layers must be a non-empty list");
+    } else {
+      for (const layer of record.resolution.layers) {
+        if (!isObject(layer)) {
+          errors.push("resolution.layers[] must be an object");
+          continue;
+        }
+        if (!validReadLayers.includes(layer?.layer)) {
+          errors.push(`resolution.layers[].layer must be one of ${validReadLayers.join(", ")}`);
+        }
+        validateNonEmptyString(layer?.label, "resolution.layers[].label", errors);
+        validateNonNegativeInteger(layer?.precedence, "resolution.layers[].precedence", errors);
+        if (!validAuthorities.includes(layer?.authority)) {
+          errors.push(`resolution.layers[].authority must be one of ${validAuthorities.join(", ")}`);
+        }
+        if (!validResolutionModes.includes(layer?.resolution_mode)) {
+          errors.push(`resolution.layers[].resolution_mode must be one of ${validResolutionModes.join(", ")}`);
+        }
+        if (!validResolutionStatuses.includes(layer?.resolution_status)) {
+          errors.push(`resolution.layers[].resolution_status must be one of ${validResolutionStatuses.join(", ")}`);
+        }
+        validateStringArray(layer?.configured_paths, "resolution.layers[].configured_paths", errors);
+        validateStringArray(layer?.resolved_paths, "resolution.layers[].resolved_paths", errors);
+        validateStringArray(layer?.missing_paths, "resolution.layers[].missing_paths", errors);
+        validateStringArray(layer?.warnings, "resolution.layers[].warnings", errors);
+        if (!Array.isArray(layer?.resolved_records)) {
+          errors.push("resolution.layers[].resolved_records must be a list");
+        }
+      }
+    }
+    if (!isObject(record.resolution?.record_resolution)) {
+      errors.push("resolution.record_resolution must be an object");
+    } else {
+      validateStringArray(
+        record.resolution.record_resolution?.precedence_rule,
+        "resolution.record_resolution.precedence_rule",
+        errors,
+        { allowEmpty: false },
+      );
+      if (!Array.isArray(record.resolution.record_resolution?.resolved_claims)) {
+        errors.push("resolution.record_resolution.resolved_claims must be a list");
+      } else {
+        for (const claim of record.resolution.record_resolution.resolved_claims) {
+          if (!isObject(claim)) {
+            errors.push("resolution.record_resolution.resolved_claims[] must be an object");
+            continue;
+          }
+          validateNonEmptyString(claim?.claim_key, "resolution.record_resolution.resolved_claims[].claim_key", errors);
+          validateNonEmptyString(claim?.kind, "resolution.record_resolution.resolved_claims[].kind", errors);
+          validateNonEmptyString(claim?.title, "resolution.record_resolution.resolved_claims[].title", errors);
+          if ("scope" in claim && claim.scope !== null && typeof claim.scope !== "string") {
+            errors.push("resolution.record_resolution.resolved_claims[].scope must be string or null");
+          }
+          if ("scope_detail" in claim && claim.scope_detail !== null && typeof claim.scope_detail !== "string") {
+            errors.push("resolution.record_resolution.resolved_claims[].scope_detail must be string or null");
+          }
+          if (!isObject(claim?.selected)) {
+            errors.push("resolution.record_resolution.resolved_claims[].selected must be an object");
+          } else {
+            if (!validReadLayers.includes(claim.selected?.layer)) {
+              errors.push(`resolution.record_resolution.resolved_claims[].selected.layer must be one of ${validReadLayers.join(", ")}`);
+            }
+            if (!validAuthorities.includes(claim.selected?.authority)) {
+              errors.push(`resolution.record_resolution.resolved_claims[].selected.authority must be one of ${validAuthorities.join(", ")}`);
+            }
+            validateNonEmptyString(
+              claim.selected?.file,
+              "resolution.record_resolution.resolved_claims[].selected.file",
+              errors,
+            );
+          }
+          if (!validResolutionTypes.includes(claim?.resolution_type)) {
+            errors.push(`resolution.record_resolution.resolved_claims[].resolution_type must be one of ${validResolutionTypes.join(", ")}`);
+          }
+          if (!Array.isArray(claim?.shadowed)) {
+            errors.push("resolution.record_resolution.resolved_claims[].shadowed must be a list");
+          } else {
+            for (const shadowed of claim.shadowed) {
+              if (!isObject(shadowed)) {
+                errors.push("resolution.record_resolution.resolved_claims[].shadowed[] must be an object");
+                continue;
+              }
+              if (!validReadLayers.includes(shadowed?.layer)) {
+                errors.push(`resolution.record_resolution.resolved_claims[].shadowed[].layer must be one of ${validReadLayers.join(", ")}`);
+              }
+              if (!validAuthorities.includes(shadowed?.authority)) {
+                errors.push(`resolution.record_resolution.resolved_claims[].shadowed[].authority must be one of ${validAuthorities.join(", ")}`);
+              }
+              validateNonEmptyString(
+                shadowed?.file,
+                "resolution.record_resolution.resolved_claims[].shadowed[].file",
+                errors,
+              );
+              if (!validShadowReasons.includes(shadowed?.reason)) {
+                errors.push(`resolution.record_resolution.resolved_claims[].shadowed[].reason must be one of ${validShadowReasons.join(", ")}`);
+              }
+            }
+          }
+        }
+      }
+      if (!Array.isArray(record.resolution.record_resolution?.conflicts)) {
+        errors.push("resolution.record_resolution.conflicts must be a list");
+      }
+      if (!Array.isArray(record.resolution.record_resolution?.gap_fills)) {
+        errors.push("resolution.record_resolution.gap_fills must be a list");
+      }
+    }
   }
 
   return errors;

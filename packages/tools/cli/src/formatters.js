@@ -632,6 +632,74 @@ export function formatMemoryCandidateReportText(report) {
   return `${lines.join("\n")}\n`;
 }
 
+export function formatMemoryAuditReportText(report) {
+  const lines = [
+    "Action: memory.audit",
+    `Runtime: ${report.runtime}`,
+    `Target: ${report.target}`,
+    `Audit scope: ${report.audit_scope}`,
+    `Mode: ${report.mode}`,
+    `Read-only: ${report.read_only ? "yes" : "no"}`,
+    `Profile: ${report.read_profile_id}`,
+    `Precedence: ${(report.precedence_rule ?? []).join(" > ")}`,
+    `Findings: ${report.findings.length}`,
+    `Next action: ${report.next_action}`,
+    "",
+    "Plan:",
+    `- files checked: ${(report.plan?.files_checked ?? []).length}`,
+    `- authoritative sources: ${(report.plan?.authoritative_sources ?? []).length}`,
+    `- focus: ${(report.focus ?? []).length > 0 ? report.focus.join(", ") : "all"}`,
+  ];
+  if ((report.summary?.unresolved_context ?? []).length > 0) {
+    lines.push(`- unresolved context: ${report.summary.unresolved_context.length}`);
+  }
+  lines.push(
+    "",
+    "Summary:",
+    `- critical: ${report.summary?.severity_counts?.critical ?? 0}`,
+    `- high: ${report.summary?.severity_counts?.high ?? 0}`,
+    `- medium: ${report.summary?.severity_counts?.medium ?? 0}`,
+    `- low: ${report.summary?.severity_counts?.low ?? 0}`,
+    `- hard conflicts: ${report.summary?.hard_conflict_count ?? 0}`,
+    `- write handoffs: ${report.summary?.write_handoff_count ?? 0}`,
+  );
+  lines.push("", "Findings:");
+  if (report.findings.length === 0) {
+    lines.push("- none");
+  } else {
+    for (const finding of report.findings) {
+      lines.push(
+        `- ${finding.id} :: ${finding.severity}/${finding.type} :: ${finding.file_or_record}`,
+      );
+      lines.push(`  ${finding.explanation}`);
+      lines.push(`  fix: ${finding.recommended_fix}`);
+      lines.push(`  write workflow needed: ${finding.write_workflow_needed ? "yes" : "no"}`);
+      if ((finding.evidence ?? []).length > 0) {
+        lines.push(`  evidence: ${finding.evidence.join(", ")}`);
+      }
+    }
+  }
+  lines.push("", "Remediation order:");
+  for (const step of report.remediation_order ?? []) {
+    lines.push(`- ${step}`);
+  }
+  if ((report.resolution?.record_resolution?.conflicts ?? []).length > 0) {
+    lines.push("", "Resolution conflicts:");
+    for (const conflict of report.resolution.record_resolution.conflicts) {
+      lines.push(
+        `- ${conflict.claim_key} :: ${conflict.selected_layer} -> ${conflict.shadowed_layer} (${conflict.reason})`,
+      );
+    }
+  }
+  if ((report.resolution?.record_resolution?.gap_fills ?? []).length > 0) {
+    lines.push("", "Supporting gap fills:");
+    for (const gapFill of report.resolution.record_resolution.gap_fills) {
+      lines.push(`- ${gapFill.claim_key} :: ${gapFill.selected_layer} :: ${gapFill.selected_file}`);
+    }
+  }
+  return `${lines.join("\n")}\n`;
+}
+
 export function formatContextExplanationText(explanation) {
   const lines = [
     `Runtime: ${explanation.runtime}`,
@@ -726,6 +794,22 @@ export function formatContextExplanationText(explanation) {
         `  conflicts=${(explanation.memory_resolution.record_resolution.conflicts ?? []).length}`,
         `  supporting_gap_fills=${(explanation.memory_resolution.record_resolution.gap_fills ?? []).length}`,
       );
+      if ((explanation.memory_resolution.record_resolution.conflicts ?? []).length > 0) {
+        lines.push("  conflict_details:");
+        for (const conflict of explanation.memory_resolution.record_resolution.conflicts) {
+          lines.push(
+            `    ${conflict.claim_key} :: ${conflict.selected_layer} (${conflict.selected_file}) over ${conflict.shadowed_layer} (${conflict.shadowed_file}) :: ${conflict.reason}`,
+          );
+        }
+      }
+      if ((explanation.memory_resolution.record_resolution.gap_fills ?? []).length > 0) {
+        lines.push("  gap_fill_details:");
+        for (const gapFill of explanation.memory_resolution.record_resolution.gap_fills) {
+          lines.push(
+            `    ${gapFill.claim_key} :: ${gapFill.selected_layer} (${gapFill.selected_file})`,
+          );
+        }
+      }
     }
   }
   if (explanation.memory_reads) {
@@ -733,6 +817,9 @@ export function formatContextExplanationText(explanation) {
     lines.push(`- Global Project Memory: ${(explanation.memory_reads.global_project_memory ?? []).length}`);
     lines.push(`- Task memory: ${(explanation.memory_reads.task_memory ?? []).length}`);
     lines.push(`- Session artifacts: ${(explanation.memory_reads.session_artifacts ?? []).length}`);
+    lines.push(`- Session layer only: ${(explanation.memory_reads.session_layer ?? []).length}`);
+    lines.push(`- Staging artifacts: ${(explanation.memory_reads.staging_artifacts ?? []).length}`);
+    lines.push(`- Audit log: ${(explanation.memory_reads.audit_log ?? []).length}`);
   }
   return `${lines.join("\n")}\n`;
 }

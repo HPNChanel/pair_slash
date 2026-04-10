@@ -20,6 +20,29 @@ This workflow is **audit-oriented** and defaults to **read-only**.
 
 ## Load sources in precedence order
 
+If PairSlash CLI is available in this repo, run the shared-loader-backed audit
+surface first:
+
+```text
+pairslash memory audit --audit-scope full --format json
+```
+
+If the user supplied a narrower scope, replace `full` with that exact
+`audit_scope`.
+
+Use the JSON artifact as the source of truth for:
+
+- `precedence_rule`
+- `resolution.record_resolution.conflicts`
+- `resolution.record_resolution.gap_fills`
+- `findings`
+- `remediation_order`
+
+When you return a narrative audit, translate that artifact into the required
+sections without inventing new findings or silently downgrading conflicts.
+If PairSlash CLI is unavailable, fall back to the manual read order below and
+state explicitly that shared-loader evidence is unavailable for this run.
+
 Read memory sources in this order:
 
 1. `.pairslash/project-memory/90-memory-index.yaml`

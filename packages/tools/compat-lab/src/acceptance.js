@@ -1,4 +1,5 @@
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 import { dirname, join } from "node:path";
 
 import {
@@ -136,8 +137,68 @@ function buildDoctorCommand(runtime, target) {
   ].join(" ");
 }
 
+function buildReadAuthorityCommands(runtime, target) {
+  return [
+    [
+      "node packages/tools/cli/src/bin/pairslash.js",
+      "explain-context",
+      "pairslash-plan",
+      "--runtime",
+      runtimeFlag(runtime),
+      "--target",
+      target,
+      "--format",
+      "json",
+    ].join(" "),
+    [
+      "node packages/tools/cli/src/bin/pairslash.js",
+      "memory",
+      "candidate",
+      "--task-scope",
+      "phase17-read-authority-acceptance",
+      "--runtime",
+      runtimeFlag(runtime),
+      "--target",
+      target,
+      "--format",
+      "json",
+    ].join(" "),
+    [
+      "node packages/tools/cli/src/bin/pairslash.js",
+      "memory",
+      "audit",
+      "--audit-scope",
+      "full",
+      "--runtime",
+      runtimeFlag(runtime),
+      "--target",
+      target,
+      "--format",
+      "json",
+    ].join(" "),
+  ];
+}
+
 function buildFirstWorkflowStep() {
   return "/skills -> select pairslash-plan -> ask for a repo plan";
+}
+
+function runCliJson({ workspaceRoot, cwd, args }) {
+  const result = spawnSync(
+    process.execPath,
+    [join(workspaceRoot, "packages", "tools", "cli", "src", "bin", "pairslash.js"), ...args],
+    {
+      cwd,
+      encoding: "utf8",
+      env: { ...process.env },
+    },
+  );
+  if (result.status !== 0) {
+    throw new Error(
+      `cli command failed (${args.join(" ")}): ${result.stderr?.trim() || result.stdout?.trim() || `exit ${result.status}`}`,
+    );
+  }
+  return JSON.parse(result.stdout);
 }
 
 function laneCommandsFor(lane) {
@@ -295,6 +356,172 @@ function runFreshInstallScenario({ repoRoot, lane, runtimeHarness }) {
             first_workflow_ready: doctorAfter.first_workflow_guidance.ready,
             first_workflow_commands: doctorAfter.first_workflow_guidance.commands.slice(),
           },
+        };
+      },
+    ),
+  );
+}
+
+function seedReadAuthorityFixture(tempRoot) {
+  mkdirSync(join(tempRoot, ".pairslash", "task-memory"), { recursive: true });
+  mkdirSync(join(tempRoot, ".pairslash", "sessions"), { recursive: true });
+  mkdirSync(join(tempRoot, ".pairslash", "staging"), { recursive: true });
+  mkdirSync(join(tempRoot, ".pairslash", "audit-log"), { recursive: true });
+  writeFileSync(
+    join(tempRoot, ".pairslash", "task-memory", "acceptance-task.yaml"),
+    [
+      "kind: constraint",
+      "title: Codex CLI read-only sandbox blocks complex PowerShell patterns",
+      "statement: task-memory acceptance conflict",
+      "evidence: compat acceptance task evidence",
+      "scope: subsystem",
+      "scope_detail: codex-cli",
+    ].join("\n"),
+  );
+  writeFileSync(
+    join(tempRoot, ".pairslash", "sessions", "acceptance-session.yaml"),
+    [
+      "kind: pattern",
+      "title: Acceptance session-only supporting context",
+      "statement: session layer stays supporting and never becomes authoritative",
+      "evidence: compat acceptance session evidence",
+      "scope: subsystem",
+      "scope_detail: acceptance",
+    ].join("\n"),
+  );
+  writeFileSync(
+    join(tempRoot, ".pairslash", "staging", "acceptance-staging.yaml"),
+    [
+      "kind: pattern",
+      "title: Acceptance staging candidate",
+      "statement: staging stays read-only until explicit write workflow is used",
+      "evidence: compat acceptance staging evidence",
+      "scope: subsystem",
+      "scope_detail: acceptance",
+    ].join("\n"),
+  );
+  writeFileSync(
+    join(tempRoot, ".pairslash", "audit-log", "acceptance-audit.yaml"),
+    [
+      "kind: constraint",
+      "title: Codex CLI read-only sandbox blocks complex PowerShell patterns",
+      "statement: audit-log acceptance conflict",
+      "evidence: compat acceptance audit evidence",
+      "scope: subsystem",
+      "scope_detail: codex-cli",
+    ].join("\n"),
+  );
+}
+
+function runReadAuthorityScenario({ repoRoot, lane, runtimeHarness }) {
+  const definition = {
+    id: `read-authority.${lane.os_lane}.${runtimeFlag(lane.runtime)}.${lane.target}`,
+    runtime: lane.runtime,
+    target: lane.target,
+    fixture_id: "repo-basic-readonly",
+    commands: buildReadAuthorityCommands(lane.runtime, lane.target),
+  };
+  return runScenario(definition, () =>
+    withFixture(
+      {
+        repoRoot,
+        fixtureId: definition.fixture_id,
+        runtimeHarness,
+        target: lane.target,
+      },
+      ({ tempRoot }) => {
+        seedReadAuthorityFixture(tempRoot);
+        const beforeGlobal = readFileSync(join(tempRoot, ".pairslash", "project-memory", "50-constraints.yaml"), "utf8");
+        const beforeIndex = readFileSync(join(tempRoot, ".pairslash", "project-memory", "90-memory-index.yaml"), "utf8");
+        const beforeAudit = readFileSync(join(tempRoot, ".pairslash", "audit-log", "acceptance-audit.yaml"), "utf8");
+
+        const explanation = runCliJson({
+          workspaceRoot: repoRoot,
+          cwd: tempRoot,
+          args: ["explain-context", "pairslash-plan", "--runtime", runtimeFlag(lane.runtime), "--target", lane.target, "--format", "json"],
+        });
+        const candidate = runCliJson({
+          workspaceRoot: repoRoot,
+          cwd: tempRoot,
+          args: [
+            "memory",
+            "candidate",
+            "--task-scope",
+            "phase17-read-authority-acceptance",
+            "--runtime",
+            runtimeFlag(lane.runtime),
+            "--target",
+            lane.target,
+            "--format",
+            "json",
+          ],
+        });
+        const audit = runCliJson({
+          workspaceRoot: repoRoot,
+          cwd: tempRoot,
+          args: [
+            "memory",
+            "audit",
+            "--audit-scope",
+            "full",
+            "--runtime",
+            runtimeFlag(lane.runtime),
+            "--target",
+            lane.target,
+            "--format",
+            "json",
+          ],
+        });
+
+        const explanationConflict =
+          explanation.memory_resolution?.record_resolution?.conflicts?.some(
+            (entry) =>
+              entry.selected_layer === "global-project-memory" &&
+              ["task-memory", "audit-log"].includes(entry.shadowed_layer),
+          ) === true;
+        const candidateConflict =
+          candidate.candidates?.some((entry) => entry.suspicion?.conflict === true) === true;
+        const auditConflict =
+          audit.findings?.some(
+            (entry) =>
+              entry.type === "conflict" &&
+              entry.selected_layer === "global-project-memory" &&
+              ["task-memory", "audit-log"].includes(entry.shadowed_layer),
+          ) === true;
+        const readOnlyPreserved =
+          beforeGlobal === readFileSync(join(tempRoot, ".pairslash", "project-memory", "50-constraints.yaml"), "utf8") &&
+          beforeIndex === readFileSync(join(tempRoot, ".pairslash", "project-memory", "90-memory-index.yaml"), "utf8") &&
+          beforeAudit === readFileSync(join(tempRoot, ".pairslash", "audit-log", "acceptance-audit.yaml"), "utf8");
+        const success =
+          explanation.memory_resolution?.uses_shared_loader === true &&
+          candidate.read_only === true &&
+          audit.read_only === true &&
+          explanationConflict &&
+          candidateConflict &&
+          auditConflict &&
+          readOnlyPreserved;
+        return {
+          success,
+          summary: success
+            ? `${lane.os_lane} ${runtimeFlag(lane.runtime)} ${lane.target} lane proves shared-loader read authority for plan/candidate/audit`
+            : `${lane.os_lane} ${runtimeFlag(lane.runtime)} ${lane.target} lane is missing shared-loader read-authority proof`,
+          commands: definition.commands,
+          repro_key: `${definition.id}:${definition.fixture_id}:${lane.runtime}:${lane.target}`,
+          details: {
+            explain_profile: explanation.memory_resolution?.profile_id ?? null,
+            candidate_profile: candidate.read_profile_id ?? null,
+            audit_profile: audit.read_profile_id ?? null,
+            explain_conflict: explanationConflict,
+            candidate_conflict: candidateConflict,
+            audit_conflict: auditConflict,
+          },
+          issue_codes: success ? [] : ["phase17-read-authority-proof-missing"],
+          doctor_success: null,
+          install_success: null,
+          update_success: null,
+          uninstall_success: null,
+          support_verdict: null,
+          read_only_preserved: readOnlyPreserved,
         };
       },
     ),
@@ -977,6 +1204,7 @@ function runLaneScenarios({ repoRoot, lane, runtimeHarness }) {
   if (lane.key === "macos" || lane.key === "linux") {
     return [
       runFreshInstallScenario({ repoRoot, lane, runtimeHarness }),
+      runReadAuthorityScenario({ repoRoot, lane, runtimeHarness }),
       runUpdatePreserveOverrideScenario({ repoRoot, lane, runtimeHarness }),
       runUninstallOwnedOnlyScenario({ repoRoot, lane, runtimeHarness }),
       runReconcileParityScenario({ repoRoot, lane, runtimeHarness }),

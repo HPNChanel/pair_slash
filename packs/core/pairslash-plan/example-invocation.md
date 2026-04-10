@@ -14,6 +14,12 @@ Create a repo plan from the current repo state.
 Create a repo plan from the current repo state.
 ```
 
+## Shared-loader context artifact
+
+```text
+pairslash explain-context pairslash-plan --format json
+```
+
 ## With scope hint
 
 ```text

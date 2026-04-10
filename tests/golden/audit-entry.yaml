@@ -6,7 +6,8 @@ duplicate_count: 0
 kind: pattern
 notes: ""
 preview_artifact: .pairslash/staging/memory-write-013bfc3f42a2c2ba-preview-patch-is-mandatory-before-write.yaml
-related_layers: []
+related_layers:
+  - global-project-memory
 result: success
 schema_version: 0.1.0
 target_file: .pairslash/project-memory/70-known-good-patterns/preview-patch-is-mandatory-before-write.yaml

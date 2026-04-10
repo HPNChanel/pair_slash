@@ -39,6 +39,7 @@ test("compat-lab acceptance macos lane reaches first workflow and keeps uninstal
     report.scenarios.map((scenario) => scenario.id),
     [
       "fresh-install.macos.codex.repo",
+      "read-authority.macos.codex.repo",
       "update-preserve-override.macos.codex.repo",
       "uninstall-owned-only.macos.codex.repo",
       "semantic-parity.reconcile-unmanaged.macos.codex.repo",
@@ -50,8 +51,18 @@ test("compat-lab acceptance macos lane reaches first workflow and keeps uninstal
     ],
   );
   assert.equal(report.scenarios[0].support_verdict, "warn");
-  assert.equal(report.scenarios[1].update_success, true);
-  assert.equal(report.scenarios[2].uninstall_success, true);
+  assert.equal(
+    report.scenarios.find((scenario) => scenario.id === "read-authority.macos.codex.repo")?.status,
+    "pass",
+  );
+  assert.equal(
+    report.scenarios.find((scenario) => scenario.id === "update-preserve-override.macos.codex.repo")?.update_success,
+    true,
+  );
+  assert.equal(
+    report.scenarios.find((scenario) => scenario.id === "uninstall-owned-only.macos.codex.repo")?.uninstall_success,
+    true,
+  );
   assert.equal(
     report.scenarios.find((scenario) => scenario.id === "doctor-broken-setup.macos.codex.repo")?.doctor_success,
     true,
@@ -74,6 +85,10 @@ test("compat-lab acceptance linux lane stays usable despite copilot tested-range
   const freshInstall = report.scenarios.find((scenario) => scenario.id === "fresh-install.linux.copilot.user");
   assert.ok(freshInstall);
   assert.equal(freshInstall.support_verdict, "degraded");
+  assert.equal(
+    report.scenarios.find((scenario) => scenario.id === "read-authority.linux.copilot.user")?.status,
+    "pass",
+  );
   assert.ok(report.issue_codes.length > 0);
 });
 

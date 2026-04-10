@@ -17,3 +17,8 @@ focus:
   - index-gap
 ```
 
+## Shared-loader proof artifact
+
+```text
+pairslash memory audit --audit-scope full --format json
+```

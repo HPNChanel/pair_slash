@@ -32,6 +32,7 @@ import {
 } from "@pairslash/installer";
 import {
   applyMemoryWrite,
+  buildMemoryAuditReport,
   buildMemoryCandidateReport,
   loadRequestFile,
   loadStagedMemoryWritePreview,
@@ -61,6 +62,7 @@ import {
   formatDoctorText,
   formatInstallResult,
   formatLintText,
+  formatMemoryAuditReportText,
   formatMemoryWritePreviewBlockedText,
   formatMemoryCandidateReportText,
   formatMemoryWritePreviewText,
@@ -91,6 +93,7 @@ function printUsage(stdout) {
       "  pairslash lint [pack-id...] [--runtime <codex|copilot|auto|all>] [--target repo|user] [--packs a,b] [--format text|json] [--strict]",
       "  pairslash memory write-global [--request path] [--kind <kind>] [--title text] [--statement text] [--evidence text] [--scope <whole-project|subsystem|path-prefix>] [--scope-detail text] [--confidence <low|medium|high>] [--action <append|supersede|reject-candidate-if-conflict>] [--tags a,b] [--source-refs a,b] [--supersedes kind/title] [--updated-by text] [--format text|json] [--apply] [--yes]",
       "  pairslash memory candidate --task-scope <text> [--runtime <codex|copilot|auto>] [--target repo|user] [--evidence-sources a,b] [--strictness <strict-gate-fail-fast|balanced|lenient>] [--max-candidates <n>] [--format text|json]",
+      "  pairslash memory audit --audit-scope <full|project-memory-only|index-only> [--runtime <codex|copilot|auto>] [--target repo|user] [--mode <report-only|fix-proposal>] [--focus a,b] [--format text|json]",
       "  pairslash explain-context [pack-id] [--runtime <codex|copilot|auto>] [--target repo|user] [--format text|json]",
       "  pairslash explain-policy [pack-id] [--runtime <codex|copilot|auto>] [--target repo|user] [--apply] [--preview] [--surface <canonical_skill|direct_invocation|hook>] [--format text|json]",
       "  pairslash debug [--latest] [--session <id>] [--runtime <codex|copilot>] [--target repo|user] [--bundle] [--out path] [--format text|json]",
@@ -101,6 +104,7 @@ function printUsage(stdout) {
       "  install/update/uninstall preview by default; add --apply to mutate.",
       "  memory write-global previews by default; add --apply and explicit approval to commit.",
       "  memory candidate is read-only and never writes project-memory, index, audit, or staging.",
+      "  memory audit is read-only and never mutates project-memory, index, audit, or staging.",
       "  debug/trace export select the latest matching recorded session unless --session is provided.",
       "  install with no pack-id selects bootstrap pack-set (pairslash-plan).",
       "  use --pack-set core or --all to select all valid manifests under packs/core.",
@@ -148,6 +152,9 @@ function parseOptions(argv) {
     evidenceSources: [],
     strictness: "strict-gate-fail-fast",
     maxCandidates: 20,
+    auditScope: null,
+    mode: "report-only",
+    focus: [],
     sessionId: null,
     latest: false,
     out: null,
@@ -343,6 +350,24 @@ function parseOptions(argv) {
       index += 1;
       continue;
     }
+    if (token === "--audit-scope") {
+      options.auditScope = argv[index + 1];
+      index += 1;
+      continue;
+    }
+    if (token === "--mode") {
+      options.mode = argv[index + 1];
+      index += 1;
+      continue;
+    }
+    if (token === "--focus") {
+      options.focus = argv[index + 1]
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean);
+      index += 1;
+      continue;
+    }
     if (token === "--session") {
       options.sessionId = argv[index + 1];
       index += 1;
@@ -485,6 +510,9 @@ function buildMemoryReadArtifacts(resolution) {
     global_project_memory: collectLayerPaths("global-project-memory"),
     task_memory: collectLayerPaths("task-memory"),
     session_artifacts: collectLayerPaths("session", "staging"),
+    session_layer: collectLayerPaths("session"),
+    staging_artifacts: collectLayerPaths("staging"),
+    audit_log: collectLayerPaths("audit-log"),
   };
 }
 
@@ -928,6 +956,14 @@ function buildMemoryCandidateInput(options) {
   };
 }
 
+function buildMemoryAuditInput(options) {
+  return {
+    auditScope: options.auditScope,
+    mode: options.mode,
+    focus: options.focus,
+  };
+}
+
 function buildLifecycleEnvelope(action, repoRoot, options) {
   assertLifecycleAction(action, { command: "preview" });
   if (action !== "install" && options.packSetProvided) {
@@ -1179,6 +1215,32 @@ function handleMemoryCandidate(repoRoot, options, stdout) {
   };
 }
 
+function handleMemoryAudit(repoRoot, options, stdout) {
+  if (options.apply || options.preview || options.dryRun) {
+    throw new Error("unsupported-flag: memory audit is read-only and does not support --apply/--preview/--dry-run");
+  }
+  const runtime = resolveExecutionRuntime(repoRoot, options.runtime, options.target);
+  const target = options.target;
+  const input = buildMemoryAuditInput(options);
+  const report = buildMemoryAuditReport({
+    repoRoot,
+    runtime,
+    target,
+    ...input,
+  });
+  emit(stdout, report, {
+    format: options.format,
+    text: formatMemoryAuditReportText,
+  });
+  return {
+    exitCode: 0,
+    artifact: report,
+    runtime: report.runtime,
+    target: report.target,
+    summary: `memory audit generated ${report.findings.length} finding(s)`,
+  };
+}
+
 export async function runCli({
   argv = process.argv.slice(2),
   cwd = process.cwd(),
@@ -1216,6 +1278,8 @@ export async function runCli({
         result = await handleMemoryWrite(repoRoot, options, stdout, stdin);
       } else if (argv[1] === "candidate") {
         result = handleMemoryCandidate(repoRoot, options, stdout);
+      } else if (argv[1] === "audit") {
+        result = handleMemoryAudit(repoRoot, options, stdout);
       } else {
         throw new Error(`unknown memory command: ${argv[1] ?? "(missing)"}`);
       }

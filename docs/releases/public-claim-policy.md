@@ -46,6 +46,7 @@ boundary ladder live in `docs/phase-12/authoritative-program-charter.md`.
   - `packs/core/*/pack.manifest.yaml`
   - `packages/core/spec-core/src/pack-catalog.js`
   - `docs/architecture/phase-17-read-authority-charter.md`
+  - `docs/architecture/phase-17-read-authority-matrix.md`
   - `packages/core/spec-core/registry/packs.yaml` (derived index only)
   - `packages/tools/installer/`
   - `packages/tools/doctor/`
@@ -70,8 +71,9 @@ boundary ladder live in `docs/phase-12/authoritative-program-charter.md`.
 - Global Project Memory is the authoritative project memory layer, and
   authoritative writes stay explicit, previewable, and auditable.
 - Global Project Memory stays authoritative on read through the documented
-  shared loader precedence contract; task, session, and staging layers remain
-  supporting only.
+  shared loader precedence contract only for workflows wired to the shared
+  loader artifacts and covered by the Phase 17 charter/matrix; task, session,
+  staging, and audit-log layers remain supporting only.
 - PairSlash ships a scoped managed installability substrate for the two core
   runtimes.
 - The current supported install path is repo-local from this checkout; package-manager

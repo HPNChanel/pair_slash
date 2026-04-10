@@ -17,8 +17,28 @@ and must follow the compatibility statuses recorded for this pack.
 
 ## Step 1: Load project memory
 
-Read the following files if they exist. Do not fail if some are missing;
-note which files were unavailable.
+If PairSlash CLI is available in this repo, obtain the authoritative read view
+first:
+
+```text
+pairslash explain-context pairslash-plan --format json
+```
+
+Use that artifact as the source of truth for:
+
+- which memory files were actually read (`memory_reads`)
+- which claims won after precedence was applied (`memory_resolution`)
+- which conflicts, gaps, or missing paths must be surfaced explicitly
+
+Treat `memory_resolution.record_resolution.precedence_rule` as authoritative for
+this workflow. Read the files listed in the artifact before inspecting any
+additional supporting files.
+
+If PairSlash CLI is not available, fall back to manual file reads below, but
+state explicitly that shared-loader evidence is unavailable for this run.
+
+Read the following files if they exist during fallback. Do not fail if some are
+missing; note which files were unavailable.
 
 - `.pairslash/project-memory/00-project-charter.yaml`
 - `.pairslash/project-memory/10-stack-profile.yaml`

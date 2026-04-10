@@ -6,7 +6,7 @@ import YAML from "yaml";
 
 import { runCli } from "../src/bin/pairslash.js";
 import { listTraceIndexes, loadTraceEvents } from "@pairslash/trace";
-import { validateCandidateReport } from "@pairslash/spec-core";
+import { validateCandidateReport, validateMemoryAuditReport } from "@pairslash/spec-core";
 
 import {
   createTempRepo,
@@ -52,6 +52,18 @@ function buildMemoryCandidateArgs(extra = []) {
     "phase17-candidate-reconcile",
     "--max-candidates",
     "10",
+    ...extra,
+  ];
+}
+
+function buildMemoryAuditArgs(extra = []) {
+  return [
+    "--runtime",
+    "codex",
+    "--target",
+    "repo",
+    "--audit-scope",
+    "full",
     ...extra,
   ];
 }
@@ -1377,6 +1389,112 @@ test("pairslash memory candidate fails clearly when source records are malformed
   }
 });
 
+test("pairslash memory audit emits schema-valid read-only report with shared-loader conflict surfacing", serial, async () => {
+  const fixture = createTempRepo({ packs: ["pairslash-memory-audit"] });
+  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  let output = "";
+  try {
+    mkdirSync(join(fixture.tempRoot, ".pairslash", "task-memory"), { recursive: true });
+    mkdirSync(join(fixture.tempRoot, ".pairslash", "audit-log"), { recursive: true });
+    writeFileSync(
+      join(fixture.tempRoot, ".pairslash", "task-memory", "task-conflict.yaml"),
+      [
+        "kind: constraint",
+        "title: Codex CLI read-only sandbox blocks complex PowerShell patterns",
+        "statement: task-memory contradicts the authoritative global claim",
+        "evidence: task audit evidence",
+        "scope: subsystem",
+        "scope_detail: codex-cli",
+      ].join("\n"),
+    );
+    writeFileSync(
+      join(fixture.tempRoot, ".pairslash", "audit-log", "audit-conflict.yaml"),
+      [
+        "kind: constraint",
+        "title: Codex CLI read-only sandbox blocks complex PowerShell patterns",
+        "statement: audit-log contradicts the authoritative global claim",
+        "evidence: audit log evidence",
+        "scope: subsystem",
+        "scope_detail: codex-cli",
+      ].join("\n"),
+    );
+
+    const globalPath = join(fixture.tempRoot, ".pairslash", "project-memory", "50-constraints.yaml");
+    const indexPath = join(fixture.tempRoot, ".pairslash", "project-memory", "90-memory-index.yaml");
+    const auditPath = join(fixture.tempRoot, ".pairslash", "audit-log", "audit-conflict.yaml");
+    const beforeGlobal = readFileSync(globalPath, "utf8");
+    const beforeIndex = readFileSync(indexPath, "utf8");
+    const beforeAudit = readFileSync(auditPath, "utf8");
+
+    const exitCode = await runCli({
+      argv: ["memory", "audit", ...buildMemoryAuditArgs(["--format", "json"])],
+      cwd: fixture.tempRoot,
+      stdout: {
+        write(chunk) {
+          output += chunk;
+        },
+      },
+    });
+    assert.equal(exitCode, 0);
+    const payload = JSON.parse(output);
+    assert.deepEqual(validateMemoryAuditReport(payload), []);
+    assert.equal(payload.kind, "memory-audit-report");
+    assert.equal(payload.read_only, true);
+    assert.equal(payload.read_profile_id, "pairslash-memory-audit");
+    assert.equal(payload.resolution.uses_shared_loader, true);
+    assert.deepEqual(payload.precedence_rule.slice(0, 5), [
+      "global-project-memory",
+      "task-memory",
+      "session",
+      "staging",
+      "audit-log",
+    ]);
+    assert.ok(
+      payload.findings.some(
+        (finding) =>
+          finding.type === "conflict" &&
+          finding.selected_layer === "global-project-memory" &&
+          finding.shadowed_layer === "task-memory",
+      ),
+    );
+    assert.ok(
+      payload.findings.some(
+        (finding) =>
+          finding.type === "conflict" &&
+          finding.selected_layer === "global-project-memory" &&
+          finding.shadowed_layer === "audit-log",
+      ),
+    );
+    assert.equal(payload.summary.hard_conflict_count >= 2, true);
+    assert.equal(payload.next_action, "USE_PAIRSLASH_MEMORY_WRITE_GLOBAL");
+    assert.equal(readFileSync(globalPath, "utf8"), beforeGlobal);
+    assert.equal(readFileSync(indexPath, "utf8"), beforeIndex);
+    assert.equal(readFileSync(auditPath, "utf8"), beforeAudit);
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("pairslash memory audit fails clearly when audit scope is missing", serial, async () => {
+  const fixture = createTempRepo({ packs: ["pairslash-memory-audit"] });
+  try {
+    await assert.rejects(
+      () =>
+        runCli({
+          argv: ["memory", "audit", "--runtime", "codex", "--format", "json"],
+          cwd: fixture.tempRoot,
+          stdout: {
+            write() {},
+          },
+        }),
+      /audit-input-invalid: --audit-scope must be one of full, project-memory-only, index-only/,
+    );
+  } finally {
+    fixture.cleanup();
+  }
+});
+
 test("pairslash explain-context keeps read-authority resolution consistent across codex and copilot lanes", serial, async () => {
   const fixture = createTempRepo({ packs: ["pairslash-memory-candidate"] });
   const runtime = installFakeRuntime({ codexVersion: "0.116.0", copilotVersion: "2.50.0" });
@@ -1629,6 +1747,9 @@ test("pairslash explain-context emits structured json report", serial, async () 
     assert.ok(payload.memory_reads.global_project_memory.includes(".pairslash/project-memory/50-constraints.yaml"));
     assert.ok(payload.memory_reads.task_memory.includes(".pairslash/task-memory/task.yaml"));
     assert.deepEqual(payload.memory_reads.session_artifacts, []);
+    assert.deepEqual(payload.memory_reads.session_layer, []);
+    assert.deepEqual(payload.memory_reads.staging_artifacts, []);
+    assert.deepEqual(payload.memory_reads.audit_log, []);
     assert.equal(payload.memory_resolution.profile_id, "pairslash-plan");
     assert.equal(payload.memory_resolution.uses_shared_loader, true);
     assert.ok(payload.memory_resolution.authoritative_sources.includes(".pairslash/project-memory/90-memory-index.yaml"));
@@ -1706,6 +1827,9 @@ test("pairslash explain-context resolves candidate read authority with authorita
     assert.ok(payload.memory_reads.task_memory.includes(".pairslash/task-memory/task.yaml"));
     assert.ok(payload.memory_reads.session_artifacts.includes(".pairslash/sessions/session-note.yaml"));
     assert.ok(payload.memory_reads.session_artifacts.includes(".pairslash/staging/candidate-preview.yaml"));
+    assert.deepEqual(payload.memory_reads.session_layer, [".pairslash/sessions/session-note.yaml"]);
+    assert.deepEqual(payload.memory_reads.staging_artifacts, [".pairslash/staging/candidate-preview.yaml"]);
+    assert.deepEqual(payload.memory_reads.audit_log, [".pairslash/audit-log/audit.jsonl"]);
     const auditLayer = payload.memory_resolution.layers.find((layer) => layer.layer === "audit-log");
     const globalLayer = payload.memory_resolution.layers.find((layer) => layer.layer === "global-project-memory");
     const sessionLayer = payload.memory_resolution.layers.find((layer) => layer.layer === "session");
