@@ -27,6 +27,7 @@ import {
   validateRuntimeRange,
   validateLintReport,
   WORKFLOW_MATURITY_LEVELS,
+  WORKFLOW_MATURITY_STRENGTH_ORDER,
 } from "@pairslash/spec-core";
 
 const ISSUE_RESULTS = new Set(["error", "warning", "note"]);
@@ -76,19 +77,12 @@ const WORKSPACE_BOUNDARY_ROOTS = [
   { root: ["packages", "runtimes", "copilot"], boundary: "runtime-copilot" },
   { root: ["packages", "tools"], boundary: "tools" },
 ];
-const WORKFLOW_MATURITY_ORDER = Object.freeze(
-  WORKFLOW_MATURITY_LEVELS.reduce((accumulator, level, index) => {
-    accumulator[level] = index;
-    return accumulator;
-  }, {}),
-);
-
 function normalizeWorkflowMaturity(level) {
   return WORKFLOW_MATURITY_LEVELS.includes(level) ? level : "canary";
 }
 
 function workflowMaturityRank(level) {
-  return WORKFLOW_MATURITY_ORDER[normalizeWorkflowMaturity(level)] ?? 0;
+  return WORKFLOW_MATURITY_STRENGTH_ORDER[normalizeWorkflowMaturity(level)] ?? 0;
 }
 
 function normalizeRuntimeScope(requestedRuntime) {

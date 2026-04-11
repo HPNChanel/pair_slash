@@ -93,6 +93,9 @@ boundary ladder live in `docs/phase-12/authoritative-program-charter.md`.
   maturity charter and canonical pack manifests.
 - Keep `implemented`, `verified`, `supported`, and `recommended` distinct in
   public wording.
+- Promotion-grade evidence references must be repo-local authoritative records.
+  Remote links may be cited for context but never counted as promotion
+  evidence.
 - One-off live runs do not justify `stable-tested`.
 - Phase wording must reuse the official sentence in
   `docs/phase-12/authoritative-program-charter.md`.

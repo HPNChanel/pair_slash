@@ -400,6 +400,43 @@
           },
           {
             "blocking_for_install": false,
+            "evidence": {
+              "workflow_maturity": {
+                "advanced_lane_fence": "core-only-catalog",
+                "blocked_pack_count": 0,
+                "contradictory_claim_count": 0,
+                "highest_effective_workflow_maturity": "canary",
+                "recommended_pack_id": "pairslash-plan",
+                "selected_pack_count": 1,
+                "selected_packs": [
+                  {
+                    "default_recommendation": true,
+                    "demoted": false,
+                    "effective_workflow_maturity": "canary",
+                    "pack_id": "pairslash-plan",
+                    "pack_manifest": null,
+                    "runtime_support_evidence_kind": "lane-matrix",
+                    "runtime_support_status": "supported",
+                    "support_scope": "core-supported",
+                    "workflow_demotion_triggers_active": [],
+                    "workflow_maturity": "canary",
+                    "workflow_maturity_blocked": false,
+                    "workflow_maturity_blockers": [],
+                    "workflow_promotion_checklist_ready": true,
+                    "workflow_transition_legal": true
+                  }
+                ]
+              }
+            },
+            "group": "trust",
+            "id": "manifest.workflow_maturity_alignment",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "1 workflow maturity label(s) align with current evidence-backed effective maturity"
+          },
+          {
+            "blocking_for_install": false,
             "evidence": {},
             "group": "dependencies",
             "id": "dependencies.required_tools",
@@ -1373,6 +1410,43 @@
           },
           {
             "blocking_for_install": false,
+            "evidence": {
+              "workflow_maturity": {
+                "advanced_lane_fence": "core-only-catalog",
+                "blocked_pack_count": 0,
+                "contradictory_claim_count": 0,
+                "highest_effective_workflow_maturity": "canary",
+                "recommended_pack_id": "pairslash-plan",
+                "selected_pack_count": 1,
+                "selected_packs": [
+                  {
+                    "default_recommendation": true,
+                    "demoted": false,
+                    "effective_workflow_maturity": "canary",
+                    "pack_id": "pairslash-plan",
+                    "pack_manifest": null,
+                    "runtime_support_evidence_kind": "lane-matrix",
+                    "runtime_support_status": "partial",
+                    "support_scope": "core-supported",
+                    "workflow_demotion_triggers_active": [],
+                    "workflow_maturity": "canary",
+                    "workflow_maturity_blocked": false,
+                    "workflow_maturity_blockers": [],
+                    "workflow_promotion_checklist_ready": true,
+                    "workflow_transition_legal": true
+                  }
+                ]
+              }
+            },
+            "group": "trust",
+            "id": "manifest.workflow_maturity_alignment",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "1 workflow maturity label(s) align with current evidence-backed effective maturity"
+          },
+          {
+            "blocking_for_install": false,
             "evidence": {},
             "group": "dependencies",
             "id": "dependencies.required_tools",
@@ -1827,6 +1901,43 @@
           },
           {
             "blocking_for_install": false,
+            "evidence": {
+              "workflow_maturity": {
+                "advanced_lane_fence": "core-only-catalog",
+                "blocked_pack_count": 0,
+                "contradictory_claim_count": 0,
+                "highest_effective_workflow_maturity": "canary",
+                "recommended_pack_id": "pairslash-plan",
+                "selected_pack_count": 1,
+                "selected_packs": [
+                  {
+                    "default_recommendation": true,
+                    "demoted": false,
+                    "effective_workflow_maturity": "canary",
+                    "pack_id": "pairslash-plan",
+                    "pack_manifest": null,
+                    "runtime_support_evidence_kind": "lane-matrix",
+                    "runtime_support_status": "partial",
+                    "support_scope": "core-supported",
+                    "workflow_demotion_triggers_active": [],
+                    "workflow_maturity": "canary",
+                    "workflow_maturity_blocked": false,
+                    "workflow_maturity_blockers": [],
+                    "workflow_promotion_checklist_ready": true,
+                    "workflow_transition_legal": true
+                  }
+                ]
+              }
+            },
+            "group": "trust",
+            "id": "manifest.workflow_maturity_alignment",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "1 workflow maturity label(s) align with current evidence-backed effective maturity"
+          },
+          {
+            "blocking_for_install": false,
             "evidence": {},
             "group": "dependencies",
             "id": "dependencies.required_tools",
@@ -1929,7 +2040,7 @@
             "node packages/tools/cli/src/bin/pairslash.js install pairslash-plan --runtime copilot --target user --apply --yes",
             "Launch gh from the repo root and use /skills to run pairslash-plan."
           ],
-          "rationale": "Install the baseline pack first, then enter the runtime through /skills.",
+          "rationale": "Install the baseline pack first, then enter the runtime through /skills. Current evidence-backed workflow maturity: canary.",
           "ready": false,
           "recommended_pack_id": "pairslash-plan"
         },

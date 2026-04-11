@@ -608,13 +608,16 @@ test("pairslash doctor emits structured json report", serial, async () => {
     const payload = JSON.parse(output);
     assert.equal(payload.kind, "doctor-report");
     assert.equal(payload.runtime, "codex_cli");
-    assert.equal(payload.schema_version, "2.1.0");
+    assert.equal(payload.schema_version, "2.2.0");
     assert.equal(payload.install_blocked, false);
     assert.equal(payload.support_lane.lane_status, "prep");
     assert.equal(payload.scope_probes.repo.selected, true);
     assert.ok(payload.checks.some((check) => check.id === "runtime.presence_matrix"));
+    assert.ok(payload.checks.some((check) => check.id === "manifest.workflow_maturity_alignment"));
     assert.ok(Array.isArray(payload.checks));
     assert.ok(Array.isArray(payload.issues));
+    assert.equal(typeof payload.workflow_maturity.selected_pack_count, "number");
+    assert.ok(Array.isArray(payload.workflow_maturity.selected_packs));
     assert.ok(Array.isArray(payload.first_workflow_guidance.commands));
   } finally {
     runtime.cleanup();
@@ -819,6 +822,9 @@ test("pairslash doctor text output includes immediate next action", serial, asyn
     assert.match(output, /Recent traces:/);
     assert.match(output, /Codex present:/);
     assert.match(output, /Copilot present:/);
+    assert.match(output, /Selected pack for install guidance:/);
+    assert.match(output, /Selected pack for first workflow path:/);
+    assert.doesNotMatch(output, /Recommended pack:/);
   } finally {
     runtime.cleanup();
     fixture.cleanup();

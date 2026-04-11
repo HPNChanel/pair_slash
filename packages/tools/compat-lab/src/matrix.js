@@ -1,6 +1,8 @@
 import {
+  loadPackCatalogRecords,
   loadPublicSupportSnapshot,
   stableYaml,
+  WORKFLOW_MATURITY_STRENGTH_ORDER,
 } from "@pairslash/spec-core";
 
 import { DEFAULT_ACCEPTANCE_LANES } from "./acceptance.js";
@@ -57,12 +59,44 @@ function formatStringList(values) {
   return values.map((value) => `\`${value}\``).join(", ");
 }
 
+function workflowMaturityRank(level) {
+  if (typeof level !== "string") {
+    return WORKFLOW_MATURITY_STRENGTH_ORDER.canary;
+  }
+  return WORKFLOW_MATURITY_STRENGTH_ORDER[level] ?? WORKFLOW_MATURITY_STRENGTH_ORDER.canary;
+}
+
 export function buildCompatibilityMatrixArtifact({
   repoRoot = process.cwd(),
   version = "0.4.0",
 } = {}) {
   const fixtures = listCompatFixtures();
   const supportSnapshot = loadPublicSupportSnapshot(repoRoot, { version });
+  const workflowMaturity = loadPackCatalogRecords(repoRoot, { includeAdvanced: false })
+    .map((record) => ({
+      pack_id: record.id,
+      workflow_maturity: record.workflow_maturity,
+      effective_workflow_maturity: record.effective_workflow_maturity,
+      default_recommendation: record.default_recommendation === true,
+      blocked: record.workflow_maturity_blocked === true,
+      blockers: Array.isArray(record.workflow_maturity_blockers) ? record.workflow_maturity_blockers : [],
+      support_scope: record.support_scope ?? null,
+      overclaimed:
+        workflowMaturityRank(record.workflow_maturity) >
+        workflowMaturityRank(record.effective_workflow_maturity),
+    }))
+    .sort((left, right) => {
+      if (
+        workflowMaturityRank(left.effective_workflow_maturity) !==
+        workflowMaturityRank(right.effective_workflow_maturity)
+      ) {
+        return workflowMaturityRank(right.effective_workflow_maturity) - workflowMaturityRank(left.effective_workflow_maturity);
+      }
+      if (left.default_recommendation !== right.default_recommendation) {
+        return left.default_recommendation ? -1 : 1;
+      }
+      return left.pack_id.localeCompare(right.pack_id);
+    });
   return {
     version: supportSnapshot.version ?? version,
     generated_from: {
@@ -76,6 +110,7 @@ export function buildCompatibilityMatrixArtifact({
     runtime_lanes: supportSnapshot.runtime_lanes.map((lane) => ({ ...lane })),
     known_issues: supportSnapshot.known_issues.map((issue) => ({ ...issue })),
     release_gates: supportSnapshot.release_gates.map((gate) => ({ ...gate })),
+    workflow_maturity: workflowMaturity,
     fixture_catalog: fixtures.map((fixture) => ({
       id: fixture.id,
       repo_archetype: fixture.repo_archetype,
@@ -168,6 +203,17 @@ export function renderCompatibilityMatrixMarkdown({
       formatRefList([lane.evidence_source, lane.evidence_data_ref, ...(lane.claim_guard_refs ?? [])]),
     ]),
   );
+  const workflowMaturityTable = formatTable(
+    ["Workflow", "Assigned", "Effective", "Default selection candidate", "Blocked", "Blockers"],
+    artifact.workflow_maturity.map((workflow) => [
+      workflow.pack_id,
+      workflow.workflow_maturity,
+      workflow.effective_workflow_maturity,
+      workflow.default_recommendation ? "yes" : "no",
+      workflow.blocked ? "yes" : "no",
+      workflow.blockers.length > 0 ? workflow.blockers.join("<br>") : "none",
+    ]),
+  );
 
   return [
     "# PairSlash Compatibility Matrix",
@@ -255,11 +301,13 @@ export function renderCompatibilityMatrixMarkdown({
     "",
     "- If workflow labels are shown on this page, show them in a separate workflow",
     "  field, note, or row.",
-    "- Keep `supported` for runtime lanes and `recommended` for workflow-choice",
-    "  guidance.",
+    "- Keep `supported` for runtime lanes and keep install ordering language",
+    "  separate from maturity labels.",
     "- Do not restate a lane label as a workflow label.",
     "- Do not let advanced workflows or advanced lanes appear as core-default or",
     "  core-stable by layout alone.",
+    "- If assigned and effective maturity differ, display both and treat the",
+    "  effective label as the public claim ceiling.",
     "",
     "Approved examples:",
     "",
@@ -271,6 +319,22 @@ export function renderCompatibilityMatrixMarkdown({
     "- \"Codex CLI repo macOS: stable\" when that is only a lane statement",
     "- \"Copilot Linux preview means the workflow is beta\"",
     "- \"Advanced lane\" shown under a shared core-stable badge",
+    "",
+    "## Workflow maturity snapshot (core packs)",
+    "",
+    "This section is derived from canonical core manifests through the pack",
+    "catalog and must stay consistent with doctor/lint outputs.",
+    "",
+    workflowMaturityTable,
+    "",
+    "Interpretation rules:",
+    "",
+    "- `Assigned` is manifest intent; `Effective` is evidence-backed truth after",
+    "  blockers, demotion rules, and lane constraints.",
+    "- Public and onboarding wording must follow `Effective`, not `Assigned`.",
+    "- A `yes` value under `Default selection candidate` means install/onboarding",
+    "  may choose that workflow first; it is not a blanket support claim or",
+    "  maturity recommendation.",
     "",
     "## Runtime lanes",
     "",
@@ -308,5 +372,10 @@ export function renderRuntimeSurfaceMatrixYaml({
   repoRoot = process.cwd(),
   version = "0.4.0",
 } = {}) {
-  return stableYaml(buildCompatibilityMatrixArtifact({ repoRoot, version }));
+  const artifact = buildCompatibilityMatrixArtifact({ repoRoot, version });
+  const {
+    workflow_maturity: _workflowMaturity,
+    ...runtimeSurfaceArtifact
+  } = artifact;
+  return stableYaml(runtimeSurfaceArtifact);
 }

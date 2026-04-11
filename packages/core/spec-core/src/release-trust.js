@@ -26,6 +26,11 @@ import {
 import { validatePackTrustDescriptor } from "./validate.js";
 import { exists, readFileNormalized, relativeFrom, sha256, stableJson, walkFiles, writeTextFile } from "./utils.js";
 
+const LIVE_RUNTIME_EVIDENCE_ROOT = "docs/evidence/live-runtime";
+const LIVE_RUNTIME_LANE_RECORD_KIND = "live-runtime-lane-record";
+const LIVE_RUNTIME_LANE_RECORD_SCHEMA_VERSION = "1.0.0";
+const SHARED_RUNTIME_SURFACE_MATRIX = "docs/compatibility/runtime-surface-matrix.yaml";
+
 const DEFAULT_TRUST_POLICY = Object.freeze({
   kind: "trust-policy",
   schema_version: TRUST_POLICY_SCHEMA_VERSION,
@@ -179,6 +184,18 @@ function stripRefFragment(value) {
 
 function isLikelyRemoteRef(value) {
   return typeof value === "string" && /^[a-z]+:\/\//i.test(value);
+}
+
+function toPosixPath(value) {
+  return value.replace(/\\/g, "/");
+}
+
+function isSharedRuntimeMatrixRef(value) {
+  if (typeof value !== "string" || value.trim() === "" || isLikelyRemoteRef(value)) {
+    return false;
+  }
+  const [pathPart] = value.split("#", 2);
+  return toPosixPath(pathPart) === SHARED_RUNTIME_SURFACE_MATRIX;
 }
 
 function buildManifestSupportDescriptor(manifest) {
@@ -428,34 +445,82 @@ export function resolveRuntimeEvidencePresence({ repoRoot, descriptorPath, evide
     return false;
   }
   if (isLikelyRemoteRef(evidenceRef)) {
-    return true;
+    return false;
   }
   const relativeRef = stripRefFragment(evidenceRef);
+  const resolvedRepoRoot = repoRoot ? resolve(repoRoot) : null;
   const candidatePaths = [
-    resolve(dirname(descriptorPath), relativeRef),
-    repoRoot ? resolve(repoRoot, relativeRef) : null,
+    descriptorPath ? resolve(dirname(descriptorPath), relativeRef) : null,
+    resolvedRepoRoot ? resolve(resolvedRepoRoot, relativeRef) : null,
   ].filter(Boolean);
-  return candidatePaths.some((candidatePath) => exists(candidatePath));
+  return candidatePaths.some((candidatePath) => {
+    if (!exists(candidatePath)) {
+      return false;
+    }
+    if (resolvedRepoRoot && !isWithin(resolvedRepoRoot, candidatePath)) {
+      return false;
+    }
+    return true;
+  });
 }
 
 export function evaluateRuntimeSupportClaim({ repoRoot, manifest, runtime, descriptorRecord }) {
   const manifestStatus = deriveManifestRuntimeSupportStatus(manifest, runtime);
+  const manifestRuntimeSupport = manifest?.support?.runtime_support?.[runtime] ?? {};
   const declaredStatus = normalizeRuntimeSupportStatus(
-    descriptorRecord?.descriptor?.runtime_support?.[runtime]?.status,
+    manifestRuntimeSupport?.status,
     manifestStatus,
   );
-  const evidenceRef = descriptorRecord?.descriptor?.runtime_support?.[runtime]?.evidence_ref ?? null;
-  const evidenceKind = descriptorRecord?.descriptor?.runtime_support?.[runtime]?.evidence_kind ?? "lane-matrix";
+  const evidenceRef = manifestRuntimeSupport?.evidence_ref ?? null;
+  const evidenceKind = manifestRuntimeSupport?.evidence_kind ?? "lane-matrix";
   const requiredForPromotion =
-    descriptorRecord?.descriptor?.runtime_support?.[runtime]?.required_for_promotion ?? true;
+    manifestRuntimeSupport?.required_for_promotion ?? true;
   const evidenceBasePath = descriptorRecord?.evidenceBasePath ?? descriptorRecord?.descriptorPath ?? null;
-  const evidencePresent = evidenceBasePath
+  let evidencePresent = evidenceBasePath
     ? resolveRuntimeEvidencePresence({
         repoRoot,
         descriptorPath: evidenceBasePath,
         evidenceRef,
       })
     : false;
+  if (evidencePresent && evidenceKind === "lane-matrix" && !isSharedRuntimeMatrixRef(evidenceRef)) {
+    evidencePresent = false;
+  }
+  if (
+    evidencePresent &&
+    evidenceKind === "pack-runtime-live" &&
+    repoRoot
+  ) {
+    const liveRuntimeRef = stripRefFragment(evidenceRef);
+    const candidatePaths = [
+      evidenceBasePath ? resolve(dirname(evidenceBasePath), liveRuntimeRef) : null,
+      resolve(repoRoot, liveRuntimeRef),
+    ].filter(Boolean);
+    const resolvedLaneRecordPath = candidatePaths.find((candidatePath) =>
+      exists(candidatePath) && isWithin(resolve(repoRoot), candidatePath));
+    if (!resolvedLaneRecordPath) {
+      evidencePresent = false;
+    } else {
+      const relativeLaneRecordPath = toPosixPath(relativeFrom(resolve(repoRoot), resolvedLaneRecordPath));
+      try {
+        const liveRuntimeRecord = loadStructuredFile(resolvedLaneRecordPath);
+        const packId = manifest?.pack_name ?? manifest?.pack?.id ?? null;
+        const packScope = Array.isArray(liveRuntimeRecord?.pack_scope) ? liveRuntimeRecord.pack_scope : [];
+        const workflowScope = Array.isArray(liveRuntimeRecord?.workflow_scope) ? liveRuntimeRecord.workflow_scope : [];
+        evidencePresent = Boolean(
+          relativeLaneRecordPath.startsWith(`${LIVE_RUNTIME_EVIDENCE_ROOT}/`) &&
+          relativeLaneRecordPath.endsWith(".yaml") &&
+          liveRuntimeRecord?.kind === LIVE_RUNTIME_LANE_RECORD_KIND &&
+          liveRuntimeRecord?.schema_version === LIVE_RUNTIME_LANE_RECORD_SCHEMA_VERSION &&
+          liveRuntimeRecord?.runtime_id === runtime &&
+          liveRuntimeRecord?.canonical_entrypoint === "/skills" &&
+          (!packId || packScope.includes(packId) || workflowScope.includes(packId))
+        );
+      } catch {
+        evidencePresent = false;
+      }
+    }
+  }
   const reasons = [];
   let policyAction = "allow";
   if (manifestStatus === "blocked" && declaredStatus !== "blocked") {

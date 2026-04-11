@@ -5,7 +5,7 @@ export const NORMALIZED_IR_SCHEMA_VERSION = "1.0.0";
 export const COMPILED_PACK_SCHEMA_VERSION = "1.0.0";
 export const INSTALL_STATE_SCHEMA_VERSION = "1.0.0";
 export const PREVIEW_PLAN_SCHEMA_VERSION = "1.0.0";
-export const DOCTOR_REPORT_SCHEMA_VERSION = "2.1.0";
+export const DOCTOR_REPORT_SCHEMA_VERSION = "2.2.0";
 export const INSTALL_JOURNAL_SCHEMA_VERSION = "1.0.0";
 export const LINT_REPORT_SCHEMA_VERSION = "1.0.0";
 export const RELEASE_MANIFEST_SCHEMA_VERSION = "1.0.0";
@@ -328,6 +328,13 @@ export const WORKFLOW_MATURITY_LEVELS = [
   "stable",
   "deprecated",
 ];
+export const WORKFLOW_MATURITY_STRENGTH_ORDER = Object.freeze({
+  deprecated: -1,
+  canary: 0,
+  preview: 1,
+  beta: 2,
+  stable: 3,
+});
 export const WORKFLOW_DEMOTION_TRIGGER_CODES = [
   "evidence-stale",
   "runtime-regression",

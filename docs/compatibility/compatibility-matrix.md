@@ -75,11 +75,13 @@ and `NOTICE`.
 
 - If workflow labels are shown on this page, show them in a separate workflow
   field, note, or row.
-- Keep `supported` for runtime lanes and `recommended` for workflow-choice
-  guidance.
+- Keep `supported` for runtime lanes and keep install ordering language
+  separate from maturity labels.
 - Do not restate a lane label as a workflow label.
 - Do not let advanced workflows or advanced lanes appear as core-default or
   core-stable by layout alone.
+- If assigned and effective maturity differ, display both and treat the
+  effective label as the public claim ceiling.
 
 Approved examples:
 
@@ -91,6 +93,34 @@ Forbidden examples:
 - "Codex CLI repo macOS: stable" when that is only a lane statement
 - "Copilot Linux preview means the workflow is beta"
 - "Advanced lane" shown under a shared core-stable badge
+
+## Workflow maturity snapshot (core packs)
+
+This section is derived from canonical core manifests through the pack
+catalog and must stay consistent with doctor/lint outputs.
+
+| Workflow | Assigned | Effective | Default selection candidate | Blocked | Blockers |
+| --- | --- | --- | --- | --- | --- |
+| pairslash-plan | canary | canary | yes | no | none |
+| pairslash-backend | canary | canary | no | no | none |
+| pairslash-command-suggest | canary | canary | no | no | none |
+| pairslash-devops | canary | canary | no | no | none |
+| pairslash-frontend | canary | canary | no | no | none |
+| pairslash-memory-audit | canary | canary | no | no | none |
+| pairslash-memory-candidate | canary | canary | no | no | none |
+| pairslash-memory-write-global | canary | canary | no | no | none |
+| pairslash-onboard-repo | canary | canary | no | no | none |
+| pairslash-release | canary | canary | no | no | none |
+| pairslash-review | canary | canary | no | no | none |
+
+Interpretation rules:
+
+- `Assigned` is manifest intent; `Effective` is evidence-backed truth after
+  blockers, demotion rules, and lane constraints.
+- Public and onboarding wording must follow `Effective`, not `Assigned`.
+- A `yes` value under `Default selection candidate` means install/onboarding
+  may choose that workflow first; it is not a blanket support claim or
+  maturity recommendation.
 
 ## Runtime lanes
 

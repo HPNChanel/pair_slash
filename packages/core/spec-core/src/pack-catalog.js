@@ -3,7 +3,11 @@ import { basename, join, resolve } from "node:path";
 
 import YAML from "yaml";
 
-import { SUPPORTED_RUNTIMES, WORKFLOW_MATURITY_LEVELS } from "./constants.js";
+import {
+  SUPPORTED_RUNTIMES,
+  WORKFLOW_MATURITY_LEVELS,
+  WORKFLOW_MATURITY_STRENGTH_ORDER,
+} from "./constants.js";
 import { loadPackManifestRecords } from "./manifest.js";
 import {
   evaluateRuntimeSupportClaim,
@@ -28,13 +32,6 @@ const ALLOWED_LIVE_EVIDENCE_CLASSES = new Set([
 ]);
 const ALLOWED_FRESHNESS_STATES = new Set(["none-recorded", "fresh", "stale", "expired"]);
 const ALLOWED_EVIDENCE_VERDICTS = new Set(["pass", "partial", "fail", "blocked", "unrecorded"]);
-const WORKFLOW_MATURITY_ORDER = Object.freeze(
-  WORKFLOW_MATURITY_LEVELS.reduce((accumulator, level, index) => {
-    accumulator[level] = index;
-    return accumulator;
-  }, {}),
-);
-
 export const DEFAULT_PUBLIC_SUPPORT_POLICY = Object.freeze({
   blocked:
     "Fresh negative live evidence blocks the exact lane or documented surface until superseded by newer live verification.",
@@ -381,7 +378,7 @@ function validateEvidenceRefExists(repoRoot, evidenceRef, errorKey) {
     throw new Error(`public-support-snapshot-invalid:${errorKey}`);
   }
   if (isLikelyRemoteRef(evidenceRef)) {
-    return;
+    throw new Error(`public-support-snapshot-invalid:${errorKey}:${evidenceRef}`);
   }
   const [pathPart] = evidenceRef.split("#", 1);
   if (!exists(resolve(repoRoot, pathPart))) {
@@ -426,7 +423,7 @@ function normalizeWorkflowMaturity(level) {
 }
 
 function workflowMaturityRank(level) {
-  return WORKFLOW_MATURITY_ORDER[normalizeWorkflowMaturity(level)] ?? 0;
+  return WORKFLOW_MATURITY_STRENGTH_ORDER[normalizeWorkflowMaturity(level)] ?? 0;
 }
 
 function pickWeakerWorkflowMaturity(left, right) {
@@ -444,6 +441,7 @@ const WORKFLOW_TRANSITION_MAP = Object.freeze({
 });
 
 const STABLE_WORKFLOW_LANE_SUPPORT_LEVELS = new Set(["stable-tested"]);
+const PREVIEW_WORKFLOW_LANE_SUPPORT_LEVELS = new Set(["preview", "stable-tested"]);
 
 function readScopedReleaseGateStatus(repoRoot) {
   const verdictPath = resolve(repoRoot, SCOPED_RELEASE_VERDICT_PATH);
@@ -489,55 +487,6 @@ function collectCanaryWorkflowMaturityBlockers(manifest) {
   return blockers.sort((left, right) => left.localeCompare(right));
 }
 
-function collectPreviewWorkflowMaturityBlockers(manifest, runtimeSupport) {
-  const blockers = [];
-  const runtimes = supportedWorkflowRuntimes(manifest);
-  const smokeCoverage = workflowSmokeCoverageRuntimes(manifest);
-  for (const runtime of runtimes) {
-    if (!smokeCoverage.has(runtime)) {
-      blockers.push(`workflow-maturity-preview-deterministic-coverage-missing:${runtime}`);
-    }
-    const liveRefs = manifest?.support?.workflow_evidence?.live_workflow_refs?.[runtime];
-    if (!Array.isArray(liveRefs) || liveRefs.length === 0) {
-      blockers.push(`workflow-maturity-preview-live-workflow-evidence-missing:${runtime}`);
-    }
-    const claim = runtimeSupport?.[runtime];
-    if (claim?.required_for_promotion === false) {
-      continue;
-    }
-    if (claim?.declared_status === "blocked") {
-      blockers.push(`workflow-maturity-runtime-support-blocked:${runtime}`);
-    }
-    if (claim?.declared_status === "unverified") {
-      blockers.push(`workflow-maturity-runtime-support-unverified:${runtime}`);
-    }
-    if (claim?.evidence_kind !== "pack-runtime-live") {
-      blockers.push(`workflow-maturity-pack-runtime-live-required:${runtime}:${claim?.evidence_kind ?? "missing"}`);
-    }
-    if (!claim?.evidence_present) {
-      blockers.push(`workflow-maturity-live-evidence-missing:${runtime}:${claim?.evidence_scope ?? "missing"}`);
-    }
-  }
-  if (manifest?.support?.promotion_checklist?.canonical_entrypoint_verified !== true) {
-    blockers.push("workflow-maturity-preview-checklist-canonical-entrypoint-unverified");
-  }
-  return blockers.sort((left, right) => left.localeCompare(right));
-}
-
-function collectBetaWorkflowMaturityBlockers(manifest) {
-  const blockers = [];
-  for (const runtime of supportedWorkflowRuntimes(manifest)) {
-    const liveRefs = manifest?.support?.workflow_evidence?.live_workflow_refs?.[runtime] ?? [];
-    if (!Array.isArray(liveRefs) || liveRefs.length < 2) {
-      blockers.push(`workflow-maturity-beta-repeated-live-evidence-required:${runtime}`);
-    }
-  }
-  if (manifest?.support?.promotion_checklist?.docs_synced !== true) {
-    blockers.push("workflow-maturity-beta-checklist-docs-unsynced");
-  }
-  return blockers.sort((left, right) => left.localeCompare(right));
-}
-
 function findDefaultPromotionLanes(publicSupport, runtime) {
   const defaultTarget =
     publicSupport?.evidence_policy?.runbook_policy?.runtime_runbooks?.[runtime]?.default_target ?? null;
@@ -564,8 +513,234 @@ function findClaimedOrDefaultLanes(manifest, publicSupport, runtime) {
   return findDefaultPromotionLanes(publicSupport, runtime);
 }
 
-function collectStableWorkflowMaturityBlockers(manifest, runtimeSupport, publicSupport, releaseGateStatus) {
+function normalizePackId(manifest) {
+  return manifest?.pack_name ?? manifest?.pack?.id ?? null;
+}
+
+function normalizeEvidenceRefDescriptor(value) {
+  if (typeof value !== "string" || value.trim() === "") {
+    return { path: null, remote: false, fragment: null };
+  }
+  const [pathPart, fragment] = value.split("#", 2);
+  return {
+    path: toPosixPath(pathPart),
+    remote: isLikelyRemoteRef(value),
+    fragment: fragment ?? null,
+  };
+}
+
+function buildLiveRuntimeLaneRecordIndex(repoRoot, publicSupport) {
+  const byEvidenceRef = new Map();
+  const byLaneId = new Map();
+  for (const lane of publicSupport?.runtime_lanes ?? []) {
+    const evidenceDataRef = laneEvidenceDataRef(lane);
+    if (typeof evidenceDataRef !== "string" || evidenceDataRef.trim() === "") {
+      continue;
+    }
+    const normalizedRef = toPosixPath(evidenceDataRef);
+    const record = readYamlFile(resolve(repoRoot, normalizedRef));
+    byEvidenceRef.set(normalizedRef, { lane, record });
+    byLaneId.set(lane.lane_id, { lane, record, evidence_ref: normalizedRef });
+  }
+  return { byEvidenceRef, byLaneId };
+}
+
+function workflowEvidenceScopeMatches(record, packId) {
+  const packScope = Array.isArray(record?.pack_scope) ? record.pack_scope : [];
+  const workflowScope = Array.isArray(record?.workflow_scope) ? record.workflow_scope : [];
+  return !packId || packScope.includes(packId) || workflowScope.includes(packId);
+}
+
+function countMatchingWorkflowVerificationRuns(record, packId) {
+  return (record?.live_records ?? []).filter((liveRecord) =>
+    liveRecord?.verdict === "pass" &&
+    liveRecord?.freshness_state === "fresh" &&
+    liveRecord?.entrypoint_path_used === "/skills" &&
+    ["live_verification", "repeated_live_verification"].includes(liveRecord?.evidence_class) &&
+    workflowEvidenceScopeMatches(liveRecord, packId)
+  ).length;
+}
+
+function resolveWorkflowEvidenceAnalysis({ manifest, runtime, publicSupport, laneRecordIndex }) {
+  const packId = normalizePackId(manifest);
+  const lanes = findClaimedOrDefaultLanes(manifest, publicSupport, runtime);
+  const laneIds = new Set(lanes.map((lane) => lane.lane_id));
+  const refs = Array.isArray(manifest?.support?.workflow_evidence?.live_workflow_refs?.[runtime])
+    ? manifest.support.workflow_evidence.live_workflow_refs[runtime]
+    : [];
+  const invalidBlockers = [];
+  const evidenceByLaneId = new Map();
+
+  for (const evidenceRef of refs) {
+    const { path, remote, fragment } = normalizeEvidenceRefDescriptor(evidenceRef);
+    if (remote) {
+      invalidBlockers.push(`workflow-maturity-live-workflow-ref-invalid:${runtime}:remote`);
+      continue;
+    }
+    if (!path) {
+      invalidBlockers.push(`workflow-maturity-live-workflow-ref-invalid:${runtime}:missing`);
+      continue;
+    }
+    if (fragment) {
+      invalidBlockers.push(`workflow-maturity-live-workflow-ref-invalid:${runtime}:${path}:fragment`);
+      continue;
+    }
+    if (!path.startsWith(`${LIVE_RUNTIME_EVIDENCE_ROOT}/`) || !path.endsWith(".yaml")) {
+      invalidBlockers.push(`workflow-maturity-live-workflow-ref-invalid:${runtime}:${path}:authoritative-root-required`);
+      continue;
+    }
+    const indexedRecord = laneRecordIndex?.byEvidenceRef?.get(path);
+    if (!indexedRecord) {
+      invalidBlockers.push(`workflow-maturity-live-workflow-ref-invalid:${runtime}:${path}:unregistered-live-runtime-record`);
+      continue;
+    }
+    if (indexedRecord.lane.runtime_id !== runtime || indexedRecord.record?.runtime_id !== runtime) {
+      invalidBlockers.push(`workflow-maturity-live-workflow-ref-invalid:${runtime}:${path}:runtime-mismatch`);
+      continue;
+    }
+    if (!workflowEvidenceScopeMatches(indexedRecord.record, packId)) {
+      invalidBlockers.push(`workflow-maturity-live-workflow-ref-invalid:${runtime}:${path}:workflow-scope-mismatch`);
+      continue;
+    }
+    if (!laneIds.has(indexedRecord.lane.lane_id)) {
+      invalidBlockers.push(`workflow-maturity-live-workflow-ref-invalid:${runtime}:${path}:lane-not-claimed`);
+      continue;
+    }
+    evidenceByLaneId.set(indexedRecord.lane.lane_id, {
+      lane: indexedRecord.lane,
+      record: indexedRecord.record,
+      verification_run_count: countMatchingWorkflowVerificationRuns(indexedRecord.record, packId),
+    });
+  }
+
+  return {
+    lanes,
+    invalidBlockers,
+    evidenceByLaneId,
+    totalVerificationRuns: [...evidenceByLaneId.values()]
+      .reduce((sum, entry) => sum + entry.verification_run_count, 0),
+  };
+}
+
+function collectPreviewWorkflowMaturityBlockers(manifest, runtimeSupport, publicSupport, laneRecordIndex) {
   const blockers = [];
+  const runtimes = supportedWorkflowRuntimes(manifest);
+  const smokeCoverage = workflowSmokeCoverageRuntimes(manifest);
+  const isWriteAuthorityWorkflow =
+    manifest?.workflow_class === "write-authority" ||
+    manifest?.memory_permissions?.global_project_memory === "write" ||
+    (manifest?.capabilities ?? []).includes("memory_write_global");
+  const packId = normalizePackId(manifest);
+  for (const runtime of runtimes) {
+    if (!smokeCoverage.has(runtime)) {
+      blockers.push(`workflow-maturity-preview-deterministic-coverage-missing:${runtime}`);
+    }
+    const liveRefs = manifest?.support?.workflow_evidence?.live_workflow_refs?.[runtime];
+    if (!Array.isArray(liveRefs) || liveRefs.length === 0) {
+      blockers.push(`workflow-maturity-preview-live-workflow-evidence-missing:${runtime}`);
+    }
+    const claim = runtimeSupport?.[runtime];
+    if (claim?.required_for_promotion === false) {
+      continue;
+    }
+    if (claim?.declared_status === "blocked") {
+      blockers.push(`workflow-maturity-runtime-support-blocked:${runtime}`);
+    }
+    if (claim?.declared_status === "unverified") {
+      blockers.push(`workflow-maturity-runtime-support-unverified:${runtime}`);
+    }
+    if (claim?.evidence_kind !== "pack-runtime-live") {
+      blockers.push(`workflow-maturity-pack-runtime-live-required:${runtime}:${claim?.evidence_kind ?? "missing"}`);
+    }
+    if (!claim?.evidence_present) {
+      blockers.push(`workflow-maturity-live-evidence-missing:${runtime}:${claim?.evidence_scope ?? "missing"}`);
+    }
+    const analysis = resolveWorkflowEvidenceAnalysis({
+      manifest,
+      runtime,
+      publicSupport,
+      laneRecordIndex,
+    });
+    blockers.push(...analysis.invalidBlockers);
+    if (analysis.lanes.length === 0) {
+      blockers.push(`workflow-maturity-preview-claimed-lane-missing:${runtime}`);
+    }
+    for (const lane of analysis.lanes) {
+      const evidence = analysis.evidenceByLaneId.get(lane.lane_id);
+      if (!evidence) {
+        blockers.push(`workflow-maturity-preview-live-workflow-lane-unbound:${runtime}:${lane.lane_id}`);
+        continue;
+      }
+      if (!PREVIEW_WORKFLOW_LANE_SUPPORT_LEVELS.has(lane.support_level)) {
+        blockers.push(
+          `workflow-maturity-preview-public-lane-not-preview:${runtime}:${lane.lane_id}:${lane.support_level ?? "unknown"}`,
+        );
+      }
+      if (lane.freshness_state !== "fresh") {
+        blockers.push(
+          `workflow-maturity-preview-public-lane-not-fresh:${runtime}:${lane.lane_id}:${lane.freshness_state ?? "unknown"}`,
+        );
+      }
+      if (evidence.record?.surface_verdicts?.canonical_picker !== "pass") {
+        blockers.push(`workflow-maturity-preview-canonical-picker-unverified:${runtime}:${lane.lane_id}`);
+      }
+      if (!["live_verification", "repeated_live_verification"].includes(evidence.record?.best_live_evidence_class)) {
+        blockers.push(
+          `workflow-maturity-preview-live-verification-missing:${runtime}:${lane.lane_id}:${evidence.record?.best_live_evidence_class ?? "none-recorded"}`,
+        );
+      }
+      if (evidence.verification_run_count < 1) {
+        blockers.push(`workflow-maturity-preview-workflow-verification-run-missing:${runtime}:${lane.lane_id}`);
+      }
+    }
+  }
+  if (isWriteAuthorityWorkflow) {
+    const operationalSafetyRefs = manifest?.support?.workflow_evidence?.operational_safety_refs ?? [];
+    const validOperationalSafetyRefs = operationalSafetyRefs.filter((evidenceRef) => {
+      const { path, remote, fragment } = normalizeEvidenceRefDescriptor(evidenceRef);
+      const indexedRecord =
+        !remote && !fragment && typeof path === "string"
+          ? laneRecordIndex?.byEvidenceRef?.get(path)
+          : null;
+      return Boolean(indexedRecord && workflowEvidenceScopeMatches(indexedRecord.record, packId));
+    });
+    if (validOperationalSafetyRefs.length === 0) {
+      blockers.push("workflow-maturity-write-authority-operational-safety-evidence-missing");
+    }
+  }
+  if (manifest?.support?.promotion_checklist?.canonical_entrypoint_verified !== true) {
+    blockers.push("workflow-maturity-preview-checklist-canonical-entrypoint-unverified");
+  }
+  return blockers.sort((left, right) => left.localeCompare(right));
+}
+
+function collectBetaWorkflowMaturityBlockers(manifest, publicSupport, laneRecordIndex) {
+  const blockers = [];
+  for (const runtime of supportedWorkflowRuntimes(manifest)) {
+    const analysis = resolveWorkflowEvidenceAnalysis({
+      manifest,
+      runtime,
+      publicSupport,
+      laneRecordIndex,
+    });
+    blockers.push(...analysis.invalidBlockers);
+    if (analysis.totalVerificationRuns < 2) {
+      blockers.push(`workflow-maturity-beta-repeated-live-evidence-required:${runtime}`);
+    }
+  }
+  if (manifest?.support?.promotion_checklist?.docs_synced !== true) {
+    blockers.push("workflow-maturity-beta-checklist-docs-unsynced");
+  }
+  return [...new Set(blockers)].sort((left, right) => left.localeCompare(right));
+}
+
+function collectStableWorkflowMaturityBlockers(manifest, runtimeSupport, publicSupport, releaseGateStatus, laneRecordIndex) {
+  const blockers = [];
+  const isWriteAuthorityWorkflow =
+    manifest?.workflow_class === "write-authority" ||
+    manifest?.memory_permissions?.global_project_memory === "write" ||
+    (manifest?.capabilities ?? []).includes("memory_write_global");
+  const packId = normalizePackId(manifest);
   if (releaseGateStatus !== "GO") {
     blockers.push(`workflow-maturity-release-gate:${releaseGateStatus.toLowerCase()}`);
   }
@@ -582,7 +757,19 @@ function collectStableWorkflowMaturityBlockers(manifest, runtimeSupport, publicS
       blockers.push(`workflow-maturity-public-lane-missing:${runtime}`);
       continue;
     }
+    const analysis = resolveWorkflowEvidenceAnalysis({
+      manifest,
+      runtime,
+      publicSupport,
+      laneRecordIndex,
+    });
+    blockers.push(...analysis.invalidBlockers);
     for (const lane of lanes) {
+      const evidence = analysis.evidenceByLaneId.get(lane.lane_id);
+      if (!evidence) {
+        blockers.push(`workflow-maturity-stable-live-workflow-lane-unbound:${runtime}:${lane.lane_id}`);
+        continue;
+      }
       if (lane.freshness_state !== "fresh") {
         blockers.push(
           `workflow-maturity-public-lane-not-fresh:${runtime}:${lane.lane_id}:${lane.freshness_state ?? "unknown"}`,
@@ -593,6 +780,34 @@ function collectStableWorkflowMaturityBlockers(manifest, runtimeSupport, publicS
           `workflow-maturity-public-lane-not-stable:${runtime}:${lane.lane_id}:${lane.support_level ?? "unknown"}`,
         );
       }
+      if (evidence.record?.surface_verdicts?.canonical_picker !== "pass") {
+        blockers.push(`workflow-maturity-stable-canonical-picker-unverified:${runtime}:${lane.lane_id}`);
+      }
+      if (evidence.record?.best_live_evidence_class !== "repeated_live_verification") {
+        blockers.push(
+          `workflow-maturity-stable-repeated-live-verification-required:${runtime}:${lane.lane_id}:${evidence.record?.best_live_evidence_class ?? "none-recorded"}`,
+        );
+      }
+      if (evidence.verification_run_count < 2) {
+        blockers.push(`workflow-maturity-stable-workflow-verification-runs-required:${runtime}:${lane.lane_id}`);
+      }
+    }
+  }
+  if (isWriteAuthorityWorkflow) {
+    const operationalSafetyRefs = manifest?.support?.workflow_evidence?.operational_safety_refs ?? [];
+    const operationalSafetyVerificationRuns = operationalSafetyRefs.reduce((sum, evidenceRef) => {
+      const { path, remote, fragment } = normalizeEvidenceRefDescriptor(evidenceRef);
+      if (remote || fragment || typeof path !== "string") {
+        return sum;
+      }
+      const indexedRecord = laneRecordIndex?.byEvidenceRef?.get(path);
+      if (!indexedRecord || !workflowEvidenceScopeMatches(indexedRecord.record, packId)) {
+        return sum;
+      }
+      return sum + countMatchingWorkflowVerificationRuns(indexedRecord.record, packId);
+    }, 0);
+    if (operationalSafetyVerificationRuns < 2) {
+      blockers.push("workflow-maturity-write-authority-operational-safety-repeated-verification-required");
     }
   }
   return blockers.sort((left, right) => left.localeCompare(right));
@@ -628,7 +843,11 @@ function deriveDemotionTriggersFromBlockers(blockers) {
     if (
       blocker.includes("not-fresh") ||
       blocker.includes("live-evidence-missing") ||
-      blocker.includes("repeated-live-evidence")
+      blocker.includes("deterministic-evidence-missing") ||
+      blocker.includes("repeated-live-evidence") ||
+      blocker.includes("live-workflow-ref-invalid") ||
+      blocker.includes("workflow-verification-run") ||
+      blocker.includes("live-verification")
     ) {
       triggerCodes.add("evidence-stale");
       continue;
@@ -636,7 +855,8 @@ function deriveDemotionTriggersFromBlockers(blockers) {
     if (
       blocker.includes("runtime-support-") ||
       blocker.includes("public-lane-") ||
-      blocker.includes("pack-runtime-live-required")
+      blocker.includes("pack-runtime-live-required") ||
+      blocker.includes("lane-unbound")
     ) {
       triggerCodes.add("runtime-regression");
       continue;
@@ -645,9 +865,21 @@ function deriveDemotionTriggersFromBlockers(blockers) {
       triggerCodes.add("docs-drift");
       continue;
     }
+    if (
+      blocker.includes("promotion-checklist") ||
+      blocker.includes("canonical-entrypoint") ||
+      blocker.includes("transition-illegal") ||
+      blocker.includes("deprecated-")
+    ) {
+      triggerCodes.add("docs-drift");
+      continue;
+    }
     if (blocker.includes("write-authority")) {
       triggerCodes.add("write-safety-regression");
     }
+  }
+  if (blockers.length > 0 && triggerCodes.size === 0) {
+    triggerCodes.add("docs-drift");
   }
   return [...triggerCodes].sort((left, right) => left.localeCompare(right));
 }
@@ -675,16 +907,16 @@ function promotionChecklistReady(manifest) {
   );
 }
 
-function resolveWorkflowMaturity({ repoRoot, manifest, runtimeSupport, publicSupport }) {
+function resolveWorkflowMaturity({ repoRoot, manifest, runtimeSupport, publicSupport, laneRecordIndex }) {
   const assigned = normalizeWorkflowMaturity(manifest?.support?.workflow_maturity);
   const transitionFrom = normalizeWorkflowTransitionFrom(manifest, assigned);
   const transitionLegal = isWorkflowTransitionLegal(transitionFrom, assigned);
   const canaryBlockers = collectCanaryWorkflowMaturityBlockers(manifest);
   const previewBlockers = canaryBlockers.length === 0
-    ? collectPreviewWorkflowMaturityBlockers(manifest, runtimeSupport)
+    ? collectPreviewWorkflowMaturityBlockers(manifest, runtimeSupport, publicSupport, laneRecordIndex)
     : [];
   const betaBlockers = previewBlockers.length === 0
-    ? collectBetaWorkflowMaturityBlockers(manifest)
+    ? collectBetaWorkflowMaturityBlockers(manifest, publicSupport, laneRecordIndex)
     : [];
   const releaseGateStatus = readScopedReleaseGateStatus(repoRoot);
   const stableBlockers = betaBlockers.length === 0
@@ -693,6 +925,7 @@ function resolveWorkflowMaturity({ repoRoot, manifest, runtimeSupport, publicSup
       runtimeSupport,
       publicSupport,
       releaseGateStatus,
+      laneRecordIndex,
     )
     : [];
   const deprecatedBlockers = collectDeprecatedWorkflowMaturityBlockers(manifest);
@@ -1210,7 +1443,7 @@ function resolvePackDocPath(sourceRoot, relativePath) {
     : null;
 }
 
-function buildCoreCatalogRecord(repoRoot, record, { publicSupport }) {
+function buildCoreCatalogRecord(repoRoot, record, { publicSupport, laneRecordIndex }) {
   const descriptorRecord = loadPackTrustDescriptorRecord({
     manifestPath: record.manifestPath,
     manifest: record.manifest,
@@ -1229,6 +1462,7 @@ function buildCoreCatalogRecord(repoRoot, record, { publicSupport }) {
     manifest: record.manifest,
     runtimeSupport,
     publicSupport,
+    laneRecordIndex,
   });
   return {
     id: record.packId,
@@ -1538,12 +1772,13 @@ function readAdvancedManifestRecord(repoRoot, manifestPath) {
 
 export function loadPackCatalogRecords(
   repoRoot,
-  { includeAdvanced = true } = {},
+  { includeAdvanced = false } = {},
 ) {
   const publicSupport = loadPublicSupportSnapshot(repoRoot);
+  const laneRecordIndex = buildLiveRuntimeLaneRecordIndex(repoRoot, publicSupport);
   const coreRecords = loadPackManifestRecords(repoRoot).map((record) =>
     record.isValid
-      ? buildCoreCatalogRecord(repoRoot, record, { publicSupport })
+      ? buildCoreCatalogRecord(repoRoot, record, { publicSupport, laneRecordIndex })
       : buildInvalidCoreCatalogRecord(repoRoot, record));
   const advancedRecords = includeAdvanced
     ? discoverAdvancedManifestPaths(repoRoot).map((manifestPath) =>
@@ -1681,7 +1916,7 @@ export function publicSupportLevelToDoctorLaneStatus(supportLevel) {
 }
 
 export function loadAuthoritativeCatalog({ repoRoot, version = null } = {}) {
-  const packRecords = loadPackCatalogRecords(repoRoot);
+  const packRecords = loadPackCatalogRecords(repoRoot, { includeAdvanced: true });
   const publicSupport = loadPublicSupportSnapshot(repoRoot, { version });
   return {
     kind: "pairslash-authoritative-catalog",
@@ -1704,26 +1939,31 @@ export function selectDefaultCatalogPack(records) {
     .filter((record) =>
       record.catalog_scope === "core" &&
       record.catalog_status === "operational" &&
-      record.default_discovery !== false,
+      record.default_discovery !== false &&
+      record.workflow_maturity !== "deprecated" &&
+      record.effective_workflow_maturity !== "deprecated" &&
+      !["deprecated", "archived"].includes(record.deprecation_status ?? "active"),
     )
     .slice()
-    .sort((left, right) =>
-      [
-        left.default_recommendation ? "0" : "1",
-        `${9 - workflowMaturityRank(left.effective_workflow_maturity)}`,
-        left.maturity === "stable" ? "0" : left.maturity === "preview" ? "1" : "2",
-        left.id,
-      ]
-        .join("\u0000")
-        .localeCompare(
-          [
-            right.default_recommendation ? "0" : "1",
-            `${9 - workflowMaturityRank(right.effective_workflow_maturity)}`,
-            right.maturity === "stable" ? "0" : right.maturity === "preview" ? "1" : "2",
-            right.id,
-          ].join("\u0000"),
-        ),
-    );
+    .sort((left, right) => {
+      const leftMaturityRank = workflowMaturityRank(left.effective_workflow_maturity);
+      const rightMaturityRank = workflowMaturityRank(right.effective_workflow_maturity);
+      if (leftMaturityRank !== rightMaturityRank) {
+        return rightMaturityRank - leftMaturityRank;
+      }
+      if (left.workflow_maturity_blocked !== right.workflow_maturity_blocked) {
+        return left.workflow_maturity_blocked ? 1 : -1;
+      }
+      if (left.default_recommendation !== right.default_recommendation) {
+        return left.default_recommendation ? -1 : 1;
+      }
+      const leftReleaseRank = left.maturity === "stable" ? 0 : left.maturity === "preview" ? 1 : 2;
+      const rightReleaseRank = right.maturity === "stable" ? 0 : right.maturity === "preview" ? 1 : 2;
+      if (leftReleaseRank !== rightReleaseRank) {
+        return leftReleaseRank - rightReleaseRank;
+      }
+      return left.id.localeCompare(right.id);
+    });
   return coreRecords[0] ?? null;
 }
 
@@ -1734,7 +1974,7 @@ export function buildPackCatalogIndex(
     lastUpdated = new Date().toISOString().slice(0, 10),
   } = {},
 ) {
-  const records = loadPackCatalogRecords(repoRoot);
+  const records = loadPackCatalogRecords(repoRoot, { includeAdvanced: true });
   const coreRecords = records.filter((record) =>
     record.catalog_scope === "core" && record.catalog_status === "operational");
   const excludedRecords = records.filter((record) =>

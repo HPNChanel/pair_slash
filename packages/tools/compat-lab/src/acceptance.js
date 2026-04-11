@@ -1,5 +1,4 @@
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { spawnSync } from "node:child_process";
 import { dirname, join } from "node:path";
 
 import {
@@ -11,7 +10,12 @@ import {
   planUpdate,
   resolveStatePath,
 } from "@pairslash/installer";
+import {
+  buildMemoryAuditReport,
+  buildMemoryCandidateReport,
+} from "@pairslash/memory-engine";
 import { runDoctor } from "@pairslash/doctor";
+import { resolveReadAuthority } from "@pairslash/spec-core";
 
 import { materializeCompatFixture } from "./materialize.js";
 import {
@@ -181,24 +185,6 @@ function buildReadAuthorityCommands(runtime, target) {
 
 function buildFirstWorkflowStep() {
   return "/skills -> select pairslash-plan -> ask for a repo plan";
-}
-
-function runCliJson({ workspaceRoot, cwd, args }) {
-  const result = spawnSync(
-    process.execPath,
-    [join(workspaceRoot, "packages", "tools", "cli", "src", "bin", "pairslash.js"), ...args],
-    {
-      cwd,
-      encoding: "utf8",
-      env: { ...process.env },
-    },
-  );
-  if (result.status !== 0) {
-    throw new Error(
-      `cli command failed (${args.join(" ")}): ${result.stderr?.trim() || result.stdout?.trim() || `exit ${result.status}`}`,
-    );
-  }
-  return JSON.parse(result.stdout);
 }
 
 function laneCommandsFor(lane) {
@@ -435,42 +421,23 @@ function runReadAuthorityScenario({ repoRoot, lane, runtimeHarness }) {
         const beforeIndex = readFileSync(join(tempRoot, ".pairslash", "project-memory", "90-memory-index.yaml"), "utf8");
         const beforeAudit = readFileSync(join(tempRoot, ".pairslash", "audit-log", "acceptance-audit.yaml"), "utf8");
 
-        const explanation = runCliJson({
-          workspaceRoot: repoRoot,
-          cwd: tempRoot,
-          args: ["explain-context", "pairslash-plan", "--runtime", runtimeFlag(lane.runtime), "--target", lane.target, "--format", "json"],
+        const explanation = {
+          memory_resolution: resolveReadAuthority({
+            repoRoot: tempRoot,
+            packId: PRIMARY_PACK_ID,
+          }),
+        };
+        const candidate = buildMemoryCandidateReport({
+          repoRoot: tempRoot,
+          runtime: lane.runtime,
+          target: lane.target,
+          taskScope: "phase17-read-authority-acceptance",
         });
-        const candidate = runCliJson({
-          workspaceRoot: repoRoot,
-          cwd: tempRoot,
-          args: [
-            "memory",
-            "candidate",
-            "--task-scope",
-            "phase17-read-authority-acceptance",
-            "--runtime",
-            runtimeFlag(lane.runtime),
-            "--target",
-            lane.target,
-            "--format",
-            "json",
-          ],
-        });
-        const audit = runCliJson({
-          workspaceRoot: repoRoot,
-          cwd: tempRoot,
-          args: [
-            "memory",
-            "audit",
-            "--audit-scope",
-            "full",
-            "--runtime",
-            runtimeFlag(lane.runtime),
-            "--target",
-            lane.target,
-            "--format",
-            "json",
-          ],
+        const audit = buildMemoryAuditReport({
+          repoRoot: tempRoot,
+          runtime: lane.runtime,
+          target: lane.target,
+          auditScope: "full",
         });
 
         const explanationConflict =

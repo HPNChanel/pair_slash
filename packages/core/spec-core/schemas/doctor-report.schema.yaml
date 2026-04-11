@@ -1,5 +1,5 @@
 $schema: "https://json-schema.org/draft/2020-12/schema"
-$id: "https://pairslash.dev/schemas/doctor-report/2.1.0"
+$id: "https://pairslash.dev/schemas/doctor-report/2.2.0"
 title: PairSlash Doctor Report
 type: object
 required:
@@ -18,13 +18,14 @@ required:
   - issues
   - next_actions
   - remediation
+  - workflow_maturity
   - installed_packs
   - first_workflow_guidance
 properties:
   kind:
     const: doctor-report
   schema_version:
-    const: "2.1.0"
+    const: "2.2.0"
   generated_at:
     type: string
   runtime:
@@ -367,6 +368,112 @@ properties:
     type: array
     items:
       type: string
+  workflow_maturity:
+    type: object
+    required:
+      - selected_pack_count
+      - recommended_pack_id
+      - highest_effective_workflow_maturity
+      - contradictory_claim_count
+      - blocked_pack_count
+      - advanced_lane_fence
+      - selected_packs
+    properties:
+      selected_pack_count:
+        type: integer
+      recommended_pack_id:
+        type:
+          - string
+          - "null"
+      highest_effective_workflow_maturity:
+        type:
+          - string
+          - "null"
+        enum:
+          - canary
+          - preview
+          - beta
+          - stable
+          - deprecated
+          - "null"
+      contradictory_claim_count:
+        type: integer
+      blocked_pack_count:
+        type: integer
+      advanced_lane_fence:
+        type: string
+      selected_packs:
+        type: array
+        items:
+          type: object
+          required:
+            - pack_id
+            - workflow_maturity
+            - effective_workflow_maturity
+            - workflow_transition_legal
+            - workflow_maturity_blocked
+            - workflow_maturity_blockers
+            - workflow_demotion_triggers_active
+            - workflow_promotion_checklist_ready
+            - runtime_support_status
+            - runtime_support_evidence_kind
+            - support_scope
+            - default_recommendation
+            - pack_manifest
+            - demoted
+          properties:
+            pack_id:
+              type: string
+            workflow_maturity:
+              type: string
+              enum:
+                - canary
+                - preview
+                - beta
+                - stable
+                - deprecated
+            effective_workflow_maturity:
+              type: string
+              enum:
+                - canary
+                - preview
+                - beta
+                - stable
+                - deprecated
+            workflow_transition_legal:
+              type: boolean
+            workflow_maturity_blocked:
+              type: boolean
+            workflow_maturity_blockers:
+              type: array
+              items:
+                type: string
+            workflow_demotion_triggers_active:
+              type: array
+              items:
+                type: string
+            workflow_promotion_checklist_ready:
+              type: boolean
+            runtime_support_status:
+              type:
+                - string
+                - "null"
+            runtime_support_evidence_kind:
+              type:
+                - string
+                - "null"
+            support_scope:
+              type:
+                - string
+                - "null"
+            default_recommendation:
+              type: boolean
+            pack_manifest:
+              type:
+                - string
+                - "null"
+            demoted:
+              type: boolean
   installed_packs:
     type: array
     items:

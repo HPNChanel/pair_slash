@@ -101,17 +101,61 @@ test("doctor reports structured environment summary for codex repo lane", () => 
     assert.equal(typeof report.observability_health.index_event_consistent, "boolean");
     assert.equal(typeof report.observability_health.missing_event_files, "number");
     assert.equal(typeof report.observability_health.retention_policy.max_days, "number");
+    assert.ok(report.workflow_maturity.selected_pack_count > 0);
+    assert.equal(report.workflow_maturity.recommended_pack_id, "pairslash-plan");
+    assert.equal(report.workflow_maturity.advanced_lane_fence, "core-only-catalog");
     assert.equal(report.first_workflow_guidance.recommended_pack_id, "pairslash-plan");
     assert.ok(report.checks.some((check) => check.id === "platform.shell_profile_candidates"));
     assert.ok(report.checks.some((check) => check.id === "runtime.presence_matrix"));
     assert.ok(report.checks.some((check) => check.id === "runtime.detect"));
     assert.ok(report.checks.some((check) => check.id === "filesystem.config_home"));
+    assert.ok(report.checks.some((check) => check.id === "manifest.workflow_maturity_alignment"));
     assert.equal(report.support_verdict, "degraded");
     assert.equal(report.support_lane.evidence_source, "docs/evidence/live-runtime/codex-cli-repo-windows.md");
     assert.equal(report.support_lane.claim_status, "prep");
     assert.equal(report.support_lane.required_evidence_class, "live_verification");
     assert.equal(report.support_lane.actual_evidence_class, "live_smoke");
     assert.equal(report.support_lane.freshness_state, "fresh");
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("doctor fails when a manifest workflow maturity claim outruns effective evidence-backed maturity", () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  try {
+    updatePackManifest({
+      repoRoot: fixture.tempRoot,
+      packId: "pairslash-plan",
+      mutate(manifest) {
+        manifest.support.workflow_maturity = "preview";
+        manifest.support.promotion_checklist.required_for_label = "preview";
+        manifest.support.promotion_checklist.canonical_entrypoint_verified = true;
+        manifest.support.workflow_evidence.live_workflow_refs.codex_cli = [
+          "docs/evidence/live-runtime/codex-cli-repo-macos.yaml",
+        ];
+        manifest.support.workflow_evidence.live_workflow_refs.copilot_cli = [
+          "docs/evidence/live-runtime/copilot-cli-user-linux.yaml",
+        ];
+        return manifest;
+      },
+    });
+    const report = runDoctor({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      target: "repo",
+      packs: ["pairslash-plan"],
+    });
+    const maturityCheck = report.checks.find((check) => check.id === "manifest.workflow_maturity_alignment");
+    assert.equal(maturityCheck?.status, "fail");
+    assert.equal(report.support_verdict, "fail");
+    assert.equal(report.install_blocked, false);
+    assert.equal(report.workflow_maturity.contradictory_claim_count > 0, true);
+    assert.equal(report.workflow_maturity.selected_packs[0].workflow_maturity, "preview");
+    assert.equal(report.workflow_maturity.selected_packs[0].effective_workflow_maturity, "canary");
+    assert.equal(report.workflow_maturity.selected_packs[0].demoted, true);
   } finally {
     runtime.cleanup();
     fixture.cleanup();

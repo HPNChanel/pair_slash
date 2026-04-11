@@ -22,6 +22,7 @@ import {
   SUPPORT_VERDICTS,
   SUPPORTED_TARGETS,
   SUPPORTED_RUNTIMES,
+  WORKFLOW_MATURITY_STRENGTH_ORDER,
   exists,
   loadPackCatalogRecords,
   loadPackManifestRecords,
@@ -63,6 +64,13 @@ const REMEDIATION_STATUS_BLOCKED = "blocked";
 const REMEDIATION_DECISION_REPAIR = "repair";
 const REMEDIATION_DECISION_RECONCILE = "reconcile";
 const REMEDIATION_DECISION_ABORT = "abort";
+
+function workflowMaturityRank(level) {
+  if (typeof level !== "string") {
+    return WORKFLOW_MATURITY_STRENGTH_ORDER.canary;
+  }
+  return WORKFLOW_MATURITY_STRENGTH_ORDER[level] ?? WORKFLOW_MATURITY_STRENGTH_ORDER.canary;
+}
 
 function getAdapter(runtime) {
   const normalized = normalizeRuntime(runtime);
@@ -2364,6 +2372,109 @@ function runAssetPlacement(context) {
   });
 }
 
+function runWorkflowMaturityAlignment(context) {
+  const summary = buildWorkflowMaturitySummary(context);
+  if (summary.selected_pack_count === 0) {
+    return createCheckResult({
+      id: "manifest.workflow_maturity_alignment",
+      group: "trust",
+      status: "pass",
+      runtime: context.runtime,
+      target: context.target,
+      inputs: {},
+      summary: "no selected core manifests available for workflow maturity evaluation",
+      evidence: {
+        workflow_maturity: summary,
+      },
+    });
+  }
+
+  const illegalTransitions = summary.selected_packs.filter((pack) => pack.workflow_transition_legal === false);
+  if (illegalTransitions.length > 0) {
+    return createCheckResult({
+      id: "manifest.workflow_maturity_alignment",
+      group: "trust",
+      status: "fail",
+      runtime: context.runtime,
+      target: context.target,
+      inputs: {},
+      summary: `${illegalTransitions.length} workflow maturity transition(s) are illegal`,
+      remediation:
+        "Fix support.workflow_transition and support.workflow_maturity in the affected manifests before promoting workflow claims.",
+      evidence: {
+        workflow_maturity: summary,
+        illegal_transitions: illegalTransitions.map((pack) => ({
+          pack_id: pack.pack_id,
+          workflow_maturity: pack.workflow_maturity,
+          effective_workflow_maturity: pack.effective_workflow_maturity,
+        })),
+      },
+    });
+  }
+
+  const contradictoryClaims = summary.selected_packs.filter((pack) => pack.demoted);
+  if (contradictoryClaims.length > 0) {
+    return createCheckResult({
+      id: "manifest.workflow_maturity_alignment",
+      group: "trust",
+      status: "fail",
+      runtime: context.runtime,
+      target: context.target,
+      inputs: {},
+      summary: `${contradictoryClaims.length} workflow maturity claim(s) outrun evidence-backed effective maturity`,
+      remediation:
+        "Demote support.workflow_maturity or add the missing runtime, checklist, and release evidence before using stronger labels.",
+      evidence: {
+        workflow_maturity: summary,
+        contradictory_claims: contradictoryClaims.map((pack) => ({
+          pack_id: pack.pack_id,
+          workflow_maturity: pack.workflow_maturity,
+          effective_workflow_maturity: pack.effective_workflow_maturity,
+          blockers: pack.workflow_maturity_blockers,
+        })),
+      },
+    });
+  }
+
+  const blockedPacks = summary.selected_packs.filter(
+    (pack) => pack.workflow_maturity_blocked || pack.workflow_maturity_blockers.length > 0,
+  );
+  if (blockedPacks.length > 0) {
+    return createCheckResult({
+      id: "manifest.workflow_maturity_alignment",
+      group: "trust",
+      status: "degraded",
+      runtime: context.runtime,
+      target: context.target,
+      inputs: {},
+      summary: `${blockedPacks.length} workflow maturity label(s) are capped by active demotion blockers`,
+      remediation:
+        "Keep public wording at effective workflow maturity until blocker evidence is resolved and revalidated.",
+      evidence: {
+        workflow_maturity: summary,
+        blocked_packs: blockedPacks.map((pack) => ({
+          pack_id: pack.pack_id,
+          blockers: pack.workflow_maturity_blockers,
+          demotion_triggers_active: pack.workflow_demotion_triggers_active,
+        })),
+      },
+    });
+  }
+
+  return createCheckResult({
+    id: "manifest.workflow_maturity_alignment",
+    group: "trust",
+    status: "pass",
+    runtime: context.runtime,
+    target: context.target,
+    inputs: {},
+    summary: `${summary.selected_pack_count} workflow maturity label(s) align with current evidence-backed effective maturity`,
+    evidence: {
+      workflow_maturity: summary,
+    },
+  });
+}
+
 const CHECKS = [
   runRuntimePresenceMatrix,
   runRuntimeDetect,
@@ -2380,6 +2491,7 @@ const CHECKS = [
   runManifestValidation,
   runManifestRuntimeTargets,
   runManifestNamingConflicts,
+  runWorkflowMaturityAlignment,
   runRequiredTools,
   runRequiredMcpServers,
   runInstalledTrustPosture,
@@ -2643,28 +2755,74 @@ function buildRecentTraceSummary(repoRoot, runtime, target) {
   };
 }
 
-function preferredPackId(context) {
-  const selectedPackIds = context.selectedManifests.map((record) => record.packId);
-  const defaultCatalogRecord = selectDefaultCatalogPack(context.catalogRecords ?? []);
-  if (defaultCatalogRecord && selectedPackIds.includes(defaultCatalogRecord.id)) {
-    return defaultCatalogRecord.id;
+function buildCatalogRecordMap(catalogRecords) {
+  return new Map((catalogRecords ?? []).map((record) => [record.id, record]));
+}
+
+function compareRecommendationPriority(left, right) {
+  const leftEffectiveRank = workflowMaturityRank(left.effective_workflow_maturity);
+  const rightEffectiveRank = workflowMaturityRank(right.effective_workflow_maturity);
+  if (leftEffectiveRank !== rightEffectiveRank) {
+    return rightEffectiveRank - leftEffectiveRank;
   }
+  if (left.workflow_maturity_blocked !== right.workflow_maturity_blocked) {
+    return left.workflow_maturity_blocked ? 1 : -1;
+  }
+  if (left.default_recommendation !== right.default_recommendation) {
+    return left.default_recommendation ? -1 : 1;
+  }
+  const leftAssignedRank = workflowMaturityRank(left.workflow_maturity);
+  const rightAssignedRank = workflowMaturityRank(right.workflow_maturity);
+  if (leftAssignedRank !== rightAssignedRank) {
+    return rightAssignedRank - leftAssignedRank;
+  }
+  return left.id.localeCompare(right.id);
+}
+
+function sortPackIdsForRecommendation(context, packIds) {
+  const catalogByPackId = buildCatalogRecordMap(context.catalogRecords);
+  return [...new Set(packIds)]
+    .filter((packId) => typeof packId === "string" && packId.trim() !== "")
+    .map((packId) => {
+      const record = catalogByPackId.get(packId);
+      return {
+        id: packId,
+        workflow_maturity: record?.workflow_maturity ?? "canary",
+        effective_workflow_maturity: record?.effective_workflow_maturity ?? "canary",
+        workflow_maturity_blocked: Boolean(record?.workflow_maturity_blocked),
+        default_recommendation: Boolean(record?.default_recommendation),
+      };
+    })
+    .sort(compareRecommendationPriority)
+    .map((entry) => entry.id);
+}
+
+function preferredPackId(context) {
+  const selectedPackIds = sortPackIdsForRecommendation(
+    context,
+    context.selectedManifests.map((record) => record.packId),
+  );
   if (selectedPackIds.length > 0) {
     return selectedPackIds[0];
   }
-  const installedPackIds = (context.state?.packs ?? []).map((pack) => pack.id);
-  if (defaultCatalogRecord && installedPackIds.includes(defaultCatalogRecord.id)) {
-    return defaultCatalogRecord.id;
-  }
+
+  const installedPackIds = sortPackIdsForRecommendation(
+    context,
+    (context.state?.packs ?? []).map((pack) => pack.id),
+  );
   if (installedPackIds.length > 0) {
     return installedPackIds[0];
   }
+
+  const defaultCatalogRecord = selectDefaultCatalogPack(context.catalogRecords ?? []);
   if (defaultCatalogRecord) {
     return defaultCatalogRecord.id;
   }
-  const availablePackIds = context.catalogRecords
-    .map((record) => record.id)
-    .sort((left, right) => left.localeCompare(right));
+
+  const availablePackIds = sortPackIdsForRecommendation(
+    context,
+    (context.catalogRecords ?? []).map((record) => record.id),
+  );
   return availablePackIds[0] ?? null;
 }
 
@@ -2672,8 +2830,66 @@ function runtimeFlag(runtime) {
   return runtime === "codex_cli" ? "codex" : "copilot";
 }
 
-function buildFirstWorkflowGuidance(context, { installBlocked }) {
-  const recommendedPackId = preferredPackId(context);
+function buildWorkflowMaturitySummary(context) {
+  const catalogByPackId = buildCatalogRecordMap(context.catalogRecords);
+  const selectedPackIds = sortPackIdsForRecommendation(
+    context,
+    context.selectedManifests.map((record) => record.packId),
+  );
+  const selectedPacks = selectedPackIds.map((packId) => {
+    const catalogRecord = catalogByPackId.get(packId);
+    const workflowMaturity = catalogRecord?.workflow_maturity ?? "canary";
+    const effectiveWorkflowMaturity = catalogRecord?.effective_workflow_maturity ?? "canary";
+    const blockers = Array.isArray(catalogRecord?.workflow_maturity_blockers)
+      ? catalogRecord.workflow_maturity_blockers
+      : [];
+    const demotionTriggersActive = Array.isArray(catalogRecord?.workflow_demotion_triggers_active)
+      ? catalogRecord.workflow_demotion_triggers_active
+      : [];
+    return {
+      pack_id: packId,
+      workflow_maturity: workflowMaturity,
+      effective_workflow_maturity: effectiveWorkflowMaturity,
+      workflow_transition_legal: catalogRecord?.workflow_transition_legal !== false,
+      workflow_maturity_blocked: Boolean(catalogRecord?.workflow_maturity_blocked),
+      workflow_maturity_blockers: blockers,
+      workflow_demotion_triggers_active: demotionTriggersActive,
+      workflow_promotion_checklist_ready: catalogRecord?.workflow_promotion_checklist_ready === true,
+      runtime_support_status: catalogRecord?.runtime_support?.[context.runtime]?.resolved_status ?? null,
+      runtime_support_evidence_kind: catalogRecord?.runtime_support?.[context.runtime]?.evidence_kind ?? null,
+      support_scope: catalogRecord?.support_scope ?? null,
+      default_recommendation: catalogRecord?.default_recommendation === true,
+      pack_manifest: catalogRecord?.metadata_file ?? null,
+      demoted: workflowMaturityRank(workflowMaturity) > workflowMaturityRank(effectiveWorkflowMaturity),
+    };
+  });
+
+  const contradictoryClaims = selectedPacks.filter(
+    (pack) => pack.demoted || pack.workflow_transition_legal === false,
+  );
+  const blockedPacks = selectedPacks.filter(
+    (pack) => pack.workflow_maturity_blocked || pack.workflow_maturity_blockers.length > 0,
+  );
+  const highestEffective = selectedPacks.length === 0
+    ? null
+    : selectedPacks
+      .map((pack) => pack.effective_workflow_maturity)
+      .sort((left, right) => workflowMaturityRank(right) - workflowMaturityRank(left))[0];
+  return {
+    selected_pack_count: selectedPacks.length,
+    recommended_pack_id: selectedPacks[0]?.pack_id ?? preferredPackId(context),
+    highest_effective_workflow_maturity: highestEffective,
+    contradictory_claim_count: contradictoryClaims.length,
+    blocked_pack_count: blockedPacks.length,
+    advanced_lane_fence: "core-only-catalog",
+    selected_packs: selectedPacks,
+  };
+}
+
+function buildFirstWorkflowGuidance(context, { installBlocked, workflowMaturity }) {
+  const recommendedPackId = workflowMaturity?.recommended_pack_id ?? preferredPackId(context);
+  const effectiveLabel = workflowMaturity?.selected_packs?.find((entry) => entry.pack_id === recommendedPackId)
+    ?.effective_workflow_maturity;
   const doctorCommand = `node packages/tools/cli/src/bin/pairslash.js doctor --runtime ${runtimeFlag(context.runtime)} --target ${context.target}`;
 
   if (installBlocked) {
@@ -2689,7 +2905,7 @@ function buildFirstWorkflowGuidance(context, { installBlocked }) {
     return {
       ready: true,
       recommended_pack_id: recommendedPackId,
-      rationale: "A managed pack is already installed for this runtime and target.",
+      rationale: `A managed pack is already installed for this runtime and target.${effectiveLabel ? ` Keep the workflow label caveat explicit (${effectiveLabel}).` : ""}`,
       commands: [
         `Launch ${context.detection.executable ?? runtimeFlag(context.runtime)} from the repo root and use /skills to run ${recommendedPackId ?? "the installed pack"}.`,
       ],
@@ -2700,7 +2916,7 @@ function buildFirstWorkflowGuidance(context, { installBlocked }) {
     return {
       ready: false,
       recommended_pack_id: recommendedPackId,
-      rationale: "Install the baseline pack first, then enter the runtime through /skills.",
+      rationale: `Install the baseline pack first, then enter the runtime through /skills.${effectiveLabel ? ` Current evidence-backed workflow maturity: ${effectiveLabel}.` : ""}`,
       commands: [
         `node packages/tools/cli/src/bin/pairslash.js preview install ${recommendedPackId} --runtime ${runtimeFlag(context.runtime)} --target ${context.target}`,
         `node packages/tools/cli/src/bin/pairslash.js install ${recommendedPackId} --runtime ${runtimeFlag(context.runtime)} --target ${context.target} --apply --yes`,
@@ -2755,6 +2971,7 @@ export function runDoctor({
     installBlocked,
     issues,
   });
+  const workflowMaturity = buildWorkflowMaturitySummary(context);
   const report = {
     kind: "doctor-report",
     schema_version: DOCTOR_REPORT_SCHEMA_VERSION,
@@ -2775,9 +2992,11 @@ export function runDoctor({
     checks,
     issues,
     next_actions: buildNextActions(issues, remediationActions),
+    workflow_maturity: workflowMaturity,
     installed_packs: buildInstalledPacks(context.state),
     first_workflow_guidance: buildFirstWorkflowGuidance(context, {
       installBlocked,
+      workflowMaturity,
     }),
   };
   const errors = validateDoctorReport(report);

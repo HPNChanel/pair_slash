@@ -309,8 +309,31 @@ export function formatDoctorText(report) {
         : "none"
     }`,
     "",
-    "Blocking issues:",
+    "Workflow maturity:",
+    `- Selected packs: ${report.workflow_maturity.selected_pack_count}`,
+    `- Selected pack for install guidance: ${report.workflow_maturity.recommended_pack_id ?? "none"}`,
+    `- Highest effective maturity: ${report.workflow_maturity.highest_effective_workflow_maturity ?? "none"}`,
+    `- Contradictory claims: ${report.workflow_maturity.contradictory_claim_count}`,
+    `- Blocked labels: ${report.workflow_maturity.blocked_pack_count}`,
+    `- Advanced-lane fence: ${report.workflow_maturity.advanced_lane_fence}`,
+    "",
   );
+  if ((report.workflow_maturity.selected_packs ?? []).length === 0) {
+    lines.push("- workflow labels unavailable for selected manifests");
+  } else {
+    for (const pack of report.workflow_maturity.selected_packs) {
+      lines.push(
+        `- ${pack.pack_id}: assigned=${pack.workflow_maturity}, effective=${pack.effective_workflow_maturity}, blocked=${pack.workflow_maturity_blocked ? "yes" : "no"}, demoted=${pack.demoted ? "yes" : "no"}, runtime_support=${pack.runtime_support_status ?? "unknown"}`,
+      );
+      if ((pack.workflow_maturity_blockers ?? []).length > 0) {
+        lines.push(`  blockers: ${pack.workflow_maturity_blockers.join("; ")}`);
+      }
+      if ((pack.workflow_demotion_triggers_active ?? []).length > 0) {
+        lines.push(`  active triggers: ${pack.workflow_demotion_triggers_active.join(", ")}`);
+      }
+    }
+  }
+  lines.push("", "Blocking issues:");
   if (blockingIssues.length === 0) {
     lines.push("- none");
   } else {
@@ -351,7 +374,7 @@ export function formatDoctorText(report) {
   lines.push("", "First workflow:");
   lines.push(`- Ready now: ${report.first_workflow_guidance.ready ? "yes" : "no"}`);
   lines.push(
-    `- Recommended pack: ${report.first_workflow_guidance.recommended_pack_id ?? "none"}`,
+    `- Selected pack for first workflow path: ${report.first_workflow_guidance.recommended_pack_id ?? "none"}`,
   );
   lines.push(`- Rationale: ${report.first_workflow_guidance.rationale}`);
   for (const command of report.first_workflow_guidance.commands) {

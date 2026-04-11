@@ -178,10 +178,10 @@ test("lint bridge fails when workflow maturity exceeds the evidence ceiling", se
         manifest.support.workflow_transition.from = "canary";
         manifest.support.workflow_transition.reason = "lint-overclaim-check";
         manifest.support.workflow_evidence.live_workflow_refs.codex_cli = [
-          "docs/evidence/live-runtime/codex-cli-repo-macos.md",
+          "docs/evidence/live-runtime/codex-cli-repo-macos.yaml",
         ];
         manifest.support.workflow_evidence.live_workflow_refs.copilot_cli = [
-          "docs/evidence/live-runtime/copilot-cli-user-linux.md",
+          "docs/evidence/live-runtime/copilot-cli-user-linux.yaml",
         ];
         manifest.support.promotion_checklist.required_for_label = "preview";
         return manifest;
@@ -354,7 +354,7 @@ test("lint bridge fails when runtime support marks a lane blocked", serial, () =
   }
 });
 
-test("lint bridge warns when unverified runtime surfaces are missing evidence records", serial, () => {
+test("lint bridge warns when runtime support includes unverified surfaces", serial, () => {
   const fixture = createTempRepo({ packs: ["pairslash-plan"] });
   try {
     updatePackManifest({
@@ -362,7 +362,8 @@ test("lint bridge warns when unverified runtime surfaces are missing evidence re
       packId: "pairslash-plan",
       mutate(manifest) {
         manifest.support.runtime_support.copilot_cli.status = "unverified";
-        manifest.support.runtime_support.copilot_cli.evidence_ref = null;
+        manifest.support.runtime_support.copilot_cli.evidence_ref =
+          "docs/compatibility/runtime-surface-matrix.yaml";
         return manifest;
       },
     });
@@ -376,9 +377,8 @@ test("lint bridge warns when unverified runtime surfaces are missing evidence re
     assert.ok(
       report.issues.some(
         (issue) =>
-          issue.code === "LINT-RUNTIME-006" &&
-          issue.result === "warning" &&
-          issue.message.includes("copilot_cli.direct_invocation"),
+          issue.code === "LINT-RUNTIME-004" &&
+          issue.result === "warning",
       ),
     );
   } finally {

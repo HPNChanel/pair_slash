@@ -74,6 +74,7 @@ import {
   UPDATE_STRATEGY_MODES,
   WORKFLOW_DEMOTION_TRIGGER_CODES,
   WORKFLOW_MATURITY_LEVELS,
+  WORKFLOW_MATURITY_STRENGTH_ORDER,
   WORKFLOW_CLASSES,
 } from "./constants.js";
 import { safeParsePackManifestV2 } from "./manifest-v2.schema.js";
@@ -98,12 +99,47 @@ function isObject(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
-const WORKFLOW_MATURITY_ORDER = Object.freeze(
-  WORKFLOW_MATURITY_LEVELS.reduce((accumulator, level, index) => {
-    accumulator[level] = index;
-    return accumulator;
-  }, {}),
-);
+function toPosixPath(value) {
+  return value.replace(/\\/g, "/");
+}
+
+const SHARED_RUNTIME_SURFACE_MATRIX = "docs/compatibility/runtime-surface-matrix.yaml";
+
+function isLikelyRemoteRef(value) {
+  return typeof value === "string" && /^[a-z]+:\/\//i.test(value);
+}
+
+function isSharedRuntimeMatrixRef(value) {
+  if (typeof value !== "string" || value.trim() === "" || isLikelyRemoteRef(value)) {
+    return false;
+  }
+  const [pathPart] = value.split("#", 2);
+  return toPosixPath(pathPart) === SHARED_RUNTIME_SURFACE_MATRIX;
+}
+
+function isAuthoritativeLiveRuntimeRecordRef(value) {
+  if (typeof value !== "string" || value.trim() === "" || isLikelyRemoteRef(value)) {
+    return false;
+  }
+  const [pathPart, fragment] = value.split("#", 2);
+  if (fragment) {
+    return false;
+  }
+  const normalizedPath = toPosixPath(pathPart);
+  return normalizedPath.startsWith("docs/evidence/live-runtime/") && normalizedPath.endsWith(".yaml");
+}
+
+function validateEvidenceRefPolicy(values, field, errors, code, { requireAuthoritativeLiveRuntimeRecord = false } = {}) {
+  for (const value of values) {
+    if (isLikelyRemoteRef(value)) {
+      push(errors, code, `${field} must use repo-local evidence references`);
+      continue;
+    }
+    if (requireAuthoritativeLiveRuntimeRecord && !isAuthoritativeLiveRuntimeRecordRef(value)) {
+      push(errors, code, `${field} must point to docs/evidence/live-runtime/*.yaml authoritative lane records`);
+    }
+  }
+}
 
 const WORKFLOW_TRANSITION_MAP = Object.freeze({
   canary: new Set(["canary", "preview", "deprecated"]),
@@ -117,7 +153,7 @@ function workflowMaturityRank(level) {
   if (!WORKFLOW_MATURITY_LEVELS.includes(level)) {
     return -1;
   }
-  return WORKFLOW_MATURITY_ORDER[level];
+  return WORKFLOW_MATURITY_STRENGTH_ORDER[level] ?? -1;
 }
 
 function isLegalWorkflowTransition(from, to) {
@@ -1038,6 +1074,12 @@ function validateCanonicalCatalog(canonical, errors) {
   ) {
     push(errors, "PSM064", "catalog.default_recommendation requires catalog.default_discovery");
   }
+  if (
+    canonical.catalog?.default_recommendation === true &&
+    ["deprecated", "archived"].includes(canonical.catalog?.deprecation_status)
+  ) {
+    push(errors, "PSM064", "catalog.default_recommendation cannot be true for deprecated or archived workflows");
+  }
   if (!PACK_RELEASE_VISIBILITY.includes(canonical.catalog?.release_visibility)) {
     push(errors, "PSM064", `catalog.release_visibility must be one of ${PACK_RELEASE_VISIBILITY.join(", ")}`);
   }
@@ -1117,6 +1159,9 @@ function validateCanonicalSupport(canonical, errors) {
     if (runtimeSupport?.evidence_ref !== null && typeof runtimeSupport?.evidence_ref !== "string") {
       push(errors, "PSM065", `support.runtime_support.${runtime}.evidence_ref must be string or null`);
     }
+    if (typeof runtimeSupport?.evidence_ref === "string" && isLikelyRemoteRef(runtimeSupport.evidence_ref)) {
+      push(errors, "PSM065", `support.runtime_support.${runtime}.evidence_ref must be repo-local`);
+    }
     if (
       ["supported", "partial"].includes(runtimeSupport?.status) &&
       (typeof runtimeSupport?.evidence_ref !== "string" || runtimeSupport.evidence_ref.trim() === "")
@@ -1128,6 +1173,26 @@ function validateCanonicalSupport(canonical, errors) {
         errors,
         "PSM065",
         `support.runtime_support.${runtime}.evidence_kind must be one of ${PACK_RUNTIME_EVIDENCE_KINDS.join(", ")}`,
+      );
+    }
+    if (
+      runtimeSupport?.evidence_kind === "lane-matrix" &&
+      !isSharedRuntimeMatrixRef(runtimeSupport?.evidence_ref)
+    ) {
+      push(
+        errors,
+        "PSM065",
+        `support.runtime_support.${runtime}.evidence_ref must point to ${SHARED_RUNTIME_SURFACE_MATRIX} for lane-matrix`,
+      );
+    }
+    if (
+      runtimeSupport?.evidence_kind === "pack-runtime-live" &&
+      !isAuthoritativeLiveRuntimeRecordRef(runtimeSupport?.evidence_ref)
+    ) {
+      push(
+        errors,
+        "PSM065",
+        `support.runtime_support.${runtime}.evidence_ref must point to docs/evidence/live-runtime/*.yaml for pack-runtime-live`,
       );
     }
     if (typeof runtimeSupport?.required_for_promotion !== "boolean") {
@@ -1188,6 +1253,15 @@ function validateCanonicalSupport(canonical, errors) {
       ),
     ]),
   );
+  for (const runtime of SUPPORTED_RUNTIMES) {
+    validateEvidenceRefPolicy(
+      liveWorkflowRefs[runtime],
+      `support.workflow_evidence.live_workflow_refs.${runtime}`,
+      errors,
+      "PSM065",
+      { requireAuthoritativeLiveRuntimeRecord: true },
+    );
+  }
   const operationalSafetyRefs = validateStringArray(
     canonical.support.workflow_evidence?.operational_safety_refs,
     "support.workflow_evidence.operational_safety_refs",
@@ -1195,12 +1269,25 @@ function validateCanonicalSupport(canonical, errors) {
     "PSM065",
     { allowEmpty: true },
   );
+  validateEvidenceRefPolicy(
+    operationalSafetyRefs,
+    "support.workflow_evidence.operational_safety_refs",
+    errors,
+    "PSM065",
+    { requireAuthoritativeLiveRuntimeRecord: true },
+  );
   const migrationRefs = validateStringArray(
     canonical.support.workflow_evidence?.migration_refs,
     "support.workflow_evidence.migration_refs",
     errors,
     "PSM065",
     { allowEmpty: true },
+  );
+  validateEvidenceRefPolicy(
+    migrationRefs,
+    "support.workflow_evidence.migration_refs",
+    errors,
+    "PSM065",
   );
 
   if (workflowMaturity !== "deprecated" && deterministicRefs.length === 0) {
@@ -1333,6 +1420,12 @@ function validateCanonicalSupport(canonical, errors) {
     workflowMaturity !== "deprecated"
   ) {
     push(errors, "PSM065", "catalog.deprecation_status deprecated/archived requires support.workflow_maturity deprecated");
+  }
+  if (
+    workflowMaturity === "deprecated" &&
+    canonical.catalog?.default_recommendation === true
+  ) {
+    push(errors, "PSM065", "deprecated workflows must not set catalog.default_recommendation");
   }
 
   const isWriteAuthorityWorkflow =
@@ -2602,6 +2695,78 @@ export function validateDoctorReport(record) {
     for (const action of record.next_actions) {
       if (typeof action !== "string" || action.trim() === "") {
         errors.push("next_actions entries must be non-empty strings");
+      }
+    }
+  }
+  if (!isObject(record?.workflow_maturity)) {
+    errors.push("workflow_maturity must be an object");
+  } else {
+    const workflow = record.workflow_maturity;
+    if (!Number.isInteger(workflow?.selected_pack_count)) {
+      errors.push("workflow_maturity.selected_pack_count must be an integer");
+    }
+    if (workflow?.recommended_pack_id !== null && typeof workflow?.recommended_pack_id !== "string") {
+      errors.push("workflow_maturity.recommended_pack_id must be string or null");
+    }
+    if (
+      workflow?.highest_effective_workflow_maturity !== null &&
+      !WORKFLOW_MATURITY_LEVELS.includes(workflow?.highest_effective_workflow_maturity)
+    ) {
+      errors.push("workflow_maturity.highest_effective_workflow_maturity must be a legal maturity label or null");
+    }
+    if (!Number.isInteger(workflow?.contradictory_claim_count)) {
+      errors.push("workflow_maturity.contradictory_claim_count must be an integer");
+    }
+    if (!Number.isInteger(workflow?.blocked_pack_count)) {
+      errors.push("workflow_maturity.blocked_pack_count must be an integer");
+    }
+    validateNonEmptyString(workflow?.advanced_lane_fence, "workflow_maturity.advanced_lane_fence", errors, "DCR004");
+    if (!Array.isArray(workflow?.selected_packs)) {
+      errors.push("workflow_maturity.selected_packs must be a list");
+    } else {
+      for (const pack of workflow.selected_packs) {
+        validateNonEmptyString(pack?.pack_id, "workflow_maturity.selected_packs[].pack_id", errors, "DCR004");
+        if (!WORKFLOW_MATURITY_LEVELS.includes(pack?.workflow_maturity)) {
+          errors.push(`unsupported workflow_maturity.selected_packs[].workflow_maturity: ${pack?.workflow_maturity}`);
+        }
+        if (!WORKFLOW_MATURITY_LEVELS.includes(pack?.effective_workflow_maturity)) {
+          errors.push(
+            `unsupported workflow_maturity.selected_packs[].effective_workflow_maturity: ${pack?.effective_workflow_maturity}`,
+          );
+        }
+        if (typeof pack?.workflow_transition_legal !== "boolean") {
+          errors.push("workflow_maturity.selected_packs[].workflow_transition_legal must be boolean");
+        }
+        if (typeof pack?.workflow_maturity_blocked !== "boolean") {
+          errors.push("workflow_maturity.selected_packs[].workflow_maturity_blocked must be boolean");
+        }
+        if (!Array.isArray(pack?.workflow_maturity_blockers)) {
+          errors.push("workflow_maturity.selected_packs[].workflow_maturity_blockers must be a list");
+        }
+        if (!Array.isArray(pack?.workflow_demotion_triggers_active)) {
+          errors.push("workflow_maturity.selected_packs[].workflow_demotion_triggers_active must be a list");
+        }
+        if (typeof pack?.workflow_promotion_checklist_ready !== "boolean") {
+          errors.push("workflow_maturity.selected_packs[].workflow_promotion_checklist_ready must be boolean");
+        }
+        if (pack?.runtime_support_status !== null && typeof pack?.runtime_support_status !== "string") {
+          errors.push("workflow_maturity.selected_packs[].runtime_support_status must be string or null");
+        }
+        if (pack?.runtime_support_evidence_kind !== null && typeof pack?.runtime_support_evidence_kind !== "string") {
+          errors.push("workflow_maturity.selected_packs[].runtime_support_evidence_kind must be string or null");
+        }
+        if (pack?.support_scope !== null && typeof pack?.support_scope !== "string") {
+          errors.push("workflow_maturity.selected_packs[].support_scope must be string or null");
+        }
+        if (typeof pack?.default_recommendation !== "boolean") {
+          errors.push("workflow_maturity.selected_packs[].default_recommendation must be boolean");
+        }
+        if (pack?.pack_manifest !== null && typeof pack?.pack_manifest !== "string") {
+          errors.push("workflow_maturity.selected_packs[].pack_manifest must be string or null");
+        }
+        if (typeof pack?.demoted !== "boolean") {
+          errors.push("workflow_maturity.selected_packs[].demoted must be boolean");
+        }
       }
     }
   }

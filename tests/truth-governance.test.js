@@ -4,7 +4,11 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import YAML from "yaml";
 
-import { repoRoot } from "./phase4-helpers.js";
+import { buildCompatibilityMatrixArtifact } from "@pairslash/compat-lab";
+import { runDoctor } from "@pairslash/doctor";
+import { loadPackCatalogRecords, selectDefaultCatalogPack } from "@pairslash/spec-core";
+
+import { installFakeRuntime, repoRoot } from "./phase4-helpers.js";
 
 const CHARTER_PATH = "docs/phase-12/authoritative-program-charter.md";
 const CHARTER_FILE = "authoritative-program-charter.md";
@@ -319,6 +323,14 @@ test("compatibility matrix distinguishes implementation, deterministic, live, an
     contents.includes("## Workflow label display convention"),
     `${matrixPath} should keep workflow label display rules explicit`,
   );
+  assert.ok(
+    contents.includes("## Workflow maturity snapshot (core packs)"),
+    `${matrixPath} should render the core workflow maturity snapshot`,
+  );
+  assert.ok(
+    contents.includes("`Assigned` is manifest intent; `Effective` is evidence-backed truth"),
+    `${matrixPath} should keep assigned vs effective maturity semantics explicit`,
+  );
 });
 
 test("live runtime evidence index and lane records stay committed", () => {
@@ -604,6 +616,40 @@ test("onboarding path keeps workflow labels and recommendation boundaries explic
     contents.includes("current example path"),
     "docs/phase-9/onboarding-path.md should distinguish the example path from a default recommendation",
   );
+});
+
+test("catalog, doctor, and compatibility artifacts stay semantically aligned on core workflow selection", () => {
+  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  try {
+    const catalogRecords = loadPackCatalogRecords(repoRoot, { includeAdvanced: false });
+    const defaultRecord = selectDefaultCatalogPack(catalogRecords);
+    const compatibilityArtifact = buildCompatibilityMatrixArtifact({
+      repoRoot,
+      version: "0.4.0",
+    });
+    const doctorReport = runDoctor({
+      repoRoot,
+      runtime: "codex_cli",
+      target: "repo",
+    });
+
+    assert.ok(defaultRecord);
+    assert.equal(doctorReport.workflow_maturity.advanced_lane_fence, "core-only-catalog");
+    assert.equal(doctorReport.workflow_maturity.recommended_pack_id, defaultRecord.id);
+    assert.equal(doctorReport.first_workflow_guidance.recommended_pack_id, defaultRecord.id);
+
+    const artifactEntry = compatibilityArtifact.workflow_maturity.find(
+      (workflow) => workflow.pack_id === defaultRecord.id,
+    );
+    assert.ok(artifactEntry);
+    assert.equal(artifactEntry.effective_workflow_maturity, defaultRecord.effective_workflow_maturity);
+    assert.equal(
+      compatibilityArtifact.workflow_maturity.some((workflow) => workflow.support_scope === "excluded-advanced-surface"),
+      false,
+    );
+  } finally {
+    runtime.cleanup();
+  }
 });
 
 test("phase 9 public narrative docs keep repo source licensing separate from package publication", () => {

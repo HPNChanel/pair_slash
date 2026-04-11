@@ -16,6 +16,7 @@ import {
   resolveManifestInstallSpec,
   serializePackManifestV2,
   selectPackManifestRecords,
+  selectDefaultCatalogPack,
   validateDoctorReport,
   validateInstallState,
   validatePreviewPlan,
@@ -55,7 +56,7 @@ test("derived pack registry stays aligned with canonical core manifests", () => 
 });
 
 test("pack catalog records include core metadata and excluded advanced inventory", () => {
-  const records = loadPackCatalogRecords(repoRoot);
+  const records = loadPackCatalogRecords(repoRoot, { includeAdvanced: true });
   const planRecord = records.find((record) => record.id === "pairslash-plan" && record.catalog_scope === "core");
   const advancedRecord = records.find((record) => record.id === "pairslash-retrieval-addon");
 
@@ -71,6 +72,130 @@ test("pack catalog records include core metadata and excluded advanced inventory
   assert.ok(advancedRecord);
   assert.equal(advancedRecord.catalog_scope, "advanced");
   assert.equal(advancedRecord.catalog_status, "excluded");
+});
+
+test("default catalog selection prefers stronger effective workflow maturity over deprecated", () => {
+  const selected = selectDefaultCatalogPack([
+    {
+      id: "pairslash-stable",
+      catalog_scope: "core",
+      catalog_status: "operational",
+      default_discovery: true,
+      default_recommendation: true,
+      effective_workflow_maturity: "stable",
+      maturity: "stable",
+    },
+    {
+      id: "pairslash-deprecated",
+      catalog_scope: "core",
+      catalog_status: "operational",
+      default_discovery: true,
+      default_recommendation: true,
+      effective_workflow_maturity: "deprecated",
+      maturity: "stable",
+    },
+  ]);
+  assert.equal(selected?.id, "pairslash-stable");
+});
+
+test("default pack catalog load stays core-only unless advanced inclusion is explicit", () => {
+  const records = loadPackCatalogRecords(repoRoot);
+  assert.equal(
+    records.some((record) => record.catalog_scope === "advanced"),
+    false,
+  );
+});
+
+test("pack-runtime-live claims fail closed when they do not reference authoritative lane records", () => {
+  const fixture = createTempRepo({ packs: ["pairslash-plan"] });
+  try {
+    updatePackManifest({
+      repoRoot: fixture.tempRoot,
+      packId: "pairslash-plan",
+      mutate(manifest) {
+        manifest.support.runtime_support.codex_cli.evidence_kind = "pack-runtime-live";
+        manifest.support.runtime_support.codex_cli.evidence_ref = "README.md";
+        return manifest;
+      },
+    });
+    const records = loadPackCatalogRecords(fixture.tempRoot, { includeAdvanced: false });
+    const planRecord = records.find((record) => record.id === "pairslash-plan");
+    assert.ok(planRecord);
+    assert.equal(planRecord.catalog_status, "invalid");
+    assert.ok(
+      planRecord.descriptor_errors.some((error) =>
+        error.includes("support.runtime_support.codex_cli.evidence_ref must point to docs/evidence/live-runtime/*.yaml for pack-runtime-live")),
+    );
+  } finally {
+    fixture.cleanup();
+  }
+});
+
+test("lane-matrix claims fail closed when runtime evidence ref is not the shared matrix", () => {
+  const fixture = createTempRepo({ packs: ["pairslash-plan"] });
+  try {
+    updatePackManifest({
+      repoRoot: fixture.tempRoot,
+      packId: "pairslash-plan",
+      mutate(manifest) {
+        manifest.support.runtime_support.codex_cli.evidence_kind = "lane-matrix";
+        manifest.support.runtime_support.codex_cli.evidence_ref = "docs/evidence/live-runtime/codex-cli-repo-macos.yaml";
+        return manifest;
+      },
+    });
+    const records = loadPackCatalogRecords(fixture.tempRoot, { includeAdvanced: false });
+    const planRecord = records.find((record) => record.id === "pairslash-plan");
+    assert.ok(planRecord);
+    assert.equal(planRecord.catalog_status, "invalid");
+    assert.ok(
+      planRecord.descriptor_errors.some((error) =>
+        error.includes(
+          "support.runtime_support.codex_cli.evidence_ref must point to docs/compatibility/runtime-surface-matrix.yaml for lane-matrix",
+        )),
+    );
+  } finally {
+    fixture.cleanup();
+  }
+});
+
+test("workflow preview claims must bind live workflow evidence to the exact claimed lane", () => {
+  const fixture = createTempRepo({ packs: ["pairslash-plan"] });
+  try {
+    updatePackManifest({
+      repoRoot: fixture.tempRoot,
+      packId: "pairslash-plan",
+      mutate(manifest) {
+        manifest.support.workflow_maturity = "preview";
+        manifest.support.workflow_transition.from = "canary";
+        manifest.support.workflow_transition.reason = "lane-binding-check";
+        manifest.support.runtime_support.codex_cli.evidence_kind = "pack-runtime-live";
+        manifest.support.runtime_support.codex_cli.evidence_ref = "docs/evidence/live-runtime/codex-cli-repo-macos.yaml";
+        manifest.support.runtime_support.copilot_cli.evidence_kind = "pack-runtime-live";
+        manifest.support.runtime_support.copilot_cli.evidence_ref = "docs/evidence/live-runtime/copilot-cli-user-linux.yaml";
+        manifest.support.workflow_evidence.live_workflow_refs.codex_cli = [
+          "docs/evidence/live-runtime/codex-cli-repo-macos.yaml",
+        ];
+        manifest.support.workflow_evidence.live_workflow_refs.copilot_cli = [
+          "docs/evidence/live-runtime/copilot-cli-user-linux.yaml",
+        ];
+        manifest.support.promotion_checklist.required_for_label = "preview";
+        manifest.support.promotion_checklist.canonical_entrypoint_verified = true;
+        manifest.support.promotion_checklist.claimed_lanes.codex_cli = ["codex-cli-repo-windows"];
+        return manifest;
+      },
+    });
+    const records = loadPackCatalogRecords(fixture.tempRoot, { includeAdvanced: false });
+    const planRecord = records.find((record) => record.id === "pairslash-plan");
+    assert.ok(planRecord);
+    assert.equal(planRecord.effective_workflow_maturity, "canary");
+    assert.ok(
+      planRecord.workflow_maturity_blockers.includes(
+        "workflow-maturity-preview-live-workflow-lane-unbound:codex_cli:codex-cli-repo-windows",
+      ),
+    );
+  } finally {
+    fixture.cleanup();
+  }
 });
 
 test("public support snapshot fails closed when runtime support data is missing", () => {
@@ -103,6 +228,22 @@ test("public support snapshot fails closed when a lane evidence data file is mis
   const fixture = createTempRepo();
   try {
     unlinkSync(join(fixture.tempRoot, "docs", "evidence", "live-runtime", "codex-cli-repo-macos.yaml"));
+    assert.throws(
+      () => loadPublicSupportSnapshot(fixture.tempRoot),
+      /public-support-snapshot-invalid:runtime_lanes\[0\]\.evidence_data_ref/,
+    );
+  } finally {
+    fixture.cleanup();
+  }
+});
+
+test("public support snapshot rejects remote evidence refs", () => {
+  const fixture = createTempRepo();
+  try {
+    const matrixPath = join(fixture.tempRoot, "docs", "compatibility", "runtime-surface-matrix.yaml");
+    const matrix = YAML.parse(readFileSync(matrixPath, "utf8"));
+    matrix.runtime_lanes[0].evidence_data_ref = "https://example.com/lane.yaml";
+    writeFileSync(matrixPath, YAML.stringify(matrix, { lineWidth: 0, simpleKeys: true }));
     assert.throws(
       () => loadPublicSupportSnapshot(fixture.tempRoot),
       /public-support-snapshot-invalid:runtime_lanes\[0\]\.evidence_data_ref/,
@@ -420,12 +561,12 @@ test("workflow maturity promotion claims demote when live evidence and release t
         manifest.support.workflow_transition.from = "beta";
         manifest.support.workflow_transition.reason = "phase-18-regression-check";
         manifest.support.workflow_evidence.live_workflow_refs.codex_cli = [
-          "docs/evidence/live-runtime/codex-cli-repo-macos.md",
-          "docs/evidence/live-runtime/codex-cli-repo-windows.md",
+          "docs/evidence/live-runtime/codex-cli-repo-macos.yaml",
+          "docs/evidence/live-runtime/codex-cli-repo-windows.yaml",
         ];
         manifest.support.workflow_evidence.live_workflow_refs.copilot_cli = [
-          "docs/evidence/live-runtime/copilot-cli-user-linux.md",
-          "docs/evidence/live-runtime/copilot-cli-user-windows.md",
+          "docs/evidence/live-runtime/copilot-cli-user-linux.yaml",
+          "docs/evidence/live-runtime/copilot-cli-user-windows.yaml",
         ];
         manifest.support.promotion_checklist.required_for_label = "stable";
         manifest.support.promotion_checklist.docs_synced = true;
@@ -447,6 +588,29 @@ test("workflow maturity promotion claims demote when live evidence and release t
     assert.ok(
       planRecord.workflow_maturity_blockers.includes("workflow-maturity-release-gate:no-go"),
     );
+  } finally {
+    fixture.cleanup();
+  }
+});
+
+test("workflow demotion triggers stay visible when checklist blockers are active", () => {
+  const fixture = createTempRepo({ packs: ["pairslash-plan"] });
+  try {
+    updatePackManifest({
+      repoRoot: fixture.tempRoot,
+      packId: "pairslash-plan",
+      mutate(manifest) {
+        manifest.support.promotion_checklist.canonical_entrypoint_verified = false;
+        return manifest;
+      },
+    });
+    const records = loadPackCatalogRecords(fixture.tempRoot, { includeAdvanced: false });
+    const planRecord = records.find((record) => record.id === "pairslash-plan");
+    assert.ok(planRecord);
+    assert.ok(
+      planRecord.workflow_maturity_blockers.includes("workflow-maturity-promotion-checklist-incomplete"),
+    );
+    assert.ok(planRecord.workflow_demotion_triggers_active.includes("docs-drift"));
   } finally {
     fixture.cleanup();
   }
@@ -482,6 +646,58 @@ test("validator requires migration guidance for deprecated workflows", () => {
     ),
   );
   assert.ok(hasCode(errors, "PSM065"));
+});
+
+test("validator rejects remote and non-authoritative workflow promotion evidence refs", () => {
+  const manifest = loadManifestFixture("pack.manifest.v2.core.sample.yaml");
+  manifest.support.workflow_maturity = "preview";
+  manifest.support.workflow_transition.from = "canary";
+  manifest.support.workflow_transition.reason = "evidence-policy-check";
+  manifest.support.promotion_checklist.required_for_label = "preview";
+  manifest.support.promotion_checklist.canonical_entrypoint_verified = true;
+  manifest.support.workflow_evidence.live_workflow_refs.codex_cli = [
+    "https://example.com/codex-live-proof.yaml",
+  ];
+  manifest.support.workflow_evidence.live_workflow_refs.copilot_cli = [
+    "docs/evidence/live-runtime/copilot-cli-user-linux.md",
+  ];
+  const errors = validatePackManifestV2(manifest);
+  assert.ok(
+    errors.some((error) =>
+      error.includes("support.workflow_evidence.live_workflow_refs.codex_cli must use repo-local evidence references")),
+  );
+  assert.ok(
+    errors.some((error) =>
+      error.includes("support.workflow_evidence.live_workflow_refs.copilot_cli must point to docs/evidence/live-runtime/*.yaml authoritative lane records")),
+  );
+});
+
+test("validator rejects lane-matrix runtime evidence refs outside the shared matrix", () => {
+  const manifest = loadManifestFixture("pack.manifest.v2.core.sample.yaml");
+  manifest.support.runtime_support.codex_cli.evidence_kind = "lane-matrix";
+  manifest.support.runtime_support.codex_cli.evidence_ref = "docs/evidence/live-runtime/codex-cli-repo-macos.yaml";
+  const errors = validatePackManifestV2(manifest);
+  assert.ok(
+    errors.some((error) =>
+      error.includes(
+        "support.runtime_support.codex_cli.evidence_ref must point to docs/compatibility/runtime-surface-matrix.yaml for lane-matrix",
+      )),
+  );
+});
+
+test("validator rejects deprecated workflows marked as default recommendation", () => {
+  const manifest = loadManifestFixture("pack.manifest.v2.core.sample.yaml");
+  manifest.status = "deprecated";
+  manifest.catalog.deprecation_status = "deprecated";
+  manifest.catalog.default_recommendation = true;
+  manifest.support.workflow_maturity = "deprecated";
+  manifest.support.workflow_transition.from = "beta";
+  manifest.support.workflow_transition.reason = "deprecation-check";
+  manifest.catalog.replacement_pack = "pairslash-review";
+  const errors = validatePackManifestV2(manifest);
+  assert.ok(
+    errors.some((error) => error.includes("deprecated workflows must not set catalog.default_recommendation")),
+  );
 });
 
 test("validator rejects low-risk manifests with write capabilities", () => {
@@ -569,7 +785,7 @@ test("manifest selection isolates unrelated invalid manifests for targeted pack 
 test("doctor report validator accepts phase 4 execution report shape", () => {
   const errors = validateDoctorReport({
     kind: "doctor-report",
-    schema_version: "2.1.0",
+    schema_version: "2.2.0",
     generated_at: "2026-03-24T10:00:00.000Z",
     runtime: "codex_cli",
     target: "repo",
@@ -726,6 +942,32 @@ test("doctor report validator accepts phase 4 execution report shape", () => {
       },
     ],
     next_actions: ["No action required."],
+    workflow_maturity: {
+      selected_pack_count: 1,
+      recommended_pack_id: "pairslash-plan",
+      highest_effective_workflow_maturity: "canary",
+      contradictory_claim_count: 0,
+      blocked_pack_count: 0,
+      advanced_lane_fence: "core-only-catalog",
+      selected_packs: [
+        {
+          pack_id: "pairslash-plan",
+          workflow_maturity: "canary",
+          effective_workflow_maturity: "canary",
+          workflow_transition_legal: true,
+          workflow_maturity_blocked: false,
+          workflow_maturity_blockers: [],
+          workflow_demotion_triggers_active: [],
+          workflow_promotion_checklist_ready: true,
+          runtime_support_status: "unverified",
+          runtime_support_evidence_kind: "lane-matrix",
+          support_scope: "official-preview",
+          default_recommendation: true,
+          pack_manifest: "packs/core/pairslash-plan/pack.manifest.yaml",
+          demoted: false,
+        },
+      ],
+    },
     installed_packs: [],
     first_workflow_guidance: {
       ready: false,

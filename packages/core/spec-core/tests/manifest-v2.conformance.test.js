@@ -154,12 +154,12 @@ test("workflow maturity demotes on runtime regression blockers", () => {
         manifest.support.workflow_transition.from = "beta";
         manifest.support.workflow_transition.reason = "stable-check";
         manifest.support.workflow_evidence.live_workflow_refs.codex_cli = [
-          "docs/evidence/live-runtime/codex-cli-repo-macos.md",
-          "docs/evidence/live-runtime/codex-cli-repo-windows.md",
+          "docs/evidence/live-runtime/codex-cli-repo-macos.yaml",
+          "docs/evidence/live-runtime/codex-cli-repo-windows.yaml",
         ];
         manifest.support.workflow_evidence.live_workflow_refs.copilot_cli = [
-          "docs/evidence/live-runtime/copilot-cli-user-linux.md",
-          "docs/evidence/live-runtime/copilot-cli-user-windows.md",
+          "docs/evidence/live-runtime/copilot-cli-user-linux.yaml",
+          "docs/evidence/live-runtime/copilot-cli-user-windows.yaml",
         ];
         manifest.support.promotion_checklist.required_for_label = "stable";
         manifest.support.promotion_checklist.docs_synced = true;

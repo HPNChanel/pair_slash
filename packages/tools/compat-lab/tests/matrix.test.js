@@ -52,6 +52,9 @@ test("compatibility matrix artifact exposes public support semantics", () => {
     ),
   );
   assert.equal(artifact.release_gates.length, 4);
+  assert.ok(Array.isArray(artifact.workflow_maturity));
+  assert.ok(artifact.workflow_maturity.length > 0);
+  assert.ok(artifact.workflow_maturity.every((workflow) => workflow.pack_id && workflow.effective_workflow_maturity));
   assert.ok(artifact.generated_from.evals.length >= 6);
   const markdown = renderCompatibilityMatrixMarkdown({
     repoRoot,
@@ -59,6 +62,11 @@ test("compatibility matrix artifact exposes public support semantics", () => {
   });
   assert.match(markdown, /Fake acceptance evidence/);
   assert.match(markdown, /Shim acceptance evidence/);
+  assert.match(markdown, /Workflow maturity snapshot \(core packs\)/);
+  assert.match(markdown, /Assigned/);
+  assert.match(markdown, /Effective/);
+  assert.match(markdown, /Default selection candidate/);
+  assert.doesNotMatch(markdown, /Default recommendation/);
 });
 
 test("generated compatibility docs stay in sync with committed artifacts", () => {
