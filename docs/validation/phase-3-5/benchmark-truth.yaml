@@ -1,0 +1,118 @@
+version: "0.4.0"
+truth_id: pairslash-phase-19-benchmark-truth
+phase: 19
+status: active
+canonical_machine_readable_sources:
+  - docs-private/validation/phase-3-5/benchmark-truth.yaml
+  - docs-private/validation/phase-3-5/benchmark-task-catalog.yaml
+  - docs-private/validation/phase-3-5/benchmark-log-schema.yaml
+  - docs-private/validation/phase-3-5/benchmark-scoring-rubric.yaml
+  - docs-private/validation/phase-3-5/benchmark-lane-wording.yaml
+classification_legend:
+  - implemented
+  - partially_evidenced
+  - docs_only
+  - not_acceptable_for_claims
+fixed_boundary:
+  product_position: trust-layer-for-terminal-native-ai-workflows
+  canonical_entrypoint: /skills
+  authoritative_memory_root: .pairslash/project-memory
+  supported_runtimes:
+    - codex_cli
+    - copilot_cli
+  advanced_lanes:
+    benchmarkable: false
+    claimable_in_round_one: false
+  blended_cross_runtime_reporting: false
+  public_claim_language_requires_lane_specificity: true
+truth_roots:
+  authoritative_program_charter: docs/phase-12/authoritative-program-charter.md
+  product_validation_verdict: docs/validation/phase-3-5/verdict.md
+  read_authority_charter: docs/architecture/phase-17-read-authority-charter.md
+  workflow_maturity_charter: docs/architecture/phase-18-workflow-maturity-charter.md
+  workflow_maturity_wording_system: docs/architecture/phase-18-workflow-maturity-wording-system.md
+  runtime_support_matrix: docs/compatibility/runtime-surface-matrix.yaml
+  current_state_report: docs-private/architecture/pairslash-current-state-deep-report.md
+  implementation_inventory_audit: docs-private/architecture/pairslash-implementation-inventory-audit.md
+  weekly_reuse_metric: docs-private/phase-3.5/phase-exit/north-star-metric.md
+  adoption_scorecard: docs-private/phase-3.5/phase-exit/adoption-scorecard.md
+  wedge_decision: docs-private/phase-3.5/wedge-workflows-decision.md
+reused_phase_outputs:
+  phase_17:
+    status: implemented
+    required_outputs:
+      - authoritative read precedence
+      - workflow-specific read profiles
+      - explain-context evidence surfaces
+  phase_18:
+    status: implemented
+    required_outputs:
+      - workflow maturity labels
+      - promotion and demotion rules
+      - wording separation between workflow maturity and runtime-support truth
+      - wording separation between runtime-support truth and product-validation truth
+unresolved_dependencies:
+  - dependency_id: missing_post_11_roadmap
+    status: docs_only
+    claim_policy: do_not_infer
+    effect_on_phase_19: benchmark implementation must inherit only from surviving truth roots
+  - dependency_id: missing_phase_16_artifact
+    status: docs_only
+    claim_policy: do_not_infer
+    effect_on_phase_19: any claimed Phase 16 reuse must come from surfaced outputs, not assumed lineage
+  - dependency_id: missing_phase_19_artifact
+    status: docs_only
+    claim_policy: current_file_is_local_truth_root
+    effect_on_phase_19: this benchmark truth package becomes the local Phase 19 reference until superseded
+  - dependency_id: missing_phase_20_artifact
+    status: docs_only
+    claim_policy: do_not_infer
+    effect_on_phase_19: no forward-looking readiness claims may inherit from an absent phase artifact
+  - dependency_id: missing_model_routing_spec
+    status: docs_only
+    claim_policy: routing_agnostic_execution
+    effect_on_phase_19: benchmark runs record model provenance only and never claim routing advantage
+round_one_policy:
+  calibration_controls:
+    - C1
+  headline_wedges:
+    - W1
+    - W2a
+    - W2b
+    - W3
+  headline_reporting_guard:
+    W3: conditional_shadow_until_clean
+  lane_policy:
+    primary_scored_lane:
+      lane_id: codex-cli-repo-macos
+      classification: partially_evidenced
+    shadow_only_lanes:
+      - copilot-cli-user-linux
+      - codex-cli-repo-windows
+      - copilot-cli-user-windows
+    prep_lanes_cannot_support_headline_claims: true
+    blended_cross_runtime_rollup_forbidden: true
+metric_priority:
+  primary:
+    - trusted_weekly_reuse_rate
+    - trust_boundary_integrity
+    - rework_reduction_vs_baseline
+  secondary:
+    - median_ttfs_delta_vs_baseline
+control_surfaces:
+  - task_card_id: C1
+    workflow_id: pairslash-plan
+    classification: implemented
+    public_benchmark: false
+    role: calibration
+    reason: keep read-authority and assumption labeling measurable without replacing onboarding as wedge 1
+disallowed_shortcuts:
+  - installability_only_as_wedge_proof
+  - doctor_only_as_wedge_proof
+  - preview_only_as_wedge_proof
+  - advanced_lane_benchmarking
+  - blended_dual_runtime_scores
+  - broad_parity_wording
+  - production_ready_wording
+  - benchmark_ready_wording
+  - validated_product_pull_without_official_runs

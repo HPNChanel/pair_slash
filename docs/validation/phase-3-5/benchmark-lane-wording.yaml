@@ -1,0 +1,105 @@
+version: "0.4.0"
+wording_id: pairslash-phase-19-benchmark-lane-wording
+required_report_fields:
+  - runtime_id
+  - lane_id
+  - lane_support_level
+  - workflow_id
+  - workflow_maturity
+  - claim_status
+  - reporting_mode
+aggregate_rules:
+  blended_cross_runtime_score: forbidden
+  prep_lane_headline_reporting: forbidden
+  advanced_lane_reporting: forbidden
+  review_fix_as_lead_thesis: forbidden
+runtime_support_words:
+  degraded:
+    allowed_label: degraded
+    required_caveats:
+      - lane_specific
+      - caveated
+      - canonical_entrypoint_status_named
+    forbidden_substitutions:
+      - stable_tested
+      - broad_parity
+  prep:
+    allowed_label: prep
+    required_caveats:
+      - lane_specific
+      - shadow_only_for_headline_reporting
+      - no_public_readiness_inference
+    forbidden_substitutions:
+      - supported
+      - stable_tested
+      - broad_parity
+  preview:
+    allowed_label: preview
+    required_caveats:
+      - lane_specific
+    forbidden_substitutions:
+      - stable_tested
+  stable_tested:
+    allowed_label: stable-tested
+    required_caveats:
+      - lane_specific
+    forbidden_substitutions: []
+  blocked:
+    allowed_label: blocked
+    required_caveats:
+      - exact_surface_named
+    forbidden_substitutions:
+      - degraded
+      - prep
+workflow_maturity_words:
+  canary:
+    allowed_label: canary
+    required_suffix: workflow_maturity_only
+  preview:
+    allowed_label: preview
+    required_suffix: workflow_maturity_only
+  beta:
+    allowed_label: beta
+    required_suffix: workflow_maturity_only
+  stable:
+    allowed_label: stable
+    required_suffix: workflow_maturity_only
+  deprecated:
+    allowed_label: deprecated
+    required_suffix: workflow_maturity_only
+claim_status_words:
+  implemented: implemented in repo
+  partially_evidenced: partially evidenced
+  docs_only: docs-only
+  not_acceptable_for_claims: not acceptable for claims
+round_one_lane_templates:
+  - lane_id: codex-cli-repo-macos
+    runtime_id: codex_cli
+    reporting_mode: lane_specific_headline
+    required_support_level: degraded
+    required_sentence: Results are lane-specific to the documented Codex CLI repo macOS lane.
+  - lane_id: copilot-cli-user-linux
+    runtime_id: copilot_cli
+    reporting_mode: lane_specific_shadow
+    required_support_level: prep
+    required_sentence: Results are shadow-only for the documented GitHub Copilot CLI user Linux prep lane.
+  - lane_id: codex-cli-repo-windows
+    runtime_id: codex_cli
+    reporting_mode: lane_specific_shadow
+    required_support_level: prep
+    required_sentence: Results are shadow-only for the documented Codex CLI repo Windows prep lane.
+  - lane_id: copilot-cli-user-windows
+    runtime_id: copilot_cli
+    reporting_mode: lane_specific_shadow
+    required_support_level: prep
+    required_sentence: Results are shadow-only for the documented GitHub Copilot CLI user Windows prep lane.
+banned_phrases:
+  - broad parity
+  - validated product pull
+  - production ready
+  - benchmark ready
+  - public ready
+  - works anywhere AI agents run
+  - autonomous coding agent
+  - advanced lanes prove the core wedge
+  - review/fix validates the whole product by itself

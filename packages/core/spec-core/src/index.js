@@ -1,4 +1,5 @@
 export * from "./compile.js";
+export * from "./benchmark-truth.js";
 export * from "./constants.js";
 export * from "./ir.js";
 export * from "./manifest.js";

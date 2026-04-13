@@ -67,6 +67,7 @@ What must not be overclaimed: that tests equal market validation, that preview o
 | --- | --- | --- |
 | Phase truth | `docs/phase-12/authoritative-program-charter.md` | Owns the official stage sentence, truth-layer split, and authority hierarchy. |
 | Validation verdict | `docs/validation/phase-3-5/verdict.md` | Owns product-validation `GO/NO-GO` only. |
+| Benchmark truth package | `docs/validation/phase-3-5/benchmark-truth.yaml`, `benchmark-task-catalog.yaml`, `benchmark-log-schema.yaml`, `benchmark-scoring-rubric.yaml`, and `benchmark-lane-wording.yaml` | Own machine-readable benchmark task cards, scoring contract, run schema, lane wording, and round-one benchmark boundary. |
 | Public claim policy | `docs/releases/public-claim-policy.md` | Owns allowed and forbidden public wording rules, not the phase statement. |
 | Runtime support policy | `docs/compatibility/runtime-surface-matrix.yaml` | Owns machine-readable lane labels and promotion inputs consumed by doctor and compat-lab. |
 | Runtime support markdown | `docs/compatibility/compatibility-matrix.md` | Public rendering of the runtime-support catalog; never a competing source. |
@@ -145,6 +146,7 @@ Rule: downstream files may restate the official phase sentence, but they must po
 - Compatibility wording must stay lane-specific and must not imply that support labels promote program phase or product maturity.
 - Workflow maturity wording must not flatten release channel, runtime-lane support, or product-validation status into one label.
 - Validation docs must not become release verdicts, and release docs must not become product-validation verdicts.
+- Benchmark Markdown guides must stay derivative of the machine-readable benchmark truth package and must not own competing benchmark policy.
 - Pack catalog or pack count changes must not widen public support wording unless the canonical manifests, runtime-support catalog, optional trust shims, derived registry, and release docs all stay aligned.
 - `docs/releases/legal-packaging-status.md` must stay aligned with package metadata and the current presence or absence of `LICENSE` and `NOTICE`.
 - `.pairslash/project-memory/00-project-charter.yaml` may summarize and point, but it must not carry a competing narrative root.

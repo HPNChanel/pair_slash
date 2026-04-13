@@ -1,0 +1,96 @@
+version: "0.4.0"
+rubric_id: pairslash-phase-19-benchmark-scoring-rubric
+metric_priority:
+  primary:
+    - trusted_weekly_reuse_rate
+    - trust_boundary_integrity
+    - rework_reduction_vs_baseline
+  secondary:
+    - median_ttfs_delta_vs_baseline
+hard_fail_conditions:
+  - hidden_durable_write
+  - preview_skipped_on_W2a
+  - weak_or_conflicting_memory_accepted_on_W2b
+  - blended_cross_runtime_headline_rollup
+  - prep_lane_used_for_headline_claim
+  - advanced_lane_benchmark_in_round_one
+  - review_fix_becomes_generic_coding_thesis
+  - installability_only_labeled_as_wedge_proof
+  - official_run_omitted_without_reason
+metric_thresholds:
+  trusted_weekly_reuse_rate:
+    bad: <40%
+    acceptable: 40-59%
+    strong: '>=60%'
+  task_success_without_manual_rescue:
+    bad: <50%
+    acceptable: 50-69%
+    strong: '>=70%'
+  median_ttfs_delta_vs_baseline:
+    bad: <=0%
+    acceptable: 0-19%
+    strong: '>=20%'
+  issue_reproducibility_rate:
+    bad: <50%
+    acceptable: 50-69%
+    strong: '>=70%'
+  rework_reduction_vs_baseline:
+    bad: <10%
+    acceptable: 10-29%
+    strong: '>=30%'
+  trust_boundary_integrity:
+    bad: any_violation
+    acceptable: 100_percent_on_read_flows_only
+    strong: 100_percent_on_all_required_memory_scenarios
+  preview_to_write_fidelity:
+    bad: any_drift
+    acceptable: 100_percent_on_one_runtime_only
+    strong: 100_percent_on_both_runtimes
+  evidence_completeness:
+    bad: <90%
+    acceptable: 90-99%
+    strong: 100%
+workflow_pass_rules:
+  W1:
+    required:
+      - pairslash_beats_or_matches_baseline_with_better_orientation_accuracy
+      - task_success_true
+      - pairslash_manual_rescue_count_zero
+      - weekly_reuse_answer_in_likely_yes_or_default_path
+  W2a:
+    required:
+      - task_success_true
+      - trust_boundary_result_pass
+      - preview_fidelity_result_pass
+      - pairslash_manual_rescue_count_zero
+      - weekly_reuse_answer_in_likely_yes_or_default_path
+  W2b:
+    required:
+      - weak_or_conflicting_evidence_is_downgraded_blocked_or_rejected_correctly
+      - trust_boundary_result_pass
+      - blocking_explanation_clear_true
+      - pairslash_manual_rescue_count_zero
+  W3:
+    required:
+      - issue_reproduced_true
+      - task_success_true
+      - rework_reduction_positive
+      - explicit_user_approved_fix_handoff
+round_one_rollup_rules:
+  primary_scored_lane: codex-cli-repo-macos
+  primary_scored_lane_support_level: degraded
+  prep_lanes_shadow_only: true
+  cross_runtime_headline_rollup_forbidden_until_each_lane_has_official_runs: true
+  W3_shadow_until_clean: true
+  control_task_ids:
+    - C1
+thirty_day_gate:
+  requires:
+    - trusted_weekly_reuse_rate_overall_gte_60
+    - onboarding_and_memory_each_gte_50
+    - task_success_without_manual_rescue_overall_gte_70
+    - memory_trust_boundary_integrity_eq_100
+    - preview_to_write_fidelity_eq_100
+    - evidence_completeness_eq_100
+    - at_least_two_onboarding_or_memory_runs_with_likely_yes_or_default_path
+    - review_fix_not_only_workflow_showing_a_win

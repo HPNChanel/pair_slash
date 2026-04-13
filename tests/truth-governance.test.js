@@ -448,6 +448,7 @@ test("repository license and manifest SPDX metadata stay normalized", () => {
     "packages/runtimes/copilot/adapter/package.json",
     "packages/runtimes/copilot/compiler/package.json",
     "packages/tools/cli/package.json",
+    "packages/tools/benchmark/package.json",
     "packages/tools/compat-lab/package.json",
     "packages/tools/doctor/package.json",
     "packages/tools/installer/package.json",
@@ -477,6 +478,7 @@ test("root and package manifests stay private while package publication is not c
     "packages/runtimes/copilot/adapter/package.json",
     "packages/runtimes/copilot/compiler/package.json",
     "packages/tools/cli/package.json",
+    "packages/tools/benchmark/package.json",
     "packages/tools/compat-lab/package.json",
     "packages/tools/doctor/package.json",
     "packages/tools/installer/package.json",
@@ -714,6 +716,81 @@ test("legacy planning and benchmark docs stay derivative instead of owning curre
   assert.ok(
     benchmarkTasksContents.includes(CHARTER_PATH),
     `${benchmarkTasksPath} should point to the charter for the phase statement`,
+  );
+});
+
+test("phase 19 benchmark truth package exists and markdown guides stay derivative", () => {
+  const requiredPaths = [
+    "docs/validation/phase-3-5/benchmark-truth.yaml",
+    "docs/validation/phase-3-5/benchmark-task-catalog.yaml",
+    "docs/validation/phase-3-5/benchmark-log-schema.yaml",
+    "docs/validation/phase-3-5/benchmark-scoring-rubric.yaml",
+    "docs/validation/phase-3-5/benchmark-lane-wording.yaml",
+  ];
+
+  for (const relativePath of requiredPaths) {
+    assert.equal(existsSync(join(repoRoot, relativePath)), true, `${relativePath} should exist`);
+  }
+
+  const readmeContents = read("docs-private/validation/phase-3-5/README.md");
+  assert.ok(
+    readmeContents.includes("benchmark-truth.yaml") &&
+      readmeContents.includes("benchmark-task-catalog.yaml") &&
+      readmeContents.includes("benchmark-log-schema.yaml") &&
+      readmeContents.includes("benchmark-scoring-rubric.yaml") &&
+      readmeContents.includes("benchmark-lane-wording.yaml"),
+    "docs-private/validation/phase-3-5/README.md should point to the canonical machine-readable benchmark sources",
+  );
+  assert.ok(
+    readmeContents.includes("docs-private/phase-3.5/phase-exit/north-star-metric.md"),
+    "docs-private/validation/phase-3-5/README.md should use the current docs-private north-star path",
+  );
+
+  const benchmarkTasksContents = read("docs-private/validation/phase-3-5/benchmark-tasks.md");
+  assert.ok(
+    benchmarkTasksContents.includes("human-readable rendering of") &&
+      benchmarkTasksContents.includes("benchmark-task-catalog.yaml"),
+    "benchmark task guide should stay derivative of the task catalog",
+  );
+  assert.ok(
+    benchmarkTasksContents.includes("conditional_shadow_until_clean"),
+    "benchmark task guide should keep review/fix conditional in round one",
+  );
+
+  const scoringContents = read("docs-private/validation/phase-3-5/scoring-rubric.md");
+  assert.ok(
+    scoringContents.includes("benchmark-scoring-rubric.yaml"),
+    "scoring rubric guide should point to the machine-readable scoring contract",
+  );
+  assert.ok(
+    scoringContents.includes("prep lanes stay shadow-only"),
+    "scoring rubric guide should keep prep-lane reporting bounded",
+  );
+
+  const runbookContents = read("docs-private/validation/phase-3-5/runbook.md");
+  assert.ok(
+    runbookContents.includes("benchmark-lane-wording.yaml"),
+    "runbook should point to the lane-wording source",
+  );
+  assert.ok(
+    runbookContents.includes("docs-private/phase-3.5/phase-exit/adoption-scorecard.md"),
+    "runbook should use the current docs-private adoption scorecard path",
+  );
+  assert.ok(
+    runbookContents.includes("C1"),
+    "runbook should include the pairslash-plan calibration control",
+  );
+
+  const evidenceLogContents = read("docs-private/validation/phase-3-5/evidence-log.md");
+  assert.ok(
+    evidenceLogContents.includes("benchmark-log-schema.yaml"),
+    "evidence log should point to the machine-readable log schema",
+  );
+  assert.ok(
+    evidenceLogContents.includes("lane_support_level") &&
+      evidenceLogContents.includes("workflow_maturity") &&
+      evidenceLogContents.includes("claim_status"),
+    "evidence log should require lane and claim-scoping fields",
   );
 });
 

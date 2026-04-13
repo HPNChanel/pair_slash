@@ -1,0 +1,136 @@
+version: "0.4.0"
+schema_id: pairslash-phase-19-benchmark-log-schema
+record_type: benchmark_pair_run
+required_fields:
+  - run_id
+  - paired_group_id
+  - task_card_id
+  - workflow_id
+  - scenario_id
+  - runtime_id
+  - lane_id
+  - lane_support_level
+  - workflow_maturity
+  - claim_status
+  - reporting_mode
+  - repo_snapshot_ref
+  - task_statement
+  - success_criteria
+  - arm_order
+  - baseline_method
+  - pairslash_method
+  - baseline_ttfs_seconds
+  - pairslash_ttfs_seconds
+  - ttfs_delta_vs_baseline
+  - baseline_manual_rescue_count
+  - pairslash_manual_rescue_count
+  - baseline_rework_units
+  - pairslash_rework_units
+  - rework_reduction_pct_vs_baseline
+  - task_success
+  - trust_boundary_result
+  - weekly_reuse_answer
+  - weekly_reuse_reason
+  - artifact_refs
+  - include_in_rollup
+  - negative_evidence_note
+enums:
+  runtime_id:
+    - codex_cli
+    - copilot_cli
+  lane_support_level:
+    - degraded
+    - prep
+    - preview
+    - stable_tested
+    - blocked
+    - unsupported
+  workflow_maturity:
+    - canary
+    - preview
+    - beta
+    - stable
+    - deprecated
+  claim_status:
+    - implemented
+    - partially_evidenced
+    - docs_only
+    - not_acceptable_for_claims
+  reporting_mode:
+    - lane_specific_headline
+    - lane_specific_shadow
+    - internal_control
+    - excluded
+  weekly_reuse_answer:
+    - no
+    - maybe
+    - likely_yes
+    - default_path
+  trust_boundary_result:
+    - pass
+    - fail
+    - not_applicable
+  preview_fidelity_result:
+    - pass
+    - fail
+    - not_applicable
+conditional_fields:
+  - field: preview_fidelity_result
+    required_when:
+      task_card_id:
+        - W2a
+  - field: issue_reproduced
+    required_when:
+      task_card_id:
+        - W3
+  - field: blocking_explanation_clear
+    required_when:
+      task_card_id:
+        - W2b
+  - field: exclude_reason
+    required_when:
+      include_in_rollup: false
+derived_metrics:
+  - trusted_weekly_reuse_eligible
+  - ttfs_delta_vs_baseline
+  - rework_reduction_pct_vs_baseline
+  - pairslash_task_success_without_manual_rescue
+example:
+  run_id: 2026-04-xx-w1-codex-primary-01
+  paired_group_id: grp-2026-04-xx-w1-01
+  task_card_id: W1
+  workflow_id: pairslash-onboard-repo
+  scenario_id: paired_onboarding
+  runtime_id: codex_cli
+  lane_id: codex-cli-repo-macos
+  lane_support_level: degraded
+  workflow_maturity: canary
+  claim_status: not_acceptable_for_claims
+  reporting_mode: lane_specific_headline
+  repo_snapshot_ref: commit:abc1234
+  task_statement: Return cold to this repo and identify what matters first.
+  success_criteria:
+    - State the canonical entrypoint correctly
+    - Identify the supported runtime boundary correctly
+    - Recommend the right next workflow
+  arm_order: AB
+  baseline_method: Raw CLI repo summary prompt with manual grep follow-up
+  pairslash_method: /skills -> pairslash-onboard-repo
+  baseline_ttfs_seconds: 510
+  pairslash_ttfs_seconds: 420
+  ttfs_delta_vs_baseline: 0.1765
+  baseline_manual_rescue_count: 1
+  pairslash_manual_rescue_count: 0
+  baseline_rework_units: 4
+  pairslash_rework_units: 1
+  rework_reduction_pct_vs_baseline: 0.75
+  task_success: true
+  trust_boundary_result: pass
+  weekly_reuse_answer: likely_yes
+  weekly_reuse_reason: Gets me to the right files and constraints faster than raw summary prompts.
+  artifact_refs:
+    - baseline-transcript.md
+    - pairslash-transcript.md
+    - evaluator-notes.md
+  include_in_rollup: true
+  negative_evidence_note: Baseline needed one manual redirect to the real constraint files.

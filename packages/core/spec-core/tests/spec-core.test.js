@@ -9,6 +9,7 @@ import {
   buildPackCatalogIndex,
   buildManifestTemplate,
   discoverPackManifestPaths,
+  loadBenchmarkTruth,
   loadPublicSupportSnapshot,
   loadPackCatalogRecords,
   loadPackManifest,
@@ -18,6 +19,7 @@ import {
   selectPackManifestRecords,
   selectDefaultCatalogPack,
   validateDoctorReport,
+  validateBenchmarkTruth,
   validateInstallState,
   validatePreviewPlan,
   validateLintReport,
@@ -347,6 +349,40 @@ test("public support snapshot fails closed when a live run omits command metadat
   } finally {
     fixture.cleanup();
   }
+});
+
+test("benchmark truth package loads the canonical Phase 19 benchmark sources", () => {
+  const documents = loadBenchmarkTruth(repoRoot);
+  assert.deepEqual(documents.benchmarkTruth.fixed_boundary.supported_runtimes, ["codex_cli", "copilot_cli"]);
+  assert.deepEqual(documents.benchmarkTruth.round_one_policy.headline_wedges, ["W1", "W2a", "W2b", "W3"]);
+  assert.equal(documents.benchmarkTruth.round_one_policy.calibration_controls.includes("C1"), true);
+
+  const reviewTask = documents.taskCatalog.official_tasks.find((task) => task.task_card_id === "W3");
+  assert.ok(reviewTask);
+  assert.equal(reviewTask.public_claim_mode, "conditional_shadow_until_clean");
+
+  const planControl = documents.taskCatalog.official_tasks.find((task) => task.task_card_id === "C1");
+  assert.ok(planControl);
+  assert.equal(planControl.role, "calibration_control");
+  assert.equal(planControl.public_claim_mode, "internal_only");
+});
+
+test("benchmark truth validator fails closed when review becomes a headline claim or prep lanes go public", () => {
+  const documents = loadBenchmarkTruth(repoRoot);
+
+  const reviewDrift = structuredClone(documents);
+  reviewDrift.taskCatalog.official_tasks.find((task) => task.task_card_id === "W3").public_claim_mode = "headline";
+  assert.throws(
+    () => validateBenchmarkTruth(reviewDrift, { throwOnError: true }),
+    /PBT010/,
+  );
+
+  const laneDrift = structuredClone(documents);
+  laneDrift.laneWording.aggregate_rules.prep_lane_headline_reporting = "allowed";
+  assert.throws(
+    () => validateBenchmarkTruth(laneDrift, { throwOnError: true }),
+    /PBT018/,
+  );
 });
 
 test("pairslash-plan manifest v2 validates", () => {

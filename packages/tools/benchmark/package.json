@@ -1,0 +1,13 @@
+{
+  "name": "@pairslash/benchmark",
+  "version": "0.4.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": "./src/index.js",
+  "dependencies": {
+    "@pairslash/spec-core": "file:../../core/spec-core",
+    "@pairslash/trace": "file:../trace",
+    "yaml": "^2.8.1"
+  }
+}

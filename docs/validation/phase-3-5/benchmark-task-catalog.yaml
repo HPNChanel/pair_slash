@@ -1,0 +1,200 @@
+version: "0.4.0"
+catalog_id: pairslash-phase-19-benchmark-task-catalog
+supported_runtime_ids:
+  - codex_cli
+  - copilot_cli
+official_tasks:
+  - task_card_id: W1
+    role: headline_wedge
+    workflow_id: pairslash-onboard-repo
+    workflow_chain:
+      - pairslash-onboard-repo
+    advanced_surface: false
+    implementation_status: implemented
+    evidence_status: partially_evidenced
+    claim_status: not_acceptable_for_claims
+    public_claim_mode: internal_until_official_runs
+    benchmark_shape: paired_baseline_vs_pairslash
+    pairslash_path: /skills -> pairslash-onboard-repo
+    baseline_method: raw_cli_repo_orientation
+    required_runtime_ids:
+      - codex_cli
+      - copilot_cli
+    required_success_criteria:
+      - identifies canonical entrypoint and runtime boundary correctly
+      - surfaces repo constraints and next workflow without false assumptions
+      - stays read-only and makes no durable writes
+    primary_metrics:
+      - trusted_weekly_reuse_rate
+      - task_success_without_manual_rescue
+      - median_ttfs_delta_vs_baseline
+    required_artifacts:
+      - baseline_transcript_or_notes
+      - pairslash_transcript_or_notes
+      - repo_snapshot_ref
+      - evaluator_notes_on_false_assumptions
+    banned_shortcuts:
+      - polished_summary_only
+      - extra_repo_hints_for_pairslash
+      - install_or_doctor_substitution
+    lane_reporting_rules:
+      - lane_specific_wording_required
+      - blended_runtime_rollup_forbidden
+  - task_card_id: W2a
+    role: headline_wedge
+    workflow_id: pairslash-memory-write-global
+    workflow_chain:
+      - pairslash-memory-candidate
+      - pairslash-memory-write-global
+    advanced_surface: false
+    implementation_status: implemented
+    evidence_status: partially_evidenced
+    claim_status: not_acceptable_for_claims
+    public_claim_mode: internal_until_official_runs
+    benchmark_shape: paired_baseline_vs_pairslash
+    pairslash_path: /skills -> pairslash-memory-candidate -> pairslash-memory-write-global
+    baseline_method: raw_cli_with_manual_memory_drafting
+    required_runtime_ids:
+      - codex_cli
+      - copilot_cli
+    required_success_criteria:
+      - candidate extraction remains evidence-first and reconciles against authoritative memory
+      - preview appears before any durable write
+      - explicit acceptance happens before mutation
+      - written record matches preview exactly
+    primary_metrics:
+      - trust_boundary_integrity
+      - preview_to_write_fidelity
+      - trusted_weekly_reuse_rate
+    required_artifacts:
+      - candidate_output
+      - preview_artifact
+      - written_record_or_commit_result
+      - audit_log_reference
+      - memory_index_reference
+    banned_shortcuts:
+      - hidden_write
+      - preview_skip
+      - weak_evidence_promotion
+    lane_reporting_rules:
+      - lane_specific_wording_required
+      - blended_runtime_rollup_forbidden
+  - task_card_id: W2b
+    role: headline_wedge
+    workflow_id: pairslash-memory-write-global
+    workflow_chain:
+      - pairslash-memory-candidate
+      - pairslash-memory-write-global
+    advanced_surface: false
+    implementation_status: implemented
+    evidence_status: partially_evidenced
+    claim_status: not_acceptable_for_claims
+    public_claim_mode: internal_until_official_runs
+    benchmark_shape: paired_baseline_vs_pairslash
+    pairslash_path: /skills -> pairslash-memory-candidate -> pairslash-memory-write-global
+    baseline_method: raw_cli_with_manual_conflict_checking
+    required_runtime_ids:
+      - codex_cli
+      - copilot_cli
+    required_success_criteria:
+      - weak or conflicting evidence is downgraded, blocked, or rejected correctly
+      - the blocking explanation is plain enough for the user to trust the stop
+      - the workflow stays inside the trust boundary
+    primary_metrics:
+      - trust_boundary_integrity
+      - rejection_correctness
+      - trusted_weekly_reuse_rate
+    required_artifacts:
+      - weak_or_conflicting_source_refs
+      - candidate_output
+      - preview_or_rejection_artifact
+      - policy_or_audit_artifacts
+    banned_shortcuts:
+      - accepting_conflicted_write
+      - hidden_conflicts
+      - describing_guardrails_as_optional_friction
+    lane_reporting_rules:
+      - lane_specific_wording_required
+      - blended_runtime_rollup_forbidden
+  - task_card_id: W3
+    role: headline_wedge
+    workflow_id: pairslash-review
+    workflow_chain:
+      - pairslash-review
+      - explicit_user_approved_fix_handoff
+    advanced_surface: false
+    implementation_status: implemented
+    evidence_status: partially_evidenced
+    claim_status: not_acceptable_for_claims
+    public_claim_mode: conditional_shadow_until_clean
+    benchmark_shape: paired_baseline_vs_pairslash
+    pairslash_path: /skills -> pairslash-review -> explicit fix handoff
+    baseline_method: raw_cli_review_plus_fix_loop
+    required_runtime_ids:
+      - codex_cli
+      - copilot_cli
+    required_success_criteria:
+      - reproduces the real issue before proposing a fix
+      - lowers cleanup burden versus raw CLI
+      - keeps the fix path explicit and user approved
+    primary_metrics:
+      - issue_reproducibility_rate
+      - rework_reduction_vs_baseline
+      - trusted_weekly_reuse_rate
+    required_artifacts:
+      - diff_or_working_tree_snapshot
+      - review_report
+      - fix_attempt_notes
+      - verification_output
+    banned_shortcuts:
+      - generic_code_review_only
+      - autonomous_fix_first
+      - toy_easy_tasks
+    lane_reporting_rules:
+      - lane_specific_wording_required
+      - headline_reporting_requires_task_cleanliness_lock
+  - task_card_id: C1
+    role: calibration_control
+    workflow_id: pairslash-plan
+    workflow_chain:
+      - pairslash-plan
+    advanced_surface: false
+    implementation_status: implemented
+    evidence_status: partially_evidenced
+    claim_status: not_acceptable_for_claims
+    public_claim_mode: internal_only
+    benchmark_shape: unpaired_control
+    pairslash_path: /skills -> pairslash-plan
+    baseline_method: none
+    required_runtime_ids:
+      - codex_cli
+      - copilot_cli
+    required_success_criteria:
+      - reads authoritative project memory
+      - labels facts versus assumptions
+      - stays read-only and structurally deterministic
+    primary_metrics:
+      - read_authority_correctness
+      - assumption_labeling_quality
+      - structural_completeness
+    required_artifacts:
+      - plan_output
+      - memory_citation_refs
+      - no_write_verification_note
+    banned_shortcuts:
+      - turning_control_task_into_public_wedge
+      - skipping_memory_citations
+      - speculative_plan_without_goal
+    lane_reporting_rules:
+      - internal_only
+execution_order:
+  - C1
+  - W1
+  - W2a
+  - W2b
+  - W3
+supporting_followups:
+  - follow_up_id: L1
+    role: delayed_follow_up
+    include_in_rollup: false
+    description: five-to-ten-day replay or note on at least two official runs to test durable usefulness later

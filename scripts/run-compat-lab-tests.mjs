@@ -19,6 +19,7 @@ const testFiles = [
   "packages/tools/trace/tests/trace.test.js",
   "packages/tools/doctor/tests/doctor.test.js",
   "packages/tools/cli/tests/cli.test.js",
+  "packages/tools/benchmark/tests/benchmark.test.js",
   "tests/repo-normalization.test.js",
   "tests/truth-governance.test.js",
   "tests/phase11/retrieval-lane.test.js",
