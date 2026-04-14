@@ -1,6 +1,7 @@
 import { stableJson, writeTextFile } from "@pairslash/spec-core";
 
 import { renderCaseStudyArtifacts } from "./case-study.js";
+import { writeEvidenceLogArtifacts } from "./evidence-log.js";
 import { buildPhase19Paths } from "./paths.js";
 import { replayBenchmarkRuns } from "./replay.js";
 import { formatScoreReportText, scoreBenchmarkRuns } from "./score.js";
@@ -22,6 +23,7 @@ export function runPhase19RoundOne({
   const effectiveScoreOutPath = scoreOutPath ? scoreOutPath : paths.roundOneScorePath;
   writeTextFile(effectiveScoreOutPath, stableJson(scoreReport));
 
+  const evidenceLogReport = writeEvidenceLogArtifacts({ repoRoot });
   const caseStudyReport = renderCaseStudies ? renderCaseStudyArtifacts({ repoRoot }) : null;
   const replayReport = replayArtifacts ? replayBenchmarkRuns({ repoRoot }) : null;
 
@@ -34,6 +36,7 @@ export function runPhase19RoundOne({
         : "fail",
     validation,
     score: scoreReport,
+    evidence_log: evidenceLogReport,
     case_studies: caseStudyReport,
     replay: replayReport,
     score_path: effectiveScoreOutPath,
@@ -49,6 +52,13 @@ export function formatRoundOneReportText(report) {
     "",
     formatScoreReportText(report.score).trimEnd(),
   ];
+
+  if (report.evidence_log) {
+    lines.push(
+      "",
+      `Evidence log: ${report.evidence_log.json_path} (${report.evidence_log.run_count} runs)`,
+    );
+  }
 
   if (report.case_studies) {
     lines.push("", `Case studies generated: ${report.case_studies.output_count}`);

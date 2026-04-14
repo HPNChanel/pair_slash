@@ -1,6 +1,7 @@
 export * from "./capture.js";
 export * from "./case-study.js";
 export * from "./constants.js";
+export * from "./evidence-log.js";
 export * from "./io.js";
 export * from "./paths.js";
 export * from "./replay.js";

@@ -6,6 +6,7 @@ import { stableJson, writeTextFile } from "@pairslash/spec-core";
 import {
   captureBenchmarkRun,
   formatCaseStudyReportText,
+  formatEvidenceLogReportText,
   formatReplayReportText,
   formatRoundOneReportText,
   formatScoreReportText,
@@ -16,6 +17,7 @@ import {
   runPhase19RoundOne,
   scoreBenchmarkRuns,
   validatePhase19BenchmarkConfig,
+  writeEvidenceLogArtifacts,
 } from "../index.js";
 
 function printUsage() {
@@ -25,6 +27,7 @@ function printUsage() {
       "  pairslash-benchmark validate [--format text|json]",
       "  pairslash-benchmark capture --input <path> [--allow-overwrite] [--format text|json]",
       "  pairslash-benchmark score [--out path] [--run-ids id1,id2] [--format text|json]",
+      "  pairslash-benchmark evidence [--run-id id | --run-ids id1,id2] [--format text|json]",
       "  pairslash-benchmark case [--run-id id] [--run-ids id1,id2] [--format text|json]",
       "  pairslash-benchmark replay [--run-id id | --run-ids id1,id2] [--format text|json]",
       "  pairslash-benchmark round1 [--score-out path] [--no-case-studies] [--no-replay] [--format text|json]",
@@ -168,6 +171,15 @@ try {
       runIds: options.runIds,
     });
     emitReport(report, options.format, formatCaseStudyReportText);
+    process.exit(0);
+  }
+
+  if (command === "evidence") {
+    const report = writeEvidenceLogArtifacts({
+      repoRoot: process.cwd(),
+      runIds: options.runIds,
+    });
+    emitReport(report, options.format, formatEvidenceLogReportText);
     process.exit(0);
   }
 

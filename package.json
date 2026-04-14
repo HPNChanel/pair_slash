@@ -26,6 +26,7 @@
     "benchmark:validate": "node packages/tools/benchmark/src/bin/pairslash-benchmark.js validate",
     "benchmark:capture": "node packages/tools/benchmark/src/bin/pairslash-benchmark.js capture",
     "benchmark:score": "node packages/tools/benchmark/src/bin/pairslash-benchmark.js score",
+    "benchmark:evidence": "node packages/tools/benchmark/src/bin/pairslash-benchmark.js evidence",
     "benchmark:case": "node packages/tools/benchmark/src/bin/pairslash-benchmark.js case",
     "benchmark:replay": "node packages/tools/benchmark/src/bin/pairslash-benchmark.js replay",
     "benchmark:round1": "node scripts/run-phase19-benchmark-round1.mjs",

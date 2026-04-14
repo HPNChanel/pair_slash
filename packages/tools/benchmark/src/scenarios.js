@@ -5,21 +5,68 @@ import { parseStructuredFile } from "./io.js";
 
 const REQUIRED_SCENARIO_FIELDS = [
   "scenario_id",
+  "scenario_title",
   "task_card_id",
   "workflow_id",
   "workflow_chain",
   "benchmark_shape",
   "advanced_surface",
+  "include_in_round_one",
+  "include_in_rollup",
+  "public_claim_mode",
   "required_runtime_ids",
+  "repo_profile_id",
+  "user_situation",
+  "repo_condition",
+  "input_package",
   "entrypoint",
   "baseline_method",
   "pairslash_path",
+  "expected_failure_boundaries",
+  "fairness_rule",
+  "disallowed_handholding",
+  "before_after_comparison_method",
+  "scoring_notes",
+  "claimability_notes",
   "success_criteria",
   "artifact_requirements",
 ];
 
 function pushError(errors, code, message) {
   errors.push(`${code} ${message}`);
+}
+
+function hasNonEmptyString(value) {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+function validateNonEmptyStringField(errors, code, scenario, fieldName) {
+  if (!hasNonEmptyString(scenario[fieldName])) {
+    pushError(
+      errors,
+      code,
+      `${scenario.source_path} field ${fieldName} must be a non-empty string`,
+    );
+  }
+}
+
+function validateNonEmptyArrayField(errors, code, scenario, fieldName) {
+  const values = scenario[fieldName];
+  if (!Array.isArray(values) || values.length === 0) {
+    pushError(
+      errors,
+      code,
+      `${scenario.source_path} field ${fieldName} must be a non-empty list`,
+    );
+    return;
+  }
+  if (!values.every((entry) => hasNonEmptyString(entry))) {
+    pushError(
+      errors,
+      code,
+      `${scenario.source_path} field ${fieldName} entries must be non-empty strings`,
+    );
+  }
 }
 
 export function loadScenarioDefinitions(repoRoot = process.cwd()) {
@@ -88,6 +135,14 @@ export function validateScenarioDefinitions(scenarios, context) {
       );
     }
 
+    if (task.public_claim_mode !== scenario.public_claim_mode) {
+      pushError(
+        errors,
+        "P19-SCN-015",
+        `${scenario.source_path} public_claim_mode=${scenario.public_claim_mode} must match task public_claim_mode ${task.public_claim_mode}`,
+      );
+    }
+
     if (!Array.isArray(scenario.workflow_chain) || scenario.workflow_chain.length === 0) {
       pushError(errors, "P19-SCN-007", `${scenario.source_path} workflow_chain must be a non-empty list`);
     }
@@ -110,6 +165,18 @@ export function validateScenarioDefinitions(scenarios, context) {
     if (!Array.isArray(scenario.artifact_requirements) || scenario.artifact_requirements.length === 0) {
       pushError(errors, "P19-SCN-011", `${scenario.source_path} artifact_requirements must be a non-empty list`);
     }
+
+    validateNonEmptyStringField(errors, "P19-SCN-016", scenario, "repo_profile_id");
+    validateNonEmptyStringField(errors, "P19-SCN-017", scenario, "user_situation");
+    validateNonEmptyStringField(errors, "P19-SCN-018", scenario, "repo_condition");
+    validateNonEmptyStringField(errors, "P19-SCN-019", scenario, "fairness_rule");
+    validateNonEmptyStringField(errors, "P19-SCN-020", scenario, "before_after_comparison_method");
+
+    validateNonEmptyArrayField(errors, "P19-SCN-021", scenario, "input_package");
+    validateNonEmptyArrayField(errors, "P19-SCN-022", scenario, "expected_failure_boundaries");
+    validateNonEmptyArrayField(errors, "P19-SCN-023", scenario, "disallowed_handholding");
+    validateNonEmptyArrayField(errors, "P19-SCN-024", scenario, "scoring_notes");
+    validateNonEmptyArrayField(errors, "P19-SCN-025", scenario, "claimability_notes");
 
     if (
       scenario.task_card_id === "W3" &&

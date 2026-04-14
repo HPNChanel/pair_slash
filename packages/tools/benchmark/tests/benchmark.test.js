@@ -7,10 +7,12 @@ import {
   captureBenchmarkRun,
   formatScoreReportText,
   renderCaseStudyArtifacts,
+  writeCaseStudySourceRecords,
   replayBenchmarkRun,
   runPhase19RoundOne,
   scoreBenchmarkRuns,
   validatePhase19BenchmarkConfig,
+  writeEvidenceLogArtifacts,
 } from "../src/index.js";
 
 import { createTempRepo, repoRoot } from "../../../../tests/phase4-helpers.js";
@@ -109,6 +111,12 @@ function createBaseRunRecord({
     artifact_refs: artifactRefs,
     include_in_rollup: true,
     negative_evidence_note: "Baseline required one redirect to authoritative files.",
+    before_state_notes: [
+      "cold-start context gap",
+      "frozen snapshot at commit abc1234",
+    ],
+    baseline_reprompt_count: 1,
+    pairslash_reprompt_count: 0,
     ...extras,
   };
 }
@@ -120,6 +128,28 @@ test("phase19 benchmark validation passes on freshly copied scenario bundle", se
     assert.equal(report.ok, true);
     assert.equal(report.summary.scenario_count >= 5, true);
     assert.equal(report.errors.length, 0);
+  } finally {
+    fixture.cleanup();
+  }
+});
+
+test("phase19 scenario validation fails closed when required enriched scenario field is missing", serial, () => {
+  const fixture = createBenchmarkTempRepo();
+  try {
+    const scenarioPath = join(
+      fixture.tempRoot,
+      "docs-private",
+      "validation",
+      "phase-3-5",
+      "scenarios",
+      "w1-onboard-repo-paired.yaml",
+    );
+    const original = readFileSync(scenarioPath, "utf8");
+    writeFileSync(scenarioPath, original.replace(/^repo_profile_id:.*\n/m, ""));
+
+    const report = validatePhase19BenchmarkConfig({ repoRoot: fixture.tempRoot });
+    assert.equal(report.ok, false);
+    assert.match(report.errors.join("\n"), /P19-SCN-002|P19-SCN-016/);
   } finally {
     fixture.cleanup();
   }
@@ -209,6 +239,34 @@ test("phase19 score, case-study rendering, and round1 pipeline run end-to-end", 
     assert.equal(score.metrics.trusted_weekly_reuse_rate, 1);
     assert.match(formatScoreReportText(score), /Phase 19 benchmark score/);
 
+    const evidenceLog = writeEvidenceLogArtifacts({ repoRoot: fixture.tempRoot });
+    assert.equal(evidenceLog.run_count, 3);
+    assert.equal(
+      existsSync(join(fixture.tempRoot, evidenceLog.json_path)),
+      true,
+    );
+    assert.equal(
+      existsSync(join(fixture.tempRoot, evidenceLog.markdown_path)),
+      true,
+    );
+
+    const sourceReport = writeCaseStudySourceRecords({ repoRoot: fixture.tempRoot });
+    assert.equal(sourceReport.output_count, 3);
+    assert.equal(
+      existsSync(
+        join(
+          fixture.tempRoot,
+          "docs-private",
+          "validation",
+          "phase-3-5",
+          "case-studies",
+          "sources",
+          "2026-04-13-w1-codex-01.source.json",
+        ),
+      ),
+      true,
+    );
+
     const caseReport = renderCaseStudyArtifacts({ repoRoot: fixture.tempRoot });
     assert.equal(caseReport.output_count, 3);
 
@@ -218,7 +276,8 @@ test("phase19 score, case-study rendering, and round1 pipeline run end-to-end", 
       "validation",
       "phase-3-5",
       "case-studies",
-      "2026-04-13-w1-codex-01.md",
+      "internal",
+      "2026-04-13-w1-codex-01.internal.md",
     );
     const caseStudyContents = readFileSync(caseStudyPath, "utf8");
     assert.match(
@@ -226,8 +285,22 @@ test("phase19 score, case-study rendering, and round1 pipeline run end-to-end", 
       /Results are lane-specific to the documented Codex CLI repo macOS lane\./,
     );
 
+    const publicCasePath = join(
+      fixture.tempRoot,
+      "docs-private",
+      "validation",
+      "phase-3-5",
+      "case-studies",
+      "public",
+      "2026-04-13-w1-codex-01.public.md",
+    );
+    const publicCaseContents = readFileSync(publicCasePath, "utf8");
+    assert.match(publicCaseContents, /Claimability/);
+    assert.doesNotMatch(publicCaseContents, /repo_snapshot_ref/);
+
     const round1Report = runPhase19RoundOne({ repoRoot: fixture.tempRoot });
     assert.equal(round1Report.status, "pass");
+    assert.equal(round1Report.evidence_log.run_count, 3);
   } finally {
     fixture.cleanup();
   }
