@@ -30,6 +30,8 @@ product-validation truth.
 - `@pairslash/cli` is the user-facing executable surface in the repo, but it
   is not currently a published package-manager artifact.
 - Package-manager publication is not part of the current public surface.
+- Signed release-trust bundles are release artifacts only. They do not turn
+  the repo into a published package-manager surface.
 - Runtime install paths such as `.agents/skills/` and `.github/skills/` are
   derived install artifacts, not canonical source.
 
@@ -45,6 +47,8 @@ Safe today:
 - Package-manager publication is not claimed today.
 - The absence of a top-level `NOTICE` file is intentional under the current
   legal and packaging posture.
+- Signed release-trust verification does not change the package-publicness
+  boundary.
 
 Not safe today:
 

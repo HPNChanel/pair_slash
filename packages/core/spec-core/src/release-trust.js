@@ -1,5 +1,5 @@
 import { sign as signBuffer, verify as verifyBuffer } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { readFileSync, rmSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 
 import YAML from "yaml";
@@ -30,6 +30,7 @@ const LIVE_RUNTIME_EVIDENCE_ROOT = "docs/evidence/live-runtime";
 const LIVE_RUNTIME_LANE_RECORD_KIND = "live-runtime-lane-record";
 const LIVE_RUNTIME_LANE_RECORD_SCHEMA_VERSION = "1.0.0";
 const SHARED_RUNTIME_SURFACE_MATRIX = "docs/compatibility/runtime-surface-matrix.yaml";
+const COMMITTED_TRUST_POLICY_PATH = "trust/trust-policy.yaml";
 
 const DEFAULT_TRUST_POLICY = Object.freeze({
   kind: "trust-policy",
@@ -57,6 +58,13 @@ const DEFAULT_VERSION_POLICY = Object.freeze({
   stable_lane: "same-major",
   zero_major_lane: "same-minor",
 });
+
+const PACK_TRUST_AUTHORITY_SCHEMA_VERSION = "1.0.0";
+const HIGH_RISK_CAPABILITIES = Object.freeze(
+  ["memory_write_global", "repo_write", "shell_exec", "test_exec", "mcp_client"].sort((left, right) =>
+    left.localeCompare(right),
+  ),
+);
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -172,6 +180,44 @@ function loadStructuredFile(filePath) {
     return JSON.parse(text);
   }
   return YAML.parse(text);
+}
+
+function normalizePackTrustAuthority(authority) {
+  const candidate = isObject(authority) ? authority : {};
+  return {
+    kind: candidate.kind ?? "pack-trust-authority",
+    schema_version: candidate.schema_version ?? PACK_TRUST_AUTHORITY_SCHEMA_VERSION,
+    core_maintained_packs: uniqueSorted(
+      Array.isArray(candidate.core_maintained_packs) ? candidate.core_maintained_packs : [],
+    ),
+    high_risk_capabilities: Object.fromEntries(
+    HIGH_RISK_CAPABILITIES.map((capability) => [
+      capability,
+      {
+        allowed_packs: uniqueSorted(
+          Array.isArray(candidate.high_risk_capabilities?.[capability]?.allowed_packs)
+            ? candidate.high_risk_capabilities?.[capability]?.allowed_packs
+            : [],
+        ),
+      },
+    ]),
+    ),
+  };
+}
+
+function createEmptyPackTrustAuthority() {
+  return {
+    kind: "pack-trust-authority",
+    schema_version: PACK_TRUST_AUTHORITY_SCHEMA_VERSION,
+    core_maintained_packs: [],
+    high_risk_capabilities: Object.fromEntries(
+      HIGH_RISK_CAPABILITIES.map((capability) => [capability, { allowed_packs: [] }]),
+    ),
+  };
+}
+
+function isObject(value) {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
 function stripRefFragment(value) {
@@ -555,12 +601,14 @@ export function evaluateRuntimeSupportClaim({ repoRoot, manifest, runtime, descr
 }
 
 function resolveTrustTier({
+  packId,
   sourceClass,
   descriptor,
   releaseVerification,
+  authorityDecision,
 }) {
   const tierClaim = normalizeTrustTier(
-    descriptor?.tier_claim,
+    authorityDecision?.authorized_tier ?? descriptor?.tier_claim,
     sourceClass === "first-party-release"
       ? "first-party-official"
       : sourceClass === "external-trusted"
@@ -575,6 +623,13 @@ function resolveTrustTier({
   }
   if (releaseVerification.verified) {
     return tierClaim;
+  }
+  if (
+    sourceClass === "first-party-release" &&
+    authorityDecision?.authorized_tier === "core-maintained" &&
+    packId
+  ) {
+    return "first-party-official";
   }
   return sourceClass === "external-trusted" ? "verified-external" : "unverified-external";
 }
@@ -692,6 +747,77 @@ export function loadVersionPolicy(repoRoot) {
   return normalizeVersionPolicy(policy);
 }
 
+export function loadPackTrustAuthority(repoRoot) {
+  for (const relativePath of ["trust/pack-authority.yaml", ".pairslash/trust/pack-authority.yaml"]) {
+    const filePath = resolve(repoRoot, relativePath);
+    if (!exists(filePath)) {
+      continue;
+    }
+    return normalizePackTrustAuthority(loadStructuredFile(filePath));
+  }
+  throw new Error("pack trust authority file not found (expected trust/pack-authority.yaml)");
+}
+
+export function evaluatePackTrustAuthority({
+  repoRoot,
+  packId,
+  manifest,
+  descriptor = null,
+}) {
+  let authority = createEmptyPackTrustAuthority();
+  const errors = [];
+  try {
+    authority = loadPackTrustAuthority(repoRoot);
+  } catch (error) {
+    errors.push(`trust-authority:load-failed:${error.message}`);
+  }
+  const memoryAuthority = buildMemoryAuthoritySummary(manifest);
+  const capabilities = uniqueSorted(manifest?.capabilities ?? []);
+  const publisherId =
+    descriptor?.publisher?.publisher_id ??
+    manifest?.support?.publisher?.publisher_id ??
+    null;
+  const requestedTier = normalizeTrustTier(
+    descriptor?.tier_claim ?? manifest?.support?.tier_claim,
+    publisherId === "pairslash" ? "first-party-official" : "verified-external",
+  );
+  let authorizedTier = requestedTier;
+
+  if (publisherId === "pairslash") {
+    if (requestedTier === "core-maintained" && !authority.core_maintained_packs.includes(packId)) {
+      errors.push(`trust-authority:core-maintained-not-authorized:${packId}`);
+      authorizedTier = "first-party-official";
+    }
+    if (requestedTier !== "core-maintained" && authority.core_maintained_packs.includes(packId)) {
+      errors.push(`trust-authority:core-maintained-claim-missing:${packId}`);
+    }
+  } else if (requestedTier === "core-maintained") {
+    errors.push(`trust-authority:non-pairslash-core-tier:${packId}`);
+    authorizedTier = "verified-external";
+  }
+
+  if (
+    memoryAuthority.global_project_memory === "write" &&
+    !authority.high_risk_capabilities.memory_write_global.allowed_packs.includes(packId)
+  ) {
+    errors.push(`trust-authority:memory-write-not-authorized:${packId}`);
+  }
+
+  for (const capability of capabilities.filter((entry) => HIGH_RISK_CAPABILITIES.includes(entry))) {
+    const allowedPacks = authority.high_risk_capabilities[capability]?.allowed_packs ?? [];
+    if (!allowedPacks.includes(packId)) {
+      errors.push(`trust-authority:capability-not-authorized:${packId}:${capability}`);
+    }
+  }
+
+  return {
+    authority,
+    requested_tier: requestedTier,
+    authorized_tier: authorizedTier,
+    errors: uniqueSorted(errors),
+  };
+}
+
 export function loadTrustKeyring(repoRoot, keyringPath) {
   const resolvedPath = resolve(repoRoot, keyringPath);
   if (!exists(resolvedPath)) {
@@ -714,8 +840,96 @@ export function loadTrustKeyring(repoRoot, keyringPath) {
             key_id: key.key_id,
             public_key_pem: key.public_key_pem,
             status: key.status ?? "active",
+            algorithm: key.algorithm ?? "ed25519",
+            created_at: key.created_at ?? null,
           }))
       : [],
+  };
+}
+
+export function validateReleaseTrustBootstrap({ repoRoot, publisherId = "pairslash" }) {
+  const failures = [];
+  if (!exists(resolve(repoRoot, COMMITTED_TRUST_POLICY_PATH))) {
+    failures.push(`trust-policy:missing:${COMMITTED_TRUST_POLICY_PATH}`);
+  }
+
+  let trustPolicy = null;
+  try {
+    trustPolicy = loadTrustPolicy(repoRoot);
+  } catch (error) {
+    return {
+      kind: "release-trust-bootstrap-validation",
+      publisher: publisherId,
+      keyring_path: null,
+      active_key_count: 0,
+      authority_loaded: false,
+      ok: false,
+      failures: [`trust-policy:invalid:${error.message}`],
+    };
+  }
+
+  const publisherEntry = resolvePublisherEntry(trustPolicy, publisherId);
+  if (!publisherEntry) {
+    failures.push(`trust-policy:publisher-missing:${publisherId}`);
+  }
+  const publisherSourceClass = normalizeSourceClass(
+    publisherEntry?.source_class,
+    "external-trusted",
+  );
+  if (publisherEntry && publisherSourceClass !== "first-party-release") {
+    failures.push(
+      `trust-policy:publisher-source-class-not-first-party-release:${publisherId}:${publisherSourceClass}`,
+    );
+  }
+
+  const keyringPath = publisherEntry?.keyring_path ?? null;
+  if (!keyringPath) {
+    failures.push(`trust-policy:keyring-path-missing:${publisherId}`);
+  }
+
+  let keyring = { keys: [] };
+  if (keyringPath) {
+    try {
+      keyring = loadTrustKeyring(repoRoot, keyringPath);
+      if (!keyring.publisher) {
+        failures.push(`trust-keyring:publisher-missing:${keyringPath}`);
+      } else if (keyring.publisher !== publisherId) {
+        failures.push(`trust-keyring:publisher-mismatch:${keyringPath}:${keyring.publisher}`);
+      }
+    } catch (error) {
+      failures.push(`trust-keyring:invalid:${keyringPath}:${error.message}`);
+    }
+  }
+
+  const activeKeys = (keyring.keys ?? []).filter((key) => key.status !== "revoked");
+  if (activeKeys.length === 0) {
+    failures.push(`trust-keyring:no-active-keys:${publisherId}`);
+  }
+
+  let authorityLoaded = false;
+  try {
+    const authority = loadPackTrustAuthority(repoRoot);
+    authorityLoaded = true;
+    if (!Array.isArray(authority.core_maintained_packs) || authority.core_maintained_packs.length === 0) {
+      failures.push("pack-authority:core-maintained-empty");
+    }
+    for (const capability of HIGH_RISK_CAPABILITIES) {
+      if (!Array.isArray(authority.high_risk_capabilities?.[capability]?.allowed_packs)) {
+        failures.push(`pack-authority:invalid-capability-list:${capability}`);
+      }
+    }
+  } catch (error) {
+    failures.push(`pack-authority:invalid:${error.message}`);
+  }
+
+  return {
+    kind: "release-trust-bootstrap-validation",
+    publisher: publisherId,
+    keyring_path: keyringPath,
+    active_key_count: activeKeys.length,
+    authority_loaded: authorityLoaded,
+    ok: failures.length === 0,
+    failures: uniqueSorted(failures),
   };
 }
 
@@ -887,6 +1101,103 @@ function buildChecksums(trustDir) {
   };
 }
 
+function isSafeChecksumPath(pathValue) {
+  if (typeof pathValue !== "string" || pathValue.length === 0) {
+    return false;
+  }
+  if (pathValue.trim() !== pathValue) {
+    return false;
+  }
+  if (
+    pathValue.startsWith("/") ||
+    pathValue.startsWith("./") ||
+    pathValue.startsWith("../") ||
+    pathValue.includes("/../") ||
+    pathValue.includes("/./") ||
+    pathValue.includes("\\")
+  ) {
+    return false;
+  }
+  return true;
+}
+
+function collectSignatureArtifacts(trustDir) {
+  return walkFiles(trustDir)
+    .filter((filePath) => filePath.endsWith(".sig.json"))
+    .map((filePath) => relativeFromRoot(trustDir, filePath))
+    .sort((left, right) => left.localeCompare(right));
+}
+
+function clearReleaseTrustOutputDir(outDir) {
+  rmSync(join(outDir, "packs"), { recursive: true, force: true });
+  rmSync(join(outDir, "release-manifest.json"), { force: true });
+  rmSync(join(outDir, "release-manifest.sig.json"), { force: true });
+  rmSync(join(outDir, "checksums.json"), { force: true });
+}
+
+function validateTrustBundleChecksums(trustDir) {
+  const checksumsPath = join(trustDir, "checksums.json");
+  if (!exists(checksumsPath)) {
+    return ["missing checksum set"];
+  }
+  const parsed = JSON.parse(readFileSync(checksumsPath, "utf8"));
+  if (
+    parsed?.kind !== "checksum-set" ||
+    parsed?.schema_version !== "1.0.0" ||
+    parsed?.algorithm !== "sha256" ||
+    !Array.isArray(parsed?.entries)
+  ) {
+    return ["invalid checksum set"];
+  }
+  const entryFailures = [];
+  const seenPaths = new Set();
+  const actualEntries = [];
+  for (const entry of parsed.entries) {
+    if (typeof entry?.path !== "string" || typeof entry?.sha256 !== "string") {
+      entryFailures.push("invalid checksum entry");
+      continue;
+    }
+    if (!isSafeChecksumPath(entry.path)) {
+      entryFailures.push(`invalid checksum entry path ${entry.path}`);
+      continue;
+    }
+    if (seenPaths.has(entry.path)) {
+      entryFailures.push(`duplicate checksum entry for ${entry.path}`);
+      continue;
+    }
+    seenPaths.add(entry.path);
+    actualEntries.push({
+      path: entry.path,
+      sha256: entry.sha256,
+    });
+  }
+  if (entryFailures.length > 0) {
+    return uniqueSorted(entryFailures);
+  }
+
+  const expectedEntries = buildChecksums(trustDir).entries;
+  actualEntries.sort((left, right) => left.path.localeCompare(right.path));
+  const expectedByPath = new Map(expectedEntries.map((entry) => [entry.path, entry.sha256]));
+  const actualByPath = new Map(actualEntries.map((entry) => [entry.path, entry.sha256]));
+  const failures = [];
+
+  for (const entry of expectedEntries) {
+    if (!actualByPath.has(entry.path)) {
+      failures.push(`checksum entry missing for ${entry.path}`);
+      continue;
+    }
+    if (actualByPath.get(entry.path) !== entry.sha256) {
+      failures.push(`checksum digest mismatch for ${entry.path}`);
+    }
+  }
+  for (const entry of actualEntries) {
+    if (!expectedByPath.has(entry.path)) {
+      failures.push(`unexpected checksum entry ${entry.path}`);
+    }
+  }
+  return failures;
+}
+
 export function writeReleaseTrustBundle({
   repoRoot,
   releaseId,
@@ -897,6 +1208,7 @@ export function writeReleaseTrustBundle({
   outDir = resolve(repoRoot, RELEASE_TRUST_DIR),
   sourceCommit = null,
 }) {
+  clearReleaseTrustOutputDir(outDir);
   const packEntries = [];
   for (const artifact of packArtifacts.slice().sort((left, right) => left.pack_id.localeCompare(right.pack_id))) {
     const packDir = join(outDir, "packs", artifact.pack_id);
@@ -980,6 +1292,13 @@ function verifyReleaseBundleForPack({
       reasons: ["release-trust-bundle:unsigned"],
     };
   }
+  const checksumFailures = validateTrustBundleChecksums(artifacts.trust_dir);
+  if (checksumFailures.length > 0) {
+    return {
+      verified: false,
+      reasons: checksumFailures.map((failure) => `release-checksum-invalid:${failure}`),
+    };
+  }
 
   const releaseManifest = JSON.parse(readFileSync(releaseManifestPath, "utf8"));
   const signatureEnvelope = JSON.parse(readFileSync(signaturePath, "utf8"));
@@ -1028,31 +1347,35 @@ function verifyReleaseBundleForPack({
     };
   }
   const packMetadata = JSON.parse(readFileSync(packMetadataPath, "utf8"));
-  if (packEntry.signature_path) {
-    const packSignaturePath = join(artifacts.trust_dir, packEntry.signature_path);
-    if (!exists(packSignaturePath)) {
-      return {
-        verified: false,
-        reasons: [`pack-signature-missing:${compiledPack.pack_id}`],
-      };
-    }
-    const packSignature = JSON.parse(readFileSync(packSignaturePath, "utf8"));
-    const packKey = keyring.keys.find(
-      (key) => key.key_id === packSignature.key_id && key.status !== "revoked",
-    );
-    if (
-      !packKey ||
-      !verifyDetachedSignature({
-        payload: packMetadata,
-        signatureEnvelope: packSignature,
-        publicKeyPem: packKey.public_key_pem,
-      })
-    ) {
-      return {
-        verified: false,
-        reasons: [`pack-signature-invalid:${compiledPack.pack_id}`],
-      };
-    }
+  if (!packEntry.signature_path) {
+    return {
+      verified: false,
+      reasons: [`pack-signature-missing:${compiledPack.pack_id}`],
+    };
+  }
+  const packSignaturePath = join(artifacts.trust_dir, packEntry.signature_path);
+  if (!exists(packSignaturePath)) {
+    return {
+      verified: false,
+      reasons: [`pack-signature-missing:${compiledPack.pack_id}`],
+    };
+  }
+  const packSignature = JSON.parse(readFileSync(packSignaturePath, "utf8"));
+  const packKey = keyring.keys.find(
+    (key) => key.key_id === packSignature.key_id && key.status !== "revoked",
+  );
+  if (
+    !packKey ||
+    !verifyDetachedSignature({
+      payload: packMetadata,
+      signatureEnvelope: packSignature,
+      publicKeyPem: packKey.public_key_pem,
+    })
+  ) {
+    return {
+      verified: false,
+      reasons: [`pack-signature-invalid:${compiledPack.pack_id}`],
+    };
   }
   if (packMetadata.manifest_digest !== compiledPack.manifest_digest) {
     return {
@@ -1117,6 +1440,11 @@ export function assessPackTrust({
     candidateVersion: compiledPack.version ?? manifest.pack_version,
     policy: versionPolicy,
   });
+  const authorityDecision = evaluatePackTrustAuthority({
+    repoRoot,
+    packId: manifest.pack.id,
+    manifest,
+  });
   const descriptorRecord = loadPackTrustDescriptorRecord({
     manifestPath,
     manifest,
@@ -1162,9 +1490,11 @@ export function assessPackTrust({
   }
 
   const trustTier = resolveTrustTier({
+    packId: manifest.pack.id,
     sourceClass,
     descriptor: descriptorRecord.descriptor,
     releaseVerification,
+    authorityDecision,
   });
   const signatureStatus = resolveSignatureStatus({
     sourceClass,
@@ -1202,17 +1532,21 @@ export function assessPackTrust({
       policyAction = mergeAction(policyAction, sourceClass === "local-source" ? "ask" : "deny");
     }
   }
+  if (authorityDecision.errors.length > 0) {
+    reasons.push(...authorityDecision.errors);
+    policyAction = mergeAction(policyAction, "deny");
+  }
 
   if (
     memoryAuthority.global_project_memory === "write" &&
-    descriptorRecord.descriptor?.tier_claim !== "core-maintained"
+    authorityDecision.authorized_tier !== "core-maintained"
   ) {
     reasons.push(`memory-authority-exceeds-tier:${manifest.pack.id}`);
     policyAction = mergeAction(policyAction, "deny");
   }
   if (
     capabilities.includes("memory_write_global") &&
-    descriptorRecord.descriptor?.tier_claim !== "core-maintained"
+    authorityDecision.authorized_tier !== "core-maintained"
   ) {
     reasons.push(`capability-exceeds-tier:${manifest.pack.id}:memory_write_global`);
     policyAction = mergeAction(policyAction, "deny");
@@ -1398,6 +1732,10 @@ export function verifyReleaseTrustBundle({ repoRoot, trustDir = resolve(repoRoot
   if (!exists(signaturePath)) {
     throw new Error(`missing release signature at ${signaturePath}`);
   }
+  const checksumFailures = validateTrustBundleChecksums(trustDir);
+  if (checksumFailures.length > 0) {
+    throw new Error(checksumFailures.join("; "));
+  }
   const releaseManifest = JSON.parse(readFileSync(releaseManifestPath, "utf8"));
   const signatureEnvelope = JSON.parse(readFileSync(signaturePath, "utf8"));
   const trustPolicy = loadTrustPolicy(repoRoot);
@@ -1464,6 +1802,86 @@ export function verifyReleaseTrustBundle({ repoRoot, trustDir = resolve(repoRoot
     release_id: releaseManifest.release_id,
     publisher: releaseManifest.publisher,
     pack_count: releaseManifest.pack_count,
+    verified: true,
+  };
+}
+
+export function verifyReleaseTrustBundleStructure({
+  repoRoot,
+  trustDir = resolve(repoRoot, RELEASE_TRUST_DIR),
+}) {
+  const releaseManifestPath = join(trustDir, "release-manifest.json");
+  if (!exists(releaseManifestPath)) {
+    throw new Error(`missing release manifest at ${releaseManifestPath}`);
+  }
+  const checksumFailures = validateTrustBundleChecksums(trustDir);
+  if (checksumFailures.length > 0) {
+    throw new Error(checksumFailures.join("; "));
+  }
+  const releaseManifest = JSON.parse(readFileSync(releaseManifestPath, "utf8"));
+  const failures = [];
+  const releaseSignaturePath = join(trustDir, "release-manifest.sig.json");
+  const packEntries = releaseManifest.packs ?? [];
+  const packSignatureStates = packEntries.map((entry) => Boolean(entry.signature_path));
+  if (packSignatureStates.some((state) => state !== packSignatureStates[0])) {
+    failures.push("pack signature state is inconsistent across release-manifest entries");
+  }
+  const signed = packSignatureStates.length === 0 ? exists(releaseSignaturePath) : packSignatureStates[0];
+  if (signed && !exists(releaseSignaturePath)) {
+    failures.push("missing release signature artifact release-manifest.sig.json");
+  }
+  if (!signed && exists(releaseSignaturePath)) {
+    failures.push("unexpected release signature artifact release-manifest.sig.json");
+  }
+  const expectedSignatureArtifacts = new Set();
+  if (signed) {
+    expectedSignatureArtifacts.add("release-manifest.sig.json");
+  }
+
+  for (const packEntry of packEntries) {
+    const metadataPath = join(trustDir, packEntry.metadata_path);
+    if (!exists(metadataPath)) {
+      failures.push(`missing pack metadata ${packEntry.metadata_path}`);
+      continue;
+    }
+    const metadata = JSON.parse(readFileSync(metadataPath, "utf8"));
+    if (packEntry.metadata_sha256 !== sha256(stableJson(metadata))) {
+      failures.push(`pack metadata digest mismatch for ${packEntry.pack_id}`);
+    }
+    if (signed) {
+      if (!packEntry.signature_path) {
+        failures.push(`pack metadata signature missing for ${packEntry.pack_id}`);
+      } else {
+        expectedSignatureArtifacts.add(packEntry.signature_path);
+        if (!exists(join(trustDir, packEntry.signature_path))) {
+          failures.push(`pack metadata signature file missing for ${packEntry.pack_id}`);
+        }
+      }
+    } else if (packEntry.signature_path) {
+      failures.push(`pack metadata signature unexpected for unsigned bundle ${packEntry.pack_id}`);
+    }
+  }
+  const actualSignatureArtifacts = collectSignatureArtifacts(trustDir);
+  const actualSignatureArtifactSet = new Set(actualSignatureArtifacts);
+  for (const artifactPath of actualSignatureArtifacts) {
+    if (!expectedSignatureArtifacts.has(artifactPath)) {
+      failures.push(`unexpected release signature artifact ${artifactPath}`);
+    }
+  }
+  for (const artifactPath of expectedSignatureArtifacts) {
+    if (!actualSignatureArtifactSet.has(artifactPath)) {
+      failures.push(`missing release signature artifact ${artifactPath}`);
+    }
+  }
+  if (failures.length > 0) {
+    throw new Error(failures.join("; "));
+  }
+  return {
+    kind: "release-trust-structure-verification",
+    release_id: releaseManifest.release_id,
+    publisher: releaseManifest.publisher,
+    pack_count: releaseManifest.pack_count,
+    signed,
     verified: true,
   };
 }

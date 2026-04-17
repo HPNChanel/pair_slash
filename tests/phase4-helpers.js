@@ -162,6 +162,17 @@ export function updatePackManifest({ repoRoot: tempRoot, packId, mutate }) {
   return manifestPath;
 }
 
+export function updatePackTrustAuthority({ repoRoot: tempRoot, mutate }) {
+  const authorityPath = join(tempRoot, "trust", "pack-authority.yaml");
+  const rawAuthority = YAML.parse(readFileSync(authorityPath, "utf8"));
+  const updated = mutate(structuredClone(rawAuthority)) ?? rawAuthority;
+  writeFileSync(authorityPath, YAML.stringify(updated, {
+    lineWidth: 0,
+    simpleKeys: true,
+  }));
+  return authorityPath;
+}
+
 export function installFakeRuntime({ codexVersion = null, copilotVersion = null } = {}) {
   const binDir = mkdtempSync(join(tmpdir(), "pairslash-runtime-"));
   const previousPath = process.env.PATH ?? "";

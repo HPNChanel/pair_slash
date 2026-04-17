@@ -1,9 +1,9 @@
 # PairSlash Scoped Release Verdict
 
 Gate status: NO-GO
-Last updated: 2026-04-05
+Last updated: 2026-04-17
 Truth class: scoped-release
-Claim scope: phase4-installability-substrate
+Claim scope: phase20-release-trust-activation
 Release-covered runtimes: codex_cli, copilot_cli
 
 This file owns scoped release/installability truth only.
@@ -17,13 +17,12 @@ claiming product-validation exit?
 
 ## Current decision
 
-Not on the current branch.
+Not yet.
 
-PairSlash still has a technically shipped installability substrate for exactly
-two runtimes, with `/skills` as the canonical front door and explicit,
-preview-first managed commands (`doctor`, `preview`, `install`, `update`,
-`uninstall`), but the current branch is not entitled to a scoped release claim
-while release-readiness is failing.
+PairSlash has the scoped release-trust implementation and local release gates,
+but this branch is blocked from a shipped scoped release claim until at least
+one protected `release-trust-candidate` run succeeds with an uploaded signed
+bundle artifact.
 
 ## What this verdict proves
 
@@ -31,7 +30,18 @@ while release-readiness is failing.
 - Preview-first mutation, override preservation, ownership tracking, and
   rollback-safe behavior are part of the shipped surface.
 - Doctor is a machine-readable diagnosis surface for runtime detection, path
-  checks, permission checks, support-lane reporting, and install blocking state.
+  checks, permission checks, support-lane reporting, install blocking state,
+  and installed trust posture review.
+- Release-readiness now requires release-trust bundle build plus structural
+  checksum verification on the current branch.
+- The first-party public trust root is checked into
+  `trust/first-party-keys.json`, and protected CI is the only approved lane
+  for live-signed release-trust bundles.
+- Protected release lanes enforce
+  `PAIRSLASH_RELEASE_TRUST_REQUIRE_SIGNED=1`, so missing signing material is a
+  hard failure instead of a soft skip.
+- `trust/pack-authority.yaml` now centrally controls `core-maintained` status
+  and high-risk capability authority.
 - Compatibility docs are generated from deterministic compat-lab metadata and
   kept in sync by tests.
 
@@ -41,8 +51,10 @@ while release-readiness is failing.
 - Weekly reuse, must-win wedge success, or business pull.
 - Runtime parity beyond the exact lane evidence in compatibility and runtime
   verification docs.
+- Signed release publication on every fork or clone without protected signing
+  configuration.
 - Legal/package publicness beyond current repository metadata.
-- That the current branch is release-ready while `npm run test:release` fails.
+- Live runtime support promotion beyond the checked-in lane records.
 
 ## Required companion sources
 
@@ -56,5 +68,7 @@ while release-readiness is failing.
 
 ## Update rule
 
-This file must stay `Gate status: NO-GO` until `npm run test:release` is green
-again and public support wording stays inside the checked-in live evidence.
+This file must return to `Gate status: NO-GO` if `npm run test:release` fails,
+if release wording outruns the checked-in support evidence, or if the scoped
+release story starts implying package publication or runtime parity beyond the
+documented lanes.

@@ -71,6 +71,22 @@ function parseArgs(argv) {
   return options;
 }
 
+function loadSigningOptions({ repoRoot, privateKeyFile, keyId }) {
+  const envPrivateKey = process.env.PAIRSLASH_RELEASE_TRUST_PRIVATE_KEY ?? null;
+  const envKeyId = process.env.PAIRSLASH_RELEASE_TRUST_KEY_ID ?? null;
+  const privateKeyPem = privateKeyFile
+    ? readFileSync(privateKeyFile, "utf8")
+    : envPrivateKey;
+  const resolvedKeyId = keyId ?? envKeyId;
+  if (Boolean(privateKeyPem) !== Boolean(resolvedKeyId)) {
+    throw new Error("provide both signing key and key id, or neither");
+  }
+  return {
+    privateKeyPem,
+    keyId: resolvedKeyId,
+  };
+}
+
 function detectSourceCommit(repoRoot) {
   const result = spawnSync("git", ["rev-parse", "HEAD"], {
     cwd: repoRoot,
@@ -121,14 +137,15 @@ function compileAllRuntimes({ repoRoot, manifestPath }) {
 }
 
 const options = parseArgs(process.argv.slice(2));
-if (Boolean(options.privateKeyFile) !== Boolean(options.keyId)) {
-  throw new Error("provide both --private-key-file and --key-id, or neither");
-}
+const signingOptions = loadSigningOptions({
+  repoRoot: options.repoRoot,
+  privateKeyFile: options.privateKeyFile,
+  keyId: options.keyId,
+});
 
 const releaseId = options.releaseId ?? detectReleaseId(options.repoRoot);
 const sourceCommit = options.sourceCommit ?? detectSourceCommit(options.repoRoot);
 const selectedRecords = selectManifestRecords(options.repoRoot, options.packs);
-const privateKeyPem = options.privateKeyFile ? readFileSync(options.privateKeyFile, "utf8") : null;
 
 const packArtifacts = selectedRecords.map((record) => {
   const compiledPacks = compileAllRuntimes({
@@ -152,8 +169,8 @@ const bundle = writeReleaseTrustBundle({
   releaseId,
   packArtifacts,
   publisher: options.publisher,
-  privateKeyPem,
-  keyId: options.keyId,
+  privateKeyPem: signingOptions.privateKeyPem,
+  keyId: signingOptions.keyId,
   outDir: options.outDir ?? resolve(options.repoRoot, "dist", "release-trust"),
   sourceCommit,
 });

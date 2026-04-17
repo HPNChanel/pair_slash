@@ -1,0 +1,49 @@
+name: release-trust-candidate
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-trust-candidate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  signed-release-trust:
+    runs-on: ubuntu-latest
+    env:
+      PAIRSLASH_RELEASE_TRUST_PRIVATE_KEY: ${{ secrets.PAIRSLASH_RELEASE_TRUST_PRIVATE_KEY }}
+      PAIRSLASH_RELEASE_TRUST_KEY_ID: ${{ secrets.PAIRSLASH_RELEASE_TRUST_KEY_ID }}
+      PAIRSLASH_RELEASE_TRUST_REQUIRE_SIGNED: "1"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run release-readiness gates
+        run: npm run test:release
+
+      - name: Build signed release-trust artifact
+        run: node scripts/build-release-trust.mjs --out artifacts/release-trust
+
+      - name: Verify signed release-trust artifact
+        run: node scripts/verify-release-trust.mjs --trust-dir artifacts/release-trust
+
+      - name: Upload signed release-trust artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-trust-bundle-candidate
+          path: artifacts/release-trust

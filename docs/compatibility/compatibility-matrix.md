@@ -155,7 +155,7 @@ Interpretation rules:
 | quick-pr | pull_request and push | lint, unit, compat goldens, matrix sync | yes | Fast deterministic gate that blocks obvious compiler/installer/docs regressions. |
 | cross-os-acceptance | pull_request and push | macOS Codex acceptance, Linux Copilot acceptance, Windows prep acceptance | yes | Cross-OS installability and doctor coverage with fake acceptance plus shimmed runtime fixtures in deterministic lanes. |
 | nightly-smoke | nightly schedule or workflow_dispatch | fixture smoke matrix, behavior evals, artifact regeneration check | yes | Deeper regression control without forcing the full cost into every PR. |
-| release-readiness | manual pre-release gate | full JS suite, compat-lab suite, public docs present, generated artifacts up to date | yes | Release promotion must not proceed unless this gate is green. |
+| release-readiness | manual pre-release gate | full JS suite, compat-lab suite, public docs present, generated artifacts up to date, release trust bundle structure | yes | Release promotion must not proceed unless this gate is green. Protected CI may additionally run the live-signed release-trust verification lane when signing secrets are configured. |
 
 ## Fixture coverage
 

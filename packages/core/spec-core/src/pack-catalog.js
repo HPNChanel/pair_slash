@@ -11,6 +11,7 @@ import {
 import { loadPackManifestRecords } from "./manifest.js";
 import {
   evaluateRuntimeSupportClaim,
+  evaluatePackTrustAuthority,
   loadPackTrustDescriptorRecord,
 } from "./release-trust.js";
 import { exists, relativeFrom, stableYaml, walkFiles } from "./utils.js";
@@ -286,9 +287,16 @@ export const DEFAULT_PUBLIC_RELEASE_GATES = Object.freeze([
   {
     id: "release-readiness",
     trigger: "manual pre-release gate",
-    checks: ["full JS suite", "compat-lab suite", "public docs present", "generated artifacts up to date"],
+    checks: [
+      "full JS suite",
+      "compat-lab suite",
+      "public docs present",
+      "generated artifacts up to date",
+      "release trust bundle structure",
+    ],
     required_for_release: true,
-    notes: "Release promotion must not proceed unless this gate is green.",
+    notes:
+      "Release promotion must not proceed unless this gate is green. Protected CI may additionally run the live-signed release-trust verification lane when signing secrets are configured.",
   },
 ]);
 
@@ -1453,6 +1461,12 @@ function buildCoreCatalogRecord(repoRoot, record, { publicSupport, laneRecordInd
     manifest: record.manifest,
     descriptorRecord,
   });
+  const authorityDecision = evaluatePackTrustAuthority({
+    repoRoot,
+    packId: record.packId,
+    manifest: record.manifest,
+    descriptor: descriptorRecord.descriptor,
+  });
   const sourceRoot = toPosixPath(record.manifest.runtime_assets?.source_root ?? `packs/core/${record.packId}`);
   const supportScope = record.manifest.support?.support_level_claim ?? descriptorRecord.descriptor?.support_level_claim ?? null;
   const releaseChannel = record.manifest.release_channel ?? null;
@@ -1524,7 +1538,7 @@ function buildCoreCatalogRecord(repoRoot, record, { publicSupport, laneRecordInd
       ? `packages/core/spec-core/specs/${record.packId}.spec.yaml`
       : null,
     compatibility_matrix: SHARED_RUNTIME_SURFACE_MATRIX,
-    trust_tier: record.manifest.support?.tier_claim ?? descriptorRecord.descriptor?.tier_claim ?? null,
+    trust_tier: authorityDecision.authorized_tier,
     publisher_id: record.manifest.support?.publisher?.publisher_id ?? descriptorRecord.descriptor?.publisher?.publisher_id ?? null,
     publisher_class: record.manifest.support?.publisher?.publisher_class ?? descriptorRecord.descriptor?.publisher?.publisher_class ?? null,
     maintainer_owner: record.manifest.support?.maintainers?.owner ?? null,
@@ -1532,7 +1546,8 @@ function buildCoreCatalogRecord(repoRoot, record, { publicSupport, laneRecordInd
     runtime_support: runtimeSupport,
     promotion_ready: buildPromotionBlockers(runtimeSupport).length === 0,
     promotion_blockers: buildPromotionBlockers(runtimeSupport),
-    descriptor_errors: [...(descriptorRecord.errors ?? [])].sort((left, right) => left.localeCompare(right)),
+    descriptor_errors: [...(descriptorRecord.errors ?? []), ...(authorityDecision.errors ?? [])]
+      .sort((left, right) => left.localeCompare(right)),
     descriptor_shim_errors: [...(descriptorRecord.shimErrors ?? [])].sort((left, right) => left.localeCompare(right)),
   };
 }

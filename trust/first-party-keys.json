@@ -2,5 +2,13 @@
   "kind": "trust-keyring",
   "schema_version": "1.0.0",
   "publisher": "pairslash",
-  "keys": []
+  "keys": [
+    {
+      "key_id": "pairslash-release-2026-04",
+      "status": "active",
+      "algorithm": "ed25519",
+      "created_at": "2026-04-15T00:00:00Z",
+      "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAq1gS9Wio2i+pTaw/t0AP3Oh3l+5PRDZ7a5OPawRFGfo=\n-----END PUBLIC KEY-----\n"
+    }
+  ]
 }

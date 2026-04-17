@@ -40,6 +40,10 @@ jobs:
   release-gates:
     needs: quick-checks
     runs-on: ubuntu-latest
+    env:
+      PAIRSLASH_RELEASE_TRUST_PRIVATE_KEY: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && secrets.PAIRSLASH_RELEASE_TRUST_PRIVATE_KEY || '' }}
+      PAIRSLASH_RELEASE_TRUST_KEY_ID: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && secrets.PAIRSLASH_RELEASE_TRUST_KEY_ID || '' }}
+      PAIRSLASH_RELEASE_TRUST_REQUIRE_SIGNED: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && '1' || '0' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -55,3 +59,18 @@ jobs:
 
       - name: Run release-readiness gates
         run: npm run test:release
+
+      - name: Build signed release-trust artifact
+        if: env.PAIRSLASH_RELEASE_TRUST_REQUIRE_SIGNED == '1' && env.PAIRSLASH_RELEASE_TRUST_PRIVATE_KEY != '' && env.PAIRSLASH_RELEASE_TRUST_KEY_ID != ''
+        run: node scripts/build-release-trust.mjs --out artifacts/release-trust
+
+      - name: Verify signed release-trust artifact
+        if: env.PAIRSLASH_RELEASE_TRUST_REQUIRE_SIGNED == '1' && env.PAIRSLASH_RELEASE_TRUST_PRIVATE_KEY != '' && env.PAIRSLASH_RELEASE_TRUST_KEY_ID != ''
+        run: node scripts/verify-release-trust.mjs --trust-dir artifacts/release-trust
+
+      - name: Upload signed release-trust artifact
+        if: env.PAIRSLASH_RELEASE_TRUST_REQUIRE_SIGNED == '1' && env.PAIRSLASH_RELEASE_TRUST_PRIVATE_KEY != '' && env.PAIRSLASH_RELEASE_TRUST_KEY_ID != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-trust-bundle
+          path: artifacts/release-trust

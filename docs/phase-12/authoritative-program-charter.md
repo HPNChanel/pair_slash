@@ -47,7 +47,7 @@ runtime-lane support truth or product-validation truth.
 
 ### Release-Trust Truth
 
-Release-trust truth answers whether PairSlash can make a scoped installability claim without pretending product validation is complete. The authoritative public files are `docs/releases/scoped-release-verdict.md` and `docs/releases/phase-5-shipped-scope.md`. Maintainer release-readiness runbooks remain local-only. That layer is currently `NO-GO` on the current branch because release-readiness is red, and still `NO-GO` for product-validation exit. Legal and package publicness remain capped by current metadata in `package.json`, package-level `package.json` files, the absence or presence of `LICENSE` and `NOTICE`, and the current boundary recorded in `docs/releases/legal-packaging-status.md`.
+Release-trust truth answers whether PairSlash can make a scoped installability claim without pretending product validation is complete. The authoritative public files are `docs/releases/scoped-release-verdict.md` and `docs/releases/phase-5-shipped-scope.md`. Maintainer release-readiness runbooks remain local-only. On the current branch, that layer is `GO` only when `npm run test:release` is green and release wording stays inside the checked-in lane evidence. Its current scoped proof is checksum-backed structural release-trust verification on the branch plus a protected-CI path for live-signed release-trust bundles. It remains `NO-GO` for product-validation exit. Legal and package publicness remain capped by current metadata in `package.json`, package-level `package.json` files, the absence or presence of `LICENSE` and `NOTICE`, and the current boundary recorded in `docs/releases/legal-packaging-status.md`.
 
 ## 4. Official Phase Statement
 

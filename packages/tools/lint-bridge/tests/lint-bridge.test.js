@@ -6,7 +6,11 @@ import YAML from "yaml";
 
 import { buildContractEnvelope } from "@pairslash/contract-engine";
 import { runLintBridge } from "../src/index.js";
-import { createTempRepo, updatePackManifest } from "../../../../tests/phase4-helpers.js";
+import {
+  createTempRepo,
+  updatePackManifest,
+  updatePackTrustAuthority,
+} from "../../../../tests/phase4-helpers.js";
 
 const serial = { concurrency: false };
 
@@ -79,6 +83,15 @@ test("lint bridge reports runtime range parse errors", serial, () => {
 test("lint bridge emits warning when shell_exec is declared without required_tools", serial, () => {
   const fixture = createTempRepo({ packs: ["pairslash-plan"] });
   try {
+    updatePackTrustAuthority({
+      repoRoot: fixture.tempRoot,
+      mutate(authority) {
+        authority.high_risk_capabilities.shell_exec.allowed_packs = [
+          ...new Set([...(authority.high_risk_capabilities?.shell_exec?.allowed_packs ?? []), "pairslash-plan"]),
+        ].sort();
+        return authority;
+      },
+    });
     updatePackManifest({
       repoRoot: fixture.tempRoot,
       packId: "pairslash-plan",

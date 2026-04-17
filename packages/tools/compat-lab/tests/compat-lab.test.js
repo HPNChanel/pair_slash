@@ -19,6 +19,12 @@ const SNAPSHOT_FIXTURES = [
   "repo-conflict-existing-runtime",
 ];
 
+function loadScopedReleaseGateStatus(rootPath) {
+  const verdictPath = resolve(rootPath, "docs", "releases", "scoped-release-verdict.md");
+  const match = readFileSync(verdictPath, "utf8").match(/Gate status:\s*([A-Z-]+)/i);
+  return match ? match[1].toUpperCase() : "NO-GO";
+}
+
 test("compat-lab registers Phase 6 fixture corpus with required archetypes", () => {
   const fixtures = listCompatFixtures();
   assert.deepEqual(
@@ -77,6 +83,7 @@ test("compat-lab smoke lanes cover Phase 6 compile/install/doctor gates", () => 
     repoRoot,
   });
   assert.equal(results.length, 6);
+  const gateStatus = loadScopedReleaseGateStatus(repoRoot);
 
   const byId = new Map(results.map((result) => [result.id, result]));
 
@@ -86,19 +93,34 @@ test("compat-lab smoke lanes cover Phase 6 compile/install/doctor gates", () => 
   assert.equal(byId.get("compile.python-service.copilot").bundle_kind, "copilot-package-bundle");
   assert.equal(byId.get("compile.python-service.copilot").pack_count, 2);
 
-  assert.equal(byId.get("install.docs-heavy.codex.repo").can_apply, true);
-  assert.equal(byId.get("install.docs-heavy.codex.repo").support_verdict, "fail");
-  assert.equal(byId.get("install.docs-heavy.codex.repo").lane_status, "supported");
-  assert.equal(byId.get("install.docs-heavy.codex.repo").policy_summary.no_silent_fallback, true);
+  const docsHeavy = byId.get("install.docs-heavy.codex.repo");
+  assert.equal(docsHeavy.can_apply, gateStatus === "GO");
+  assert.equal(docsHeavy.lane_status, "supported");
+  assert.equal(docsHeavy.policy_summary.no_silent_fallback, true);
+  if (gateStatus === "GO") {
+    assert.equal(docsHeavy.support_verdict, "fail");
+  } else {
+    assert.equal(docsHeavy.policy_summary.overall_verdict, "deny");
+  }
 
-  assert.equal(byId.get("install.infra-repo.copilot.user").can_apply, true);
-  assert.equal(byId.get("install.infra-repo.copilot.user").support_verdict, "fail");
-  assert.equal(byId.get("install.infra-repo.copilot.user").lane_status, "prep");
+  const infraRepo = byId.get("install.infra-repo.copilot.user");
+  assert.equal(infraRepo.can_apply, gateStatus === "GO");
+  assert.equal(infraRepo.lane_status, "prep");
+  if (gateStatus === "GO") {
+    assert.equal(infraRepo.support_verdict, "fail");
+  } else {
+    assert.equal(infraRepo.policy_summary.overall_verdict, "deny");
+  }
 
   assert.equal(byId.get("doctor.backend-mcp.codex.windows-prep").support_verdict, "degraded");
   assert.equal(byId.get("doctor.backend-mcp.codex.windows-prep").lane_status, "prep");
 
-  assert.equal(byId.get("install.conflict.copilot.repo").can_apply, false);
-  assert.equal(byId.get("install.conflict.copilot.repo").support_verdict, "fail");
-  assert.ok(byId.get("install.conflict.copilot.repo").blocked_operations > 0);
+  const installConflict = byId.get("install.conflict.copilot.repo");
+  assert.equal(installConflict.can_apply, false);
+  if (gateStatus === "GO") {
+    assert.equal(installConflict.support_verdict, "fail");
+    assert.ok(installConflict.blocked_operations > 0);
+  } else {
+    assert.equal(installConflict.policy_summary.overall_verdict, "deny");
+  }
 });

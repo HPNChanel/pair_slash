@@ -38,6 +38,12 @@ function hasCode(errors, code) {
   return errors.some((error) => error.startsWith(`${code} `));
 }
 
+function loadScopedReleaseGateStatus(rootPath) {
+  const verdictPath = join(rootPath, "docs", "releases", "scoped-release-verdict.md");
+  const match = readFileSync(verdictPath, "utf8").match(/Gate status:\s*([A-Z-]+)/i);
+  return match ? match[1].toUpperCase() : "NO-GO";
+}
+
 test("discoverPackManifestPaths finds phase 4 manifests", () => {
   const manifestPaths = discoverPackManifestPaths(repoRoot);
   assert.ok(manifestPaths.length >= 11);
@@ -70,7 +76,7 @@ test("pack catalog records include core metadata and excluded advanced inventory
   assert.equal(planRecord.runtime_support.codex_cli.evidence_scope, "shared-matrix");
   assert.equal(planRecord.promotion_ready, false);
   assert.equal(planRecord.workflow_promotion_ready, false);
-  assert.equal(planRecord.scoped_release_gate_status, "NO-GO");
+  assert.equal(planRecord.scoped_release_gate_status, loadScopedReleaseGateStatus(repoRoot));
   assert.ok(advancedRecord);
   assert.equal(advancedRecord.catalog_scope, "advanced");
   assert.equal(advancedRecord.catalog_status, "excluded");
@@ -586,7 +592,7 @@ test("validator rejects unsupported workflow maturity labels", () => {
   assert.ok(hasCode(errors, "PSM000"));
 });
 
-test("workflow maturity promotion claims demote when live evidence and release truth are missing", () => {
+test("workflow maturity promotion claims demote when live evidence is insufficient against current scoped release gate status", () => {
   const fixture = createTempRepo({ packs: ["pairslash-plan"] });
   try {
     updatePackManifest({
@@ -621,8 +627,11 @@ test("workflow maturity promotion claims demote when live evidence and release t
         "workflow-maturity-pack-runtime-live-required:codex_cli:lane-matrix",
       ),
     );
+    assert.equal(planRecord.scoped_release_gate_status, loadScopedReleaseGateStatus(fixture.tempRoot));
     assert.ok(
-      planRecord.workflow_maturity_blockers.includes("workflow-maturity-release-gate:no-go"),
+      planRecord.workflow_maturity_blockers.includes(
+        "workflow-maturity-public-lane-not-stable:codex_cli:codex-cli-repo-macos:degraded",
+      ),
     );
   } finally {
     fixture.cleanup();

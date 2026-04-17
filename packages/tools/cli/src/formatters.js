@@ -1,3 +1,29 @@
+function describeTrustTuple(value) {
+  if (!value) {
+    return "no trust metadata";
+  }
+  if (value.verification_status === "legacy") {
+    return "legacy install state missing a trust receipt";
+  }
+  if ((value.trust_tier ?? value.source_class) === "local-dev") {
+    return "local source only";
+  }
+  if (
+    value.trust_tier === "verified-external" ||
+    value.support_level === "publisher-verified" ||
+    value.source_class === "external-trusted"
+  ) {
+    return "trusted by local policy only";
+  }
+  if (value.trust_tier === "first-party-official") {
+    return "PairSlash first-party preview support";
+  }
+  if (value.trust_tier === "core-maintained") {
+    return "PairSlash core-maintained support";
+  }
+  return "review trust posture";
+}
+
 export function formatPreviewPlanText(plan) {
   const lines = [
     `Action: ${plan.action}`,
@@ -86,6 +112,12 @@ export function formatPreviewPlanText(plan) {
         lines.push(
           `  ${change.pack_id} :: ${current} -> ${candidate}${change.blocking ? " [blocking]" : ""}`,
         );
+        if (change.current) {
+          lines.push(`    current trust note: ${describeTrustTuple(change.current)}`);
+        }
+        if (change.candidate) {
+          lines.push(`    candidate trust note: ${describeTrustTuple(change.candidate)}`);
+        }
         if (change.capability_expansions?.length > 0) {
           lines.push(`    capability expansion: ${change.capability_expansions.join(", ")}`);
         }
@@ -388,6 +420,9 @@ export function formatDoctorText(report) {
       lines.push(
         `- ${pack.id}: version=${pack.version}, trust=${pack.trust_tier ?? pack.source_class ?? "unknown"}/${pack.signature_status ?? pack.verification_status ?? "unknown"}/${pack.support_level ?? "unknown"}, local_overrides=${pack.local_overrides}, install_dir=${pack.install_dir}`,
       );
+      if (pack.trust_note) {
+        lines.push(`  trust note: ${pack.trust_note}`);
+      }
     }
   }
   return `${lines.join("\n")}\n`;

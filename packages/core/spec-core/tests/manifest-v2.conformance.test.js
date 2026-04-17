@@ -20,6 +20,12 @@ function toPosixPath(value) {
   return value.replace(/\\/g, "/");
 }
 
+function loadScopedReleaseGateStatus(rootPath) {
+  const verdictPath = join(rootPath, "docs", "releases", "scoped-release-verdict.md");
+  const match = readFileSync(verdictPath, "utf8").match(/Gate status:\s*([A-Z-]+)/i);
+  return match ? match[1].toUpperCase() : "NO-GO";
+}
+
 test("authoritative pack catalog covers every discovered core manifest path", () => {
   const discoveredManifestPaths = discoverPackManifestPaths(repoRoot)
     .map((manifestPath) => toPosixPath(relative(repoRoot, manifestPath)))
@@ -133,13 +139,14 @@ test("promotion remains blocked when evidence is not pack-runtime-live", () => {
   }
 });
 
-test("workflow promotion remains blocked on a NO-GO branch", () => {
+test("workflow promotion remains blocked when evidence is insufficient against current scoped release gate status", () => {
   const records = loadPackCatalogRecords(repoRoot, { includeAdvanced: false })
     .filter((record) => record.catalog_scope === "core" && record.catalog_status === "operational");
+  const expectedGateStatus = loadScopedReleaseGateStatus(repoRoot);
 
   for (const record of records) {
     assert.equal(record.workflow_promotion_ready, false, `${record.id} should not be workflow-promotion-ready`);
-    assert.notEqual(record.scoped_release_gate_status, "GO");
+    assert.equal(record.scoped_release_gate_status, expectedGateStatus);
   }
 });
 

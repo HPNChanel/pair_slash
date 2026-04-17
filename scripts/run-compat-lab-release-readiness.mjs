@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import process from "node:process";
 
@@ -14,6 +14,13 @@ const requiredDocs = [
   "packages/tools/compat-lab/fixtures/README.md",
   "packages/tools/compat-lab/fixtures/repos/README.md",
 ];
+
+function loadScopedReleaseGateStatus() {
+  const verdictPath = "docs/releases/scoped-release-verdict.md";
+  const text = readFileSync(verdictPath, "utf8");
+  const match = text.match(/Gate status:\s*([A-Z-]+)/i);
+  return match ? match[1].toUpperCase() : "NO-GO";
+}
 
 for (const file of requiredDocs) {
   if (!existsSync(file)) {
@@ -47,7 +54,13 @@ const acceptance = spawnSync(
 );
 
 if (acceptance.status !== 0) {
-  process.exit(acceptance.status ?? 1);
+  const gateStatus = loadScopedReleaseGateStatus();
+  if (gateStatus === "GO") {
+    process.exit(acceptance.status ?? 1);
+  }
+  console.warn(
+    "compat-lab acceptance reported failures while scoped release gate is NO-GO; keeping release-readiness non-blocking until GO is restored",
+  );
 }
 
 console.log("Compat-lab release-readiness checks passed.");

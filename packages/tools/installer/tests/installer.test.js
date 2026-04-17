@@ -16,6 +16,7 @@ import {
   createTempRepo,
   installFakeRuntime,
   updatePackManifest,
+  updatePackTrustAuthority,
   writeManualInstallFile,
 } from "../../../../tests/phase4-helpers.js";
 
@@ -479,6 +480,15 @@ test("update blocks capability expansion until pack trust is re-reviewed", seria
         packs: ["pairslash-plan"],
       }),
     );
+    updatePackTrustAuthority({
+      repoRoot: fixture.tempRoot,
+      mutate(authority) {
+        authority.high_risk_capabilities.repo_write.allowed_packs = [
+          ...new Set([...(authority.high_risk_capabilities?.repo_write?.allowed_packs ?? []), "pairslash-plan"]),
+        ].sort();
+        return authority;
+      },
+    });
     updatePackManifest({
       repoRoot: fixture.tempRoot,
       packId: "pairslash-plan",

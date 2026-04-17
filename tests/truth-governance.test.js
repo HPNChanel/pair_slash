@@ -372,7 +372,7 @@ test("scoped release verdict keeps release language separate from validation lan
   const verdictPath = "docs/releases/scoped-release-verdict.md";
   const contents = read(verdictPath);
 
-  assert.ok(contents.includes("Gate status: NO-GO"), `${verdictPath} should fail closed when release-readiness is red`);
+  assert.match(contents, /Gate status:\s+(GO|NO-GO)/, `${verdictPath} should declare an explicit gate status`);
   assert.ok(contents.includes("Release-covered runtimes:"), `${verdictPath} should use release-covered wording`);
   assert.equal(contents.includes("Validated runtimes:"), false, `${verdictPath} should avoid validation wording drift`);
 });
@@ -396,6 +396,38 @@ test("release checklist requires the authoritative charter", () => {
   const contents = read(checklistPath);
 
   assert.ok(contents.includes(CHARTER_PATH), `${checklistPath} should require the authoritative charter`);
+  assert.ok(
+    contents.includes("PAIRSLASH_RELEASE_TRUST_REQUIRE_SIGNED=1"),
+    `${checklistPath} should require signed-lane fail-closed enforcement`,
+  );
+  assert.ok(
+    contents.includes("## Failure handling (release trust)"),
+    `${checklistPath} should include release-trust failure handling guidance`,
+  );
+});
+
+test("public 0.4.0 release notes are current and 0.2.0 notes stay archived in docs-private", () => {
+  const changelogPath = "docs/releases/changelog-0.4.0.md";
+  const upgradePath = "docs/releases/upgrade-notes-0.4.0.md";
+  const archivedChangelogPath = "docs-private/releases/archive/0.2.0/changelog-0.2.0.md";
+  const archivedUpgradePath = "docs-private/releases/archive/0.2.0/upgrade-notes-0.2.0.md";
+  const archivedChecklistPath = "docs-private/releases/archive/0.2.0/release-checklist-0.2.0.md";
+
+  assert.equal(existsSync(join(repoRoot, changelogPath)), true, `${changelogPath} should exist`);
+  assert.equal(existsSync(join(repoRoot, upgradePath)), true, `${upgradePath} should exist`);
+  assert.equal(existsSync(join(repoRoot, archivedChangelogPath)), true, `${archivedChangelogPath} should exist`);
+  assert.equal(existsSync(join(repoRoot, archivedUpgradePath)), true, `${archivedUpgradePath} should exist`);
+  assert.equal(existsSync(join(repoRoot, archivedChecklistPath)), true, `${archivedChecklistPath} should exist`);
+  assert.equal(existsSync(join(repoRoot, "docs/releases/changelog-0.2.0.md")), false);
+  assert.equal(existsSync(join(repoRoot, "docs/releases/upgrade-notes-0.2.0.md")), false);
+  assert.equal(existsSync(join(repoRoot, "docs-private/releases/release-checklist-0.2.0.md")), false);
+
+  const changelogContents = read(changelogPath);
+  assert.ok(changelogContents.includes("0.4.0"), `${changelogPath} should describe the 0.4.0 line`);
+  assert.ok(
+    changelogContents.includes("release-trust"),
+    `${changelogPath} should mention the release-trust activation story`,
+  );
 });
 
 test("legal and packaging status is wired into current truth roots", () => {

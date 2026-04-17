@@ -13,6 +13,7 @@ import {
   installFakeRuntime,
   repoRoot,
   updatePackManifest,
+  updatePackTrustAuthority,
   writeManualInstallFile,
 } from "../../../../tests/phase4-helpers.js";
 
@@ -1025,6 +1026,15 @@ test("pairslash lint --strict fails on warnings", serial, async () => {
   const fixture = createTempRepo({ packs: ["pairslash-plan"] });
   let output = "";
   try {
+    updatePackTrustAuthority({
+      repoRoot: fixture.tempRoot,
+      mutate(authority) {
+        authority.high_risk_capabilities.shell_exec.allowed_packs = [
+          ...new Set([...(authority.high_risk_capabilities?.shell_exec?.allowed_packs ?? []), "pairslash-plan"]),
+        ].sort();
+        return authority;
+      },
+    });
     updatePackManifest({
       repoRoot: fixture.tempRoot,
       packId: "pairslash-plan",

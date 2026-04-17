@@ -52,6 +52,10 @@ jobs:
 
   nightly-release-readiness:
     runs-on: ubuntu-latest
+    env:
+      PAIRSLASH_RELEASE_TRUST_PRIVATE_KEY: ${{ secrets.PAIRSLASH_RELEASE_TRUST_PRIVATE_KEY }}
+      PAIRSLASH_RELEASE_TRUST_KEY_ID: ${{ secrets.PAIRSLASH_RELEASE_TRUST_KEY_ID }}
+      PAIRSLASH_RELEASE_TRUST_REQUIRE_SIGNED: "1"
     steps:
       - name: Checkout
         uses: actions/checkout@v4

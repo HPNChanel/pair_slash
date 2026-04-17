@@ -332,8 +332,9 @@ release_gates:
       - compat-lab suite
       - public docs present
       - generated artifacts up to date
+      - release trust bundle structure
     id: release-readiness
-    notes: Release promotion must not proceed unless this gate is green.
+    notes: Release promotion must not proceed unless this gate is green. Protected CI may additionally run the live-signed release-trust verification lane when signing secrets are configured.
     required_for_release: true
     trigger: manual pre-release gate
 runtime_lanes:

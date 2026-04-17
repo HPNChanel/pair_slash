@@ -18,6 +18,8 @@
       "blocked_reason_codes": [],
       "blocked_reasons": [
         "lint-error:LINT-RUNTIME-004:pairslash-devops:copilot_cli: runtime compatibility copilot_cli.direct_invocation=blocked is not allowed for shippable Phase 5 workflows",
+        "lint-error:LINT-TRUST-001:pairslash-devops:shared: authoritative support metadata is invalid: trust-authority:capability-not-authorized:pairslash-devops:repo_write; trust-authority:capability-not-authorized:pairslash-devops:shell_exec; trust-authority:capability-not-authorized:pairslash-devops:test_exec; trust-authority:load-failed:pack trust authority file not found (expected trust/pack-authority.yaml)",
+        "lint-error:LINT-TRUST-001:pairslash-memory-write-global:shared: authoritative support metadata is invalid: trust-authority:capability-not-authorized:pairslash-memory-write-global:memory_write_global; trust-authority:capability-not-authorized:pairslash-memory-write-global:repo_write; trust-authority:capability-not-authorized:pairslash-memory-write-global:shell_exec; trust-authority:core-maintained-not-authorized:pairslash-memory-write-global; trust-authority:load-failed:pack trust authority file not found (expected trust/pack-authority.yaml); trust-authority:memory-write-not-authorized:pairslash-memory-write-global",
         "LINT-RUNTIME-004:pairslash-devops:copilot_cli",
         "unsupported-runtime-capability:no-silent-fallback"
       ],
@@ -28,7 +30,9 @@
       "status": "blocked"
     },
     "errors": [
-      "lint-error:LINT-RUNTIME-004:pairslash-devops:copilot_cli: runtime compatibility copilot_cli.direct_invocation=blocked is not allowed for shippable Phase 5 workflows"
+      "lint-error:LINT-RUNTIME-004:pairslash-devops:copilot_cli: runtime compatibility copilot_cli.direct_invocation=blocked is not allowed for shippable Phase 5 workflows",
+      "lint-error:LINT-TRUST-001:pairslash-devops:shared: authoritative support metadata is invalid: trust-authority:capability-not-authorized:pairslash-devops:repo_write; trust-authority:capability-not-authorized:pairslash-devops:shell_exec; trust-authority:capability-not-authorized:pairslash-devops:test_exec; trust-authority:load-failed:pack trust authority file not found (expected trust/pack-authority.yaml)",
+      "lint-error:LINT-TRUST-001:pairslash-memory-write-global:shared: authoritative support metadata is invalid: trust-authority:capability-not-authorized:pairslash-memory-write-global:memory_write_global; trust-authority:capability-not-authorized:pairslash-memory-write-global:repo_write; trust-authority:capability-not-authorized:pairslash-memory-write-global:shell_exec; trust-authority:core-maintained-not-authorized:pairslash-memory-write-global; trust-authority:load-failed:pack trust authority file not found (expected trust/pack-authority.yaml); trust-authority:memory-write-not-authorized:pairslash-memory-write-global"
     ],
     "operations": [],
     "policy_summary": {
@@ -85,8 +89,7 @@
     "target": "repo",
     "warnings": [
       "lint-warning:LINT-RUNTIME-004:pairslash-devops:shared: runtime support has degraded/unverified surfaces: codex_cli.canonical_picker=unverified, codex_cli.direct_invocation=unverified, copilot_cli.canonical_picker=unverified",
-      "lint-warning:LINT-RUNTIME-004:pairslash-memory-write-global:shared: runtime support has degraded/unverified surfaces: codex_cli.direct_invocation=unverified, copilot_cli.direct_invocation=unverified",
-      "lint-warning:LINT-TRUST-003:pairslash-memory-write-global:shared: codex_cli support claim is backed only by shared matrix evidence, not pack-scoped runtime proof; copilot_cli support claim is backed only by shared matrix evidence, not pack-scoped runtime proof"
+      "lint-warning:LINT-RUNTIME-004:pairslash-memory-write-global:shared: runtime support has degraded/unverified surfaces: codex_cli.direct_invocation=unverified, copilot_cli.direct_invocation=unverified"
     ]
   },
   "kind": "compat-preview-policy-golden",

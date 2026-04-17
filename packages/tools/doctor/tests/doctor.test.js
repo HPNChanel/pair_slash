@@ -11,6 +11,7 @@ import {
   createTempRepo,
   installFakeRuntime,
   updatePackManifest,
+  updatePackTrustAuthority,
   writeManualInstallFile,
 } from "../../../../tests/phase4-helpers.js";
 
@@ -763,6 +764,15 @@ test("doctor fails missing MCP config for installed pack", () => {
   const fixture = createTempRepo();
   const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
   try {
+    updatePackTrustAuthority({
+      repoRoot: fixture.tempRoot,
+      mutate(authority) {
+        authority.high_risk_capabilities.mcp_client.allowed_packs = [
+          ...new Set([...(authority.high_risk_capabilities?.mcp_client?.allowed_packs ?? []), "pairslash-plan"]),
+        ].sort();
+        return authority;
+      },
+    });
     updatePackManifest({
       repoRoot: fixture.tempRoot,
       packId: "pairslash-plan",

@@ -38,3 +38,31 @@ test("node-only docs and workflow references use the canonical npm validation co
   assert.ok(workflow.includes("npm run test"));
   assert.ok(workflow.includes("npm run test:release"));
 });
+
+test("release workflows enforce signed release-trust verification on protected lanes", () => {
+  const repoChecks = readFileSync(join(repoRoot, ".github", "workflows", "repo-checks.yml"), "utf8");
+  assert.ok(repoChecks.includes("PAIRSLASH_RELEASE_TRUST_REQUIRE_SIGNED"));
+  assert.ok(
+    repoChecks.includes("PAIRSLASH_RELEASE_TRUST_REQUIRE_SIGNED == '1'"),
+    "repo-checks signed artifact steps should be gated to protected signed lanes",
+  );
+  assert.ok(
+    repoChecks.includes("node scripts/build-release-trust.mjs --out artifacts/release-trust"),
+    "repo-checks should build signed release-trust artifacts with the canonical script path",
+  );
+  assert.ok(
+    repoChecks.includes("node scripts/verify-release-trust.mjs --trust-dir artifacts/release-trust"),
+    "repo-checks should verify signed release-trust artifacts with the canonical script path",
+  );
+
+  const nightly = readFileSync(join(repoRoot, ".github", "workflows", "compat-lab-nightly.yml"), "utf8");
+  assert.ok(nightly.includes("PAIRSLASH_RELEASE_TRUST_REQUIRE_SIGNED: \"1\""));
+
+  const candidatePath = join(repoRoot, ".github", "workflows", "release-trust-candidate.yml");
+  assert.equal(existsSync(candidatePath), true);
+  const candidate = readFileSync(candidatePath, "utf8");
+  assert.ok(candidate.includes("PAIRSLASH_RELEASE_TRUST_REQUIRE_SIGNED: \"1\""));
+  assert.ok(candidate.includes("npm run test:release"));
+  assert.ok(candidate.includes("node scripts/build-release-trust.mjs --out artifacts/release-trust"));
+  assert.ok(candidate.includes("node scripts/verify-release-trust.mjs --trust-dir artifacts/release-trust"));
+});

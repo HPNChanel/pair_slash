@@ -1819,6 +1819,29 @@ function normalizePackTrustReceipt(pack) {
   );
 }
 
+function describeTrustPosture(receipt) {
+  if (receipt.verification_status === "legacy") {
+    return "legacy install state missing a trust receipt";
+  }
+  if (receipt.trust_tier === "local-dev") {
+    return "local source only; not release-verified";
+  }
+  if (
+    receipt.trust_tier === "verified-external" ||
+    receipt.support_level === "publisher-verified" ||
+    receipt.source_class === "external-trusted"
+  ) {
+    return "trusted by local policy only; not PairSlash-maintained support";
+  }
+  if (receipt.trust_tier === "first-party-official") {
+    return "PairSlash first-party release with preview support posture";
+  }
+  if (receipt.trust_tier === "core-maintained") {
+    return "PairSlash core-maintained release";
+  }
+  return receipt.summary ?? "review trust posture";
+}
+
 function runInstalledTrustPosture(context) {
   if (!context.state || context.state.packs.length === 0) {
     return createCheckResult({
@@ -1846,6 +1869,7 @@ function runInstalledTrustPosture(context) {
       support_level: receipt.support_level ?? "local-dev",
       policy_action: receipt.policy_action,
       summary: receipt.summary,
+      trust_note: describeTrustPosture(receipt),
     };
     if (receipt.policy_action === "deny" || receipt.source_class === "external-unverified") {
       failures.push({
@@ -1899,7 +1923,8 @@ function runInstalledTrustPosture(context) {
       target: context.target,
       inputs: {},
       summary: `${warnings.length} installed pack(s) require trust review or carry non-core support posture`,
-      remediation: "Review `doctor --format json` to confirm which packs are local-dev, official-preview, or verified-external.",
+      remediation:
+        "Review `doctor --format json` to identify legacy installs, local-source packs, and local-policy-trusted external packs. Reinstall legacy packs to attach trust receipts, and do not treat local-policy trust as PairSlash support.",
       evidence: {
         warnings,
       },
@@ -2535,6 +2560,7 @@ function buildInstalledPacks(state) {
           trust_tier: receipt.trust_tier ?? "local-dev",
           signature_status: receipt.signature_status ?? "missing",
           support_level: receipt.support_level ?? "local-dev",
+          trust_note: describeTrustPosture(receipt),
         };
       })(),
       id: pack.id,

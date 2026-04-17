@@ -17,15 +17,11 @@
     "codex_cli": {
       "apply_result": {
         "errors": [
-          "trust-delta-blocked:pairslash-plan:capability-expanded:memory_read",
-          "trust-delta-blocked:pairslash-plan:capability-expanded:plan_generation",
-          "trust-delta-blocked:pairslash-plan:capability-expanded:repo_read",
-          "trust-delta-blocked:pairslash-plan:local-source:manifest-under-current-repo",
-          "trust-delta-blocked:pairslash-plan:release-trust-bundle:not-found"
+          "lint-error:LINT-TRUST-001:pairslash-plan:shared: authoritative support metadata is invalid: trust-authority:core-maintained-not-authorized:pairslash-plan; trust-authority:load-failed:pack trust authority file not found (expected trust/pack-authority.yaml)"
         ],
         "status": "blocked",
         "summary": {
-          "blocked_conflict": 1,
+          "blocked_conflict": 0,
           "create": 0,
           "mkdir": 0,
           "preserve_override": 0,
@@ -466,6 +462,7 @@
                   "source_class": "local-source",
                   "summary": "legacy install state without trust receipt",
                   "support_level": "local-dev",
+                  "trust_note": "legacy install state missing a trust receipt",
                   "trust_tier": "local-dev",
                   "verification_status": "legacy"
                 }
@@ -473,7 +470,7 @@
             },
             "group": "trust",
             "id": "install_state.trust_posture",
-            "remediation": "Review `doctor --format json` to confirm which packs are local-dev, official-preview, or verified-external.",
+            "remediation": "Review `doctor --format json` to identify legacy installs, local-source packs, and local-policy-trusted external packs. Reinstall legacy packs to attach trust receipts, and do not treat local-policy trust as PairSlash support.",
             "severity": "warn",
             "status": "warn",
             "summary": "1 installed pack(s) require trust review or carry non-core support posture"
@@ -509,12 +506,8 @@
                 }
               ],
               "errors": [
-                "ownership-mismatch:pairslash-plan:pairslash.install.json: missing on disk",
-                "trust-delta-blocked:pairslash-plan:capability-expanded:memory_read",
-                "trust-delta-blocked:pairslash-plan:capability-expanded:plan_generation",
-                "trust-delta-blocked:pairslash-plan:capability-expanded:repo_read",
-                "trust-delta-blocked:pairslash-plan:local-source:manifest-under-current-repo",
-                "trust-delta-blocked:pairslash-plan:release-trust-bundle:not-found"
+                "lint-error:LINT-TRUST-001:pairslash-plan:shared: authoritative support metadata is invalid: trust-authority:core-maintained-not-authorized:pairslash-plan; trust-authority:load-failed:pack trust authority file not found (expected trust/pack-authority.yaml)",
+                "ownership-mismatch:pairslash-plan:pairslash.install.json: missing on disk"
               ]
             },
             "group": "install_state",
@@ -525,23 +518,14 @@
             "summary": "update preview found blocking conflicts or plan errors for the installed footprint"
           },
           {
-            "blocking_for_install": true,
-            "evidence": {
-              "redirects": [
-                {
-                  "pack_id": "pairslash-plan",
-                  "reason": "pack is already managed by PairSlash; run update instead of install",
-                  "reason_code": "managed-pack-requires-update",
-                  "relative_path": "."
-                }
-              ]
-            },
+            "blocking_for_install": false,
+            "evidence": {},
             "group": "install_state",
             "id": "install_state.install_preview_parity",
-            "remediation": "Run `pairslash update --preview` for those packs instead of reinstalling them.",
-            "severity": "fail",
-            "status": "fail",
-            "summary": "1 requested pack(s) are already managed; install preview redirects to update"
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "requested packs do not require install-to-update redirection"
           },
           {
             "blocking_for_install": false,
@@ -654,15 +638,16 @@
                   "source_class": "local-source",
                   "summary": "legacy install state without trust receipt",
                   "support_level": "local-dev",
+                  "trust_note": "legacy install state missing a trust receipt",
                   "trust_tier": "local-dev",
                   "verification_status": "legacy"
                 }
               ]
             },
             "message": "1 installed pack(s) require trust review or carry non-core support posture",
-            "remediation": "Review `doctor --format json` to confirm which packs are local-dev, official-preview, or verified-external.",
+            "remediation": "Review `doctor --format json` to identify legacy installs, local-source packs, and local-policy-trusted external packs. Reinstall legacy packs to attach trust receipts, and do not treat local-policy trust as PairSlash support.",
             "severity": "warn",
-            "suggested_fix": "Review `doctor --format json` to confirm which packs are local-dev, official-preview, or verified-external.",
+            "suggested_fix": "Review `doctor --format json` to identify legacy installs, local-source packs, and local-policy-trusted external packs. Reinstall legacy packs to attach trust receipts, and do not treat local-policy trust as PairSlash support.",
             "summary": "1 installed pack(s) require trust review or carry non-core support posture",
             "verdict": "warn"
           },
@@ -701,12 +686,8 @@
                 }
               ],
               "errors": [
-                "ownership-mismatch:pairslash-plan:pairslash.install.json: missing on disk",
-                "trust-delta-blocked:pairslash-plan:capability-expanded:memory_read",
-                "trust-delta-blocked:pairslash-plan:capability-expanded:plan_generation",
-                "trust-delta-blocked:pairslash-plan:capability-expanded:repo_read",
-                "trust-delta-blocked:pairslash-plan:local-source:manifest-under-current-repo",
-                "trust-delta-blocked:pairslash-plan:release-trust-bundle:not-found"
+                "lint-error:LINT-TRUST-001:pairslash-plan:shared: authoritative support metadata is invalid: trust-authority:core-maintained-not-authorized:pairslash-plan; trust-authority:load-failed:pack trust authority file not found (expected trust/pack-authority.yaml)",
+                "ownership-mismatch:pairslash-plan:pairslash.install.json: missing on disk"
               ]
             },
             "message": "update preview found blocking conflicts or plan errors for the installed footprint",
@@ -714,27 +695,6 @@
             "severity": "fail",
             "suggested_fix": "Run `pairslash update --preview` and resolve blocked conflicts before applying changes.",
             "summary": "update preview found blocking conflicts or plan errors for the installed footprint",
-            "verdict": "fail"
-          },
-          {
-            "blocking_for_install": true,
-            "check_id": "install_state.install_preview_parity",
-            "code": "DOC-INSTALL_STATE-INSTALL_PREVIEW_PARITY",
-            "evidence": {
-              "redirects": [
-                {
-                  "pack_id": "pairslash-plan",
-                  "reason": "pack is already managed by PairSlash; run update instead of install",
-                  "reason_code": "managed-pack-requires-update",
-                  "relative_path": "."
-                }
-              ]
-            },
-            "message": "1 requested pack(s) are already managed; install preview redirects to update",
-            "remediation": "Run `pairslash update --preview` for those packs instead of reinstalling them.",
-            "severity": "fail",
-            "suggested_fix": "Run `pairslash update --preview` for those packs instead of reinstalling them.",
-            "summary": "1 requested pack(s) are already managed; install preview redirects to update",
             "verdict": "fail"
           }
         ],
@@ -803,11 +763,7 @@
         "action": "install",
         "can_apply": false,
         "errors": [
-          "trust-delta-blocked:pairslash-plan:capability-expanded:memory_read",
-          "trust-delta-blocked:pairslash-plan:capability-expanded:plan_generation",
-          "trust-delta-blocked:pairslash-plan:capability-expanded:repo_read",
-          "trust-delta-blocked:pairslash-plan:local-source:manifest-under-current-repo",
-          "trust-delta-blocked:pairslash-plan:release-trust-bundle:not-found"
+          "lint-error:LINT-TRUST-001:pairslash-plan:shared: authoritative support metadata is invalid: trust-authority:core-maintained-not-authorized:pairslash-plan; trust-authority:load-failed:pack trust authority file not found (expected trust/pack-authority.yaml)"
         ],
         "install_root": "<repo>\\.agents\\skills",
         "operations": [
@@ -832,27 +788,14 @@
             "pack_id": "_pairslash",
             "reason": "install state will be written after successful apply",
             "relative_path": null
-          },
-          {
-            "absolute_path": "<repo>\\.agents\\skills\\pairslash-plan",
-            "asset_kind": null,
-            "install_surface": null,
-            "kind": "blocked_conflict",
-            "override_eligible": null,
-            "ownership": "pairslash",
-            "pack_id": "pairslash-plan",
-            "reason": "pack is already managed by PairSlash; run update instead of install",
-            "relative_path": "."
           }
         ],
         "requires_confirmation": true,
         "runtime": "codex_cli",
-        "selected_packs": [
-          "pairslash-plan"
-        ],
+        "selected_packs": [],
         "state_path": "<repo>\\.pairslash\\install-state\\repo-codex_cli.json",
         "summary": {
-          "blocked_conflict": 1,
+          "blocked_conflict": 0,
           "create": 0,
           "mkdir": 0,
           "preserve_override": 0,
@@ -866,199 +809,20 @@
         },
         "target": "repo",
         "warnings": [
-          "lint-warning:LINT-RUNTIME-004:pairslash-plan:shared: runtime support has degraded/unverified surfaces: copilot_cli.direct_invocation=unverified",
-          "lint-warning:LINT-TRUST-003:pairslash-plan:shared: codex_cli support claim is backed only by shared matrix evidence, not pack-scoped runtime proof; copilot_cli support claim is backed only by shared matrix evidence, not pack-scoped runtime proof",
-          "trust-review:pairslash-plan: local-dev (local-dev; local-dev); version transition allowed (0.2.0 -> 0.2.0)"
+          "lint-warning:LINT-RUNTIME-004:pairslash-plan:shared: runtime support has degraded/unverified surfaces: copilot_cli.direct_invocation=unverified"
         ]
       }
     },
     "copilot_cli": {
       "apply_result": {
-        "state": {
-          "config_home": "<repo>\\.compat-home\\.copilot",
-          "install_root": "<repo>\\.compat-home\\.copilot\\skills",
-          "packs": [
-            {
-              "compiler_version": "2.0.0",
-              "files": [
-                {
-                  "absolute_path": "<repo>\\.compat-home\\.copilot\\skills\\pairslash-plan\\agents\\runtime-context.md",
-                  "asset_id": "copilot-agent-context",
-                  "asset_kind": "agent_fragment",
-                  "declared_owner": "pairslash",
-                  "generated": true,
-                  "generator": "copilot_agent",
-                  "install_surface": "agent",
-                  "last_operation": "create",
-                  "local_override": false,
-                  "override_eligible": false,
-                  "owned_by_pairslash": true,
-                  "relative_path": "agents/runtime-context.md",
-                  "required": true,
-                  "runtime_selector": "copilot_cli",
-                  "uninstall_behavior": "detach_if_modified",
-                  "write_authority_guarded": false
-                },
-                {
-                  "absolute_path": "<repo>\\.compat-home\\.copilot\\skills\\pairslash-plan\\contract.md",
-                  "asset_id": "contract-doc",
-                  "asset_kind": "support_doc",
-                  "declared_owner": "pairslash",
-                  "generated": false,
-                  "generator": "source_copy",
-                  "install_surface": "support_doc",
-                  "last_operation": "create",
-                  "local_override": false,
-                  "override_eligible": true,
-                  "owned_by_pairslash": true,
-                  "relative_path": "contract.md",
-                  "required": true,
-                  "runtime_selector": "shared",
-                  "uninstall_behavior": "detach_if_modified",
-                  "write_authority_guarded": false
-                },
-                {
-                  "absolute_path": "<repo>\\.compat-home\\.copilot\\skills\\pairslash-plan\\example-invocation.md",
-                  "asset_id": "example-invocation-doc",
-                  "asset_kind": "support_doc",
-                  "declared_owner": "pairslash",
-                  "generated": false,
-                  "generator": "source_copy",
-                  "install_surface": "support_doc",
-                  "last_operation": "create",
-                  "local_override": false,
-                  "override_eligible": true,
-                  "owned_by_pairslash": true,
-                  "relative_path": "example-invocation.md",
-                  "required": true,
-                  "runtime_selector": "shared",
-                  "uninstall_behavior": "detach_if_modified",
-                  "write_authority_guarded": false
-                },
-                {
-                  "absolute_path": "<repo>\\.compat-home\\.copilot\\skills\\pairslash-plan\\example-output.md",
-                  "asset_id": "example-output-doc",
-                  "asset_kind": "support_doc",
-                  "declared_owner": "pairslash",
-                  "generated": false,
-                  "generator": "source_copy",
-                  "install_surface": "support_doc",
-                  "last_operation": "create",
-                  "local_override": false,
-                  "override_eligible": true,
-                  "owned_by_pairslash": true,
-                  "relative_path": "example-output.md",
-                  "required": true,
-                  "runtime_selector": "shared",
-                  "uninstall_behavior": "detach_if_modified",
-                  "write_authority_guarded": false
-                },
-                {
-                  "absolute_path": "<repo>\\.compat-home\\.copilot\\skills\\pairslash-plan\\pack.yaml",
-                  "asset_id": "pack-yaml-doc",
-                  "asset_kind": "support_doc",
-                  "declared_owner": "pairslash",
-                  "generated": false,
-                  "generator": "source_copy",
-                  "install_surface": "support_doc",
-                  "last_operation": "create",
-                  "local_override": false,
-                  "override_eligible": true,
-                  "owned_by_pairslash": true,
-                  "relative_path": "pack.yaml",
-                  "required": true,
-                  "runtime_selector": "shared",
-                  "uninstall_behavior": "detach_if_modified",
-                  "write_authority_guarded": false
-                },
-                {
-                  "absolute_path": "<repo>\\.compat-home\\.copilot\\skills\\pairslash-plan\\package\\pairslash-bundle.json",
-                  "asset_id": "copilot-package",
-                  "asset_kind": "runtime_manifest",
-                  "declared_owner": "pairslash",
-                  "generated": true,
-                  "generator": "copilot_package",
-                  "install_surface": "metadata",
-                  "last_operation": "create",
-                  "local_override": false,
-                  "override_eligible": false,
-                  "owned_by_pairslash": true,
-                  "relative_path": "package/pairslash-bundle.json",
-                  "required": true,
-                  "runtime_selector": "copilot_cli",
-                  "uninstall_behavior": "detach_if_modified",
-                  "write_authority_guarded": false
-                },
-                {
-                  "absolute_path": "<repo>\\.compat-home\\.copilot\\skills\\pairslash-plan\\pairslash.install.json",
-                  "asset_id": "ownership-receipt",
-                  "asset_kind": "ownership_manifest",
-                  "declared_owner": "pairslash",
-                  "generated": true,
-                  "generator": "pairslash_ownership_receipt",
-                  "install_surface": "metadata",
-                  "last_operation": "create",
-                  "local_override": false,
-                  "override_eligible": false,
-                  "owned_by_pairslash": true,
-                  "relative_path": "pairslash.install.json",
-                  "required": true,
-                  "runtime_selector": "shared",
-                  "uninstall_behavior": "remove_if_unmodified",
-                  "write_authority_guarded": false
-                },
-                {
-                  "absolute_path": "<repo>\\.compat-home\\.copilot\\skills\\pairslash-plan\\SKILL.md",
-                  "asset_id": "skill",
-                  "asset_kind": "skill_markdown",
-                  "declared_owner": "pairslash",
-                  "generated": false,
-                  "generator": "source_copy",
-                  "install_surface": "canonical_skill",
-                  "last_operation": "create",
-                  "local_override": false,
-                  "override_eligible": true,
-                  "owned_by_pairslash": true,
-                  "relative_path": "SKILL.md",
-                  "required": true,
-                  "runtime_selector": "shared",
-                  "uninstall_behavior": "detach_if_modified",
-                  "write_authority_guarded": false
-                },
-                {
-                  "absolute_path": "<repo>\\.compat-home\\.copilot\\skills\\pairslash-plan\\validation-checklist.md",
-                  "asset_id": "validation-checklist-doc",
-                  "asset_kind": "support_doc",
-                  "declared_owner": "pairslash",
-                  "generated": false,
-                  "generator": "source_copy",
-                  "install_surface": "support_doc",
-                  "last_operation": "create",
-                  "local_override": false,
-                  "override_eligible": true,
-                  "owned_by_pairslash": true,
-                  "relative_path": "validation-checklist.md",
-                  "required": true,
-                  "runtime_selector": "shared",
-                  "uninstall_behavior": "detach_if_modified",
-                  "write_authority_guarded": false
-                }
-              ],
-              "id": "pairslash-plan",
-              "install_dir": "<repo>\\.compat-home\\.copilot\\skills\\pairslash-plan",
-              "manifest_digest": "d8ddb32a03d00513ab2ded6f32e2bebd6e2812d2bd8b28c886dd69c748dfecb5",
-              "previous_version": null,
-              "version": "0.2.0"
-            }
-          ],
-          "runtime": "copilot_cli",
-          "target": "user"
-        },
-        "status": "applied",
+        "errors": [
+          "lint-error:LINT-TRUST-001:pairslash-plan:shared: authoritative support metadata is invalid: trust-authority:core-maintained-not-authorized:pairslash-plan; trust-authority:load-failed:pack trust authority file not found (expected trust/pack-authority.yaml)"
+        ],
+        "status": "blocked",
         "summary": {
           "blocked_conflict": 0,
-          "create": 9,
-          "mkdir": 1,
+          "create": 0,
+          "mkdir": 0,
           "preserve_override": 0,
           "reconcile_unmanaged": 0,
           "remove": 0,
@@ -1219,495 +983,7 @@
           "version": "0.2.0"
         }
       ],
-      "doctor_after": {
-        "checks": [
-          {
-            "blocking_for_install": false,
-            "evidence": {
-              "runtimes": {
-                "codex_cli": {
-                  "available": true,
-                  "error": null,
-                  "executable": "codex",
-                  "version": "0.116.0"
-                },
-                "copilot_cli": {
-                  "available": true,
-                  "error": null,
-                  "executable": "gh",
-                  "version": "2.50.0"
-                }
-              }
-            },
-            "group": "runtime",
-            "id": "runtime.presence_matrix",
-            "remediation": null,
-            "severity": "info",
-            "status": "pass",
-            "summary": "detected runtime(s): codex_cli, copilot_cli"
-          },
-          {
-            "blocking_for_install": false,
-            "evidence": {
-              "version": "2.50.0"
-            },
-            "group": "runtime",
-            "id": "runtime.detect",
-            "remediation": null,
-            "severity": "info",
-            "status": "pass",
-            "summary": "runtime available via gh (2.50.0)"
-          },
-          {
-            "blocking_for_install": false,
-            "evidence": {
-              "version": "2.50.0"
-            },
-            "group": "runtime",
-            "id": "runtime.version_range",
-            "remediation": null,
-            "severity": "info",
-            "status": "pass",
-            "summary": "runtime version satisfies all selected pack ranges"
-          },
-          {
-            "blocking_for_install": false,
-            "evidence": {
-              "lane_status": "prep",
-              "tested_range_status": "prep_lane"
-            },
-            "group": "runtime",
-            "id": "runtime.tested_range",
-            "remediation": null,
-            "severity": "info",
-            "status": "skip",
-            "summary": "skipped because no tested runtime range is recorded for this support lane"
-          },
-          {
-            "blocking_for_install": false,
-            "evidence": {
-              "evidence_source": "docs/evidence/live-runtime/copilot-cli-user-<host-os>.md",
-              "lane_status": "prep",
-              "tested_range_status": "prep_lane",
-              "tested_version_range": null
-            },
-            "group": "platform",
-            "id": "platform.support_lane",
-            "remediation": "Use doctor and preview on Windows, but keep install support claims in prep status until live runtime evidence is recorded.",
-            "severity": "warn",
-            "status": "degraded",
-            "summary": "Deterministic coverage exists, but no checked-in canonical /skills verification or live install record exists for the Linux user lane. Keep this lane prep-only."
-          },
-          {
-            "blocking_for_install": false,
-            "evidence": {},
-            "group": "platform",
-            "id": "platform.os_shell_support",
-            "remediation": null,
-            "severity": "info",
-            "status": "pass",
-            "summary": "platform <host-os> with shell <host-shell> is recognized"
-          },
-          {
-            "blocking_for_install": false,
-            "evidence": {
-              "candidates": [
-                "<repo>\\.compat-home\\.<host-shell>rc",
-                "<repo>\\.compat-home\\.<host-shell>_profile",
-                "<repo>\\.compat-home\\.profile"
-              ]
-            },
-            "group": "platform",
-            "id": "platform.shell_profile_candidates",
-            "remediation": null,
-            "severity": "info",
-            "status": "pass",
-            "summary": "detected 3 shell profile candidate(s)"
-          },
-          {
-            "blocking_for_install": false,
-            "evidence": {},
-            "group": "scope",
-            "id": "scope.repo_root",
-            "remediation": null,
-            "severity": "info",
-            "status": "pass",
-            "summary": "user scope does not require repository markers"
-          },
-          {
-            "blocking_for_install": false,
-            "evidence": {},
-            "group": "filesystem",
-            "id": "filesystem.config_home",
-            "remediation": null,
-            "severity": "info",
-            "status": "pass",
-            "summary": "config home path is valid"
-          },
-          {
-            "blocking_for_install": false,
-            "evidence": {},
-            "group": "filesystem",
-            "id": "filesystem.install_root",
-            "remediation": null,
-            "severity": "info",
-            "status": "pass",
-            "summary": "install root path is valid"
-          },
-          {
-            "blocking_for_install": false,
-            "evidence": {},
-            "group": "filesystem",
-            "id": "filesystem.write_permission",
-            "remediation": null,
-            "severity": "info",
-            "status": "pass",
-            "summary": "required filesystem paths are writable"
-          },
-          {
-            "blocking_for_install": false,
-            "evidence": {
-              "pack_count": 1
-            },
-            "group": "install_state",
-            "id": "install_state.load",
-            "remediation": null,
-            "severity": "info",
-            "status": "pass",
-            "summary": "install state loaded successfully"
-          },
-          {
-            "blocking_for_install": false,
-            "evidence": {
-              "discovered": 1
-            },
-            "group": "manifest",
-            "id": "manifest.discover_and_validate",
-            "remediation": null,
-            "severity": "info",
-            "status": "pass",
-            "summary": "1 manifest(s) selected for doctor checks"
-          },
-          {
-            "blocking_for_install": false,
-            "evidence": {},
-            "group": "manifest",
-            "id": "manifest.runtime_target_presence",
-            "remediation": null,
-            "severity": "info",
-            "status": "pass",
-            "summary": "all selected manifests declare the requested runtime and install target"
-          },
-          {
-            "blocking_for_install": false,
-            "evidence": {},
-            "group": "conflict",
-            "id": "manifest.naming_conflicts",
-            "remediation": null,
-            "severity": "info",
-            "status": "pass",
-            "summary": "no manifest naming conflicts detected"
-          },
-          {
-            "blocking_for_install": false,
-            "evidence": {
-              "workflow_maturity": {
-                "advanced_lane_fence": "core-only-catalog",
-                "blocked_pack_count": 0,
-                "contradictory_claim_count": 0,
-                "highest_effective_workflow_maturity": "canary",
-                "recommended_pack_id": "pairslash-plan",
-                "selected_pack_count": 1,
-                "selected_packs": [
-                  {
-                    "default_recommendation": true,
-                    "demoted": false,
-                    "effective_workflow_maturity": "canary",
-                    "pack_id": "pairslash-plan",
-                    "pack_manifest": null,
-                    "runtime_support_evidence_kind": "lane-matrix",
-                    "runtime_support_status": "partial",
-                    "support_scope": "core-supported",
-                    "workflow_demotion_triggers_active": [],
-                    "workflow_maturity": "canary",
-                    "workflow_maturity_blocked": false,
-                    "workflow_maturity_blockers": [],
-                    "workflow_promotion_checklist_ready": true,
-                    "workflow_transition_legal": true
-                  }
-                ]
-              }
-            },
-            "group": "trust",
-            "id": "manifest.workflow_maturity_alignment",
-            "remediation": null,
-            "severity": "info",
-            "status": "pass",
-            "summary": "1 workflow maturity label(s) align with current evidence-backed effective maturity"
-          },
-          {
-            "blocking_for_install": false,
-            "evidence": {},
-            "group": "dependencies",
-            "id": "dependencies.required_tools",
-            "remediation": null,
-            "severity": "info",
-            "status": "pass",
-            "summary": "required tool checks passed"
-          },
-          {
-            "blocking_for_install": false,
-            "evidence": {},
-            "group": "dependencies",
-            "id": "dependencies.required_mcp_servers",
-            "remediation": null,
-            "severity": "info",
-            "status": "pass",
-            "summary": "required MCP server config assets are present"
-          },
-          {
-            "blocking_for_install": false,
-            "evidence": {
-              "warnings": [
-                {
-                  "pack_id": "pairslash-plan",
-                  "policy_action": "ask",
-                  "signature_status": "local-dev",
-                  "source_class": "local-source",
-                  "summary": "local-dev (local-dev; local-dev); initial install",
-                  "support_level": "local-dev",
-                  "trust_tier": "local-dev",
-                  "verification_status": "local"
-                }
-              ]
-            },
-            "group": "trust",
-            "id": "install_state.trust_posture",
-            "remediation": "Review `doctor --format json` to confirm which packs are local-dev, official-preview, or verified-external.",
-            "severity": "warn",
-            "status": "warn",
-            "summary": "1 installed pack(s) require trust review or carry non-core support posture"
-          },
-          {
-            "blocking_for_install": false,
-            "evidence": {},
-            "group": "install_state",
-            "id": "install_state.owned_files_integrity",
-            "remediation": null,
-            "severity": "info",
-            "status": "pass",
-            "summary": "tracked managed files match install state receipts"
-          },
-          {
-            "blocking_for_install": false,
-            "evidence": {},
-            "group": "install_state",
-            "id": "install_state.update_preview_risk",
-            "remediation": null,
-            "severity": "info",
-            "status": "pass",
-            "summary": "update preview reports no override-preservation or conflict risk"
-          },
-          {
-            "blocking_for_install": true,
-            "evidence": {
-              "redirects": [
-                {
-                  "pack_id": "pairslash-plan",
-                  "reason": "pack is already managed by PairSlash; run update instead of install",
-                  "reason_code": "managed-pack-requires-update",
-                  "relative_path": "."
-                }
-              ]
-            },
-            "group": "install_state",
-            "id": "install_state.install_preview_parity",
-            "remediation": "Run `pairslash update --preview` for those packs instead of reinstalling them.",
-            "severity": "fail",
-            "status": "fail",
-            "summary": "1 requested pack(s) are already managed; install preview redirects to update"
-          },
-          {
-            "blocking_for_install": false,
-            "evidence": {},
-            "group": "conflict",
-            "id": "conflict.unmanaged_install_root",
-            "remediation": null,
-            "severity": "info",
-            "status": "pass",
-            "summary": "no unmanaged runtime assets detected under the install root"
-          },
-          {
-            "blocking_for_install": false,
-            "evidence": {},
-            "group": "install_state",
-            "id": "install_state.asset_placement",
-            "remediation": null,
-            "severity": "info",
-            "status": "pass",
-            "summary": "installed runtime assets match expected placement for the selected runtime"
-          }
-        ],
-        "environment_summary": {
-          "config_home": "<repo>\\.compat-home\\.copilot",
-          "cwd": "<workspace>",
-          "install_root": "<repo>\\.compat-home\\.copilot\\skills",
-          "os": "<host-os>",
-          "repo_root": "<repo>",
-          "runtime_available": true,
-          "runtime_executable": "gh",
-          "runtime_version": "2.50.0",
-          "shell": "<host-shell>",
-          "shell_profile_candidates": [
-            "<repo>\\.compat-home\\.<host-shell>rc",
-            "<repo>\\.compat-home\\.<host-shell>_profile",
-            "<repo>\\.compat-home\\.profile"
-          ],
-          "state_path": "<repo>\\.pairslash\\install-state\\user-copilot_cli.json"
-        },
-        "first_workflow_guidance": {
-          "commands": [
-            "node packages/tools/cli/src/bin/pairslash.js doctor --runtime copilot --target user"
-          ],
-          "rationale": "Blocking issues must be fixed before install or first workflow execution.",
-          "ready": false,
-          "recommended_pack_id": "pairslash-plan"
-        },
-        "install_blocked": true,
-        "installed_packs": [
-          {
-            "id": "pairslash-plan",
-            "install_dir": "<repo>\\.compat-home\\.copilot\\skills\\pairslash-plan",
-            "local_overrides": 0,
-            "version": "0.2.0"
-          }
-        ],
-        "issues": [
-          {
-            "blocking_for_install": false,
-            "check_id": "platform.support_lane",
-            "code": "DOC-PLATFORM-SUPPORT_LANE",
-            "evidence": {
-              "evidence_source": "docs/evidence/live-runtime/copilot-cli-user-<host-os>.md",
-              "lane_status": "prep",
-              "tested_range_status": "prep_lane",
-              "tested_version_range": null
-            },
-            "message": "Deterministic coverage exists, but no checked-in canonical /skills verification or live install record exists for the Linux user lane. Keep this lane prep-only.",
-            "remediation": "Use doctor and preview on Windows, but keep install support claims in prep status until live runtime evidence is recorded.",
-            "severity": "warn",
-            "suggested_fix": "Use doctor and preview on Windows, but keep install support claims in prep status until live runtime evidence is recorded.",
-            "summary": "Deterministic coverage exists, but no checked-in canonical /skills verification or live install record exists for the Linux user lane. Keep this lane prep-only.",
-            "verdict": "degraded"
-          },
-          {
-            "blocking_for_install": false,
-            "check_id": "install_state.trust_posture",
-            "code": "DOC-INSTALL_STATE-TRUST_POSTURE",
-            "evidence": {
-              "warnings": [
-                {
-                  "pack_id": "pairslash-plan",
-                  "policy_action": "ask",
-                  "signature_status": "local-dev",
-                  "source_class": "local-source",
-                  "summary": "local-dev (local-dev; local-dev); initial install",
-                  "support_level": "local-dev",
-                  "trust_tier": "local-dev",
-                  "verification_status": "local"
-                }
-              ]
-            },
-            "message": "1 installed pack(s) require trust review or carry non-core support posture",
-            "remediation": "Review `doctor --format json` to confirm which packs are local-dev, official-preview, or verified-external.",
-            "severity": "warn",
-            "suggested_fix": "Review `doctor --format json` to confirm which packs are local-dev, official-preview, or verified-external.",
-            "summary": "1 installed pack(s) require trust review or carry non-core support posture",
-            "verdict": "warn"
-          },
-          {
-            "blocking_for_install": true,
-            "check_id": "install_state.install_preview_parity",
-            "code": "DOC-INSTALL_STATE-INSTALL_PREVIEW_PARITY",
-            "evidence": {
-              "redirects": [
-                {
-                  "pack_id": "pairslash-plan",
-                  "reason": "pack is already managed by PairSlash; run update instead of install",
-                  "reason_code": "managed-pack-requires-update",
-                  "relative_path": "."
-                }
-              ]
-            },
-            "message": "1 requested pack(s) are already managed; install preview redirects to update",
-            "remediation": "Run `pairslash update --preview` for those packs instead of reinstalling them.",
-            "severity": "fail",
-            "suggested_fix": "Run `pairslash update --preview` for those packs instead of reinstalling them.",
-            "summary": "1 requested pack(s) are already managed; install preview redirects to update",
-            "verdict": "fail"
-          }
-        ],
-        "next_actions": [
-          "node packages/tools/cli/src/bin/pairslash.js update pairslash-plan --runtime copilot --target user --dry-run"
-        ],
-        "runtime": "copilot_cli",
-        "runtime_compatibility": {
-          "compatible_pack_count": 1,
-          "incompatible_pack_ids": [],
-          "requested_runtime_range_max_status": "supported",
-          "selected_pack_count": 1
-        },
-        "scope_probes": {
-          "repo": {
-            "blocking_for_install": false,
-            "config_home": "<repo>\\.github",
-            "config_home_exists": true,
-            "install_root": "<repo>\\.github\\skills",
-            "install_root_exists": true,
-            "issue_codes": [],
-            "issues": [],
-            "selected": false,
-            "state_path": "<repo>\\.pairslash\\install-state\\repo-copilot_cli.json",
-            "target": "repo",
-            "verdict": "pass",
-            "writable": true
-          },
-          "user": {
-            "blocking_for_install": false,
-            "config_home": "<repo>\\.compat-home\\.copilot",
-            "config_home_exists": true,
-            "install_root": "<repo>\\.compat-home\\.copilot\\skills",
-            "install_root_exists": true,
-            "issue_codes": [],
-            "issues": [],
-            "selected": true,
-            "state_path": "<repo>\\.pairslash\\install-state\\user-copilot_cli.json",
-            "target": "user",
-            "verdict": "pass",
-            "writable": true
-          }
-        },
-        "support_lane": {
-          "actual_evidence_class": null,
-          "blocking_for_install": false,
-          "canonical_entrypoint": "/skills",
-          "claim_status": "prep",
-          "evidence_data_ref": "docs/evidence/live-runtime/copilot-cli-user-linux.yaml",
-          "evidence_source": "docs/evidence/live-runtime/copilot-cli-user-<host-os>.md",
-          "freshness_state": "none-recorded",
-          "lane_status": "prep",
-          "last_verified_at": null,
-          "os": "linux",
-          "required_evidence_class": "live_verification",
-          "runtime": "copilot_cli",
-          "summary": "Deterministic coverage exists, but no checked-in canonical /skills verification or live install record exists for the Linux user lane. Keep this lane prep-only.",
-          "target": "user",
-          "tested_range_status": "prep_lane",
-          "tested_version_range": null
-        },
-        "support_verdict": "fail",
-        "target": "user"
-      },
+      "doctor_after": null,
       "doctor_before": {
         "checks": [
           {
@@ -2158,8 +1434,10 @@
       },
       "install_preview": {
         "action": "install",
-        "can_apply": true,
-        "errors": [],
+        "can_apply": false,
+        "errors": [
+          "lint-error:LINT-TRUST-001:pairslash-plan:shared: authoritative support metadata is invalid: trust-authority:core-maintained-not-authorized:pairslash-plan; trust-authority:load-failed:pack trust authority file not found (expected trust/pack-authority.yaml)"
+        ],
         "install_root": "<repo>\\.compat-home\\.copilot\\skills",
         "operations": [
           {
@@ -2183,128 +1461,16 @@
             "pack_id": "_pairslash",
             "reason": "install state will be written after successful apply",
             "relative_path": null
-          },
-          {
-            "absolute_path": "<repo>\\.compat-home\\.copilot\\skills\\pairslash-plan\\agents\\runtime-context.md",
-            "asset_kind": "agent_fragment",
-            "install_surface": "agent",
-            "kind": "create",
-            "override_eligible": false,
-            "ownership": "pairslash",
-            "pack_id": "pairslash-plan",
-            "reason": "missing target file",
-            "relative_path": "agents/runtime-context.md"
-          },
-          {
-            "absolute_path": "<repo>\\.compat-home\\.copilot\\skills\\pairslash-plan\\contract.md",
-            "asset_kind": "support_doc",
-            "install_surface": "support_doc",
-            "kind": "create",
-            "override_eligible": true,
-            "ownership": "pairslash",
-            "pack_id": "pairslash-plan",
-            "reason": "missing target file",
-            "relative_path": "contract.md"
-          },
-          {
-            "absolute_path": "<repo>\\.compat-home\\.copilot\\skills\\pairslash-plan\\example-invocation.md",
-            "asset_kind": "support_doc",
-            "install_surface": "support_doc",
-            "kind": "create",
-            "override_eligible": true,
-            "ownership": "pairslash",
-            "pack_id": "pairslash-plan",
-            "reason": "missing target file",
-            "relative_path": "example-invocation.md"
-          },
-          {
-            "absolute_path": "<repo>\\.compat-home\\.copilot\\skills\\pairslash-plan\\example-output.md",
-            "asset_kind": "support_doc",
-            "install_surface": "support_doc",
-            "kind": "create",
-            "override_eligible": true,
-            "ownership": "pairslash",
-            "pack_id": "pairslash-plan",
-            "reason": "missing target file",
-            "relative_path": "example-output.md"
-          },
-          {
-            "absolute_path": "<repo>\\.compat-home\\.copilot\\skills\\pairslash-plan\\pack.yaml",
-            "asset_kind": "support_doc",
-            "install_surface": "support_doc",
-            "kind": "create",
-            "override_eligible": true,
-            "ownership": "pairslash",
-            "pack_id": "pairslash-plan",
-            "reason": "missing target file",
-            "relative_path": "pack.yaml"
-          },
-          {
-            "absolute_path": "<repo>\\.compat-home\\.copilot\\skills\\pairslash-plan\\package\\pairslash-bundle.json",
-            "asset_kind": "runtime_manifest",
-            "install_surface": "metadata",
-            "kind": "create",
-            "override_eligible": false,
-            "ownership": "pairslash",
-            "pack_id": "pairslash-plan",
-            "reason": "missing target file",
-            "relative_path": "package/pairslash-bundle.json"
-          },
-          {
-            "absolute_path": "<repo>\\.compat-home\\.copilot\\skills\\pairslash-plan\\pairslash.install.json",
-            "asset_kind": "ownership_manifest",
-            "install_surface": "metadata",
-            "kind": "create",
-            "override_eligible": false,
-            "ownership": "pairslash",
-            "pack_id": "pairslash-plan",
-            "reason": "missing target file",
-            "relative_path": "pairslash.install.json"
-          },
-          {
-            "absolute_path": "<repo>\\.compat-home\\.copilot\\skills\\pairslash-plan\\SKILL.md",
-            "asset_kind": "skill_markdown",
-            "install_surface": "canonical_skill",
-            "kind": "create",
-            "override_eligible": true,
-            "ownership": "pairslash",
-            "pack_id": "pairslash-plan",
-            "reason": "missing target file",
-            "relative_path": "SKILL.md"
-          },
-          {
-            "absolute_path": "<repo>\\.compat-home\\.copilot\\skills\\pairslash-plan\\validation-checklist.md",
-            "asset_kind": "support_doc",
-            "install_surface": "support_doc",
-            "kind": "create",
-            "override_eligible": true,
-            "ownership": "pairslash",
-            "pack_id": "pairslash-plan",
-            "reason": "missing target file",
-            "relative_path": "validation-checklist.md"
-          },
-          {
-            "absolute_path": "<repo>\\.compat-home\\.copilot\\skills\\pairslash-plan",
-            "asset_kind": null,
-            "install_surface": null,
-            "kind": "mkdir",
-            "override_eligible": null,
-            "ownership": "system",
-            "pack_id": "pairslash-plan",
-            "reason": "install directory will be created",
-            "relative_path": null
           }
         ],
         "requires_confirmation": true,
         "runtime": "copilot_cli",
-        "selected_packs": [
-          "pairslash-plan"
-        ],
+        "selected_packs": [],
         "state_path": "<repo>\\.pairslash\\install-state\\user-copilot_cli.json",
         "summary": {
           "blocked_conflict": 0,
-          "create": 9,
-          "mkdir": 1,
+          "create": 0,
+          "mkdir": 0,
           "preserve_override": 0,
           "reconcile_unmanaged": 0,
           "remove": 0,
@@ -2316,9 +1482,7 @@
         },
         "target": "user",
         "warnings": [
-          "lint-warning:LINT-RUNTIME-004:pairslash-plan:shared: runtime support has degraded/unverified surfaces: copilot_cli.direct_invocation=unverified",
-          "lint-warning:LINT-TRUST-003:pairslash-plan:shared: codex_cli support claim is backed only by shared matrix evidence, not pack-scoped runtime proof; copilot_cli support claim is backed only by shared matrix evidence, not pack-scoped runtime proof",
-          "trust-review:pairslash-plan: local-dev (local-dev; local-dev); initial install"
+          "lint-warning:LINT-RUNTIME-004:pairslash-plan:shared: runtime support has degraded/unverified surfaces: copilot_cli.direct_invocation=unverified"
         ]
       }
     }

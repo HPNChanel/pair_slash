@@ -1,0 +1,31 @@
+kind: pack-trust-authority
+schema_version: "1.0.0"
+core_maintained_packs:
+  - pairslash-memory-write-global
+  - pairslash-plan
+high_risk_capabilities:
+  memory_write_global:
+    allowed_packs:
+      - pairslash-memory-write-global
+  repo_write:
+    allowed_packs:
+      - pairslash-backend
+      - pairslash-devops
+      - pairslash-frontend
+      - pairslash-memory-write-global
+      - pairslash-release
+  shell_exec:
+    allowed_packs:
+      - pairslash-backend
+      - pairslash-devops
+      - pairslash-frontend
+      - pairslash-memory-write-global
+      - pairslash-release
+  test_exec:
+    allowed_packs:
+      - pairslash-backend
+      - pairslash-devops
+      - pairslash-frontend
+      - pairslash-release
+  mcp_client:
+    allowed_packs: []

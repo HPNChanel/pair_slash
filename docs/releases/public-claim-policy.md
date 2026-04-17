@@ -1,6 +1,6 @@
 # PairSlash Public Claim Policy
 
-Last updated: 2026-04-10
+Last updated: 2026-04-15
 
 This file governs public wording only.
 The official phase statement, authority hierarchy, claim ladder, and support
@@ -86,6 +86,14 @@ boundary ladder live in `docs/phase-12/authoritative-program-charter.md`.
   runtimes.
 - The current supported install path is repo-local from this checkout; package-manager
   publication is not claimed today.
+- PairSlash release-readiness now includes release-trust bundle build plus
+  checksum-backed structural verification on the current branch.
+- PairSlash ships a checked-in public verification root for first-party signed
+  release-trust bundles, and protected CI is the only approved lane for live
+  signed provenance publication.
+- Protected release lanes must enforce
+  `PAIRSLASH_RELEASE_TRUST_REQUIRE_SIGNED=1`; do not claim live signed release
+  trust if that fail-closed gate is not active.
 - Runtime support claims must use only `stable-tested`, `preview`,
   `degraded`, `prep`, or `blocked`, exactly as recorded in compatibility docs.
 - Workflow maturity claims must use only `canary`, `preview`, `beta`,
@@ -125,9 +133,10 @@ Use an opening paragraph like this:
 > This release hardens or expands the technically shipped PairSlash
 > installability and trust-boundary substrate for Codex CLI and GitHub Copilot
 > CLI. The changes here are backed by repo code, deterministic release gates,
-> and the lane-specific compatibility docs linked below. They do not by
-> themselves prove product-validation exit, broad runtime parity, or support
-> beyond the documented lanes.
+> checksum-backed release-trust verification, and the lane-specific
+> compatibility docs linked below. They do not by themselves prove
+> product-validation exit, broad runtime parity, or support beyond the
+> documented lanes.
 
 ## Allowed verbs
 
@@ -196,6 +205,9 @@ Use an opening paragraph like this:
   interchangeable with workflow maturity labels.
 - Any statement that Windows live install parity or broad runtime parity is
   already proven.
+- Any statement that a signed bundle means a runtime lane is live-supported.
+- Any statement that protected-CI signed provenance is active everywhere
+  without the documented signing configuration.
 - Any statement that introduces a third runtime or weakens `/skills` as the
   canonical front door.
 - Any workflow-promotion statement that exceeds the current scoped release
@@ -221,6 +233,7 @@ Use an opening paragraph like this:
 - "Codex and Copilot have the same support level everywhere."
 - "A doctor pass proves the runtime is publicly supported."
 - "Preview install proves live runtime support."
+- "A signed bundle proves runtime support."
 - "Acceptance tests prove product validation."
 - "This release proves market pull."
 - "PairSlash updates project memory automatically in the background."
