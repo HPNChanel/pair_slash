@@ -59,8 +59,10 @@ if (acceptance.status !== 0) {
     process.exit(acceptance.status ?? 1);
   }
   console.warn(
-    "compat-lab acceptance reported failures while scoped release gate is NO-GO; keeping release-readiness non-blocking until GO is restored",
+    "compat-lab acceptance reported failures while scoped release gate is NO-GO; treating this as diagnostic-only until GO is restored",
   );
+  console.log("Compat-lab release diagnostic completed with non-blocking acceptance failures.");
+  process.exit(0);
 }
 
-console.log("Compat-lab release-readiness checks passed.");
+console.log("Compat-lab release diagnostic checks passed.");

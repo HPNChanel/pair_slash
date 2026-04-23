@@ -84,6 +84,8 @@ and compatibility boundary.
 
 Use the [doctor troubleshooting guide](../workflows/phase-4-doctor-troubleshooting.md)
 first, then follow the [reporting guide](../reporting.md).
+For taxonomy and triage routing, use [issue-taxonomy.md](issue-taxonomy.md) and
+[support triage playbook](../support/triage-playbook.md).
 
 ## Boundaries
 

@@ -13,6 +13,7 @@ import {
 
 import { redactTraceEvents } from "./redact.js";
 import { createBundleId } from "./ids.js";
+import { resolveFailureTaxonomy } from "./failure-taxonomy.js";
 import { listTraceIndexes, loadTraceEvents, loadTraceIndex, resolveTracePaths } from "./store.js";
 
 const TERMINAL_OUTCOMES = new Set(["blocked", "denied", "failed"]);
@@ -22,6 +23,7 @@ const SUPPORT_BUNDLE_FILE_ORDER = [
   "doctor-report",
   "context-explanation",
   "policy-explanation",
+  "failure-taxonomy",
   "privacy-note",
   "issue-template",
   "reproducibility-template",
@@ -105,7 +107,7 @@ function buildPrivacyDescriptor(traceExport, shareSafety) {
   };
 }
 
-function buildIssueTemplateText({ supportBundle, debugReport, contextExplanation }) {
+function buildIssueTemplateText({ supportBundle, debugReport, contextExplanation, failureTaxonomy }) {
   const runtime = contextExplanation?.runtime ?? debugReport?.runtime ?? "unknown";
   const target = contextExplanation?.target ?? debugReport?.target ?? "unknown";
   const pack = contextExplanation?.pack_id ?? "unknown";
@@ -133,6 +135,14 @@ function buildIssueTemplateText({ supportBundle, debugReport, contextExplanation
     `- redaction_state: ${supportBundle.privacy_descriptor.redaction_state}`,
     `- share_safety_reasons: ${(supportBundle.share_safety_reasons ?? []).join(", ") || "none"}`,
     `- Attached files: ${supportBundle.files.length > 0 ? supportBundle.files.map((file) => file.id).join(", ") : "see bundle-manifest.json"}`,
+    "",
+    "Suggested taxonomy labels (maintainer first pass)",
+    `- ${failureTaxonomy.recommended_surface_label}`,
+    `- ${failureTaxonomy.recommended_type_label}`,
+    `- ${failureTaxonomy.recommended_severity_label}`,
+    `- ${failureTaxonomy.recommended_status_label}`,
+    `- Suggested template: ${failureTaxonomy.recommended_issue_template}`,
+    `- Maintainer route: ${failureTaxonomy.maintainer_route}`,
     "",
     "Consent",
     "- I reviewed the privacy note before attaching any support artifact: yes / no",
@@ -187,13 +197,19 @@ function buildReproducibilityTemplateText(bundle) {
 }
 
 function buildTriageTemplateText(bundle) {
+  const taxonomy = bundle.failure_taxonomy ?? resolveFailureTaxonomy(bundle.trace_locator?.decisive_failure_domain);
   const lines = [
     "Maintainer Triage Note",
     "",
     "- Intake date:",
     "- Owner:",
-    "- Severity:",
+    `- Severity: ${taxonomy.recommended_severity_label}`,
     `- Failure domain: ${bundle.trace_locator.decisive_failure_domain}`,
+    `- Surface label: ${taxonomy.recommended_surface_label}`,
+    `- Type label: ${taxonomy.recommended_type_label}`,
+    `- Status label: ${taxonomy.recommended_status_label}`,
+    `- Suggested template: ${taxonomy.recommended_issue_template}`,
+    `- Maintainer route: ${taxonomy.maintainer_route}`,
     `- Share safety: ${bundle.safe_to_share ? "safe" : "local-only"}`,
     "- Primary artifact reviewed:",
     "- Missing artifact:",
@@ -329,6 +345,7 @@ export function createSupportBundle({
     decisive_failure_domain: effectiveDebugReport.decisive_failure_domain,
     decisive_reason: effectiveDebugReport.decisive_reason ?? null,
   };
+  const failureTaxonomy = resolveFailureTaxonomy(traceLocator.decisive_failure_domain);
   const shareSafety = assessSupportShareSafety(traceExport.redaction_report);
   const files = [];
   function writeArtifact(id, fileName, payload, { asText = false } = {}) {
@@ -359,6 +376,7 @@ export function createSupportBundle({
     trace_locator: traceLocator,
     runtime_descriptor: runtimeDescriptor,
     privacy_descriptor: buildPrivacyDescriptor(traceExport, shareSafety),
+    failure_taxonomy: failureTaxonomy,
     share_safety_reasons: shareSafety.reasons,
     trace_export: {
       path: join(traceExport.output_dir, "manifest.json"),
@@ -375,6 +393,7 @@ export function createSupportBundle({
   const privacyNotePath = writeArtifact("privacy-note", "privacy-note.txt", buildPrivacyNoteText(bundle), {
     asText: true,
   });
+  const failureTaxonomyPath = writeArtifact("failure-taxonomy", "failure-taxonomy.json", failureTaxonomy);
   const issueTemplatePath = writeArtifact(
     "issue-template",
     "issue-template.md",
@@ -382,6 +401,7 @@ export function createSupportBundle({
       supportBundle: bundle,
       debugReport: effectiveDebugReport,
       contextExplanation,
+      failureTaxonomy,
     }),
     { asText: true },
   );
@@ -405,10 +425,12 @@ export function createSupportBundle({
       "",
       "This bundle is local-first and redacted by design.",
       "Read privacy-note.txt before sharing anything outside your machine.",
+      `Use failure-taxonomy.json to seed labels (${failureTaxonomy.recommended_surface_label}, ${failureTaxonomy.recommended_type_label}, ${failureTaxonomy.recommended_severity_label}, ${failureTaxonomy.recommended_status_label}).`,
       "Use issue-template.md for intake and the maintainer templates after triage.",
     ].join("\n"),
     { asText: true },
   );
+  bundle.failure_taxonomy_path = failureTaxonomyPath;
   bundle.issue_template_path = issueTemplatePath;
   bundle.privacy_note_path = privacyNotePath;
   bundle.reproducibility_template_path = reproducibilityTemplatePath;

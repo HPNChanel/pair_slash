@@ -90,6 +90,37 @@ properties:
         type: boolean
       remote_collection_default:
         type: string
+  failure_taxonomy:
+    type: object
+    required:
+      - taxonomy_version
+      - decisive_failure_domain
+      - recommended_surface_label
+      - recommended_type_label
+      - recommended_severity_label
+      - recommended_status_label
+      - recommended_issue_template
+      - maintainer_route
+      - rationale
+    properties:
+      taxonomy_version:
+        type: string
+      decisive_failure_domain:
+        type: string
+      recommended_surface_label:
+        type: string
+      recommended_type_label:
+        type: string
+      recommended_severity_label:
+        type: string
+      recommended_status_label:
+        type: string
+      recommended_issue_template:
+        type: string
+      maintainer_route:
+        type: string
+      rationale:
+        type: string
   trace_export:
     type: object
     properties:
@@ -169,6 +200,10 @@ properties:
       - string
       - "null"
   readme_path:
+    type:
+      - string
+      - "null"
+  failure_taxonomy_path:
     type:
       - string
       - "null"

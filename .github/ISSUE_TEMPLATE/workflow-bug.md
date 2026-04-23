@@ -2,7 +2,7 @@
 name: Workflow bug
 about: Report incorrect behavior in a shipped workflow or pack
 title: "[workflow] "
-labels: ["support"]
+labels: ["support", "surface:workflow", "status:needs-info"]
 assignees: []
 ---
 
@@ -49,4 +49,3 @@ assignees: []
 - safe_to_share:
 - redaction_state:
 - share_safety_reasons:
-

@@ -2,7 +2,7 @@
 name: Install bug
 about: Report install, update, uninstall, preview, or doctor lifecycle failures
 title: "[install] "
-labels: ["support"]
+labels: ["support", "surface:install-lifecycle", "status:needs-info"]
 assignees: []
 ---
 
@@ -47,4 +47,3 @@ assignees: []
 - safe_to_share:
 - redaction_state:
 - share_safety_reasons:
-

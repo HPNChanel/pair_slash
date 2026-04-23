@@ -10,6 +10,8 @@
 
 - `npm run test:release` now includes release-trust bundle build and
   structural verification.
+- `npm run test:release:ship` now enforces scoped `GO` gate, candidate evidence
+  verification, and checklist completion before claiming ship-ready status.
 - Signed release-trust bundles are now reserved for protected CI with
   `PAIRSLASH_RELEASE_TRUST_PRIVATE_KEY` and
   `PAIRSLASH_RELEASE_TRUST_KEY_ID`.
@@ -34,6 +36,9 @@
    `npm run release:trust:build -- --out <path>`.
 5. Verify the resulting signed bundle with
    `npm run release:trust:verify -- --trust-dir <path>`.
+6. Record the protected candidate run in the maintainer evidence file
+   `release-candidate-evidence-0.4.0.md`.
+7. Run `npm run test:release:ship` before switching release wording to `GO`.
 
 ## Legacy install note
 

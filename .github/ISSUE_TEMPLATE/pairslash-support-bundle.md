@@ -2,7 +2,7 @@
 name: PairSlash Support Bundle
 about: Report a runtime or workflow problem with a redacted PairSlash support bundle
 title: "[support] "
-labels: ["support"]
+labels: ["support", "status:needs-info"]
 assignees: []
 ---
 
@@ -31,6 +31,13 @@ assignees: []
 - redaction_state:
 - share_safety_reasons:
 - Attached files:
+
+## Suggested taxonomy labels (from failure-taxonomy.json when present)
+
+- surface:
+- type:
+- severity:
+- status:
 
 ## Consent
 

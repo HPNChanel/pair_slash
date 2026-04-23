@@ -18,6 +18,12 @@ Use this public surface for:
 - [Install guide](../workflows/install-guide.md)
 - [Compatibility matrix](../compatibility/compatibility-matrix.md)
 - [Reporting guide](../reporting.md)
+- [Issue taxonomy](issue-taxonomy.md)
+- [Maintainer playbook](maintainer-playbook.md)
+- [Support surfaces summary](support-surfaces-summary.md)
+- [Support triage playbook](../support/triage-playbook.md)
+- [Support repro assets](../support/repro-assets.md)
+- [Maintainer entrypoint](../maintainers/README.md)
 - [Examples](../examples/README.md)
 
 PairSlash supports exactly two runtimes: Codex CLI and GitHub Copilot CLI.

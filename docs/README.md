@@ -8,6 +8,11 @@ Start here:
 - [Install guide](workflows/install-guide.md)
 - [Compatibility matrix](compatibility/compatibility-matrix.md)
 - [Reporting guide](reporting.md)
+- [Support playbook](support/phase-7-support-ops.md)
+- [Bundle intake policy](support/bundle-intake-policy.md)
+- [Issue taxonomy](phase-9/issue-taxonomy.md)
+- [Maintainer playbook](phase-9/maintainer-playbook.md)
+- [Maintainer entrypoint](maintainers/README.md)
 
 Canonical public truth:
 

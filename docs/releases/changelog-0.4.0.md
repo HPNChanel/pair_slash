@@ -39,6 +39,8 @@ Gate status: `NO-GO` as of 2026-04-17 (`docs/releases/scoped-release-verdict.md`
 ## Trust verification surfaces
 
 - Structural release gate: `npm run test:release`
+- Ship gate (requires GO verdict + candidate evidence): `npm run test:release:ship`
+- Compat diagnostic gate (non-ship signal): `npm run test:compat:release:diagnostic`
 - Local bundle build: `npm run release:trust:build`
 - Local bundle verification:
   - structural: `npm run release:trust:verify -- --mode structural`

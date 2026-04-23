@@ -3176,6 +3176,51 @@ export function validateSupportBundle(record) {
       "SUP001",
     );
   }
+  if (!isObject(record?.failure_taxonomy)) {
+    errors.push("failure_taxonomy must be an object");
+  } else {
+    validateNonEmptyString(record.failure_taxonomy?.taxonomy_version, "failure_taxonomy.taxonomy_version", errors, "SUP001");
+    if (!TRACE_FAILURE_DOMAINS.includes(record.failure_taxonomy?.decisive_failure_domain)) {
+      errors.push(`unsupported failure_taxonomy.decisive_failure_domain: ${record.failure_taxonomy?.decisive_failure_domain}`);
+    }
+    validateNonEmptyString(
+      record.failure_taxonomy?.recommended_surface_label,
+      "failure_taxonomy.recommended_surface_label",
+      errors,
+      "SUP001",
+    );
+    validateNonEmptyString(
+      record.failure_taxonomy?.recommended_type_label,
+      "failure_taxonomy.recommended_type_label",
+      errors,
+      "SUP001",
+    );
+    validateNonEmptyString(
+      record.failure_taxonomy?.recommended_severity_label,
+      "failure_taxonomy.recommended_severity_label",
+      errors,
+      "SUP001",
+    );
+    validateNonEmptyString(
+      record.failure_taxonomy?.recommended_status_label,
+      "failure_taxonomy.recommended_status_label",
+      errors,
+      "SUP001",
+    );
+    validateNonEmptyString(
+      record.failure_taxonomy?.recommended_issue_template,
+      "failure_taxonomy.recommended_issue_template",
+      errors,
+      "SUP001",
+    );
+    validateNonEmptyString(
+      record.failure_taxonomy?.maintainer_route,
+      "failure_taxonomy.maintainer_route",
+      errors,
+      "SUP001",
+    );
+    validateNonEmptyString(record.failure_taxonomy?.rationale, "failure_taxonomy.rationale", errors, "SUP001");
+  }
   if (!isObject(record?.trace_export)) {
     errors.push("trace_export must be an object");
   } else {
@@ -3209,6 +3254,7 @@ export function validateSupportBundle(record) {
     "reproducibility_template_path",
     "triage_template_path",
     "readme_path",
+    "failure_taxonomy_path",
   ]) {
     if (field in record && record?.[field] !== null && typeof record?.[field] !== "string") {
       errors.push(`${field} must be string or null`);

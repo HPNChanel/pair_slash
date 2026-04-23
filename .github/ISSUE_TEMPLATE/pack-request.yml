@@ -1,6 +1,11 @@
 name: Pack request
 description: Request a new pack or widened pack scope for a real terminal-native workflow
 title: "[pack-request] "
+labels:
+  - support
+  - surface:pack-discovery
+  - type:pack-request
+  - status:triage
 body:
   - type: textarea
     id: job_to_be_done

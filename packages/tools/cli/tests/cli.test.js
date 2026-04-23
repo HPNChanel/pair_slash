@@ -2015,6 +2015,12 @@ test("pairslash trace export can emit support bundle", serial, async () => {
     assert.ok(existsSync(payload.support_bundle.doctor_report_path));
     assert.ok(payload.support_bundle.issue_template_path);
     assert.ok(existsSync(payload.support_bundle.issue_template_path));
+    assert.ok(payload.support_bundle.failure_taxonomy_path);
+    assert.ok(existsSync(payload.support_bundle.failure_taxonomy_path));
+    assert.equal(
+      payload.support_bundle.failure_taxonomy.decisive_failure_domain,
+      payload.support_bundle.trace_locator.decisive_failure_domain,
+    );
     assert.equal(payload.support_bundle.privacy_descriptor.local_only_by_default, true);
   } finally {
     runtime.cleanup();

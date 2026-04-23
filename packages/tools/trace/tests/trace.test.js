@@ -101,12 +101,17 @@ test("trace export redacts sensitive fields and support bundle is shareable", ()
     assert.equal(supportBundle.kind, "support-bundle");
     assert.equal(supportBundle.safe_to_share, true);
     assert.equal(supportBundle.privacy_descriptor.redaction_state, "shareable");
+    assert.equal(supportBundle.failure_taxonomy.decisive_failure_domain, "memory");
+    assert.equal(supportBundle.failure_taxonomy.recommended_surface_label, "surface:memory");
+    assert.equal(supportBundle.failure_taxonomy.recommended_issue_template, ".github/ISSUE_TEMPLATE/memory-bug.md");
     assert.ok(supportBundle.debug_report_path);
     assert.ok(supportBundle.issue_template_path);
     assert.ok(supportBundle.privacy_note_path);
+    assert.ok(supportBundle.failure_taxonomy_path);
     assert.ok(existsSync(join(supportBundle.output_dir, "bundle-manifest.json")));
     assert.ok(existsSync(join(supportBundle.output_dir, "issue-template.md")));
     assert.ok(existsSync(join(supportBundle.output_dir, "privacy-note.txt")));
+    assert.ok(existsSync(join(supportBundle.output_dir, "failure-taxonomy.json")));
   } finally {
     fixture.cleanup();
   }
@@ -166,6 +171,10 @@ test("support bundle is not shareable when unknown sensitive hits are present", 
     assert.equal(supportBundle.safe_to_share, false);
     assert.ok(supportBundle.share_safety_reasons.includes("unknown-sensitive-hits"));
     assert.equal(supportBundle.privacy_descriptor.redaction_state, "review-required");
+    assert.equal(
+      supportBundle.failure_taxonomy.decisive_failure_domain,
+      supportBundle.trace_locator.decisive_failure_domain,
+    );
   } finally {
     fixture.cleanup();
   }

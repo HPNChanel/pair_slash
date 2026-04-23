@@ -22,7 +22,8 @@ Not yet.
 PairSlash has the scoped release-trust implementation and local release gates,
 but this branch is blocked from a shipped scoped release claim until at least
 one protected `release-trust-candidate` run succeeds with an uploaded signed
-bundle artifact.
+bundle artifact, and the run evidence is recorded in the maintainer candidate
+evidence log for this release line.
 
 ## What this verdict proves
 

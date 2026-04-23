@@ -1,6 +1,11 @@
 name: Docs/problem report
 description: Report docs drift, stale commands, or support wording mismatch
 title: "[docs] "
+labels:
+  - support
+  - surface:docs-nav-wording
+  - type:docs-drift
+  - status:triage
 body:
   - type: input
     id: doc_path

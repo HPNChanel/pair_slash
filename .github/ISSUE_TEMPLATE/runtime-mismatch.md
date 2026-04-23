@@ -2,7 +2,7 @@
 name: Runtime mismatch
 about: Report mismatch between observed behavior and compatibility/runtime support wording
 title: "[runtime-mismatch] "
-labels: ["support"]
+labels: ["support", "surface:runtime-mismatch", "status:needs-info"]
 assignees: []
 ---
 
@@ -46,4 +46,3 @@ assignees: []
 - safe_to_share:
 - redaction_state:
 - share_safety_reasons:
-

@@ -2,7 +2,7 @@
 name: Memory bug
 about: Report preview/apply/audit issues for explicit Global Project Memory workflows
 title: "[memory] "
-labels: ["support"]
+labels: ["support", "surface:memory", "status:needs-info"]
 assignees: []
 ---
 
@@ -46,4 +46,3 @@ assignees: []
 - safe_to_share:
 - redaction_state:
 - share_safety_reasons:
-

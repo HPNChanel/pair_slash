@@ -17,6 +17,15 @@ const requiredDocs = [
   "docs/compatibility/compatibility-matrix.md",
   "docs/compatibility/runtime-surface-matrix.yaml",
   "docs/compatibility/runtime-verification.md",
+  "docs/reporting.md",
+  "docs/support/phase-7-support-ops.md",
+  "docs/support/bundle-intake-policy.md",
+  "docs/support/triage-playbook.md",
+  "docs/support/repro-assets.md",
+  "docs/phase-9/issue-taxonomy.md",
+  "docs/phase-9/maintainer-playbook.md",
+  "docs/maintainers/README.md",
+  "docs/maintainers/pack-lifecycle-checklist.md",
   "docs/troubleshooting/compat-lab-bug-repro.md",
   "packages/tools/compat-lab/fixtures/README.md",
   "packages/tools/compat-lab/fixtures/repos/README.md",
@@ -103,7 +112,9 @@ function runSignedTrustGate() {
 
 requireDocs();
 requireTrustBootstrap();
-runNodeScript(["scripts/run-compat-lab-release-readiness.mjs"]);
+runNodeScript(["scripts/verify-supportability-surfaces.mjs"]);
+runNodeScript(["scripts/sync-compat-lab-artifacts.mjs", "--check"]);
+runNodeScript(["scripts/run-compat-lab-tests.mjs"]);
 runStructuralTrustGate();
 
 if (requireSignedVerification()) {

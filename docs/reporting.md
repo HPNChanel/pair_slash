@@ -32,6 +32,14 @@ Review the generated privacy note before sharing anything outside your machine.
 If you already have local artifacts, use
 [pairslash-support-bundle.md](../.github/ISSUE_TEMPLATE/pairslash-support-bundle.md).
 
+## Support truth and triage references
+
+- Failure taxonomy and label model: [phase-9/issue-taxonomy.md](phase-9/issue-taxonomy.md)
+- Maintainer decision flow: [phase-9/maintainer-playbook.md](phase-9/maintainer-playbook.md)
+- Support operations baseline: [support/phase-7-support-ops.md](support/phase-7-support-ops.md)
+- Bundle intake and redaction policy: [support/bundle-intake-policy.md](support/bundle-intake-policy.md)
+- Evidence escalation matrix: [support/repro-assets.md](support/repro-assets.md)
+
 ## Public boundary
 
 - Public support wording still comes from the [compatibility matrix](compatibility/compatibility-matrix.md).
