@@ -1,1 +1,5 @@
+## Why is this repository eligible?
 Though at zero stars in stealth, PairSlash pioneers a layered monorepo architecture strictly for Codex CLI and Copilot CLI runtimes. We are engineering complex, runtime-native installability (Phase 4) which demands advanced code-generation to perfect. It's a foundational tool waiting to launch. Codex Pro will critically accelerate our rigorous adapter logic and integration testing, bringing this boundary-pushing CLI framework to the open-source community much faster.
+
+## How do you use API credits for your project?
+API credits are the lifeblood of our development process. We use them primarily to fuel advanced code-generation, enabling us to dynamically build and refine the strict adapters required for Codex CLI and Copilot CLI. Furthermore, credits power our massive integration test suites, simulating complex edge cases in runtime-native environments to ensure our Phase 4 architecture is rock-solid. They allow us to iterate rapidly on complex logic, turning conceptual architectures into a production-ready, highly reliable framework.
