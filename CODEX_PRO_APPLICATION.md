@@ -3,3 +3,6 @@ Though at zero stars in stealth, PairSlash pioneers a layered monorepo architect
 
 ## How do you use API credits for your project?
 API credits are the lifeblood of our development process. We use them primarily to fuel advanced code-generation, enabling us to dynamically build and refine the strict adapters required for Codex CLI and Copilot CLI. Furthermore, credits power our massive integration test suites, simulating complex edge cases in runtime-native environments to ensure our Phase 4 architecture is rock-solid. They allow us to iterate rapidly on complex logic, turning conceptual architectures into a production-ready, highly reliable framework.
+
+## Is there anything else you'd like us to know?
+We are deeply committed to open-source innovation. While PairSlash is currently in stealth mode to refine its complex Phase 4 installability architecture, our ultimate goal is to release it to the public, establishing a robust new standard for CLI-based AI coding assistants. Support through the Codex Pro program won't just accelerate our immediate roadmap; it will directly contribute to a foundational tool that we intend to share freely with the broader developer community. Thank you for empowering builders to push the boundaries of what's possible.
