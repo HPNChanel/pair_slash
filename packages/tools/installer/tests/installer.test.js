@@ -1118,6 +1118,86 @@ test("uninstall rollback restores removed files when state removal fails", seria
   }
 });
 
+test("uninstall rollback does not recreate missing managed file when backup is unavailable", serial, () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  try {
+    applyInstall(
+      planInstall({
+        repoRoot: fixture.tempRoot,
+        runtime: "codex_cli",
+        target: "repo",
+        packs: ["pairslash-plan"],
+      }),
+    );
+    const skillPath = join(
+      fixture.tempRoot,
+      ".agents",
+      "skills",
+      "pairslash-plan",
+      "SKILL.md",
+    );
+    const statePath = join(fixture.tempRoot, ".pairslash", "install-state", "repo-codex_cli.json");
+    const envelope = planUninstall({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      target: "repo",
+      packs: ["pairslash-plan"],
+    });
+
+    rmSync(skillPath, { force: true });
+    rmSync(statePath, { force: true });
+    mkdirSync(statePath, { recursive: true });
+    assert.throws(() => applyUninstall(envelope), /uninstall failed and rolled back/);
+    assert.equal(existsSync(skillPath), false);
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("cleanup never removes outside directories that only share an install-root prefix", serial, () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  try {
+    applyInstall(
+      planInstall({
+        repoRoot: fixture.tempRoot,
+        runtime: "codex_cli",
+        target: "repo",
+        packs: ["pairslash-plan"],
+      }),
+    );
+    const envelope = planUninstall({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      target: "repo",
+      packs: ["pairslash-plan"],
+    });
+
+    const prefixDir = join(fixture.tempRoot, ".agents", "skills-pack");
+    const leakedPath = join(prefixDir, "stale.txt");
+    mkdirSync(prefixDir, { recursive: true });
+    writeFileSync(leakedPath, "leak\n");
+    envelope.plan.operations.push({
+      kind: "remove",
+      pack_id: "pairslash-plan",
+      relative_path: "stale.txt",
+      absolute_path: leakedPath,
+      ownership: "pairslash",
+      reason: "test cleanup should respect install-root boundary",
+    });
+
+    const result = applyUninstall(envelope);
+    assert.equal(result.state.packs.length, 0);
+    assert.equal(existsSync(leakedPath), false);
+    assert.equal(existsSync(prefixDir), true);
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
 test("uninstall blocks requested pack that is not installed", serial, () => {
   const fixture = createTempRepo();
   try {

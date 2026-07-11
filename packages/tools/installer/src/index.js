@@ -1411,7 +1411,7 @@ function buildInstallOperations({
 
 function cleanupEmptyDirectories(startDir, stopDir) {
   let current = startDir;
-  while (current.startsWith(stopDir)) {
+  while (isPathWithinRoot(stopDir, current)) {
     if (!exists(current)) {
       break;
     }
@@ -1450,14 +1450,15 @@ function buildMutationJournal(envelope, journalPath, action) {
       continue;
     }
     if (operation.kind === "remove") {
-      steps.push({
+      const step = {
         kind: "remove",
         path: operation.absolute_path,
         created_by_transaction: false,
-        backup_content: exists(operation.absolute_path)
-          ? readFileSync(operation.absolute_path, "utf8")
-          : "",
-      });
+      };
+      if (exists(operation.absolute_path)) {
+        step.backup_content = readFileSync(operation.absolute_path, "utf8");
+      }
+      steps.push(step);
       continue;
     }
     if (operation.kind === "replace") {
@@ -1522,11 +1523,15 @@ function rollbackInstallJournal(journal, envelope) {
       continue;
     }
     if (step.kind === "replace") {
-      writeTextFile(step.path, step.backup_content ?? "");
+      if (typeof step.backup_content === "string") {
+        writeTextFile(step.path, step.backup_content);
+      }
       continue;
     }
     if (step.kind === "remove") {
-      writeTextFile(step.path, step.backup_content ?? "");
+      if (typeof step.backup_content === "string") {
+        writeTextFile(step.path, step.backup_content);
+      }
       continue;
     }
     if (step.kind === "write_state") {

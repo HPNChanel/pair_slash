@@ -321,9 +321,7 @@ export function buildMemoryCandidateReport({
       }
       return left.claim_key.localeCompare(right.claim_key);
     });
-  const limitedRecords = sortedSourceRecords.slice(0, maxCandidates);
-
-  const candidates = limitedRecords.map((record, index) => {
+  const allCandidates = sortedSourceRecords.map((record, sortedIndex) => {
     const matchedGlobal = findGlobalMatch(record, globalByClaimKey, globalByIdentity);
     const candidateStatement = normalizeText(record.statement);
     const globalStatement = normalizeText(matchedGlobal?.statement);
@@ -360,7 +358,7 @@ export function buildMemoryCandidateReport({
       reasons.push("no-authoritative-match");
     }
     return {
-      id: `C${String(index + 1).padStart(3, "0")}-${candidateId(
+      id: `C${String(sortedIndex + 1).padStart(3, "0")}-${candidateId(
         `${record.layer}\u0000${record.file}\u0000${record.claim_key}`,
       )}`,
       source_layer: record.layer,
@@ -399,18 +397,19 @@ export function buildMemoryCandidateReport({
       recommended_next_action: classification.recommended_next_action,
     };
   });
+  const candidates = allCandidates.slice(0, maxCandidates);
 
-  if (candidates.every((candidate) => candidate.evidence.length === 0)) {
+  if (allCandidates.every((candidate) => candidate.evidence.length === 0)) {
     throw new Error("candidate-context-insufficient: extracted candidates have no evidence");
   }
 
-  const duplicatesFound = candidates
+  const duplicatesFound = allCandidates
     .filter((candidate) => candidate.suspicion.duplicate)
     .map((candidate) => candidate.id);
-  const conflictsFound = candidates
+  const conflictsFound = allCandidates
     .filter((candidate) => candidate.suspicion.conflict)
     .map((candidate) => candidate.id);
-  const missingEvidence = candidates
+  const missingEvidence = allCandidates
     .filter((candidate) => candidate.evidence.length === 0)
     .map((candidate) => candidate.id);
   const unresolvedContext = [
@@ -418,6 +417,10 @@ export function buildMemoryCandidateReport({
     ...(resolution.warnings ?? []),
     ...sourceWarnings,
   ];
+  const resolvedContext = [...unresolvedContext];
+  if (sortedSourceRecords.length > maxCandidates) {
+    resolvedContext.push(`candidate-truncation:${maxCandidates}/${sortedSourceRecords.length}`);
+  }
 
   const report = {
     kind: "memory-candidate-report",
@@ -437,7 +440,7 @@ export function buildMemoryCandidateReport({
           ? evidenceSources.slice()
           : sourceLayers.flatMap((layer) => layer.resolved_paths ?? []),
       candidate_count_estimate: sortedSourceRecords.length,
-      risk_notes: unresolvedContext,
+      risk_notes: resolvedContext,
     },
     candidates,
     reconciliation: {
@@ -451,7 +454,7 @@ export function buildMemoryCandidateReport({
       missing_evidence: missingEvidence,
       unresolved_context: unresolvedContext,
     },
-    next_action: chooseNextAction(candidates),
+    next_action: chooseNextAction(allCandidates),
   };
 
   const errors = validateCandidateReport(report);

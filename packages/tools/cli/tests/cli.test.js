@@ -1333,6 +1333,225 @@ test("pairslash memory candidate emits schema-valid reconciliation report withou
   }
 });
 
+test("pairslash memory candidate evaluates conflicts and next_action across the full source set even when payload is truncated", serial, async () => {
+  const fixture = createTempRepo({ packs: ["pairslash-memory-candidate"] });
+  let output = "";
+  try {
+    mkdirSync(join(fixture.tempRoot, ".pairslash", "project-memory"), { recursive: true });
+    mkdirSync(join(fixture.tempRoot, ".pairslash", "task-memory"), { recursive: true });
+
+    const globalPath = join(fixture.tempRoot, ".pairslash", "project-memory", "50-constraints.yaml");
+    const globalRecords = [
+      {
+        kind: "constraint",
+        title: "Candidate duplicate should match global",
+        statement: "Global duplicate statement.",
+        evidence: "global-evidence",
+        scope: "whole-project",
+        confidence: "high",
+        action: "append",
+        tags: [],
+        source_refs: [],
+        updated_by: "tests",
+        timestamp: "2026-04-07T01:00:00.000Z",
+      },
+      {
+        kind: "constraint",
+        title: "Hidden conflict should force review",
+        statement: "Global conflict baseline.",
+        evidence: "global-evidence",
+        scope: "whole-project",
+        confidence: "high",
+        action: "append",
+        tags: [],
+        source_refs: [],
+        updated_by: "tests",
+        timestamp: "2026-04-07T01:00:00.000Z",
+      },
+    ];
+    writeFileSync(
+      globalPath,
+      `${globalRecords.map((record) => YAML.stringify(record, { lineWidth: 0, simpleKeys: true }).trimEnd()).join("\n---\n")}\n`,
+    );
+    writeFileSync(
+      join(fixture.tempRoot, ".pairslash", "project-memory", "90-memory-index.yaml"),
+      YAML.stringify(
+        {
+          version: "0.1.0",
+          last_updated: "2026-04-07T01:00:00.000Z",
+          updated_by: "tests",
+          records: [
+            {
+              file: "50-constraints.yaml",
+              kind: "constraint",
+              title: "Candidate duplicate should match global",
+              scope: "whole-project",
+              status: "active",
+              record_family: "mutable",
+            },
+            {
+              file: "50-constraints.yaml",
+              kind: "constraint",
+              title: "Hidden conflict should force review",
+              scope: "whole-project",
+              status: "active",
+              record_family: "mutable",
+            },
+          ],
+        },
+        { lineWidth: 0, simpleKeys: true },
+      ),
+    );
+    writeFileSync(
+      join(fixture.tempRoot, ".pairslash", "task-memory", "a-duplicate.yaml"),
+      [
+        "kind: constraint",
+        "title: Candidate duplicate should match global",
+        "statement: Global duplicate statement.",
+        "evidence: task evidence duplicate",
+        "scope: whole-project",
+      ].join("\n"),
+    );
+    writeFileSync(
+      join(fixture.tempRoot, ".pairslash", "task-memory", "b-missing.yaml"),
+      [
+        "kind: constraint",
+        "title: Candidate has no evidence",
+        "statement: This candidate is intentionally incomplete.",
+        "scope: whole-project",
+      ].join("\n"),
+    );
+    writeFileSync(
+      join(fixture.tempRoot, ".pairslash", "task-memory", "c-conflict.yaml"),
+      [
+        "kind: constraint",
+        "title: Hidden conflict should force review",
+        "statement: Task conflicts with global baseline.",
+        "evidence: task evidence conflict",
+        "scope: whole-project",
+      ].join("\n"),
+    );
+
+    const exitCode = await runCli({
+      argv: ["memory", "candidate", ...buildMemoryCandidateArgs(["--format", "json", "--max-candidates", "1"])],
+      cwd: fixture.tempRoot,
+      stdout: {
+        write(chunk) {
+          output += chunk;
+        },
+      },
+    });
+    assert.equal(exitCode, 0);
+    const payload = JSON.parse(output);
+    assert.deepEqual(validateCandidateReport(payload), []);
+    assert.equal(payload.kind, "memory-candidate-report");
+    assert.equal(payload.precedence_rule.slice(0, 4).join(","), [
+      "global-project-memory",
+      "task-memory",
+      "session",
+      "staging",
+    ].join(","));
+    assert.equal(payload.candidates.length, 1);
+    assert.equal(
+      payload.candidates.some((candidate) => candidate.title === "Hidden conflict should force review"),
+      false,
+    );
+    assert.equal(payload.candidates.some((candidate) => candidate.suspicion.conflict), false);
+    assert.equal(payload.reconciliation.conflicts_found.length, 1);
+    assert.equal(payload.next_action, "USE_PAIRSLASH_MEMORY_WRITE_GLOBAL");
+    assert.equal(payload.plan.risk_notes.includes("candidate-truncation:1/3"), true);
+  } finally {
+    fixture.cleanup();
+  }
+});
+
+test("pairslash memory candidate does not reject due to evidence cutoff when stronger candidates exist beyond truncation", serial, async () => {
+  const fixture = createTempRepo({ packs: ["pairslash-memory-candidate"] });
+  let output = "";
+  try {
+    mkdirSync(join(fixture.tempRoot, ".pairslash", "project-memory"), { recursive: true });
+    mkdirSync(join(fixture.tempRoot, ".pairslash", "task-memory"), { recursive: true });
+    writeFileSync(
+      join(fixture.tempRoot, ".pairslash", "project-memory", "50-constraints.yaml"),
+      YAML.stringify(
+        {
+          kind: "constraint",
+          title: "Unrelated authoritative claim",
+          statement: "Authority baseline remains separate.",
+          evidence: "global-evidence",
+          scope: "whole-project",
+          confidence: "high",
+          action: "append",
+          tags: [],
+          source_refs: [],
+          updated_by: "tests",
+          timestamp: "2026-04-07T01:00:00.000Z",
+        },
+        { lineWidth: 0, simpleKeys: true },
+      ),
+    );
+    writeFileSync(
+      join(fixture.tempRoot, ".pairslash", "project-memory", "90-memory-index.yaml"),
+      YAML.stringify(
+        {
+          version: "0.1.0",
+          last_updated: "2026-04-07T01:00:00.000Z",
+          updated_by: "tests",
+          records: [
+            {
+              file: "50-constraints.yaml",
+              kind: "constraint",
+              title: "Unrelated authoritative claim",
+              scope: "whole-project",
+              status: "active",
+              record_family: "mutable",
+            },
+          ],
+        },
+        { lineWidth: 0, simpleKeys: true },
+      ),
+    );
+    writeFileSync(
+      join(fixture.tempRoot, ".pairslash", "task-memory", "a-empty.yaml"),
+      [
+        "kind: constraint",
+        "title: Candidate visible has no evidence",
+        "statement: Visible candidate is evidence-free.",
+        "scope: whole-project",
+      ].join("\n"),
+    );
+    writeFileSync(
+      join(fixture.tempRoot, ".pairslash", "task-memory", "z-evidenced.yaml"),
+      [
+        "kind: constraint",
+        "title: Candidate beyond truncation has evidence",
+        "statement: Strong candidate that should still promote global review.",
+        "evidence: strong evidence",
+        "scope: whole-project",
+      ].join("\n"),
+    );
+
+    const exitCode = await runCli({
+      argv: ["memory", "candidate", ...buildMemoryCandidateArgs(["--format", "json", "--max-candidates", "1"])],
+      cwd: fixture.tempRoot,
+      stdout: {
+        write(chunk) {
+          output += chunk;
+        },
+      },
+    });
+    assert.equal(exitCode, 0);
+    const payload = JSON.parse(output);
+    assert.deepEqual(validateCandidateReport(payload), []);
+    assert.equal(payload.candidates.length, 1);
+    assert.equal(payload.candidates[0].evidence.length, 0);
+    assert.equal(payload.next_action, "USE_PAIRSLASH_MEMORY_WRITE_GLOBAL");
+    assert.equal(payload.plan.risk_notes.includes("candidate-truncation:1/2"), true);
+  } finally {
+    fixture.cleanup();
+  }
+});
+
 test("pairslash memory candidate fails clearly when task scope is missing", serial, async () => {
   const fixture = createTempRepo({ packs: ["pairslash-memory-candidate"] });
   try {
