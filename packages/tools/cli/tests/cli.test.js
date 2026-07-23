@@ -4,7 +4,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 
 import { join } from "node:path";
 import YAML from "yaml";
 
-import { runCli } from "../src/bin/pairslash.js";
+import { runCli } from "../src/bin/pairslash.ts";
 import { listTraceIndexes, loadTraceEvents } from "@pairslash/trace";
 import { validateCandidateReport, validateMemoryAuditReport } from "@pairslash/spec-core";
 

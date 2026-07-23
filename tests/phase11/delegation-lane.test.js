@@ -9,7 +9,7 @@ import {
 import { join } from "node:path";
 import YAML from "yaml";
 
-import { runCli } from "../../packages/tools/cli/src/bin/pairslash.js";
+import { runCli } from "../../packages/tools/cli/src/bin/pairslash.ts";
 import {
   DELEGATION_CAPABILITY_DEFAULTS,
   DELEGATION_POLICY_ACTIONS,

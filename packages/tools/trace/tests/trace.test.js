@@ -11,7 +11,7 @@ import {
   exportTrace,
   loadRetentionState,
   pruneTraceStore,
-} from "../src/index.js";
+} from "../src/index.ts";
 import { createTempRepo } from "../../../../tests/phase4-helpers.js";
 
 test("trace events build a debug report with decisive failure domain", () => {
@@ -27,7 +27,7 @@ test("trace events build a debug report with decisive failure domain", () => {
       eventType: "command.started",
       outcome: "started",
       sourcePackage: "@pairslash/cli",
-      sourceModule: "bin/pairslash.js",
+      sourceModule: "bin/pairslash.ts",
       payload: {},
       summary: "doctor started",
     });
@@ -130,7 +130,7 @@ test("trace event classification keeps non-terminal lifecycle outcomes in failur
       eventType: "command.started",
       outcome: "started",
       sourcePackage: "@pairslash/cli",
-      sourceModule: "bin/pairslash.js",
+      sourceModule: "bin/pairslash.ts",
       payload: {},
       summary: "policy checks are running",
     });
@@ -153,7 +153,7 @@ test("support bundle is not shareable when unknown sensitive hits are present", 
       eventType: "error.raised",
       outcome: "failed",
       sourcePackage: "@pairslash/cli",
-      sourceModule: "bin/pairslash.js",
+      sourceModule: "bin/pairslash.ts",
       payload: {
         credential_blob: "Bearer ABCDEFGHIJKLMNOPQRSTUVWXYZ123456",
       },
@@ -209,7 +209,7 @@ test("retention pruning removes old index/event files and writes retention state
         command_name: "doctor",
         actor: "pairslash-cli",
         source_package: "@pairslash/cli",
-        source_module: "bin/pairslash.js",
+        source_module: "bin/pairslash.ts",
         outcome: "finished",
         payload: {},
         redaction_tags: [],

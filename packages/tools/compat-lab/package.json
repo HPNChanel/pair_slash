@@ -4,7 +4,7 @@
   "private": true,
   "license": "Apache-2.0",
   "type": "module",
-  "exports": "./src/index.js",
+  "exports": "./src/index.ts",
   "dependencies": {
     "@pairslash/spec-core": "file:../../core/spec-core",
     "@pairslash/memory-engine": "file:../../core/memory-engine",

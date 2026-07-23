@@ -61,8 +61,8 @@ node packages/tools/cli/src/bin/pairslash.js doctor --runtime copilot --target u
 - Record what runtime and OS were actually used.
 - Keep Windows as a prep lane until the runtime behavior is observed, not inferred.
 - Do not mark a lane supported only because fake-runtime tests passed.
-- Treat fake acceptance (`packages/tools/compat-lab/src/acceptance.js`) and shim
-  acceptance (`packages/tools/compat-lab/src/runtime-fixtures.js`) as separate
+- Treat fake acceptance (`packages/tools/compat-lab/src/acceptance.ts`) and shim
+  acceptance (`packages/tools/compat-lab/src/runtime-fixtures.ts`) as separate
   regression classes.
 - Treat `npm run test:acceptance` as installability evidence, not as a
   replacement for `/skills` interaction notes or live runtime verification.

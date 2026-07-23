@@ -11,7 +11,7 @@ import {
   parseContractEnvelope,
   ContractEngineError,
   CONTRACT_ENGINE_ERROR_CODES,
-} from "../src/index.js";
+} from "../src/index.ts";
 import { repoRoot } from "../../../../tests/phase4-helpers.js";
 
 function loadJsonFixture(fileName) {

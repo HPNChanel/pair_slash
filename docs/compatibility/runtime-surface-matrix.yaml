@@ -352,7 +352,7 @@ runtime_lanes:
     evidence_source: docs/evidence/live-runtime/codex-cli-repo-macos.md
     evidence_summary: Archived direct-invocation live smoke exists for Codex CLI 0.116.0 on macOS repo scope, but canonical /skills evidence is still unrecorded.
     fake_evidence_refs:
-      - packages/tools/compat-lab/src/acceptance.js
+      - packages/tools/compat-lab/src/acceptance.ts
     freshness_state: fresh
     host_profile_count: 1
     lane_id: codex-cli-repo-macos
@@ -370,7 +370,7 @@ runtime_lanes:
     runtime: Codex CLI
     runtime_id: codex_cli
     shim_evidence_refs:
-      - packages/tools/compat-lab/src/runtime-fixtures.js
+      - packages/tools/compat-lab/src/runtime-fixtures.ts
     support_level: degraded
     support_semantics: Real Codex CLI behavior was observed on macOS repo scope, but only through codex exec/direct invocation and not through a checked-in canonical /skills picker capture. Keep this lane degraded.
     surface_verdicts:
@@ -395,7 +395,7 @@ runtime_lanes:
     evidence_source: docs/evidence/live-runtime/copilot-cli-user-linux.md
     evidence_summary: Deterministic installability coverage exists, but no checked-in Linux user /skills verification or live install record is present.
     fake_evidence_refs:
-      - packages/tools/compat-lab/src/acceptance.js
+      - packages/tools/compat-lab/src/acceptance.ts
     freshness_state: none-recorded
     host_profile_count: 0
     lane_id: copilot-cli-user-linux
@@ -411,7 +411,7 @@ runtime_lanes:
     runtime: GitHub Copilot CLI
     runtime_id: copilot_cli
     shim_evidence_refs:
-      - packages/tools/compat-lab/src/runtime-fixtures.js
+      - packages/tools/compat-lab/src/runtime-fixtures.ts
     support_level: prep
     support_semantics: Deterministic coverage exists, but no checked-in canonical /skills verification or live install record exists for the Linux user lane. Keep this lane prep-only.
     surface_verdicts:
@@ -436,7 +436,7 @@ runtime_lanes:
     evidence_source: docs/evidence/live-runtime/codex-cli-repo-windows.md
     evidence_summary: Real Windows doctor and preview smoke were recorded on 2026-04-05, but install apply and canonical /skills evidence remain unrecorded.
     fake_evidence_refs:
-      - packages/tools/compat-lab/src/acceptance.js
+      - packages/tools/compat-lab/src/acceptance.ts
     freshness_state: fresh
     host_profile_count: 1
     lane_id: codex-cli-repo-windows
@@ -453,7 +453,7 @@ runtime_lanes:
     runtime: Codex CLI
     runtime_id: codex_cli
     shim_evidence_refs:
-      - packages/tools/compat-lab/src/runtime-fixtures.js
+      - packages/tools/compat-lab/src/runtime-fixtures.ts
     support_level: prep
     support_semantics: Real Windows doctor and preview smoke are recorded, but install apply and canonical /skills verification remain unrecorded. Keep this lane prep-only.
     surface_verdicts:
@@ -478,7 +478,7 @@ runtime_lanes:
     evidence_source: docs/evidence/live-runtime/copilot-cli-user-windows.md
     evidence_summary: A real Windows host probe was recorded on 2026-04-05, but gh was unavailable locally and preview blocked explicitly.
     fake_evidence_refs:
-      - packages/tools/compat-lab/src/acceptance.js
+      - packages/tools/compat-lab/src/acceptance.ts
     freshness_state: fresh
     host_profile_count: 1
     lane_id: copilot-cli-user-windows
@@ -496,7 +496,7 @@ runtime_lanes:
     runtime: GitHub Copilot CLI
     runtime_id: copilot_cli
     shim_evidence_refs:
-      - packages/tools/compat-lab/src/runtime-fixtures.js
+      - packages/tools/compat-lab/src/runtime-fixtures.ts
     support_level: prep
     support_semantics: A real Windows host probe was captured, but gh was unavailable locally and no canonical /skills or install proof exists. Keep this lane prep-only.
     surface_verdicts:

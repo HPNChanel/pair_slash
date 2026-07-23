@@ -15,8 +15,8 @@
     "packages/tools/*"
   ],
   "scripts": {
-    "pairslash": "node packages/tools/cli/src/bin/pairslash.js",
-    "lint": "node packages/tools/cli/src/bin/pairslash.js lint",
+    "pairslash": "node packages/tools/cli/src/bin/pairslash.ts",
+    "lint": "node packages/tools/cli/src/bin/pairslash.ts lint",
     "test": "node scripts/run-tests.mjs",
     "test:acceptance": "node scripts/run-acceptance-tests.mjs",
     "test:release": "node scripts/run-release-readiness.mjs",
@@ -40,10 +40,15 @@
     "lint:phase4": "npm run lint",
     "test:phase4": "npm run test:compat",
     "test:phase4:acceptance": "npm run test:compat:acceptance",
-    "test:phase4:release": "npm run test:compat:release"
+    "test:phase4:release": "npm run test:compat:release",
+    "typecheck": "node scripts/run-typecheck.mjs"
   },
   "dependencies": {
     "valibot": "^1.3.1",
     "yaml": "^2.8.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "typescript": "^7.0.2"
   }
 }

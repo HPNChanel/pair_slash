@@ -4,7 +4,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import YAML from "yaml";
 
-import { runCli } from "../../packages/tools/cli/src/bin/pairslash.js";
+import { runCli } from "../../packages/tools/cli/src/bin/pairslash.ts";
 import {
   createTempRepo,
   installFakeRuntime,

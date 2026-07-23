@@ -8,7 +8,7 @@ import { stableJson, writeTextFile } from "@pairslash/spec-core";
 import {
   formatRoundOneReportText,
   runPhase19RoundOne,
-} from "../packages/tools/benchmark/src/index.js";
+} from "../packages/tools/benchmark/src/index.ts";
 
 function printUsage() {
   process.stdout.write(

@@ -39,9 +39,9 @@ deterministic_evidence_refs:
   - packages/tools/compat-lab/tests/acceptance.test.js
   - packages/tools/compat-lab/tests/matrix.test.js
 fake_acceptance_evidence_refs:
-  - packages/tools/compat-lab/src/acceptance.js
+  - packages/tools/compat-lab/src/acceptance.ts
 shim_acceptance_evidence_refs:
-  - packages/tools/compat-lab/src/runtime-fixtures.js
+  - packages/tools/compat-lab/src/runtime-fixtures.ts
 live_evidence_refs:
   - docs/evidence/live-runtime/copilot-cli-user-windows.md
 negative_evidence_refs:

@@ -5,16 +5,16 @@ import { join } from "node:path";
 
 import YAML from "yaml";
 
-import { runCli } from "../../packages/tools/cli/src/bin/pairslash.js";
-import { applyMemoryWrite, previewMemoryWrite } from "../../packages/core/memory-engine/src/index.js";
-import { evaluatePolicy } from "../../packages/core/policy-engine/src/index.js";
+import { runCli } from "../../packages/tools/cli/src/bin/pairslash.ts";
+import { applyMemoryWrite, previewMemoryWrite } from "../../packages/core/memory-engine/src/index.ts";
+import { evaluatePolicy } from "../../packages/core/policy-engine/src/index.ts";
 import {
   buildContractEnvelope,
   buildMemoryWriteContract,
   ContractEngineError,
   CONTRACT_ENGINE_ERROR_CODES,
-} from "../../packages/core/contract-engine/src/index.js";
-import { loadPackManifest, validateAuditLogEntry } from "../../packages/core/spec-core/src/index.js";
+} from "../../packages/core/contract-engine/src/index.ts";
+import { loadPackManifest, validateAuditLogEntry } from "../../packages/core/spec-core/src/index.ts";
 import {
   createTempRepo,
   installFakeRuntime,

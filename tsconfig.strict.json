@@ -1,0 +1,13 @@
+{
+  "//": "PairSlash strict TypeScript configuration. Phase M3: packages graduate into this config as their type annotations are completed. Once all packages have graduated, these flags move into tsconfig.json and this file is deleted. See .kilo/plans/1784473291765-ts-strictness-tightening.md.",
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "exactOptionalPropertyTypes": false
+  },
+  "include": []
+}

@@ -11,7 +11,7 @@ import {
   applyMemoryWrite,
   loadStagedMemoryWritePreview,
   previewMemoryWrite,
-} from "../src/index.js";
+} from "../src/index.ts";
 import { createTempRepo } from "../../../../tests/phase4-helpers.js";
 
 const serial = { concurrency: false };

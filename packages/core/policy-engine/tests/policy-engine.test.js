@@ -13,7 +13,7 @@ import {
   deriveRiskProfile,
   evaluatePolicy,
   explainPolicyVerdict,
-} from "../src/index.js";
+} from "../src/index.ts";
 import { repoRoot } from "../../../../tests/phase4-helpers.js";
 
 const fixturesDir = join(repoRoot, "tests", "fixtures", "phase5", "policy");

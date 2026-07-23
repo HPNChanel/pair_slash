@@ -4,7 +4,7 @@ import process from "node:process";
 import YAML from "yaml";
 
 import { TRACE_FAILURE_DOMAINS, stableJson } from "@pairslash/spec-core";
-import { FAILURE_TAXONOMY_LABELS } from "../packages/tools/trace/src/failure-taxonomy.js";
+import { FAILURE_TAXONOMY_LABELS } from "../packages/tools/trace/src/failure-taxonomy.ts";
 
 const REQUIRED_PATHS = [
   "docs/reporting.md",

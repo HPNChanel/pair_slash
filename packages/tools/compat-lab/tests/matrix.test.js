@@ -31,14 +31,14 @@ test("compatibility matrix artifact exposes public support semantics", () => {
     artifact.runtime_lanes.every(
       (lane) =>
         Array.isArray(lane.fake_evidence_refs) &&
-        lane.fake_evidence_refs.includes("packages/tools/compat-lab/src/acceptance.js"),
+        lane.fake_evidence_refs.includes("packages/tools/compat-lab/src/acceptance.ts"),
     ),
   );
   assert.ok(
     artifact.runtime_lanes.every(
       (lane) =>
         Array.isArray(lane.shim_evidence_refs) &&
-        lane.shim_evidence_refs.includes("packages/tools/compat-lab/src/runtime-fixtures.js"),
+        lane.shim_evidence_refs.includes("packages/tools/compat-lab/src/runtime-fixtures.ts"),
     ),
   );
   assert.ok(

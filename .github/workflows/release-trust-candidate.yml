@@ -42,6 +42,9 @@ jobs:
       - name: Verify signed release-trust artifact
         run: node scripts/verify-release-trust.mjs --trust-dir artifacts/release-trust
 
+      - name: Generate CycloneDX SBOM as unsigned companion artifact
+        run: npm sbom --sbom-format cyclonedx --sbom-type application > artifacts/release-trust/sbom.cyclonedx.json
+
       - name: Upload signed release-trust artifact
         uses: actions/upload-artifact@v4
         with:

@@ -9,6 +9,6 @@ tags:
   - preview
   - trust-surface
 source_refs:
-  - packages/tools/cli/src/bin/pairslash.js
+  - packages/tools/cli/src/bin/pairslash.ts
 updated_by: preview-tests
 timestamp: 2026-03-27T00:00:00.000Z

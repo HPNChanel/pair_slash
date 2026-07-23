@@ -13,7 +13,7 @@ import {
   scoreBenchmarkRuns,
   validatePhase19BenchmarkConfig,
   writeEvidenceLogArtifacts,
-} from "../src/index.js";
+} from "../src/index.ts";
 
 import { createTempRepo, repoRoot } from "../../../../tests/phase4-helpers.js";
 

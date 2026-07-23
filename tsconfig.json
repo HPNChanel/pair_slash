@@ -1,0 +1,37 @@
+{
+  "//": "PairSlash root TypeScript configuration. Phase M2: all packages converted to .ts (Node 24 type-stripping at runtime, no build step). Phase M3: strictness is progressively tightened via a dual-config mechanism — packages graduate from this relaxed config into tsconfig.strict.json as type annotations are completed. When all packages have graduated, strict flags move here and tsconfig.strict.json is deleted. JS/TS coexistence is permitted via allowJs; only .ts roots are included so .js files stay unchecked.",
+  "compilerOptions": {
+    "target": "es2023",
+    "lib": ["es2023"],
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "allowJs": true,
+    "checkJs": false,
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": false,
+    "strict": false,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "exactOptionalPropertyTypes": false,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "types": ["node"]
+  },
+  "include": ["packages/**/*.ts"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "artifacts",
+    ".pairslash/sessions",
+    ".pairslash/staging",
+    ".pairslash/tmp"
+  ]
+}

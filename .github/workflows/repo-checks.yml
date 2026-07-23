@@ -34,6 +34,12 @@ jobs:
       - name: Run test suite
         run: npm run test
 
+      - name: Run typecheck gate
+        run: npm run typecheck
+
+      - name: Supply-chain audit (production deps, high+ severity)
+        run: npm audit --audit-level=high --omit=dev
+
       - name: Enforce generated compat artifacts
         run: npm run sync:compat-lab -- --check
 

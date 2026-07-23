@@ -24,9 +24,9 @@ Each lane has:
 - Deterministic evidence: repeatable tests, release gates, and generated
   artifacts that prove implementation and regression control.
 - Fake acceptance evidence: deterministic compat-lab scenario outputs from
-  `packages/tools/compat-lab/src/acceptance.js`.
+  `packages/tools/compat-lab/src/acceptance.ts`.
 - Shim acceptance evidence: fake runtime binaries and host overrides from
-  `packages/tools/compat-lab/src/runtime-fixtures.js`.
+  `packages/tools/compat-lab/src/runtime-fixtures.ts`.
 - Fake acceptance and shim acceptance are regression confidence only. They are
   never sufficient for live support promotion.
 - Live evidence: exact runtime, target, OS, and version observations from real

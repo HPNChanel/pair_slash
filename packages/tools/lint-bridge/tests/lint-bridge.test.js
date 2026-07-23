@@ -5,7 +5,7 @@ import { join } from "node:path";
 import YAML from "yaml";
 
 import { buildContractEnvelope } from "@pairslash/contract-engine";
-import { runLintBridge } from "../src/index.js";
+import { runLintBridge } from "../src/index.ts";
 import {
   createTempRepo,
   updatePackManifest,

@@ -32,7 +32,7 @@ Source of truth priority:
 | deterministic test | `packages/core/spec-core/tests/project-memory.test.js` | precedence, gap-fill, memory-audit profile coverage |
 | deterministic test | `packages/tools/cli/tests/cli.test.js` | schema-valid JSON outputs, read-only guarantees, conflict surfacing |
 | policy/truth guardrail | `tests/truth-governance.test.js` | public-claim and skill wording stay inside Phase 17 charter |
-| acceptance | `packages/tools/compat-lab/src/acceptance.js` | deterministic acceptance layer for canonical install/use flows plus read-authority proof slice |
+| acceptance | `packages/tools/compat-lab/src/acceptance.ts` | deterministic acceptance layer for canonical install/use flows plus read-authority proof slice |
 
 ## Workflow notes
 

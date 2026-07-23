@@ -11,7 +11,7 @@ import {
 import { join } from "node:path";
 import YAML from "yaml";
 
-import { runCli } from "../../packages/tools/cli/src/bin/pairslash.js";
+import { runCli } from "../../packages/tools/cli/src/bin/pairslash.ts";
 import {
   RETRIEVAL_CAPABILITY_DEFAULTS,
   RETRIEVAL_POLICY_CONTRACT,

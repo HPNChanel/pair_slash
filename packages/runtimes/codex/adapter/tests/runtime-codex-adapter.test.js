@@ -9,7 +9,7 @@ import {
   enforceWorkflow,
   listSupportedTriggerSurfaces,
   RUNTIME_CODEX_ADAPTER_ERROR_CODES,
-} from "../src/index.js";
+} from "../src/index.ts";
 import { repoRoot } from "../../../../../tests/phase4-helpers.js";
 
 const fixturesDir = join(repoRoot, "tests", "fixtures", "phase5", "runtime-enforcement");

@@ -17,8 +17,8 @@
 
 ## Fake/shim evidence
 
-- `packages/tools/compat-lab/src/runtime-fixtures.js`
-- `packages/tools/compat-lab/src/acceptance.js`
+- `packages/tools/compat-lab/src/runtime-fixtures.ts`
+- `packages/tools/compat-lab/src/acceptance.ts`
 
 ## Live evidence
 

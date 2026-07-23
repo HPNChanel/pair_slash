@@ -5,7 +5,7 @@
   "license": "Apache-2.0",
   "type": "module",
   "bin": {
-    "pairslash": "src/bin/pairslash.js"
+    "pairslash": "src/bin/pairslash.ts"
   },
   "dependencies": {
     "@pairslash/contract-engine": "file:../../core/contract-engine",

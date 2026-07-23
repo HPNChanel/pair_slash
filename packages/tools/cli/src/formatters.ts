@@ -1,0 +1,1045 @@
+function describeTrustTuple(value) {
+  if (!value) {
+    return "no trust metadata";
+  }
+  if (value.verification_status === "legacy") {
+    return "legacy install state missing a trust receipt";
+  }
+  if ((value.trust_tier ?? value.source_class) === "local-dev") {
+    return "local source only";
+  }
+  if (
+    value.trust_tier === "verified-external" ||
+    value.support_level === "publisher-verified" ||
+    value.source_class === "external-trusted"
+  ) {
+    return "trusted by local policy only";
+  }
+  if (value.trust_tier === "first-party-official") {
+    return "PairSlash first-party preview support";
+  }
+  if (value.trust_tier === "core-maintained") {
+    return "PairSlash core-maintained support";
+  }
+  return "review trust posture";
+}
+
+export function formatPreviewPlanText(plan) {
+  const lines = [
+    `Action: ${plan.action}`,
+    `Runtime: ${plan.runtime}`,
+    `Target: ${plan.target}`,
+    `Install root: ${plan.install_root}`,
+    `State path: ${plan.state_path}`,
+    `Can apply: ${plan.can_apply ? "yes" : "no"}`,
+    `Requires confirmation: ${plan.requires_confirmation ? "yes" : "no"}`,
+    `Selected packs: ${plan.selected_packs.length > 0 ? plan.selected_packs.join(", ") : "none"}`,
+    "",
+    "Summary:",
+  ];
+  for (const [kind, count] of Object.entries(plan.summary)) {
+    lines.push(`- ${kind}: ${count}`);
+  }
+  if (plan.asset_diff) {
+    lines.push(
+      "",
+      "Asset Diff:",
+      `- create: ${plan.asset_diff.create_count}`,
+      `- update: ${plan.asset_diff.update_count}`,
+      `- delete: ${plan.asset_diff.delete_count}`,
+      `- mutating operations: ${plan.asset_diff.mutating_operation_count}`,
+      `- risky mutations: ${plan.asset_diff.risky_mutations.length}`,
+    );
+    lines.push("- runtime-targeted outputs:");
+    if (plan.asset_diff.runtime_targeted_outputs.length === 0) {
+      lines.push("  none");
+    } else {
+      for (const output of plan.asset_diff.runtime_targeted_outputs) {
+        lines.push(
+          `  ${output.operation} ${output.pack_id}/${output.path} [${output.runtime}] surface=${output.install_surface}`,
+        );
+      }
+    }
+    lines.push("- config fragments affected:");
+    if (plan.asset_diff.config_fragments_affected.length === 0) {
+      lines.push("  none");
+    } else {
+      for (const fragment of plan.asset_diff.config_fragments_affected) {
+        lines.push(`  ${fragment}`);
+      }
+    }
+  }
+  if (plan.policy_summary) {
+    lines.push(
+      "",
+      "Policy Verdict:",
+      `- overall: ${plan.policy_summary.overall_verdict}`,
+      `- no-silent-fallback: ${plan.policy_summary.no_silent_fallback ? "yes" : "no"}`,
+      `- unsupported runtime capability: ${plan.policy_summary.unsupported_runtime_capability ? "yes" : "no"}`,
+      `- summary: ${plan.policy_summary.summary}`,
+    );
+    if (plan.policy_summary.pack_verdicts?.length > 0) {
+      lines.push("- per-pack:");
+      for (const verdict of plan.policy_summary.pack_verdicts) {
+        lines.push(`  ${verdict.pack_id ?? "global"} :: ${verdict.runtime} :: ${verdict.verdict}`);
+      }
+    }
+    if (plan.policy_summary.reasons?.length > 0) {
+      lines.push("- reasons:");
+      for (const reason of plan.policy_summary.reasons) {
+        lines.push(`  ${reason}`);
+      }
+    }
+  }
+  if (plan.trust_delta) {
+    lines.push(
+      "",
+      "Trust Delta:",
+      `- overall status: ${plan.trust_delta.overall_status}`,
+      `- blocking changes: ${plan.trust_delta.blocking_count}`,
+      `- changed packs: ${plan.trust_delta.changed_count}`,
+      `- summary: ${plan.trust_delta.summary}`,
+    );
+    if (plan.trust_delta.pack_changes?.length > 0) {
+      lines.push("- per-pack:");
+      for (const change of plan.trust_delta.pack_changes) {
+        const current = change.current
+          ? `${change.current.trust_tier ?? change.current.source_class}/${change.current.signature_status ?? change.current.verification_status}/${change.current.support_level ?? "unknown"}`
+          : "not-installed";
+        const candidate = change.candidate
+          ? `${change.candidate.trust_tier ?? change.candidate.source_class}/${change.candidate.signature_status ?? change.candidate.verification_status}/${change.candidate.support_level ?? "unknown"}`
+          : "none";
+        lines.push(
+          `  ${change.pack_id} :: ${current} -> ${candidate}${change.blocking ? " [blocking]" : ""}`,
+        );
+        if (change.current) {
+          lines.push(`    current trust note: ${describeTrustTuple(change.current)}`);
+        }
+        if (change.candidate) {
+          lines.push(`    candidate trust note: ${describeTrustTuple(change.candidate)}`);
+        }
+        if (change.capability_expansions?.length > 0) {
+          lines.push(`    capability expansion: ${change.capability_expansions.join(", ")}`);
+        }
+        if (change.memory_escalated) {
+          lines.push("    memory authority escalated");
+        }
+        if (change.trust_downgrade) {
+          lines.push("    trust tier downgraded");
+        }
+      }
+    }
+  }
+  if (plan.commitability) {
+    lines.push(
+      "",
+      "Commitability:",
+      `- status: ${plan.commitability.status}`,
+      `- can proceed: ${plan.commitability.can_proceed ? "yes" : "no"}`,
+      `- blocked: ${plan.commitability.blocked ? "yes" : "no"}`,
+      `- needs explicit approval: ${plan.commitability.needs_explicit_approval ? "yes" : "no"}`,
+      `- blocked operations: ${plan.commitability.blocked_operations_count}`,
+    );
+    if (plan.commitability.can_proceed_operations?.length > 0) {
+      lines.push("- what can proceed:");
+      for (const operation of plan.commitability.can_proceed_operations) {
+        lines.push(`  ${operation}`);
+      }
+    }
+    if (plan.commitability.blocked_reasons?.length > 0) {
+      lines.push("- what is blocked:");
+      for (const reason of plan.commitability.blocked_reasons) {
+        lines.push(`  ${reason}`);
+      }
+    }
+    if (plan.commitability.blocked_reason_codes?.length > 0) {
+      lines.push("- blocked reason codes:");
+      for (const reasonCode of plan.commitability.blocked_reason_codes) {
+        lines.push(`  ${reasonCode}`);
+      }
+    }
+    if (plan.commitability.explicit_approval_hint) {
+      lines.push(`- approval hint: ${plan.commitability.explicit_approval_hint}`);
+    }
+  }
+  if (plan.reason_codes?.length > 0) {
+    lines.push("", "Lifecycle reason codes:");
+    for (const reasonCode of plan.reason_codes) {
+      lines.push(`- ${reasonCode}`);
+    }
+  }
+  if (plan.remediation_actions?.length > 0) {
+    lines.push("", "Remediation actions:");
+    for (const action of plan.remediation_actions) {
+      lines.push(
+        `- ${action.action_kind} ${action.action_id}: ${action.summary}${action.command ? ` :: ${action.command}` : ""}`,
+      );
+    }
+  }
+  if (plan.preview_boundary) {
+    lines.push(
+      "",
+      "Preview Boundary:",
+      `- preview only: ${plan.preview_boundary.preview_only ? "yes" : "no"}`,
+      `- no commit on preview: ${plan.preview_boundary.no_commit_on_preview ? "yes" : "no"}`,
+      `- commit path: ${plan.preview_boundary.commit_path}`,
+      `- note: ${plan.preview_boundary.note}`,
+    );
+  }
+  if (plan.warnings.length > 0) {
+    lines.push("", "Warnings:");
+    for (const warning of plan.warnings) {
+      lines.push(`- ${warning}`);
+    }
+  }
+  if (plan.errors.length > 0) {
+    lines.push("", "Errors:");
+    for (const error of plan.errors) {
+      lines.push(`- ${error}`);
+    }
+  }
+  lines.push("", "Operations:");
+  if (plan.operations.length === 0) {
+    lines.push("- no file changes required");
+  } else {
+    for (const operation of plan.operations) {
+      const rel = operation.relative_path ? `/${operation.relative_path}` : "";
+      const details = [
+        operation.asset_kind ? `kind=${operation.asset_kind}` : null,
+        operation.install_surface ? `surface=${operation.install_surface}` : null,
+        operation.ownership ? `owner=${operation.ownership}` : null,
+        typeof operation.override_eligible === "boolean"
+          ? `override=${operation.override_eligible ? "yes" : "no"}`
+          : null,
+        operation.reason_code ? `reason_code=${operation.reason_code}` : null,
+        operation.management_mode ? `management=${operation.management_mode}` : null,
+        operation.reconcile_mode ? `reconcile=${operation.reconcile_mode}` : null,
+      ].filter(Boolean);
+      lines.push(`- ${operation.kind} [${operation.pack_id}${rel}] ${operation.absolute_path}`);
+      lines.push(`  ${operation.reason}${details.length > 0 ? ` :: ${details.join(", ")}` : ""}`);
+    }
+  }
+  return `${lines.join("\n")}\n`;
+}
+
+export function formatDoctorText(report) {
+  const blockingIssues = report.issues.filter((issue) => issue.blocking_for_install);
+  const advisoryIssues = report.issues.filter((issue) => !issue.blocking_for_install);
+  const selectedScope = report.scope_probes[report.target];
+  const alternateScope = report.scope_probes[report.target === "repo" ? "user" : "repo"];
+  const presenceCheck = report.checks.find((check) => check.id === "runtime.presence_matrix");
+  const immediateNextAction = report.next_actions[0] ?? report.first_workflow_guidance.commands[0] ?? "No action required.";
+  const lines = [
+    `Runtime: ${report.runtime}`,
+    `Target: ${report.target}`,
+    `Verdict: ${report.support_verdict.toUpperCase()}`,
+    `Install blocked: ${report.install_blocked ? "yes" : "no"}`,
+    "",
+    "Environment summary:",
+    `- OS: ${report.environment_summary.os}`,
+    `- Shell: ${report.environment_summary.shell}`,
+    `- Shell profiles: ${
+      report.environment_summary.shell_profile_candidates.length > 0
+        ? report.environment_summary.shell_profile_candidates.join(", ")
+        : "none"
+    }`,
+    `- Config home: ${report.environment_summary.config_home}`,
+    `- Install root: ${report.environment_summary.install_root}`,
+    `- State path: ${report.environment_summary.state_path}`,
+    `- Runtime executable: ${report.environment_summary.runtime_executable ?? "none"}`,
+    `- Runtime version: ${report.environment_summary.runtime_version ?? "unknown"}`,
+    `- Runtime available: ${report.environment_summary.runtime_available ? "yes" : "no"}`,
+  ];
+  if (presenceCheck?.evidence?.runtimes) {
+    const runtimes = presenceCheck.evidence.runtimes;
+    lines.push(
+      `- Codex present: ${runtimes.codex_cli?.available ? "yes" : "no"}${runtimes.codex_cli?.version ? ` (${runtimes.codex_cli.version})` : ""}`,
+    );
+    lines.push(
+      `- Copilot present: ${runtimes.copilot_cli?.available ? "yes" : "no"}${runtimes.copilot_cli?.version ? ` (${runtimes.copilot_cli.version})` : ""}`,
+    );
+  }
+  lines.push(
+    "",
+    `Immediate next action: ${immediateNextAction}`,
+    "",
+  );
+  if (report.reason_codes?.length > 0) {
+    lines.push("Lifecycle reason codes:");
+    for (const reasonCode of report.reason_codes) {
+      lines.push(`- ${reasonCode}`);
+    }
+    lines.push("");
+  }
+  if (report.remediation) {
+    lines.push("Remediation:");
+    lines.push(`- status: ${report.remediation.status}`);
+    for (const command of report.remediation.commands ?? []) {
+      lines.push(`- command (${command.decision}): ${command.command}`);
+    }
+    lines.push("");
+  }
+  if (report.remediation_actions?.length > 0) {
+    lines.push("Remediation actions:");
+    for (const action of report.remediation_actions) {
+      lines.push(
+        `- ${action.action_kind} ${action.action_id}: ${action.summary}${action.command ? ` :: ${action.command}` : ""}`,
+      );
+    }
+    lines.push("");
+  }
+  if (report.recent_trace_summary) {
+    lines.push(
+      "Recent traces:",
+      `- Telemetry mode: ${report.recent_trace_summary.telemetry_mode}`,
+      `- Sessions: ${report.recent_trace_summary.session_count}`,
+      `- Latest session: ${report.recent_trace_summary.latest_session_id ?? "none"}`,
+      `- Latest outcome: ${report.recent_trace_summary.latest_outcome ?? "none"}`,
+      `- Latest failure domain: ${report.recent_trace_summary.latest_failure_domain ?? "none"}`,
+      `- Last retention prune: ${report.recent_trace_summary.retention_last_pruned_at ?? "never"}`,
+      "",
+    );
+  }
+  if (report.observability_health) {
+    lines.push(
+      "Observability health:",
+      `- Trace root exists: ${report.observability_health.trace_root_exists ? "yes" : "no"}`,
+      `- Trace root writable: ${report.observability_health.trace_root_writable ? "yes" : "no"}`,
+      `- Index/event consistent: ${report.observability_health.index_event_consistent ? "yes" : "no"}`,
+      `- Missing event files: ${report.observability_health.missing_event_files}`,
+      `- Retention policy: ${report.observability_health.retention_policy.max_days}d, ${report.observability_health.retention_policy.max_sessions} sessions`,
+      "",
+    );
+  }
+  lines.push(
+    "Support lane:",
+    `- Lane status: ${report.support_lane.lane_status}`,
+    `- Public claim status: ${report.support_lane.claim_status ?? "unknown"}`,
+    `- Tested range status: ${report.support_lane.tested_range_status}`,
+    `- Tested version range: ${report.support_lane.tested_version_range ?? "none recorded"}`,
+    `- Evidence source: ${report.support_lane.evidence_source}`,
+    `- Evidence data: ${report.support_lane.evidence_data_ref ?? "none recorded"}`,
+    `- Canonical entrypoint: ${report.support_lane.canonical_entrypoint ?? "/skills"}`,
+    `- Required evidence class: ${report.support_lane.required_evidence_class ?? "unknown"}`,
+    `- Best live evidence class: ${report.support_lane.actual_evidence_class ?? "none recorded"}`,
+    `- Freshness state: ${report.support_lane.freshness_state ?? "unknown"}`,
+    `- Last verified at: ${report.support_lane.last_verified_at ?? "none recorded"}`,
+    "- Evidence role: derived from the public lane record; doctor output does not create live runtime proof",
+    `- Summary: ${report.support_lane.summary}`,
+    "",
+    "Scope probes:",
+    `- Selected scope (${selectedScope.target}): verdict=${selectedScope.verdict}, writable=${selectedScope.writable ? "yes" : "no"}, config_home=${selectedScope.config_home}, install_root=${selectedScope.install_root}`,
+    `- Alternate scope (${alternateScope.target}): verdict=${alternateScope.verdict}, writable=${alternateScope.writable ? "yes" : "no"}, config_home=${alternateScope.config_home}, install_root=${alternateScope.install_root}`,
+    "",
+    "Runtime compatibility:",
+    `- Requested packs: ${report.runtime_compatibility.selected_pack_count}`,
+    `- Compatible packs: ${report.runtime_compatibility.compatible_pack_count}`,
+    `- Runtime range status: ${report.runtime_compatibility.requested_runtime_range_max_status}`,
+    `- Incompatible packs: ${
+      report.runtime_compatibility.incompatible_pack_ids.length > 0
+        ? report.runtime_compatibility.incompatible_pack_ids.join(", ")
+        : "none"
+    }`,
+    "",
+    "Workflow maturity:",
+    `- Selected packs: ${report.workflow_maturity.selected_pack_count}`,
+    `- Selected pack for install guidance: ${report.workflow_maturity.recommended_pack_id ?? "none"}`,
+    `- Highest effective maturity: ${report.workflow_maturity.highest_effective_workflow_maturity ?? "none"}`,
+    `- Contradictory claims: ${report.workflow_maturity.contradictory_claim_count}`,
+    `- Blocked labels: ${report.workflow_maturity.blocked_pack_count}`,
+    `- Advanced-lane fence: ${report.workflow_maturity.advanced_lane_fence}`,
+    "",
+  );
+  if ((report.workflow_maturity.selected_packs ?? []).length === 0) {
+    lines.push("- workflow labels unavailable for selected manifests");
+  } else {
+    for (const pack of report.workflow_maturity.selected_packs) {
+      lines.push(
+        `- ${pack.pack_id}: assigned=${pack.workflow_maturity}, effective=${pack.effective_workflow_maturity}, blocked=${pack.workflow_maturity_blocked ? "yes" : "no"}, demoted=${pack.demoted ? "yes" : "no"}, runtime_support=${pack.runtime_support_status ?? "unknown"}`,
+      );
+      if ((pack.workflow_maturity_blockers ?? []).length > 0) {
+        lines.push(`  blockers: ${pack.workflow_maturity_blockers.join("; ")}`);
+      }
+      if ((pack.workflow_demotion_triggers_active ?? []).length > 0) {
+        lines.push(`  active triggers: ${pack.workflow_demotion_triggers_active.join(", ")}`);
+      }
+    }
+  }
+  lines.push("", "Blocking issues:");
+  if (blockingIssues.length === 0) {
+    lines.push("- none");
+  } else {
+    for (const issue of blockingIssues) {
+      lines.push(`- ${issue.verdict} ${issue.code}: ${issue.summary}`);
+      if (issue.reason_codes?.length > 0) {
+        lines.push(`  reason codes: ${issue.reason_codes.join(", ")}`);
+      }
+      if (issue.suggested_fix) {
+        lines.push(`  fix: ${issue.suggested_fix}`);
+      }
+    }
+  }
+  lines.push("", "Advisory issues:");
+  if (advisoryIssues.length === 0) {
+    lines.push("- none");
+  } else {
+    for (const issue of advisoryIssues) {
+      lines.push(`- ${issue.verdict} ${issue.code}: ${issue.summary}`);
+      if (issue.reason_codes?.length > 0) {
+        lines.push(`  reason codes: ${issue.reason_codes.join(", ")}`);
+      }
+      if (issue.suggested_fix) {
+        lines.push(`  fix: ${issue.suggested_fix}`);
+      }
+    }
+  }
+  lines.push("", "Checks:");
+  for (const check of report.checks) {
+    lines.push(
+      `- ${check.status} ${check.id}: ${check.summary}${check.blocking_for_install ? " [blocking]" : ""}`,
+    );
+  }
+  lines.push("", "Next actions:");
+  for (const action of report.next_actions) {
+    lines.push(`- ${action}`);
+  }
+  lines.push("", "First workflow:");
+  lines.push(`- Ready now: ${report.first_workflow_guidance.ready ? "yes" : "no"}`);
+  lines.push(
+    `- Selected pack for first workflow path: ${report.first_workflow_guidance.recommended_pack_id ?? "none"}`,
+  );
+  lines.push(`- Rationale: ${report.first_workflow_guidance.rationale}`);
+  for (const command of report.first_workflow_guidance.commands) {
+    lines.push(`- ${command}`);
+  }
+  lines.push("", "Installed packs:");
+  if (report.installed_packs.length === 0) {
+    lines.push("- none");
+  } else {
+    for (const pack of report.installed_packs) {
+      lines.push(
+        `- ${pack.id}: version=${pack.version}, trust=${pack.trust_tier ?? pack.source_class ?? "unknown"}/${pack.signature_status ?? pack.verification_status ?? "unknown"}/${pack.support_level ?? "unknown"}, local_overrides=${pack.local_overrides}, install_dir=${pack.install_dir}`,
+      );
+      if (pack.trust_note) {
+        lines.push(`  trust note: ${pack.trust_note}`);
+      }
+    }
+  }
+  return `${lines.join("\n")}\n`;
+}
+
+export function formatLintText(report) {
+  const lines = [
+    `PairSlash lint: ${report.ok ? "pass" : "fail"}`,
+    `Phase: ${report.phase}`,
+    `Target: ${report.target}`,
+    `Runtime scope: ${report.runtime_scope}`,
+  ];
+  if (report.contract_schema_version && report.policy_schema_version) {
+    lines.push(
+      `Contract schema: ${report.contract_schema_version}`,
+      `Policy schema: ${report.policy_schema_version}`,
+    );
+  }
+  lines.push(
+    "",
+    "Summary:",
+    `- packs: ${report.summary.pack_count}`,
+    `- runtimes: ${report.summary.runtime_count}`,
+    `- checks: ${report.summary.check_count}`,
+    `- errors: ${report.summary.error_count}`,
+    `- warnings: ${report.summary.warning_count}`,
+    `- notes: ${report.summary.note_count}`,
+    "",
+    "Issues:",
+  );
+  if (report.issues.length === 0) {
+    lines.push("- none");
+  } else {
+    for (const issue of report.issues) {
+      const location = [issue.pack_id ?? "global", issue.runtime, issue.path ?? "n/a"].join(" :: ");
+      lines.push(`- [${issue.result}] ${issue.code} ${location}`);
+      lines.push(`  ${issue.message}`);
+      if (issue.remediation) {
+        lines.push(`  remediation: ${issue.remediation}`);
+      }
+    }
+  }
+  if (Array.isArray(report.policy_verdicts)) {
+    lines.push("", "Policy Verdicts:");
+    if (report.policy_verdicts.length === 0) {
+      lines.push("- none");
+    } else {
+      for (const verdict of report.policy_verdicts) {
+        lines.push(`- ${verdict.pack_id ?? "global"} :: ${verdict.runtime} :: ${verdict.overall_verdict}`);
+        if (verdict.explanation?.summary) {
+          lines.push(`  ${verdict.explanation.summary}`);
+        }
+      }
+    }
+  }
+  lines.push("", "Next actions:");
+  for (const action of report.next_actions) {
+    lines.push(`- ${action}`);
+  }
+  return `${lines.join("\n")}\n`;
+}
+
+export function formatInstallResult(result) {
+  const lines = [
+    `Action: ${result.action}`,
+    `Runtime: ${result.runtime}`,
+    `Target: ${result.target}`,
+    `State path: ${result.state_path}`,
+    `Journal path: ${result.journal_path ?? "none"}`,
+    `Selected packs: ${result.selected_packs.join(", ")}`,
+    "",
+    "Summary:",
+  ];
+  for (const [kind, count] of Object.entries(result.summary)) {
+    if ((count as number) > 0) {
+      lines.push(`- ${kind}: ${count}`);
+    }
+  }
+  return `${lines.join("\n")}\n`;
+}
+
+export function formatMemoryWritePreviewText(preview) {
+  const scopeDetail = preview.request.record.scope_detail ? ` (${preview.request.record.scope_detail})` : "";
+  const canProceedToApply = preview.ready_for_apply && preview.policy_verdict.overall_verdict !== "deny";
+  const lines = [
+    "Action: memory.write-global",
+    `Runtime: ${preview.runtime}`,
+    `Target: ${preview.target}`,
+    `Record: ${preview.request.record.kind}/${preview.request.record.title}`,
+    `Scope affected: ${preview.request.record.scope}${scopeDetail}`,
+    `Disposition: ${preview.record_disposition}`,
+    `Policy verdict: ${preview.policy_verdict.overall_verdict}`,
+    `No-silent-fallback: ${preview.policy_verdict.enforcement_context?.no_silent_fallback ? "yes" : "no"}`,
+    `Ready for apply: ${preview.ready_for_apply ? "yes" : "no"}`,
+    `Can proceed to apply: ${canProceedToApply ? "yes" : "no"}`,
+    `Requires confirmation: ${preview.requires_confirmation ? "yes" : "no"}`,
+    `Target file: ${preview.preview_patch.target_file ?? "unresolved"}`,
+    `Staging artifact: ${preview.staging_artifact.path} (${preview.staging_artifact.exists ? "present" : "missing"})`,
+  ];
+  if (preview.related_records.length > 0) {
+    lines.push(`Related records: ${preview.related_records.length}`);
+  }
+  if (preview.duplicate_matches.length > 0) {
+    lines.push(`Duplicate matches: ${preview.duplicate_matches.length}`);
+  }
+  if (preview.conflict_matches.length > 0) {
+    lines.push(`Conflict matches: ${preview.conflict_matches.length}`);
+  }
+  if (preview.policy_verdict.explanation?.summary) {
+    lines.push(`Policy summary: ${preview.policy_verdict.explanation.summary}`);
+  }
+  if (preview.policy_verdict.reasons?.length > 0) {
+    lines.push("", "Policy reasons:");
+    for (const reason of preview.policy_verdict.reasons) {
+      lines.push(`- ${reason.code}: ${reason.message}`);
+    }
+  }
+  if (preview.duplicate_matches.length > 0) {
+    lines.push("", "Duplicate notes:");
+    for (const duplicate of preview.duplicate_matches) {
+      lines.push(`- ${duplicate.layer} :: ${duplicate.kind}/${duplicate.title} :: ${duplicate.file}`);
+    }
+  }
+  if (preview.conflict_matches.length > 0) {
+    lines.push("", "Conflict notes:");
+    for (const conflict of preview.conflict_matches) {
+      lines.push(`- ${conflict.layer} :: ${conflict.kind}/${conflict.title} :: ${conflict.file}`);
+    }
+  }
+  if (!canProceedToApply && preview.errors.length > 0) {
+    lines.push("", "Commitability:");
+    lines.push("- blocked");
+    for (const error of preview.errors) {
+      lines.push(`- ${error}`);
+    }
+  }
+  if (preview.warnings.length > 0) {
+    lines.push("", "Warnings:");
+    for (const warning of preview.warnings) {
+      lines.push(`- ${warning}`);
+    }
+  }
+  if (preview.errors.length > 0) {
+    lines.push("", "Errors:");
+    for (const error of preview.errors) {
+      lines.push(`- ${error}`);
+    }
+  }
+  lines.push("", preview.preview_patch.text || "Preview unavailable.");
+  return `${lines.join("\n")}\n`;
+}
+
+export function formatMemoryWriteResultText(result) {
+  const lines = [
+    "Action: memory.write-global",
+    `Status: ${result.status}`,
+    `Runtime: ${result.runtime}`,
+    `Target: ${result.target}`,
+    `Disposition: ${result.record_disposition}`,
+    `Committed: ${result.committed ? "yes" : "no"}`,
+    `Policy verdict: ${result.policy_verdict.overall_verdict}`,
+    `Target file: ${result.target_file ?? "none"}`,
+    `Staging artifact: ${result.staging_artifact.path} (${result.staging_artifact.exists ? "present" : "missing"})`,
+    `Audit log: ${result.audit_log_path ?? "none"}`,
+    `Index updated: ${result.index_updated ? "yes" : "no"}`,
+  ];
+  if (result.related_records.length > 0) {
+    lines.push(`Related records: ${result.related_records.length}`);
+  }
+  if (result.duplicate_matches.length > 0) {
+    lines.push(`Duplicate matches: ${result.duplicate_matches.length}`);
+  }
+  if (result.conflict_matches.length > 0) {
+    lines.push(`Conflict matches: ${result.conflict_matches.length}`);
+  }
+  if (result.policy_verdict.explanation?.summary) {
+    lines.push(`Policy summary: ${result.policy_verdict.explanation.summary}`);
+  }
+  if (result.policy_verdict.reasons?.length > 0) {
+    lines.push("", "Policy reasons:");
+    for (const reason of result.policy_verdict.reasons) {
+      lines.push(`- ${reason.code}: ${reason.message}`);
+    }
+  }
+  if (result.warnings.length > 0) {
+    lines.push("", "Warnings:");
+    for (const warning of result.warnings) {
+      lines.push(`- ${warning}`);
+    }
+  }
+  if (result.errors.length > 0) {
+    lines.push("", "Errors:");
+    for (const error of result.errors) {
+      lines.push(`- ${error}`);
+    }
+  }
+  return `${lines.join("\n")}\n`;
+}
+
+export function formatMemoryWritePreviewBlockedText(blocked) {
+  const lines = [
+    "Action: memory.write-global",
+    `Runtime: ${blocked.runtime}`,
+    `Target: ${blocked.target}`,
+    "Status: blocked",
+    `No-silent-fallback: ${blocked.no_silent_fallback ? "yes" : "no"}`,
+    "Preview only: yes",
+    "No commit on preview: yes",
+  ];
+  if (blocked.errors.length > 0) {
+    lines.push("", "Errors:");
+    for (const error of blocked.errors) {
+      lines.push(`- ${error}`);
+    }
+  }
+  if (blocked.notes.length > 0) {
+    lines.push("", "Notes:");
+    for (const note of blocked.notes) {
+      lines.push(`- ${note}`);
+    }
+  }
+  return `${lines.join("\n")}\n`;
+}
+
+export function formatMemoryCandidateReportText(report) {
+  const lines = [
+    "Action: memory.candidate",
+    `Runtime: ${report.runtime}`,
+    `Target: ${report.target}`,
+    `Task scope: ${report.task_scope}`,
+    `Read-only: ${report.read_only ? "yes" : "no"}`,
+    `Profile: ${report.read_profile_id}`,
+    `Precedence: ${(report.precedence_rule ?? []).join(" > ")}`,
+    `Candidates: ${report.candidates.length}`,
+    `Next action: ${report.next_action}`,
+  ];
+  if (report.reconciliation?.duplicates_found?.length > 0) {
+    lines.push(`Duplicates: ${report.reconciliation.duplicates_found.length}`);
+  }
+  if (report.reconciliation?.conflicts_found?.length > 0) {
+    lines.push(`Conflicts: ${report.reconciliation.conflicts_found.length}`);
+  }
+  if (report.reconciliation?.missing_evidence?.length > 0) {
+    lines.push(`Missing evidence: ${report.reconciliation.missing_evidence.length}`);
+  }
+  lines.push("", "Candidates:");
+  for (const candidate of report.candidates) {
+    lines.push(
+      `- ${candidate.id} :: ${candidate.source_layer} :: ${candidate.kind}/${candidate.title} :: ${candidate.classification}`,
+    );
+    lines.push(
+      `  suspicion duplicate=${candidate.suspicion.duplicate} conflict=${candidate.suspicion.conflict} supersede=${candidate.suspicion.supersede}`,
+    );
+    lines.push(`  recommend ${candidate.recommended_next_action}`);
+    if (candidate.matched_global_record) {
+      lines.push(`  global match ${candidate.matched_global_record.file}`);
+    }
+  }
+  if (report.reconciliation?.unresolved_context?.length > 0) {
+    lines.push("", "Unresolved context:");
+    for (const warning of report.reconciliation.unresolved_context) {
+      lines.push(`- ${warning}`);
+    }
+  }
+  return `${lines.join("\n")}\n`;
+}
+
+export function formatMemoryAuditReportText(report) {
+  const lines = [
+    "Action: memory.audit",
+    `Runtime: ${report.runtime}`,
+    `Target: ${report.target}`,
+    `Audit scope: ${report.audit_scope}`,
+    `Mode: ${report.mode}`,
+    `Read-only: ${report.read_only ? "yes" : "no"}`,
+    `Profile: ${report.read_profile_id}`,
+    `Precedence: ${(report.precedence_rule ?? []).join(" > ")}`,
+    `Findings: ${report.findings.length}`,
+    `Next action: ${report.next_action}`,
+    "",
+    "Plan:",
+    `- files checked: ${(report.plan?.files_checked ?? []).length}`,
+    `- authoritative sources: ${(report.plan?.authoritative_sources ?? []).length}`,
+    `- focus: ${(report.focus ?? []).length > 0 ? report.focus.join(", ") : "all"}`,
+  ];
+  if ((report.summary?.unresolved_context ?? []).length > 0) {
+    lines.push(`- unresolved context: ${report.summary.unresolved_context.length}`);
+  }
+  lines.push(
+    "",
+    "Summary:",
+    `- critical: ${report.summary?.severity_counts?.critical ?? 0}`,
+    `- high: ${report.summary?.severity_counts?.high ?? 0}`,
+    `- medium: ${report.summary?.severity_counts?.medium ?? 0}`,
+    `- low: ${report.summary?.severity_counts?.low ?? 0}`,
+    `- hard conflicts: ${report.summary?.hard_conflict_count ?? 0}`,
+    `- write handoffs: ${report.summary?.write_handoff_count ?? 0}`,
+  );
+  lines.push("", "Findings:");
+  if (report.findings.length === 0) {
+    lines.push("- none");
+  } else {
+    for (const finding of report.findings) {
+      lines.push(
+        `- ${finding.id} :: ${finding.severity}/${finding.type} :: ${finding.file_or_record}`,
+      );
+      lines.push(`  ${finding.explanation}`);
+      lines.push(`  fix: ${finding.recommended_fix}`);
+      lines.push(`  write workflow needed: ${finding.write_workflow_needed ? "yes" : "no"}`);
+      if ((finding.evidence ?? []).length > 0) {
+        lines.push(`  evidence: ${finding.evidence.join(", ")}`);
+      }
+    }
+  }
+  lines.push("", "Remediation order:");
+  for (const step of report.remediation_order ?? []) {
+    lines.push(`- ${step}`);
+  }
+  if ((report.resolution?.record_resolution?.conflicts ?? []).length > 0) {
+    lines.push("", "Resolution conflicts:");
+    for (const conflict of report.resolution.record_resolution.conflicts) {
+      lines.push(
+        `- ${conflict.claim_key} :: ${conflict.selected_layer} -> ${conflict.shadowed_layer} (${conflict.reason})`,
+      );
+    }
+  }
+  if ((report.resolution?.record_resolution?.gap_fills ?? []).length > 0) {
+    lines.push("", "Supporting gap fills:");
+    for (const gapFill of report.resolution.record_resolution.gap_fills) {
+      lines.push(`- ${gapFill.claim_key} :: ${gapFill.selected_layer} :: ${gapFill.selected_file}`);
+    }
+  }
+  return `${lines.join("\n")}\n`;
+}
+
+export function formatContextExplanationText(explanation) {
+  const lines = [
+    `Runtime: ${explanation.runtime}`,
+    `Target: ${explanation.target}`,
+    `Pack: ${explanation.pack_id ?? "none"}`,
+    `Manifest: ${explanation.manifest_path ?? "none"}`,
+    `Canonical entrypoint: ${explanation.canonical_entrypoint}`,
+    `Direct invocation: ${explanation.direct_invocation ?? "none"}`,
+    `Supported trigger surfaces: ${explanation.supported_trigger_surfaces.join(", ") || "none"}`,
+    `Telemetry mode: ${explanation.telemetry_mode}`,
+    `Trace root: ${explanation.trace_root}`,
+    "",
+    "Environment:",
+    `- OS: ${explanation.os}`,
+    `- Shell: ${explanation.shell}`,
+    `- CWD: ${explanation.cwd}`,
+    `- Repo root: ${explanation.repo_root}`,
+    `- Config home: ${explanation.config_home}`,
+    `- Install root: ${explanation.install_root}`,
+    `- State path: ${explanation.state_path}`,
+    `- Runtime executable: ${explanation.runtime_executable ?? "none"}`,
+    `- Runtime version: ${explanation.runtime_version ?? "unknown"}`,
+    `- Runtime available: ${explanation.runtime_available ? "yes" : "no"}`,
+    "",
+    "Tools:",
+  ];
+  if ((explanation.tool_availability ?? []).length === 0) {
+    lines.push("- none");
+  } else {
+    for (const tool of explanation.tool_availability) {
+      lines.push(`- ${tool.id}: ${tool.available ? "available" : "missing"}`);
+    }
+  }
+  if (explanation.memory_resolution) {
+    lines.push(
+      "",
+      "Memory authority resolution:",
+      `- Shared loader: ${explanation.memory_resolution.uses_shared_loader ? "yes" : "no"}`,
+      `- Profile: ${explanation.memory_resolution.profile_id}`,
+      `- Authoritative sources: ${(explanation.memory_resolution.authoritative_sources ?? []).length}`,
+    );
+    if ((explanation.memory_resolution.authoritative_sources ?? []).length === 0) {
+      lines.push("  none");
+    } else {
+      for (const path of explanation.memory_resolution.authoritative_sources) {
+        lines.push(`  ${path}`);
+      }
+    }
+    if ((explanation.memory_resolution.warnings ?? []).length > 0) {
+      lines.push("- Warnings:");
+      for (const warning of explanation.memory_resolution.warnings) {
+        lines.push(`  ${warning}`);
+      }
+    }
+    if ((explanation.memory_resolution.missing_paths ?? []).length > 0) {
+      lines.push("- Missing paths:");
+      for (const path of explanation.memory_resolution.missing_paths) {
+        lines.push(`  ${path}`);
+      }
+    }
+    lines.push("- Layers:");
+    for (const layer of explanation.memory_resolution.layers ?? []) {
+      lines.push(
+        `  ${layer.precedence}. ${layer.label} [${layer.authority}] :: ${layer.resolution_mode} :: ${layer.resolution_status}`,
+      );
+      lines.push(`     configured=${(layer.configured_paths ?? []).length} resolved=${(layer.resolved_paths ?? []).length} active_records=${(layer.resolved_records ?? []).length}`);
+      if ((layer.resolved_paths ?? []).length === 0) {
+        lines.push("     resolved paths: none");
+      } else {
+        for (const path of layer.resolved_paths) {
+          lines.push(`     ${path}`);
+        }
+      }
+      if ((layer.missing_paths ?? []).length > 0) {
+        lines.push("     missing:");
+        for (const path of layer.missing_paths) {
+          lines.push(`     ${path}`);
+        }
+      }
+      if ((layer.warnings ?? []).length > 0) {
+        lines.push("     warnings:");
+        for (const warning of layer.warnings) {
+          lines.push(`     ${warning}`);
+        }
+      }
+    }
+    if (explanation.memory_resolution.record_resolution) {
+      lines.push(
+        "- Claim resolution:",
+        `  precedence=${(explanation.memory_resolution.record_resolution.precedence_rule ?? []).join(" > ")}`,
+        `  resolved_claims=${(explanation.memory_resolution.record_resolution.resolved_claims ?? []).length}`,
+        `  conflicts=${(explanation.memory_resolution.record_resolution.conflicts ?? []).length}`,
+        `  supporting_gap_fills=${(explanation.memory_resolution.record_resolution.gap_fills ?? []).length}`,
+      );
+      if ((explanation.memory_resolution.record_resolution.conflicts ?? []).length > 0) {
+        lines.push("  conflict_details:");
+        for (const conflict of explanation.memory_resolution.record_resolution.conflicts) {
+          lines.push(
+            `    ${conflict.claim_key} :: ${conflict.selected_layer} (${conflict.selected_file}) over ${conflict.shadowed_layer} (${conflict.shadowed_file}) :: ${conflict.reason}`,
+          );
+        }
+      }
+      if ((explanation.memory_resolution.record_resolution.gap_fills ?? []).length > 0) {
+        lines.push("  gap_fill_details:");
+        for (const gapFill of explanation.memory_resolution.record_resolution.gap_fills) {
+          lines.push(
+            `    ${gapFill.claim_key} :: ${gapFill.selected_layer} (${gapFill.selected_file})`,
+          );
+        }
+      }
+    }
+  }
+  if (explanation.memory_reads) {
+    lines.push("", "Resolved read sets:");
+    lines.push(`- Global Project Memory: ${(explanation.memory_reads.global_project_memory ?? []).length}`);
+    lines.push(`- Task memory: ${(explanation.memory_reads.task_memory ?? []).length}`);
+    lines.push(`- Session artifacts: ${(explanation.memory_reads.session_artifacts ?? []).length}`);
+    lines.push(`- Session layer only: ${(explanation.memory_reads.session_layer ?? []).length}`);
+    lines.push(`- Staging artifacts: ${(explanation.memory_reads.staging_artifacts ?? []).length}`);
+    lines.push(`- Audit log: ${(explanation.memory_reads.audit_log ?? []).length}`);
+  }
+  return `${lines.join("\n")}\n`;
+}
+
+export function formatPolicyExplanationText(explanation) {
+  const lines = [
+    `Runtime: ${explanation.runtime}`,
+    `Target: ${explanation.target}`,
+    `Action: ${explanation.action}`,
+    `Contract: ${explanation.contract_id ?? "none"}`,
+    `Verdict: ${explanation.overall_verdict}`,
+    `Summary: ${explanation.summary}`,
+    `Preview required: ${explanation.preview_required ? "yes" : "no"}`,
+    `Approval required: ${explanation.approval_required ? "yes" : "no"}`,
+    `No-silent-fallback: ${explanation.no_silent_fallback ? "yes" : "no"}`,
+    "",
+    "Decisive reasons:",
+  ];
+  if (explanation.decisive_reason_codes.length === 0) {
+    lines.push("- none");
+  } else {
+    for (const code of explanation.decisive_reason_codes) {
+      lines.push(`- ${code}`);
+    }
+  }
+  lines.push("", "Allowed operations:");
+  if (explanation.allowed_operations.length === 0) {
+    lines.push("- none");
+  } else {
+    for (const operation of explanation.allowed_operations) {
+      lines.push(`- ${operation}`);
+    }
+  }
+  lines.push("", "Blocked operations:");
+  if (explanation.blocked_operations.length === 0) {
+    lines.push("- none");
+  } else {
+    for (const operation of explanation.blocked_operations) {
+      lines.push(`- ${operation}`);
+    }
+  }
+  if (explanation.reasons.length > 0) {
+    lines.push("", "Reasons:");
+    for (const reason of explanation.reasons) {
+      lines.push(`- ${reason.code}: ${reason.message}`);
+    }
+  }
+  return `${lines.join("\n")}\n`;
+}
+
+export function formatDebugReportText(report) {
+  const lines = [
+    `Session: ${report.session_id}`,
+    `Runtime: ${report.runtime ?? "unknown"}`,
+    `Target: ${report.target ?? "unknown"}`,
+    `Command: ${report.command_name}`,
+    `Outcome: ${report.outcome}`,
+    `Decisive failure domain: ${report.decisive_failure_domain}`,
+    `Reason: ${report.decisive_reason}`,
+    "",
+    "Timeline:",
+  ];
+  if (report.timeline.length === 0) {
+    lines.push("- none");
+  } else {
+    for (const event of report.timeline) {
+      lines.push(`- ${event.timestamp} ${event.event_type} ${event.outcome} [${event.failure_domain}] ${event.summary}`);
+    }
+  }
+  lines.push("", "Related artifacts:");
+  if (report.related_artifacts.length === 0) {
+    lines.push("- none");
+  } else {
+    for (const artifact of report.related_artifacts) {
+      lines.push(`- ${artifact}`);
+    }
+  }
+  lines.push("", "Repro steps:");
+  for (const step of report.repro_steps) {
+    lines.push(`- ${step}`);
+  }
+  return `${lines.join("\n")}\n`;
+}
+
+export function formatTraceExportText(traceExport) {
+  const lines = [
+    `Output dir: ${traceExport.output_dir}`,
+    `Sessions: ${traceExport.session_count}`,
+    `Events: ${traceExport.event_count}`,
+    `Redacted events: ${traceExport.redaction_report.redacted_events}`,
+    `Redacted fields: ${traceExport.redaction_report.redacted_fields}`,
+    `Unknown sensitive hits: ${traceExport.redaction_report.unknown_sensitive_hits ?? 0}`,
+    `Redaction state: ${traceExport.redaction_report.redaction_state ?? "unknown"}`,
+    `Secrets removed: ${traceExport.redaction_report.secrets_removed ?? 0}`,
+    `Hashed values: ${traceExport.redaction_report.hashed_values ?? 0}`,
+    `Config fingerprints: ${traceExport.redaction_report.config_fingerprints ?? 0}`,
+    `Normalized paths: ${traceExport.redaction_report.normalized_paths ?? 0}`,
+    `Redaction rules: ${(traceExport.redaction_report.rules_triggered ?? []).join(", ") || "none"}`,
+    "",
+    "Files:",
+  ];
+  for (const file of traceExport.files) {
+    lines.push(`- ${file.id}: ${file.path} (${file.size_bytes} bytes)`);
+  }
+  return `${lines.join("\n")}\n`;
+}
+
+export function formatSupportBundleText(bundle) {
+  const lines = [
+    `Bundle ID: ${bundle.bundle_id}`,
+    `Output dir: ${bundle.output_dir}`,
+    `Safe to share: ${bundle.safe_to_share ? "yes" : "no"}`,
+    `Redaction state: ${bundle.privacy_descriptor?.redaction_state ?? "unknown"}`,
+    `Consent required: ${bundle.privacy_descriptor?.consent_required ? "yes" : "no"}`,
+    `Share safety reasons: ${(bundle.share_safety_reasons ?? []).length > 0 ? bundle.share_safety_reasons.join(", ") : "none"}`,
+    `Trace export: ${bundle.trace_export.path}`,
+    `Trace locator: ${bundle.trace_locator?.session_id ?? "unknown"} :: ${bundle.trace_locator?.command_name ?? "unknown"} :: ${bundle.trace_locator?.decisive_failure_domain ?? "unknown"}`,
+    `Suggested labels: ${bundle.failure_taxonomy?.recommended_surface_label ?? "unknown"}, ${bundle.failure_taxonomy?.recommended_type_label ?? "unknown"}, ${bundle.failure_taxonomy?.recommended_severity_label ?? "unknown"}, ${bundle.failure_taxonomy?.recommended_status_label ?? "unknown"}`,
+    `Suggested template: ${bundle.failure_taxonomy?.recommended_issue_template ?? "unknown"}`,
+    `Maintainer route: ${bundle.failure_taxonomy?.maintainer_route ?? "unknown"}`,
+    `Runtime descriptor: ${(bundle.runtime_descriptor?.runtime ?? "unknown")}/${(bundle.runtime_descriptor?.target ?? "unknown")} on ${bundle.runtime_descriptor?.os ?? "unknown"} (${bundle.runtime_descriptor?.shell ?? "unknown"})`,
+    `Debug report: ${bundle.debug_report_path ?? "none"}`,
+    `Doctor report: ${bundle.doctor_report_path ?? "none"}`,
+    `Context explanation: ${bundle.context_explanation_path ?? "none"}`,
+    `Policy explanation: ${bundle.policy_explanation_path ?? "none"}`,
+    `Failure taxonomy: ${bundle.failure_taxonomy_path ?? "none"}`,
+    `Issue template: ${bundle.issue_template_path ?? "none"}`,
+    `Privacy note: ${bundle.privacy_note_path ?? "none"}`,
+    "",
+    "Files:",
+  ];
+  for (const file of bundle.files) {
+    lines.push(`- ${file.id}: ${file.path} (${file.size_bytes} bytes)`);
+  }
+  return `${lines.join("\n")}\n`;
+}
+
+export function formatTelemetrySummaryText(summary) {
+  const lines = [
+    `Telemetry mode: ${summary.mode}`,
+    `Local only: ${summary.privacy.local_only ? "yes" : "no"}`,
+    `Export requires explicit action: ${summary.privacy.export_requires_explicit_action ? "yes" : "no"}`,
+    `Source: ${summary.privacy.source}`,
+    `Sessions: ${summary.totals.sessions}`,
+    `Successful sessions: ${summary.totals.successful_sessions}`,
+    `Failed sessions: ${summary.totals.failed_sessions}`,
+    `Support bundle exports: ${summary.totals.support_bundle_exports}`,
+    `Weekly reuse days: ${summary.metrics.weekly_reuse_days}`,
+    `Median TTFS (s): ${summary.metrics.median_ttfs_seconds ?? "n/a"}`,
+  ];
+  if (summary.output_path) {
+    lines.push(`Output path: ${summary.output_path}`);
+  }
+  lines.push("", "Workflow breakdown:");
+  if (summary.workflows.length === 0) {
+    lines.push("- none");
+  } else {
+    for (const workflow of summary.workflows) {
+      lines.push(
+        `- ${workflow.workflow_key} :: ${workflow.runtime}/${workflow.target} :: sessions=${workflow.sessions}, success=${workflow.successful_sessions}, failed=${workflow.failed_sessions}, reuse_days=${workflow.weekly_reuse_days}, ttfs=${workflow.median_ttfs_seconds ?? "n/a"}, bundle_exports=${workflow.support_bundle_exports}`,
+      );
+    }
+  }
+  return `${lines.join("\n")}\n`;
+}
