@@ -1,5 +1,5 @@
 {
-  "//": "PairSlash strict TypeScript configuration. Phase M3: packages graduate into this config as their type annotations are completed. NOTE: due to source-to-source import resolution (type stripping, no .d.ts build), TypeScript checks ALL transitively imported files under these strict flags — per-package isolation is not possible without project references (which require emit). Full strictness requires a global flag flip with ~4600 errors fixed. The dual-config mechanism remains for future incremental use. See .kilo/plans/1784473291765-ts-strictness-tightening.md.",
+  "//": "PairSlash strict TypeScript configuration. Phase M3 big-batch: this config checks ALL packages under strict mode (no per-package isolation is possible because workspace @pairslash/* imports resolve to .ts source, so TypeScript re-checks every transitively imported file). Run via `npm run typecheck:strict` to track remaining strict errors; it is NOT wired into CI until it reaches zero errors, at which point these flags move into the root tsconfig.json and this file is deleted. See .kilo/plans/1784473291765-mega-decompose-strict-o1-a1.md.",
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "strict": true,
@@ -9,7 +9,7 @@
     "noUnusedParameters": true,
     "exactOptionalPropertyTypes": false
   },
-  "include": [],
+  "include": ["packages/**/*.ts"],
   "exclude": [
     "node_modules",
     "dist",

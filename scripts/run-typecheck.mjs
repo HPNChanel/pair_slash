@@ -1,26 +1,27 @@
 #!/usr/bin/env node
 // PairSlash typecheck runner.
 //
-// Phase M1 (modernization foundation): no package source has been converted
-// to TypeScript yet. `tsc --noEmit -p tsconfig.json` fails closed when there
-// are zero `.ts` inputs, which would block CI on a no-op gate. This wrapper
-// preserves the "no-op pass on day one" contract from the upgrade roadmap.
+// Phase M3 (progressive strictness): two tsc invocations are split into two
+// scripts so the CI gate can stay green while strict errors are fixed:
 //
-// Phase M3 (progressive strictness): a dual-config pipeline runs two tsc
-// passes — first the relaxed root config (`tsconfig.json`), then the strict
-// config (`tsconfig.strict.json`) for packages that have graduated. The
-// strict pass is skipped when its `include` array is empty.
+//   npm run typecheck         -> relaxed root config (tsconfig.json). CI gate.
+//   npm run typecheck:strict  -> strict config (tsconfig.strict.json).
 //
-// This script does not weaken type safety: once any `.ts` source exists, the
-// real `tsc` runs and its exit code is forwarded unchanged.
+// The strict config currently reports errors across all packages; it is NOT
+// wired into CI until it reaches zero errors, at which point strict flags move
+// into the root config and this dual-config mechanism is retired.
+//
+// This script does not weaken type safety: the real `tsc` runs and its exit
+// code is forwarded unchanged.
 
 import { spawnSync } from "node:child_process";
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 const ROOT = process.cwd();
 const SOURCE_ROOTS = ["packages"];
 const IGNORE_DIRS = new Set(["node_modules", "dist", "artifacts"]);
+const STRICT = process.argv.slice(2).includes("--strict");
 
 function walkTs(rootDir) {
   let stack;
@@ -60,36 +61,16 @@ const hasTsSource = SOURCE_ROOTS.some((root) => walkTs(join(ROOT, root)));
 
 if (!hasTsSource) {
   process.stdout.write(
-    "typecheck: no TypeScript source found under packages/ (Phase M1 no-op pass).\n" +
-      "TypeScript migration begins in Phase M2; until then this gate is intentionally inert.\n",
+    "typecheck: no TypeScript source found under packages/.\n" +
+      "This gate is intentionally inert until TypeScript source exists.\n",
   );
   process.exit(0);
 }
 
-const result = spawnSync("tsc", ["--noEmit", "-p", "tsconfig.json"], {
+const config = STRICT ? "tsconfig.strict.json" : "tsconfig.json";
+const result = spawnSync("tsc", ["--noEmit", "-p", config], {
   stdio: "inherit",
   shell: process.platform === "win32",
 });
 
-if ((result.status ?? 1) !== 0) {
-  process.exit(result.status ?? 1);
-}
-
-// Phase M3: run strict config if it has any include entries.
-let strictInclude = [];
-try {
-  const raw = JSON.parse(readFileSync(join(ROOT, "tsconfig.strict.json"), "utf-8"));
-  strictInclude = Array.isArray(raw.include) ? raw.include : [];
-} catch {
-  // No strict config — skip silently.
-}
-
-if (strictInclude.length > 0) {
-  const strictResult = spawnSync("tsc", ["--noEmit", "-p", "tsconfig.strict.json"], {
-    stdio: "inherit",
-    shell: process.platform === "win32",
-  });
-  process.exit(strictResult.status ?? 1);
-}
-
-process.exit(0);
+process.exit(result.status ?? 1);
