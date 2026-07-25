@@ -1,6 +1,8 @@
-import { stableJson, stableYaml } from "@pairslash/spec-core";
+import { buildNormalizedIr, stableJson, stableYaml } from "@pairslash/spec-core";
 
-function renderCopilotPackage(ir) {
+type NormalizedIr = ReturnType<typeof buildNormalizedIr>;
+
+function renderCopilotPackage(ir: NormalizedIr) {
   return stableJson({
     kind: "pairslash-copilot-package",
     schema_version: "1.0.0",
@@ -19,7 +21,7 @@ function renderCopilotPackage(ir) {
   });
 }
 
-function renderCopilotAgentContext(ir) {
+function renderCopilotAgentContext(ir: NormalizedIr) {
   return [
     `# ${ir.pack.display_name}`,
     "",
@@ -35,7 +37,7 @@ function renderCopilotAgentContext(ir) {
   ].join("\n");
 }
 
-function renderCopilotPreflight(ir) {
+function renderCopilotPreflight(ir: NormalizedIr) {
   return stableYaml({
     kind: "pairslash-copilot-preflight",
     schema_version: "1.0.0",
@@ -56,7 +58,7 @@ function renderCopilotPreflight(ir) {
             {
               id: "mcp-dependencies",
               required: true,
-              servers: ir.policy.required_mcp_servers.map((server) => server.id),
+              servers: ir.policy.required_mcp_servers.map((server: { id: string }) => server.id),
             },
           ]
         : []),
@@ -64,7 +66,7 @@ function renderCopilotPreflight(ir) {
   });
 }
 
-function renderMcpServers(ir) {
+function renderMcpServers(ir: NormalizedIr) {
   return stableYaml({
     kind: "pairslash-mcp-config",
     schema_version: "1.0.0",

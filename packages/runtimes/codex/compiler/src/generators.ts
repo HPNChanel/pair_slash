@@ -1,6 +1,8 @@
-import { stableYaml } from "@pairslash/spec-core";
+import { buildNormalizedIr, stableYaml } from "@pairslash/spec-core";
 
-function renderCodexMetadata(ir) {
+type NormalizedIr = ReturnType<typeof buildNormalizedIr>;
+
+function renderCodexMetadata(ir: NormalizedIr) {
   return stableYaml({
     kind: "pairslash-codex-bundle",
     schema_version: "1.0.0",
@@ -16,7 +18,7 @@ function renderCodexMetadata(ir) {
   });
 }
 
-function renderCodexContext(ir) {
+function renderCodexContext(ir: NormalizedIr) {
   return [
     `# ${ir.pack.display_name}`,
     "",
@@ -29,17 +31,17 @@ function renderCodexContext(ir) {
     "",
     "## Capabilities",
     "",
-    ...ir.policy.capabilities.map((capability) => `- ${capability}`),
+    ...ir.policy.capabilities.map((capability: string) => `- ${capability}`),
   ].join("\n");
 }
 
-function renderCodexConfig(ir) {
+function renderCodexConfig(ir: NormalizedIr) {
   return stableYaml({
     kind: "pairslash-runtime-config",
     schema_version: "1.0.0",
     runtime: "codex_cli",
     install_targets: ir.policy.install_targets,
-    required_tools: ir.policy.required_tools.map((tool) => tool.id),
+    required_tools: ir.policy.required_tools.map((tool: { id: string }) => tool.id),
     memory_permissions: ir.policy.memory_permissions,
     local_override_policy: ir.policy.local_override_policy,
     update_strategy: ir.policy.update_strategy,
@@ -47,7 +49,7 @@ function renderCodexConfig(ir) {
   });
 }
 
-function renderWriteAuthorityGuard(ir) {
+function renderWriteAuthorityGuard(ir: NormalizedIr) {
   return stableYaml({
     kind: "pairslash-write-authority-guard",
     schema_version: "1.0.0",
@@ -60,7 +62,7 @@ function renderWriteAuthorityGuard(ir) {
   });
 }
 
-function renderMcpServers(ir) {
+function renderMcpServers(ir: NormalizedIr) {
   return stableYaml({
     kind: "pairslash-mcp-config",
     schema_version: "1.0.0",
