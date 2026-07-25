@@ -1595,7 +1595,7 @@ export function assessPackTrust({
 }
 
 export function buildTrustDelta({ state, candidateReceipts, selectedPackIds }) {
-  const currentById = new Map(
+  const currentById = new Map<string, any>(
     (state?.packs ?? []).map((pack) => [
       pack.id,
       pack.trust_receipt ?? {

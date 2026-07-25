@@ -1129,7 +1129,7 @@ function buildInstallOperations({
   warnings,
 }) {
   const operations = [];
-  const mkdirs = new Set();
+  const mkdirs = new Set<string>();
   const installRoot = adapter.resolveInstallRoot({ repoRoot, target });
 
   for (const compiledPack of compiledPacks) {

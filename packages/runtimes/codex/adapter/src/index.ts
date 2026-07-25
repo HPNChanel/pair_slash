@@ -537,7 +537,7 @@ function spawnRuntime(args) {
   const direct = spawnSync(executable, args, options);
   if (
     process.platform !== "win32" ||
-    !["ENOENT", "EINVAL", "EPERM"].includes(direct.error?.code ?? "")
+    !["ENOENT", "EINVAL", "EPERM"].includes((direct.error as NodeJS.ErrnoException | null)?.code ?? "")
   ) {
     return direct;
   }

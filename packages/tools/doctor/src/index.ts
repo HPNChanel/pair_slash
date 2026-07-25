@@ -1470,11 +1470,11 @@ function runRequiredTools(context) {
 
   const failures = [];
   const warnings = [];
-  const statePacks = new Map((context.state?.packs ?? []).map((pack) => [pack.id, pack]));
+    const statePacks = new Map<string, any>((context.state?.packs ?? []).map((pack: any) => [pack.id, pack]));
 
   for (const record of context.selectedManifests) {
     for (const tool of record.manifest.required_tools ?? []) {
-      const requiredFor = new Set(tool.required_for ?? []);
+      const requiredFor = new Set<string>(tool.required_for ?? []);
       if (![...requiredFor].some((phase) => ["doctor", "install", "run"].includes(phase))) {
         continue;
       }
@@ -1565,7 +1565,7 @@ function runRequiredMcpServers(context) {
 
   const failures = [];
   const warnings = [];
-  const statePacks = new Map((context.state?.packs ?? []).map((pack) => [pack.id, pack]));
+    const statePacks = new Map<string, any>((context.state?.packs ?? []).map((pack: any) => [pack.id, pack]));
 
   for (const record of context.selectedManifests) {
     const servers = record.manifest.required_mcp_servers ?? [];

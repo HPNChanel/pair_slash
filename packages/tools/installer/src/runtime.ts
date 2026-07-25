@@ -25,10 +25,10 @@ export function detectRuntimeSelection(requestedRuntime) {
     };
   }
 
-  const detections = [
+  const detections: [string, any, any][] = ([
     ["codex_cli", codexAdapter, codexAdapter.detectRuntime()],
     ["copilot_cli", copilotAdapter, copilotAdapter.detectRuntime()],
-  ].filter((entry) => entry[2]?.available);
+  ] as [string, any, any][]).filter((entry) => entry[2]?.available);
 
   if (detections.length !== 1) {
     return {

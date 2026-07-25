@@ -570,9 +570,9 @@ function buildEligibleAssetIds(record, sourceEntries, { preferCanonical = false 
 function buildAssetOwnership(record, assetEntries) {
   const canonicalOwnership = isObject(record.asset_ownership) ? record.asset_ownership : {};
   const legacyOwnership = isObject(record.ownership) ? record.ownership : {};
-  const existing = new Map(
+  const existing = new Map<string, any>(
     Array.isArray(canonicalOwnership.records)
-      ? canonicalOwnership.records.map((entry) => [entry.asset_id, clone(entry)])
+      ? canonicalOwnership.records.map((entry: any) => [entry.asset_id, clone(entry)])
       : [],
   );
   const records = sortByKey(
