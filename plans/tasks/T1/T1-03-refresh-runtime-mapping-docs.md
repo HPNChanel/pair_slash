@@ -2,13 +2,13 @@
 id: T1-03
 track: T1
 title: Refresh runtime-mapping docs (codex-cli.md, copilot-cli.md)
-status: todo
+status: done
 depends_on: [T1-01]
 est_size: M
-claimed_by:
-claimed_at:
-completed_at:
-evidence:
+claimed_by: devin-session
+claimed_at: 2026-09-28
+completed_at: 2026-09-28
+evidence: docs/runtime-mapping/codex-cli.md, copilot-cli.md, pilot-acceptance.md refreshed
 ---
 
 ## Objective
@@ -46,10 +46,10 @@ Bring `docs/runtime-mapping/codex-cli.md` and `docs/runtime-mapping/copilot-cli.
 
 ## Acceptance gates
 
-- [ ] Both runtime-mapping docs reflect Sep-2026 surfaces
-- [ ] No support-level claims strengthened
-- [ ] `npm run lint` green (docs linting if enforced)
-- [ ] Cross-links resolve
+- [x] Both runtime-mapping docs reflect Sep-2026 surfaces
+- [x] No support-level claims strengthened — capability notes labeled "runtime capabilities, not PairSlash support claims"
+- [x] `npm run lint` green (docs linting if enforced)
+- [x] Cross-links resolve — stale `pairslash.js` paths corrected to `pairslash.ts`
 
 ## Evidence to record
 

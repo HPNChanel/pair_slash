@@ -47,13 +47,13 @@ Each acceptance report must keep evidence classes explicit:
 ## Minimum commands
 
 ```bash
-node packages/tools/cli/src/bin/pairslash.js preview install pairslash-plan --runtime codex --target repo
-node packages/tools/cli/src/bin/pairslash.js install pairslash-plan --runtime codex --target repo --apply --yes
-node packages/tools/cli/src/bin/pairslash.js doctor --runtime codex --target repo
+node packages/tools/cli/src/bin/pairslash.ts preview install pairslash-plan --runtime codex --target repo
+node packages/tools/cli/src/bin/pairslash.ts install pairslash-plan --runtime codex --target repo --apply --yes
+node packages/tools/cli/src/bin/pairslash.ts doctor --runtime codex --target repo
 
-node packages/tools/cli/src/bin/pairslash.js preview install pairslash-plan --runtime copilot --target user
-node packages/tools/cli/src/bin/pairslash.js install pairslash-plan --runtime copilot --target user --apply --yes
-node packages/tools/cli/src/bin/pairslash.js doctor --runtime copilot --target user
+node packages/tools/cli/src/bin/pairslash.ts preview install pairslash-plan --runtime copilot --target user
+node packages/tools/cli/src/bin/pairslash.ts install pairslash-plan --runtime copilot --target user --apply --yes
+node packages/tools/cli/src/bin/pairslash.ts doctor --runtime copilot --target user
 ```
 
 ## Evidence discipline
