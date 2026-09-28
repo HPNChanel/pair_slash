@@ -77,7 +77,7 @@
             "relative_path": "pairslash.install.json",
             "required": true,
             "runtime_selector": "shared",
-            "sha256": "438e52549f7d1bf56e994e5010859492c0e6f4e9f964302eb4d5f6a1364370fc",
+            "sha256": "7ef06c1890aed788c4fb893fc2f77a034fdcfc2902c9ad890c814d21cfb1b4d6",
             "uninstall_behavior": "remove_if_unmodified",
             "write_authority_guarded": false
           }
@@ -162,7 +162,7 @@
             "relative_path": "pairslash.install.json",
             "required": true,
             "runtime_selector": "shared",
-            "sha256": "c404f0939bbc7f57102e77f732c757092a351114417305a45b30aa50108ce772",
+            "sha256": "f955c3bb73387ec96a69952bf4838b1702bb73d200b8689d09f69c80a35405f2",
             "uninstall_behavior": "remove_if_unmodified",
             "write_authority_guarded": false
           }

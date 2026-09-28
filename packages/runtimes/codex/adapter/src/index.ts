@@ -263,11 +263,26 @@ export function resolvePackInstallDir(options, packId) {
   return join(resolveInstallRoot(options), packId);
 }
 
+const SPEC_CONVENTIONAL_DIRS = ["scripts", "references", "assets"];
+
+function specConventionalSupportPath(sourcePath) {
+  const normalized = String(sourcePath ?? "").split("\\").join("/");
+  if (!normalized) {
+    return normalized;
+  }
+  const head = normalized.split("/", 1)[0];
+  if (SPEC_CONVENTIONAL_DIRS.includes(head)) {
+    return normalized;
+  }
+  return `references/${normalized}`;
+}
+
 export function resolveAssetPath(asset) {
   switch (asset.install_surface) {
     case "canonical_skill":
-    case "support_doc":
       return asset.source_relpath ?? asset.file_name;
+    case "support_doc":
+      return specConventionalSupportPath(asset.source_relpath ?? asset.file_name);
     case "metadata":
       return posix.join("agents", asset.file_name);
     case "context":
@@ -310,7 +325,11 @@ export function resolveRuntimeAssetPath(asset) {
   if (!candidate) {
     throw new Error("codex runtime asset is missing a relative path");
   }
-  return validateAssetRelativePath(asset, candidate);
+  const resolved =
+    asset.install_surface === "support_doc"
+      ? specConventionalSupportPath(candidate)
+      : candidate;
+  return validateAssetRelativePath(asset, resolved);
 }
 
 export function supportsInstallSurface(surface) {

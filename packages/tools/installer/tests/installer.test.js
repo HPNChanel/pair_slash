@@ -831,6 +831,7 @@ test("update removes orphaned managed asset when upstream manifest no longer emi
       ".agents",
       "skills",
       "pairslash-plan",
+      "references",
       "example-output.md",
     );
     assert.ok(existsSync(orphanPath));
@@ -865,7 +866,7 @@ test("update removes orphaned managed asset when upstream manifest no longer emi
     });
     assert.ok(
       envelope.plan.operations.some(
-        (operation) => operation.kind === "remove" && operation.relative_path === "example-output.md",
+        (operation) => operation.kind === "remove" && operation.relative_path === "references/example-output.md",
       ),
     );
 
@@ -977,6 +978,7 @@ test("uninstall warns and detaches when tracked file is already missing", serial
       ".agents",
       "skills",
       "pairslash-plan",
+      "references",
       "example-output.md",
     );
     rmSync(missingPath, { force: true });
@@ -990,14 +992,14 @@ test("uninstall warns and detaches when tracked file is already missing", serial
     assert.equal(envelope.plan.can_apply, true);
     assert.ok(
       envelope.plan.warnings.some((warning) =>
-        warning.startsWith("orphan-missing:pairslash-plan/example-output.md"),
+        warning.startsWith("orphan-missing:pairslash-plan/references/example-output.md"),
       ),
     );
     assert.ok(
       envelope.plan.operations.some(
         (operation) =>
           operation.kind === "skip_unmanaged" &&
-          operation.relative_path === "example-output.md",
+          operation.relative_path === "references/example-output.md",
       ),
     );
   } finally {

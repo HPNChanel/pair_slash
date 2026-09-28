@@ -2,13 +2,26 @@
 id: T2-03
 track: T2
 title: Adopt scripts/references/assets conventions in both compilers
-status: todo
+status: done
 depends_on: [T2-01]
 est_size: M
-claimed_by:
-claimed_at:
-completed_at:
+claimed_by: devin
+claimed_at: 2026-09-28
+completed_at: 2026-09-28
 evidence:
+  summary: >
+    Both runtime adapters now map support_doc assets to spec-conventional
+    dirs: files under scripts//references//assets/ keep their paths, all other
+    support docs emit under references/. SKILL.md stays at skill root
+    (canonical_skill). Existing update logic removes unchanged old-layout
+    orphans and preserves/blocks edited ones — no unmanaged footprint.
+    Also fixed a latent T2-02 regression: doctor reconcile test now writes
+    the emitted (enriched) SKILL.md so identical-digest reconciliation is
+    actually exercised.
+  layout_map: "contract.md|example-*.md|validation-checklist.md|pack.yaml|phase-boundary.md -> references/; scripts/* -> scripts/; SKILL.md -> root"
+  gates: "lint OK; typecheck OK; test OK; test:release OK; test:compat OK; sync:compat-lab --check OK"
+  golden_diff: "path moves only (root -> references/) + sha256 ordering; no content changes"
+  commit: pending
 ---
 
 ## Objective

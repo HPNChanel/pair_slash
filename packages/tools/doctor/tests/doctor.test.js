@@ -6,6 +6,7 @@ import { join } from "node:path";
 import { applyInstall, planInstall } from "@pairslash/installer";
 import { runDoctor } from "@pairslash/doctor";
 import * as codexAdapter from "@pairslash/runtime-codex-adapter";
+import { compileCodexPack } from "@pairslash/compiler-codex";
 
 import {
   createTempRepo,
@@ -295,19 +296,22 @@ test("doctor mirrors install preview when unmanaged pack directories are non-blo
   const fixture = createTempRepo();
   const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
-    const sourceSkillPath = join(
-      fixture.tempRoot,
-      "packs",
-      "core",
-      "pairslash-plan",
-      "SKILL.md",
-    );
+    const emittedSkill = compileCodexPack({
+      repoRoot: fixture.tempRoot,
+      manifestPath: join(
+        fixture.tempRoot,
+        "packs",
+        "core",
+        "pairslash-plan",
+        "pack.manifest.yaml",
+      ),
+    }).files.find((file) => file.relative_path === "SKILL.md");
     writeManualInstallFile({
       repoRoot: fixture.tempRoot,
       runtime: "codex_cli",
       packId: "pairslash-plan",
       relativePath: "SKILL.md",
-      content: readFileSync(sourceSkillPath, "utf8"),
+      content: emittedSkill.content,
     });
 
     const report = runDoctor({
