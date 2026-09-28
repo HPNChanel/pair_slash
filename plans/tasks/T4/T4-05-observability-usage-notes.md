@@ -2,13 +2,21 @@
 id: T4-05
 track: T4
 title: Observability notes — /usage skill activity + trace alignment
-status: todo
+status: done
 depends_on: [T4-04]
 est_size: S
-claimed_by:
-claimed_at:
-completed_at:
+claimed_by: devin
+claimed_at: 2026-09-28
+completed_at: 2026-09-28
 evidence:
+  - "doc: docs/workflows/observability-notes.md"
+  - "verified: Codex /usage token views (official command reference) + plugin/skill activity on the >=0.156 usage dashboard (CX-15; handbook.reopt.ai command reference)"
+  - "verified: Copilot /usage slash + --usage-output-file JSON with per-agent metrics (deepwiki copilot-cli slash reference); session.shutdown usage stats under ~/.copilot/session-state/, session-store.db local aggregation"
+  - "trace vocab review: pack_id aligns 1:1 with runtime skill/agent attribution names by construction; command_name is CLI-surface-only; session_id/correlation_id have no join key to runtime surfaces (accepted gap); event granularity differs (per-command vs per-skill aggregate) — recorded, no schema bug, zero trace code changes per X3"
+  - "gaps recorded: no shared correlation id; codex /usage explicit-vs-implicit granularity undocumented; pack-id shared between skill and agent shim names"
+  - "authoring note added to pack-manifest-v2-practical-spec.md (pack_name/description are attribution labels)"
+  - "no telemetry defaults, redaction lists, or trace plumbing touched"
+  - "gates: lint pass, npm test all pass, typecheck pass"
 ---
 
 ## Objective
@@ -43,9 +51,9 @@ Document how PairSlash workflows surface in the runtimes' new observability surf
 
 ## Acceptance gates
 
-- [ ] Observability doc written and linked
-- [ ] Authoring docs updated
-- [ ] Gates green
+- [x] Observability doc written and linked
+- [x] Authoring docs updated
+- [x] Gates green
 
 ## Evidence to record
 

@@ -162,6 +162,12 @@ docs_refs:
 - `smoke_checks`: scenario descriptors for preview/doctor acceptance, not arbitrary shell scripts.
 - `docs_refs`: relative doc paths for contract/example/checklist surfaces.
 
+Observability note for authors: `pack_name` and SKILL.md `description` are
+runtime-visible metadata. Skill invocations surface in Codex `/usage` skill
+activity, and Copilot `.agent.md` shims appear in per-agent usage metrics —
+always under the pack id. Treat these strings as attribution labels; see
+`docs/workflows/observability-notes.md`.
+
 ## Enums
 
 - `workflow_class`: `read-oriented | dual-mode | write-authority`
