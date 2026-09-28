@@ -2,13 +2,21 @@
 id: T3-04
 track: T3
 title: gh skill publish readiness gate
-status: todo
+status: done
 depends_on: [T3-02]
 est_size: S
-claimed_by:
-claimed_at:
-completed_at:
-evidence:
+claimed_by: devin
+claimed_at: 2026-09-28
+completed_at: 2026-09-28
+evidence: >
+  scripts/verify-skill-publish-readiness.mjs stages all 11 core packs via
+  compileCopilotPack({emitMode:"plugin"}) and runs `gh skill publish
+  --dry-run` — live run on host gh 2.96.0 (2026-09-28): verdict pass, zero
+  diagnostics for all 11 packs. Report kind pairslash.skill-publish-
+  readiness/v1; gh-absent yields explicit verdict "unavailable" (exit 0),
+  skill errors fail closed (exit 1). Wired as advisory non-blocking step in
+  run-release-readiness.mjs + npm script test:publish:skills; tests in
+  tests/skill-publish-readiness.test.js cover parser/report/unavailable paths.
 ---
 
 ## Objective

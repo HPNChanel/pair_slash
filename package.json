@@ -22,6 +22,7 @@
     "test:release": "node scripts/run-release-readiness.mjs",
     "test:release:ship": "node scripts/run-release-ship-readiness.mjs",
     "test:support": "node scripts/verify-supportability-surfaces.mjs",
+    "test:publish:skills": "node scripts/verify-skill-publish-readiness.mjs",
     "test:compat": "node scripts/run-compat-lab-tests.mjs",
     "test:compat:acceptance": "node scripts/run-compat-lab-acceptance.mjs",
     "test:compat:release": "node scripts/run-compat-lab-release-readiness.mjs",

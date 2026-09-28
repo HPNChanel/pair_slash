@@ -90,6 +90,21 @@ function makeTrustTempDir(prefix) {
   return join(releaseRoot, name);
 }
 
+// Advisory only: gh-skill publish readiness is capability-detected and
+// non-blocking (dry-run validation against the real `gh` distribution tool
+// where present). Upgrade to a hard gate once coverage is proven.
+function runAdvisorySkillPublishReadiness() {
+  const result = spawnSync(process.execPath, ["scripts/verify-skill-publish-readiness.mjs"], {
+    cwd: repoRoot,
+    stdio: "inherit",
+  });
+  if (result.status !== 0) {
+    console.error(
+      "advisory: gh skill publish readiness reported failures (non-blocking; see report above)",
+    );
+  }
+}
+
 function runStructuralTrustGate() {
   const trustDir = makeTrustTempDir("structural");
   try {
@@ -116,6 +131,7 @@ runNodeScript(["scripts/verify-supportability-surfaces.mjs"]);
 runNodeScript(["scripts/sync-compat-lab-artifacts.mjs", "--check"]);
 runNodeScript(["scripts/run-compat-lab-tests.mjs"]);
 runStructuralTrustGate();
+runAdvisorySkillPublishReadiness();
 
 if (requireSignedVerification()) {
   if (!hasSigningEnv()) {
