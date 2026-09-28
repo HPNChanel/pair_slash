@@ -1,6 +1,6 @@
 # Track T4 — Runtime capability policy layer
 
-**Status:** Approved | **Priority:** P2 | **Depends on:** T1, T2
+**Status:** Done (6/6 tasks, 2026-09-28) | **Priority:** P2 | **Depends on:** T1, T2
 **Goal:** Model the runtimes' new capability surfaces — hooks, implicit invocation, custom agents, daemon awareness, observability — in the spec/policy layer with opt-in defaults that preserve charter boundaries.
 
 ## Context
