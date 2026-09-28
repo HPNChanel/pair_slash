@@ -19,7 +19,7 @@
     "accepted_sources": ["cli"],
     "accepted_modes": ["read"],
     "validation_hints": {
-      "schema_refs": ["packages/core/spec-core/schemas/pack-manifest-v2.schema.yaml@2.1.0"],
+      "schema_refs": ["packages/core/spec-core/schemas/pack-manifest-v2.schema.yaml@2.2.0"],
       "strict_required_fields": true,
       "reject_unknown_fields": true,
       "error_codes": ["CONTRACT-VALIDATION-FAILED"]

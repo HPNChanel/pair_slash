@@ -388,9 +388,9 @@ function buildInputContract(manifest) {
     optional_fields: profile?.optional_fields ?? READ_OPTIONAL_FIELDS,
     accepted_sources: ["cli", "workflow"],
     accepted_modes: CONTRACT_INPUT_MODES.filter((mode) => mode !== "apply"),
-    schema_refs: ["packages/core/spec-core/schemas/pack-manifest-v2.schema.yaml@2.1.0"],
+    schema_refs: ["packages/core/spec-core/schemas/pack-manifest-v2.schema.yaml@2.2.0"],
     validation_hints: {
-      schema_refs: ["packages/core/spec-core/schemas/pack-manifest-v2.schema.yaml@2.1.0"],
+      schema_refs: ["packages/core/spec-core/schemas/pack-manifest-v2.schema.yaml@2.2.0"],
       strict_required_fields: true,
       reject_unknown_fields: true,
       error_codes: ["CONTRACT-VALIDATION-FAILED", "CONTRACT-POLICY-BLOCKED"],

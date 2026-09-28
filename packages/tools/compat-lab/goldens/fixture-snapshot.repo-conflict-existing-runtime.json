@@ -38,7 +38,7 @@
         {
           "bundle_kind": "codex-skill-bundle",
           "canonical_entrypoint": "/skills",
-          "digest": "fc4a69493cf21227b5a8d56dd8b37e7c6c6170828703db9b092765365d65bea7",
+          "digest": "b4c2bfcb414cd6f7efecd677c80ab88bb93bbe3a63758441543ece4a487dc772",
           "direct_invocation": "$pairslash-plan",
           "files": [
             {
@@ -97,7 +97,7 @@
               "relative_path": "pairslash.install.json",
               "required": true,
               "runtime_selector": "shared",
-              "sha256": "e677f54013aed91e73c8ee883daf4514d6f5ef47f2d685ba52b4c69967aa03f3",
+              "sha256": "3adf194d15ed3a3a3885d849aef441ea2d8a64d030c0276d278dac32d53d8159",
               "uninstall_behavior": "remove_if_unmodified",
               "write_authority_guarded": false
             },
@@ -192,7 +192,7 @@
               "write_authority_guarded": false
             }
           ],
-          "normalized_ir_digest": "9d988fa6aa14406a486531dc24bb54cab60323fa9ebd61faf5be7db47636d323",
+          "normalized_ir_digest": "6addf91194018a916b0e620423dd9b19716c921c8121783f10f9a2058210bbf5",
           "output_dir": "<repo>\\dist\\compiled\\codex\\pairslash-plan",
           "pack_id": "pairslash-plan",
           "runtime": "codex_cli",
@@ -877,7 +877,7 @@
         {
           "bundle_kind": "copilot-package-bundle",
           "canonical_entrypoint": "/skills",
-          "digest": "c7e789e60c6f98c5c3543cf069f88b2d1d4b0f5f6372f7ca6e8df4bf64e39691",
+          "digest": "ddcd1a7d28af261b7688ff430d223e06444cad0863d7f3bf44a88a257adf17b1",
           "direct_invocation": "/pairslash-plan",
           "files": [
             {
@@ -921,7 +921,7 @@
               "relative_path": "pairslash.install.json",
               "required": true,
               "runtime_selector": "shared",
-              "sha256": "be69ddf6293a7c726716024eba634eaa3653e495a52aef8a4f5bced98aeb0c03",
+              "sha256": "9a1547e0fa5f62f4ac87ca5cc01aebb7a3b5f4cce4679557f5d08d20ab6cc5f9",
               "uninstall_behavior": "remove_if_unmodified",
               "write_authority_guarded": false
             },
@@ -1016,7 +1016,7 @@
               "write_authority_guarded": false
             }
           ],
-          "normalized_ir_digest": "9d988fa6aa14406a486531dc24bb54cab60323fa9ebd61faf5be7db47636d323",
+          "normalized_ir_digest": "6addf91194018a916b0e620423dd9b19716c921c8121783f10f9a2058210bbf5",
           "output_dir": "<repo>\\dist\\compiled\\copilot\\pairslash-plan",
           "pack_id": "pairslash-plan",
           "runtime": "copilot_cli",

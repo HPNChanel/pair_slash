@@ -1,5 +1,6 @@
 export const LEGACY_PHASE4_SCHEMA_VERSION = "2.0.0";
-export const PHASE4_SCHEMA_VERSION = "2.1.0";
+export const PREVIOUS_PHASE4_SCHEMA_VERSION = "2.1.0";
+export const PHASE4_SCHEMA_VERSION = "2.2.0";
 export const PHASE4_COMPILER_VERSION = "2.0.0";
 export const NORMALIZED_IR_SCHEMA_VERSION = "1.0.0";
 export const COMPILED_PACK_SCHEMA_VERSION = "1.0.0";
@@ -58,6 +59,7 @@ export const AUDIT_LOG_LEVELS = ["none", "append"] as const;
 export const TOOL_KINDS = ["binary", "script", "env_var"] as const;
 export const TOOL_PHASES = ["compile", "install", "run", "doctor"] as const;
 export const COMPATIBILITY_STATUSES = ["supported", "unverified", "blocked"] as const;
+export const MCP_SPEC_ERAS = ["legacy", "modern", "dual"] as const;
 export const UPDATE_STRATEGY_MODES = ["preserve_valid_local_overrides"] as const;
 export const UPDATE_NON_OVERRIDE_POLICIES = ["block"] as const;
 export const UNINSTALL_STRATEGY_MODES = ["pairslash_owned_only"] as const;

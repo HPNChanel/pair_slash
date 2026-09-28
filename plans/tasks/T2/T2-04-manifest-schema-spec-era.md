@@ -2,13 +2,25 @@
 id: T2-04
 track: T2
 title: Manifest-v2 schema — spec_era on required_mcp_servers
-status: todo
+status: done
 depends_on: [T2-01]
 est_size: M
-claimed_by:
-claimed_at:
-completed_at:
+claimed_by: devin
+claimed_at: 2026-09-28
+completed_at: 2026-09-28
 evidence:
+  summary: >
+    PHASE4_SCHEMA_VERSION bumped 2.1.0 -> 2.2.0. required_mcp_servers entries
+    gained optional spec_era (legacy|modern|dual); required explicitly at
+    schema 2.2.0 (PSM033), normalized to "dual" with a normalization warning
+    for 2.1.0/legacy manifests. All 11 core manifests bumped; 2.1.0 fixtures
+    retained as back-compat coverage. JSON schema doc, contract-engine
+    schema_refs, doctor/lint remediation text, and architecture docs updated.
+  schema_diff: "manifest-v2.schema.ts picklist [2.1.0, 2.2.0]; spec_era optional picklist; MCP_SPEC_ERAS const"
+  back_compat: "2.1.0 fixture manifests validate clean; spec_era defaults to dual with recorded warning"
+  tests: "4 new spec_era tests (positive, required-at-2.2.0, normalize-default, invalid era) — spec-core 54/54"
+  gates: "lint OK; typecheck OK; test OK; test:compat OK; sync:compat-lab --check OK"
+  commit: pending
 ---
 
 ## Objective

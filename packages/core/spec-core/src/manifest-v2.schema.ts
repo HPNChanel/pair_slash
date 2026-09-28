@@ -8,6 +8,7 @@ import {
   MANIFEST_SMOKE_ACTIONS,
   MEMORY_ACCESS_LEVELS,
   MEMORY_AUTHORITY_MODES,
+  MCP_SPEC_ERAS,
   PACK_CATALOG_CLASSES,
   PACK_DEPRECATION_STATUSES,
   PACK_DOCS_VISIBILITY,
@@ -19,6 +20,7 @@ import {
   PACK_TRUST_TIERS,
   PACK_STATUSES,
   PHASE4_SCHEMA_VERSION,
+  PREVIOUS_PHASE4_SCHEMA_VERSION,
   RELEASE_CHANNELS,
   RISK_LEVELS,
   RUNTIME_ASSET_GENERATORS,
@@ -63,6 +65,7 @@ const requiredToolSchema = v.object({
 
 const requiredMcpServerSchema = v.object({
   id: nonEmptyString("required_mcp_servers[].id must be a non-empty string"),
+  spec_era: v.optional(v.picklist(MCP_SPEC_ERAS)),
 });
 
 const memoryPermissionsSchema = v.object({
@@ -230,7 +233,7 @@ const supportSchema = v.object({
 
 export const packManifestV2Schema = v.object({
   kind: v.literal("pack-manifest-v2"),
-  schema_version: v.literal(PHASE4_SCHEMA_VERSION),
+  schema_version: v.picklist([PREVIOUS_PHASE4_SCHEMA_VERSION, PHASE4_SCHEMA_VERSION]),
   pack_name: nonEmptyString("pack_name must be a non-empty string"),
   display_name: nonEmptyString("display_name must be a non-empty string"),
   pack_version: nonEmptyString("pack_version must be a non-empty string"),

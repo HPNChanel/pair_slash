@@ -353,7 +353,7 @@ function applyManifestValidation(entry, checks, target) {
           target,
           path: entry.manifestPath,
           message: warning,
-          remediation: "Rewrite the manifest using canonical pack.manifest.yaml v2.1.0 fields.",
+          remediation: "Rewrite the manifest using canonical pack.manifest.yaml v2.2.0 fields.",
         }),
       );
     }

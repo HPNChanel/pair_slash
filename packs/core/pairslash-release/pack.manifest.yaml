@@ -1,5 +1,5 @@
 kind: pack-manifest-v2
-schema_version: 2.1.0
+schema_version: 2.2.0
 pack_name: pairslash-release
 display_name: PairSlash Release
 pack_version: 0.2.0

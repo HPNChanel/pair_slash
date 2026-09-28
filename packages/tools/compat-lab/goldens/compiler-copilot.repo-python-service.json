@@ -3,7 +3,7 @@
     {
       "bundle_kind": "copilot-package-bundle",
       "canonical_entrypoint": "/skills",
-      "digest": "71a6b5f77fb7852ec18d5e33f843cb0c5e4ace28b83be01f6961552723e364f9",
+      "digest": "5462990216fd3399175812d67468c95a1766a3c762fd197d55329c44fae8256a",
       "direct_invocation": "/pairslash-backend",
       "files": [
         {
@@ -47,7 +47,7 @@
           "relative_path": "pairslash.install.json",
           "required": true,
           "runtime_selector": "shared",
-          "sha256": "42b87e34512006a5ebf6646249d9474dc233277d95cfde7667d009c8a14eb0dd",
+          "sha256": "8a9e714b2715b63ae47318f9e46c4d35fa3556bd3e70f0cf24ab028521362c7b",
           "uninstall_behavior": "remove_if_unmodified",
           "write_authority_guarded": false
         },
@@ -142,7 +142,7 @@
           "write_authority_guarded": false
         }
       ],
-      "normalized_ir_digest": "728d1e7f48778d52c1b0c697f0a25ece624a8cdcb7452735b17fe0eb47006c55",
+      "normalized_ir_digest": "3ce4c41818f8688acfcc24600a85fadb71370a4a17088d2143ae54d78739a2fe",
       "output_dir": "<repo>\\dist\\compiled\\copilot\\pairslash-backend",
       "pack_id": "pairslash-backend",
       "runtime": "copilot_cli",
@@ -151,7 +151,7 @@
     {
       "bundle_kind": "copilot-package-bundle",
       "canonical_entrypoint": "/skills",
-      "digest": "2ed92ea8358bf6a85139953dfb2843ecf1746ae9dd81bfa6de26716dc5468637",
+      "digest": "1ddc6b62de024cfc1acfee023950d2208a168d4efcd06515380075d3e9c22bb6",
       "direct_invocation": "/pairslash-devops",
       "files": [
         {
@@ -195,7 +195,7 @@
           "relative_path": "pairslash.install.json",
           "required": true,
           "runtime_selector": "shared",
-          "sha256": "145a84cb034ed9b2de2711a6d6dcb59282ad768350e3befc777af5deb5bd4d1b",
+          "sha256": "8ff35f2ebc14e20e3d2782cfced412ceef3eee8adc0c3270f60abcf6079dcbfa",
           "uninstall_behavior": "remove_if_unmodified",
           "write_authority_guarded": false
         },
@@ -290,7 +290,7 @@
           "write_authority_guarded": false
         }
       ],
-      "normalized_ir_digest": "1f47c3afc12515d9a380ee6858579944d14371940d1fc02f4574f76f8beadc7d",
+      "normalized_ir_digest": "017b155895772ae8d3774d45052b3983b64240e3ae86edd59e7dbc7f3469547b",
       "output_dir": "<repo>\\dist\\compiled\\copilot\\pairslash-devops",
       "pack_id": "pairslash-devops",
       "runtime": "copilot_cli",

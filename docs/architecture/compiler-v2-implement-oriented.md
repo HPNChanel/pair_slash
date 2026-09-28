@@ -117,7 +117,7 @@ export interface NormalizedPackIr {
     install_targets: InstallTarget[];
     capabilities: CapabilityFlag[];
     required_tools: Array<{ id: string; kind: string; semver_range: string }>;
-    required_mcp_servers: Array<{ id: string; transport: string; endpoint: string }>;
+    required_mcp_servers: Array<{ id: string; transport: string; endpoint: string; spec_era: "legacy" | "modern" | "dual" }>;
     memory_permissions: {
       authority_mode: "read-only" | "write-authority";
       explicit_write_only: true;

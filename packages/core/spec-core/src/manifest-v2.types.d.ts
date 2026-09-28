@@ -89,7 +89,7 @@ export interface PackManifestV2 {
     required_for: Array<"compile" | "install" | "run" | "doctor">;
     check_command: string;
   }>;
-  required_mcp_servers: Array<{ id: string }>;
+  required_mcp_servers: Array<{ id: string; spec_era?: "legacy" | "modern" | "dual" }>;
   memory_permissions: {
     authority_mode: "read-only" | "write-authority";
     explicit_write_only: true;

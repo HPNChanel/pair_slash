@@ -1394,7 +1394,7 @@ function runManifestValidation(context) {
         requested_packs: context.requestedPacks,
       },
       summary: `${normalizationWarnings.length} manifest normalization warning(s) detected`,
-      remediation: "Rewrite legacy manifests using canonical pack.manifest.yaml v2.1.0 fields.",
+      remediation: "Rewrite legacy manifests using canonical pack.manifest.yaml v2.2.0 fields.",
       evidence: {
         discovered: context.manifestRecords.length,
         normalization_warnings: normalizationWarnings,

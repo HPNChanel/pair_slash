@@ -14,6 +14,7 @@ import {
   loadPackCatalogRecords,
   loadPackManifest,
   loadPackManifestRecords,
+  normalizePackManifestV2,
   resolveManifestInstallSpec,
   serializePackManifestV2,
   selectPackManifestRecords,
@@ -548,19 +549,108 @@ test("buildManifestTemplate emits validator-compatible runtime target shape", ()
   assert.equal("adapter" in manifest.runtime_targets.codex_cli, false);
 });
 
-test("raw canonical pack.manifest.yaml v2.1.0 validates for core pack", () => {
+test("raw canonical pack.manifest.yaml v2.2.0 validates for core pack", () => {
   const manifestPath = join(repoRoot, "packs", "core", "pairslash-plan", "pack.manifest.yaml");
   const rawManifest = YAML.parse(readFileSync(manifestPath, "utf8"));
   assert.deepEqual(validatePackManifestV2(rawManifest), []);
-  assert.equal(rawManifest.schema_version, "2.1.0");
+  assert.equal(rawManifest.schema_version, "2.2.0");
   assert.equal(rawManifest.pack_name, "pairslash-plan");
 });
 
-test("sample manifests validate in canonical pack.manifest.yaml v2.1.0 shape", () => {
+test("v2.1.0 sample manifests still validate via backward-compatible schema_version", () => {
   const coreSample = loadManifestFixture("pack.manifest.v2.core.sample.yaml");
   const runtimeTargetedSample = loadManifestFixture("pack.manifest.v2.runtime-targeted.sample.yaml");
+  assert.equal(coreSample.schema_version, "2.1.0");
   assert.deepEqual(validatePackManifestV2(coreSample), []);
   assert.deepEqual(validatePackManifestV2(runtimeTargetedSample), []);
+});
+
+function enableMcpServers(manifest, servers) {
+  manifest.capabilities.push("mcp_client");
+  manifest.required_mcp_servers = servers;
+  manifest.runtime_assets.entries.push(
+    {
+      asset_id: "codex-mcp",
+      runtime: "codex_cli",
+      asset_kind: "mcp_config",
+      install_surface: "mcp",
+      source_path: null,
+      generated_path: "fragments/mcp/servers.yaml",
+      generator: "codex_mcp",
+      required: true,
+      override_eligible: false,
+    },
+    {
+      asset_id: "copilot-preflight",
+      runtime: "copilot_cli",
+      asset_kind: "hook_script",
+      install_surface: "hook",
+      source_path: null,
+      generated_path: "hooks/preflight.yaml",
+      generator: "copilot_preflight",
+      required: true,
+      override_eligible: false,
+    },
+    {
+      asset_id: "copilot-mcp",
+      runtime: "copilot_cli",
+      asset_kind: "mcp_config",
+      install_surface: "mcp",
+      source_path: null,
+      generated_path: "mcp/servers.yaml",
+      generator: "copilot_mcp",
+      required: true,
+      override_eligible: false,
+    },
+  );
+  manifest.asset_ownership.records.push(
+    { asset_id: "codex-mcp", owner: "pairslash", uninstall_behavior: "detach_if_modified" },
+    { asset_id: "copilot-preflight", owner: "pairslash", uninstall_behavior: "detach_if_modified" },
+    { asset_id: "copilot-mcp", owner: "pairslash", uninstall_behavior: "detach_if_modified" },
+  );
+}
+
+test("required_mcp_servers spec_era: explicit eras validate at schema 2.2.0", () => {
+  const manifest = loadManifestFixture("pack.manifest.v2.core.sample.yaml");
+  manifest.schema_version = "2.2.0";
+  enableMcpServers(manifest, [
+    { id: "filesystem", spec_era: "modern" },
+    { id: "search", spec_era: "dual" },
+  ]);
+  assert.deepEqual(validatePackManifestV2(manifest), []);
+});
+
+test("required_mcp_servers spec_era is required when manifest declares schema 2.2.0", () => {
+  const manifest = loadManifestFixture("pack.manifest.v2.core.sample.yaml");
+  manifest.schema_version = "2.2.0";
+  enableMcpServers(manifest, [{ id: "filesystem" }]);
+  const errors = validatePackManifestV2(manifest);
+  assert.ok(hasCode(errors, "PSM033"));
+  assert.ok(errors.some((error) => error.includes("spec_era")));
+});
+
+test("required_mcp_servers spec_era defaults to dual with warning at schema 2.1.0", () => {
+  const manifest = loadManifestFixture("pack.manifest.v2.core.sample.yaml");
+  enableMcpServers(manifest, [{ id: "filesystem" }]);
+  assert.deepEqual(validatePackManifestV2(manifest), []);
+  const normalized = normalizePackManifestV2(manifest);
+  assert.equal(normalized.required_mcp_servers[0].spec_era, "dual");
+  assert.ok(
+    normalized.__pairslash?.normalization_warnings?.some((warning) =>
+      warning.includes("spec_era"),
+    ),
+  );
+});
+
+test("required_mcp_servers rejects unknown spec_era values", () => {
+  const manifest = loadManifestFixture("pack.manifest.v2.core.sample.yaml");
+  manifest.schema_version = "2.2.0";
+  enableMcpServers(manifest, [{ id: "filesystem", spec_era: "next-gen" }]);
+  const errors = validatePackManifestV2(manifest);
+  assert.ok(errors.length > 0);
+  assert.ok(
+    errors.some((error) => error.includes("spec_era")),
+  );
 });
 
 test("validator rejects invalid runtime range formats", () => {

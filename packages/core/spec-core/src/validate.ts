@@ -24,6 +24,7 @@ import {
   MANAGEMENT_MODES,
   MANIFEST_MARKER_MODES,
   MANIFEST_SMOKE_ACTIONS,
+  MCP_SPEC_ERAS,
   NORMALIZED_IR_SCHEMA_VERSION,
   OWNERSHIP_FILE,
   OVERRIDE_MARKER_FILE,
@@ -417,7 +418,7 @@ function validateTools(value, errors) {
   }
 }
 
-function validateMcpServers(value, capabilities, errors) {
+function validateMcpServers(value, capabilities, errors, declaredSchemaVersion = null) {
   if (!Array.isArray(value)) {
     push(errors, "PSM033", "required_mcp_servers must be a list");
     return;
@@ -432,6 +433,23 @@ function validateMcpServers(value, capabilities, errors) {
     }
     if (!validateNonEmptyString(server.id, "required_mcp_servers[].id", errors, "PSM033")) {
       continue;
+    }
+    if (
+      declaredSchemaVersion === PHASE4_SCHEMA_VERSION &&
+      server.spec_era === undefined
+    ) {
+      push(
+        errors,
+        "PSM033",
+        `required_mcp_servers[${server.id}].spec_era is required at schema_version ${PHASE4_SCHEMA_VERSION} (legacy|modern|dual)`,
+      );
+    }
+    if (server.spec_era !== undefined && !MCP_SPEC_ERAS.includes(server.spec_era)) {
+      push(
+        errors,
+        "PSM033",
+        `required_mcp_servers[${server.id}].spec_era must be one of ${MCP_SPEC_ERAS.join(", ")}`,
+      );
     }
     if (seen.has(server.id)) {
       push(errors, "PSM033", `required_mcp_servers contains duplicate id ${server.id}`);
@@ -1435,7 +1453,7 @@ export function validatePackManifestV2(record) {
   validateInstallTargets(canonical.install_targets, errors);
   const capabilities = validateCapabilities(canonical.capabilities, canonical.risk_level, errors);
   validateTools(canonical.required_tools, errors);
-  validateMcpServers(canonical.required_mcp_servers, capabilities, errors);
+  validateMcpServers(canonical.required_mcp_servers, capabilities, errors, record.schema_version);
   validateMemoryPermissions(canonical.memory_permissions, capabilities, canonical.risk_level, errors);
   validateCanonicalRuntimeBindings(canonical, errors);
   const assetIds = validateCanonicalRuntimeAssets(canonical, errors, {

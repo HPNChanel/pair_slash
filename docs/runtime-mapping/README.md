@@ -26,5 +26,5 @@ all rely on.
 
 - Common manifest authority: `runtime_bindings`, `runtime_assets.entries`, `asset_ownership.records`, `local_override_policy.eligible_asset_ids`, `update_strategy`, and `uninstall_strategy`.
 - Runtime-specific lowering: Codex consumes `codex_*` generators; Copilot consumes `copilot_*` generators; `source_copy` and `pairslash_ownership_receipt` are shared compiler behaviors.
-- Valid fallback: legacy `2.0.0` manifests may still normalize into canonical `2.1.0`, but compiler code must read canonical fields only after normalization.
+- Valid fallback: legacy `2.0.0` manifests may still normalize into canonical `2.2.0`, but compiler code must read canonical fields only after normalization.
 - Intentionally unsupported in Phase 4: third runtimes, undocumented custom slash surfaces, dynamic hook engines, contract evaluation, and policy execution.

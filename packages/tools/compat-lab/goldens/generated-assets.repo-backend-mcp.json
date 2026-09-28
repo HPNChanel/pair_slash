@@ -62,7 +62,7 @@
             "relative_path": "fragments/mcp/servers.yaml",
             "required": true,
             "runtime_selector": "codex_cli",
-            "sha256": "90a3d1c55178153c8cf2811f68f7ad8c665f5d48b287b1cf877e2ef8e9b49c66",
+            "sha256": "b990b65848cf1b79f2d884e38562aefd7e3342ce248a6c21718adf173de974c1",
             "uninstall_behavior": "detach_if_modified",
             "write_authority_guarded": false
           },
@@ -77,7 +77,7 @@
             "relative_path": "pairslash.install.json",
             "required": true,
             "runtime_selector": "shared",
-            "sha256": "7ef06c1890aed788c4fb893fc2f77a034fdcfc2902c9ad890c814d21cfb1b4d6",
+            "sha256": "6aa512a72a40f03a3f3c6576b54fca0b1a5f804cdf068b22b9661b846fec870b",
             "uninstall_behavior": "remove_if_unmodified",
             "write_authority_guarded": false
           }
@@ -132,7 +132,7 @@
             "relative_path": "mcp/servers.yaml",
             "required": true,
             "runtime_selector": "copilot_cli",
-            "sha256": "baa1df4124083fd4c20320503f5b45243ece3a689fafd461b1a23f3c9fd3d8a2",
+            "sha256": "7b5f49d9878e6939292fd0499c4c90eb841149c0ef8809a9acfecf33d202969b",
             "uninstall_behavior": "detach_if_modified",
             "write_authority_guarded": false
           },
@@ -162,7 +162,7 @@
             "relative_path": "pairslash.install.json",
             "required": true,
             "runtime_selector": "shared",
-            "sha256": "f955c3bb73387ec96a69952bf4838b1702bb73d200b8689d09f69c80a35405f2",
+            "sha256": "768f30aeb99979f83e91f2e6fda430670f9e18f7d05097cb51d37fa98f894f62",
             "uninstall_behavior": "remove_if_unmodified",
             "write_authority_guarded": false
           }

@@ -11,11 +11,11 @@ Guardrails:
 
 ## Canonical shape
 
-Canonical manifests use `schema_version: "2.1.0"`.
+Canonical manifests use `schema_version: "2.2.0"` (`2.1.0` remains accepted for backward compatibility).
 
 ```yaml
 kind: pack-manifest-v2
-schema_version: "2.1.0"
+schema_version: "2.2.0"
 
 pack_name: pairslash-plan
 display_name: PairSlash Plan
@@ -178,6 +178,7 @@ docs_refs:
 - `supported_runtimes`, `supported_runtime_ranges`, and `runtime_bindings` must describe the same exact runtime set.
 - `memory_write_global` requires `authority_mode: write-authority`, `global_project_memory: write`, and `risk_level: critical`.
 - `required_mcp_servers` requires `mcp_client`.
+- `required_mcp_servers[].spec_era` is required at `schema_version: "2.2.0"` (`legacy` = MCP 2025-11-25, `modern` = MCP 2026-07-28, `dual` = both/unknown). Older manifests normalize missing eras to `dual` with a normalization warning.
 - `runtime_assets.primary_skill` must appear exactly once as a `skill_markdown` / `canonical_skill` source asset.
 - Every asset must declare exactly one of `source_path` or `generated_path`.
 - `ownership-receipt` is mandatory, non-override, PairSlash-owned, and must use `remove_if_unmodified`.
@@ -204,7 +205,7 @@ Field mapping:
 - `local_override_policy.eligible_paths -> local_override_policy.eligible_asset_ids`
 - `local_override_policy.strategy + rollback_strategy -> update_strategy`
 
-Legacy manifests now trigger migration warnings in lint/doctor, but they are still loadable. New manifests and rewritten manifests should use canonical `2.1.0`.
+Legacy manifests now trigger migration warnings in lint/doctor, but they are still loadable. New manifests and rewritten manifests should use canonical `2.2.0`.
 
 ## Examples in repo
 

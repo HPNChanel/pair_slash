@@ -1,5 +1,5 @@
 $schema: "https://json-schema.org/draft/2020-12/schema"
-$id: "https://pairslash.dev/schemas/pack-manifest-v2/2.1.0"
+$id: "https://pairslash.dev/schemas/pack-manifest-v2/2.2.0"
 title: PairSlash Pack Manifest v2
 type: object
 additionalProperties: false
@@ -38,7 +38,9 @@ properties:
   kind:
     const: pack-manifest-v2
   schema_version:
-    const: "2.1.0"
+    enum:
+      - "2.1.0"
+      - "2.2.0"
   pack_name:
     type: string
     pattern: "^[a-z0-9]+(?:-[a-z0-9]+)*$"
@@ -645,6 +647,12 @@ $defs:
       id:
         type: string
         minLength: 1
+      spec_era:
+        type: string
+        enum:
+          - legacy
+          - modern
+          - dual
   memoryPermissions:
     type: object
     additionalProperties: false

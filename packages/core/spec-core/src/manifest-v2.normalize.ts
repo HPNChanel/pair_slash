@@ -699,9 +699,8 @@ function toCanonicalManifest(record, { preferCanonicalOverride }: any = {}) {
     Array.isArray(record.install_targets) ? record.install_targets : SUPPORTED_TARGETS,
   );
   const requiredTools = Array.isArray(record.required_tools) ? clone(record.required_tools) : [];
-  const requiredMcpServers = Array.isArray(record.required_mcp_servers)
-    ? clone(record.required_mcp_servers)
-    : [];
+  const { entries: requiredMcpServers, warnings: mcpSpecEraWarnings } =
+    normalizeRequiredMcpServers(record);
   const memoryPermissions = clone(
     isObject(record.memory_permissions)
       ? record.memory_permissions
@@ -790,7 +789,35 @@ function toCanonicalManifest(record, { preferCanonicalOverride }: any = {}) {
     support,
     trust_descriptor: pickFirstString(record.trust_descriptor) ?? undefined,
   };
-  return canonical;
+  const shape = detectPackManifestShape(record);
+  return attachManifestMeta(canonical, {
+    manifest_shape: shape,
+    canonical_schema_version: PHASE4_SCHEMA_VERSION,
+    normalization_warnings: [
+      ...(shape === "legacy-v2.0.0"
+        ? [`legacy manifest ${LEGACY_PHASE4_SCHEMA_VERSION} normalized to canonical ${PHASE4_SCHEMA_VERSION}`]
+        : []),
+      ...mcpSpecEraWarnings,
+    ],
+  });
+}
+
+function normalizeRequiredMcpServers(record) {
+  if (!Array.isArray(record.required_mcp_servers)) {
+    return { entries: [], warnings: [] };
+  }
+  const warnings = [];
+  const entries = record.required_mcp_servers.map((entry) => {
+    const cloned = clone(entry);
+    if (isObject(cloned) && cloned.spec_era === undefined) {
+      cloned.spec_era = "dual";
+      warnings.push(
+        `required_mcp_servers[${cloned.id ?? "?"}] missing spec_era; defaulted to dual`,
+      );
+    }
+    return cloned;
+  });
+  return { entries, warnings };
 }
 
 function legacyAssets(manifest) {
@@ -868,10 +895,7 @@ function attachCompatibilityAliases(canonical, shape) {
   return attachManifestMeta(manifest, {
     manifest_shape: shape,
     canonical_schema_version: PHASE4_SCHEMA_VERSION,
-    normalization_warnings:
-      shape === "legacy-v2.0.0"
-        ? [`legacy manifest ${LEGACY_PHASE4_SCHEMA_VERSION} normalized to canonical ${PHASE4_SCHEMA_VERSION}`]
-        : [],
+    normalization_warnings: canonical.__pairslash?.normalization_warnings ?? [],
   });
 }
 
