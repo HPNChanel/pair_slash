@@ -2,9 +2,9 @@ function sortStrings(values: any): any[] {
   return [...new Set(values)].sort((left: any, right: any) => left.localeCompare(right));
 }
 
-function uniqueStrings(values) {
+function uniqueStrings(values: unknown[]) {
   const seen = new Set();
-  const output = [];
+  const output: any[] = [];
   for (const value of values ?? []) {
     if (typeof value !== "string" || seen.has(value)) {
       continue;
@@ -15,15 +15,15 @@ function uniqueStrings(values) {
   return output;
 }
 
-function normalizeArtifacts(artifacts) {
+function normalizeArtifacts(artifacts: any) {
   const seen = new Set();
   return artifacts
-    .map((artifact) => ({
+    .map((artifact: any) => ({
       id: artifact.id,
       when: artifact.when,
       ...(typeof artifact.required === "boolean" ? { required: artifact.required } : {}),
     }))
-    .filter((artifact) => {
+    .filter((artifact: any) => {
       if (seen.has(artifact.id)) {
         return false;
       }
@@ -32,16 +32,16 @@ function normalizeArtifacts(artifacts) {
     });
 }
 
-function normalizeSections(sections) {
+function normalizeSections(sections: any) {
   const seen = new Set();
   return sections
-    .map((section) => ({
+    .map((section: any) => ({
       id: section.id,
       label: section.label,
       required: Boolean(section.required),
       machine_readable: Boolean(section.machine_readable),
     }))
-    .filter((section) => {
+    .filter((section: any) => {
       if (seen.has(section.id)) {
         return false;
       }
@@ -50,30 +50,30 @@ function normalizeSections(sections) {
     });
 }
 
-function normalizeNegotiation(negotiation) {
+function normalizeNegotiation(negotiation: any) {
   return negotiation
-    .map((entry) => ({
+    .map((entry: any) => ({
       capability: entry.capability,
       status: entry.status,
       reason: entry.reason ?? null,
     }))
-    .sort((left, right) => left.capability.localeCompare(right.capability));
+    .sort((left: any, right: any) => left.capability.localeCompare(right.capability));
 }
 
-function normalizeFailureCategories(categories) {
+function normalizeFailureCategories(categories: any) {
   return categories
-    .map((entry) => ({
+    .map((entry: any) => ({
       code: entry.code,
       type: entry.type,
       retryable: Boolean(entry.retryable),
       description: entry.description,
     }))
-    .sort((left, right) => left.code.localeCompare(right.code));
+    .sort((left: any, right: any) => left.code.localeCompare(right.code));
 }
 
-function normalizeToolEntries(tools) {
+function normalizeToolEntries(tools: any) {
   return tools
-    .map((tool) => ({
+    .map((tool: any) => ({
       id: tool.id,
       kind: tool.kind,
       check_command: tool.check_command,
@@ -83,10 +83,10 @@ function normalizeToolEntries(tools) {
           }
         : {}),
     }))
-    .sort((left, right) => left.id.localeCompare(right.id));
+    .sort((left: any, right: any) => left.id.localeCompare(right.id));
 }
 
-export function normalizeContractEnvelopeShape(contract) {
+export function normalizeContractEnvelopeShape(contract: any) {
   return {
     ...contract,
     input_contract: {

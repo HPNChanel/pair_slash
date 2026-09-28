@@ -1,7 +1,7 @@
 export class ContractEngineError extends Error {
   declare code: any;
   declare details: any;
-  constructor(code, message, details = {}) {
+  constructor(code: string, message: string, details: any = {}) {
     super(message);
     this.name = "ContractEngineError";
     this.code = code;
@@ -9,7 +9,7 @@ export class ContractEngineError extends Error {
   }
 }
 
-export function ensure(condition, code, message, details = {}) {
+export function ensure(condition: any, code: string, message: string, details: any = {}) {
   if (!condition) {
     throw new ContractEngineError(code, message, details);
   }

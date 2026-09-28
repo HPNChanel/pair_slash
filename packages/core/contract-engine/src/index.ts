@@ -2,6 +2,7 @@ import {
   CONTRACT_ENVELOPE_SCHEMA_VERSION,
   CONTRACT_INPUT_MODES,
   CONTRACT_INPUT_SOURCES,
+  isOneOf,
   MEMORY_WRITE_REQUEST_SCHEMA_VERSION,
   SUPPORTED_RUNTIMES,
   SUPPORTED_TARGETS,
@@ -75,19 +76,19 @@ function uniqueSorted(values: any): any[] {
   return [...new Set(values)].sort((left: any, right: any) => left.localeCompare(right));
 }
 
-function isWriteAuthority(manifest) {
+function isWriteAuthority(manifest: any) {
   return manifest.memory_permissions?.global_project_memory === "write";
 }
 
-function getReadWorkflowProfile(manifest) {
+function getReadWorkflowProfile(manifest: any) {
   return getSharedReadWorkflowProfile(manifest, { includeFallback: true });
 }
 
-function getRuntimeBoundaryDescriptor(runtime) {
-  return RUNTIME_BOUNDARY_DESCRIPTORS[normalizeRuntime(runtime)];
+function getRuntimeBoundaryDescriptor(runtime: string) {
+  return RUNTIME_BOUNDARY_DESCRIPTORS[normalizeRuntime(runtime) as keyof typeof RUNTIME_BOUNDARY_DESCRIPTORS];
 }
 
-function getRuntimeScope(manifest) {
+function getRuntimeScope(manifest: any) {
   const runtimes = uniqueSorted(manifest.supported_runtimes ?? []);
   if (runtimes.length === 1 && runtimes[0] === "codex_cli") {
     return "codex-only";
@@ -98,7 +99,7 @@ function getRuntimeScope(manifest) {
   return "both";
 }
 
-function buildMemoryPaths(manifest) {
+function buildMemoryPaths(manifest: any) {
   if (!isWriteAuthority(manifest)) {
     const profile = getReadWorkflowProfile(manifest);
     return {
@@ -124,7 +125,7 @@ function buildMemoryPaths(manifest) {
   };
 }
 
-function buildOutputContract(manifest, memoryPaths) {
+function buildOutputContract(manifest: any, memoryPaths: any) {
   const writeAuthority = isWriteAuthority(manifest);
   const profile = writeAuthority ? null : getReadWorkflowProfile(manifest);
   const artifacts = writeAuthority
@@ -179,7 +180,7 @@ function buildOutputContract(manifest, memoryPaths) {
           ...(profile?.sections ?? [
             ["summary", "Summary"],
             ["details", "Details"],
-          ]).map(([id, label]) => ({
+          ]).map(([id, label]: [string, any]) => ({
             id,
             label,
             required: true,
@@ -204,7 +205,7 @@ function buildOutputContract(manifest, memoryPaths) {
       destructive_allowed:
         (manifest.capabilities ?? []).includes("repo_write") ||
         (manifest.capabilities ?? []).includes("shell_exec"),
-      secret_touching_allowed: (manifest.required_tools ?? []).some((tool) => tool.kind === "env_var"),
+      secret_touching_allowed: (manifest.required_tools ?? []).some((tool: any) => tool.kind === "env_var"),
       preview_required: writeAuthority,
       explicit_approval_required: writeAuthority,
       filesystem_write_paths: memoryPaths.write_paths,
@@ -212,7 +213,7 @@ function buildOutputContract(manifest, memoryPaths) {
   };
 }
 
-function buildFailureContract(manifest) {
+function buildFailureContract(manifest: any) {
   const writeAuthority = isWriteAuthority(manifest);
   const categories = [
     {
@@ -270,11 +271,11 @@ function buildFailureContract(manifest) {
   return {
     no_silent_fallback: true,
     categories,
-    codes: categories.map((entry) => entry.code),
+    codes: categories.map((entry: any) => entry.code),
   };
 }
 
-function buildMemoryContract(manifest, target, memoryPaths) {
+function buildMemoryContract(manifest: any, target: any, memoryPaths: any) {
   const writeAuthority = isWriteAuthority(manifest);
   const targetScope =
     manifest.memory_permissions?.global_project_memory !== "none"
@@ -307,45 +308,45 @@ function buildMemoryContract(manifest, target, memoryPaths) {
   };
 }
 
-function buildToolContract(manifest) {
-  const requiredTools = (manifest.required_tools ?? []).map((tool) => ({
+function buildToolContract(manifest: any) {
+  const requiredTools = (manifest.required_tools ?? []).map((tool: any) => ({
     id: tool.id,
     kind: tool.kind,
     check_command: tool.check_command,
     required_for: uniqueSorted(tool.required_for ?? []),
   }));
-  const toolsAllowed = uniqueSorted(requiredTools.map((tool) => tool.id));
+  const toolsAllowed = uniqueSorted(requiredTools.map((tool: any) => tool.id));
 
   return {
     tools_allowed: toolsAllowed,
     tools_required: requiredTools,
     required_tools: requiredTools,
-    required_mcp_servers: uniqueSorted((manifest.required_mcp_servers ?? []).map((server) => server.id)),
+    required_mcp_servers: uniqueSorted((manifest.required_mcp_servers ?? []).map((server: any) => server.id)),
     network_allowance:
       (manifest.required_mcp_servers ?? []).length > 0 ||
       (manifest.capabilities ?? []).includes("mcp_client"),
     destructive_allowance:
       (manifest.capabilities ?? []).includes("repo_write") ||
       (manifest.capabilities ?? []).includes("shell_exec"),
-    secret_touching_allowance: requiredTools.some((tool) => tool.kind === "env_var"),
+    secret_touching_allowance: requiredTools.some((tool: any) => tool.kind === "env_var"),
   };
 }
 
-function buildCapabilityScope(manifest, runtime, runtimeNotes) {
+function buildCapabilityScope(manifest: any, runtime: string, runtimeNotes: any) {
   const requested = uniqueSorted(manifest.capabilities ?? []);
   const runtimeBinding = manifest.runtime_bindings?.[runtime];
   const blockedByBinding =
     runtimeBinding?.compatibility?.canonical_picker === "blocked" ||
     runtimeBinding?.compatibility?.direct_invocation === "blocked";
 
-  const negotiation = requested.map((capability) => ({
+  const negotiation = requested.map((capability: any) => ({
     capability,
     status: blockedByBinding ? "denied" : "granted",
     reason: blockedByBinding ? "runtime binding is blocked for this lane" : null,
   }));
   const granted = negotiation
-    .filter((entry) => entry.status === "granted")
-    .map((entry) => entry.capability);
+    .filter((entry: any) => entry.status === "granted")
+    .map((entry: any) => entry.capability);
 
   return {
     runtime_scope: getRuntimeScope(manifest),
@@ -356,7 +357,7 @@ function buildCapabilityScope(manifest, runtime, runtimeNotes) {
   };
 }
 
-function buildInputContract(manifest) {
+function buildInputContract(manifest: any) {
   if (isWriteAuthority(manifest)) {
     return {
       required_fields: MEMORY_WRITE_REQUIRED_FIELDS,
@@ -387,7 +388,7 @@ function buildInputContract(manifest) {
     required_fields: profile?.required_fields ?? READ_REQUIRED_FIELDS,
     optional_fields: profile?.optional_fields ?? READ_OPTIONAL_FIELDS,
     accepted_sources: ["cli", "workflow"],
-    accepted_modes: CONTRACT_INPUT_MODES.filter((mode) => mode !== "apply"),
+    accepted_modes: CONTRACT_INPUT_MODES.filter((mode: string) => mode !== "apply"),
     schema_refs: ["packages/core/spec-core/schemas/pack-manifest-v2.schema.yaml@2.2.0"],
     validation_hints: {
       schema_refs: ["packages/core/spec-core/schemas/pack-manifest-v2.schema.yaml@2.2.0"],
@@ -398,9 +399,9 @@ function buildInputContract(manifest) {
   };
 }
 
-function validateRequestedRuntimeAndTarget(runtime, target) {
+function validateRequestedRuntimeAndTarget(runtime: string, target: any) {
   ensure(
-    SUPPORTED_RUNTIMES.includes(runtime),
+    isOneOf(runtime, SUPPORTED_RUNTIMES),
     CONTRACT_ENGINE_ERROR_CODES.RUNTIME_UNSUPPORTED,
     `unsupported runtime: ${runtime}`,
     { runtime },
@@ -413,14 +414,14 @@ function validateRequestedRuntimeAndTarget(runtime, target) {
   );
 }
 
-function validateManifestContractBoundary(manifest) {
+function validateManifestContractBoundary(manifest: any) {
   ensure(
     manifest && typeof manifest === "object",
     CONTRACT_ENGINE_ERROR_CODES.MANIFEST_REQUIRED,
     "manifest is required to build contract envelope",
   );
   const unsupportedRuntimes = (manifest.supported_runtimes ?? []).filter(
-    (runtime) => !SUPPORTED_RUNTIMES.includes(runtime),
+    (runtime: string) => !isOneOf(runtime, SUPPORTED_RUNTIMES),
   );
   ensure(
     unsupportedRuntimes.length === 0,
@@ -454,7 +455,7 @@ function validateManifestContractBoundary(manifest) {
   }
 }
 
-function assertRuntimeWithinManifest(manifest, runtime) {
+function assertRuntimeWithinManifest(manifest: any, runtime: string) {
   ensure(
     (manifest.supported_runtimes ?? []).includes(runtime),
     CONTRACT_ENGINE_ERROR_CODES.RUNTIME_NOT_IN_MANIFEST,
@@ -466,7 +467,7 @@ function assertRuntimeWithinManifest(manifest, runtime) {
   );
 }
 
-function assertRuntimeCapabilityCompatibility(manifest, runtime) {
+function assertRuntimeCapabilityCompatibility(manifest: any, runtime: string) {
   const binding = manifest.runtime_bindings?.[runtime];
   ensure(
     Boolean(binding),
@@ -489,7 +490,7 @@ function assertRuntimeCapabilityCompatibility(manifest, runtime) {
   }
 }
 
-function buildRuntimeBoundary(_manifest, runtime) {
+function buildRuntimeBoundary(_manifest: any, runtime: string) {
   const descriptor = getRuntimeBoundaryDescriptor(runtime);
   return {
     adapter: descriptor.runtime,
@@ -498,11 +499,11 @@ function buildRuntimeBoundary(_manifest, runtime) {
   };
 }
 
-function inferWorkflowClass(manifest) {
+function inferWorkflowClass(manifest: any) {
   return manifest.workflow_class ?? manifest.pack?.workflow_class ?? "read-oriented";
 }
 
-function assertRequiredSections(contract) {
+function assertRequiredSections(contract: any) {
   for (const section of CONTRACT_SECTIONS) {
     if (!contract || typeof contract[section] !== "object" || contract[section] === null) {
       throw new ContractEngineError(
@@ -516,7 +517,7 @@ function assertRequiredSections(contract) {
   }
 }
 
-function finalizeContract(contract) {
+function finalizeContract(contract: any) {
   assertRequiredSections(contract);
   const normalized = normalizeContractEnvelopeShape(contract);
   const errors = validateContractEnvelope(normalized);
@@ -532,7 +533,7 @@ function finalizeContract(contract) {
   return normalized;
 }
 
-export function parseContractEnvelope(contract) {
+export function parseContractEnvelope(contract: any) {
   ensure(
     contract && typeof contract === "object",
     CONTRACT_ENGINE_ERROR_CODES.CONTRACT_REQUIRED,
