@@ -52,6 +52,13 @@ These are runtime capabilities, not PairSlash support claims (see claim policy):
   emitted `description` field and this note are the trust-review surface.
 - Daemon: a shared local app-server daemon backs `codex agents`,
   `codex app-server`, and `codex remote-control` (experimental surfaces).
+  Since Codex v0.157 the daemon auto-starts per `[daemon] auto_start` in
+  `~/.codex/config.toml` (default port 40022). PairSlash doctor reports
+  daemon state via the informational `runtime.daemon_state` check — it
+  passively inspects `CODEX_HOME` artifacts (`app-server-daemon/`,
+  `app-server-control/`, `packages/app-server-daemon/`) and never spawns,
+  connects to, or manages the daemon (C.8). Daemon presence is never a
+  support-verdict input.
 - Built-in diagnostics: `codex doctor`, `codex features` (feature flags),
   `codex cloud`, `codex exec-server`, `codex sandbox`.
 - Invocation surfaces: `/skills` remains the canonical PairSlash entrypoint;

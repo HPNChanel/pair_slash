@@ -256,7 +256,7 @@
                   "probe": "codex.config_home"
                 },
                 {
-                  "description": "Codex daemon/exec-server state artifacts; informational only, daemon lifecycle is not probed or managed",
+                  "description": "Codex app-server/exec-server daemon artifacts; informational only, daemon lifecycle is not probed or managed",
                   "detected": false,
                   "paths": [],
                   "probe": "codex.daemon_state"
@@ -275,6 +275,30 @@
             "severity": "info",
             "status": "pass",
             "summary": "0/3 informational surface probe(s) detected artifacts"
+          },
+          {
+            "blocking_for_install": false,
+            "evidence": {
+              "affects_verdict": false,
+              "applicable": true,
+              "artifacts": [],
+              "codex_home": "<repo>\\.compat-home\\.codex",
+              "codex_home_error": null,
+              "config_readable": true,
+              "daemon_auto_start": "unset",
+              "daemon_state": "absent",
+              "detection_method": "passive-filesystem-artifacts",
+              "informational_only": true,
+              "interpretation": "no daemon artifacts observed; no daemon-capable session has run here or auto_start is off",
+              "lifecycle_management": "none",
+              "recorded_pid": null
+            },
+            "group": "runtime",
+            "id": "runtime.daemon_state",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "codex daemon artifacts absent (informational, lifecycle unmanaged)"
           },
           {
             "blocking_for_install": false,
@@ -1111,6 +1135,21 @@
             "severity": "info",
             "status": "pass",
             "summary": "0/3 informational surface probe(s) detected artifacts"
+          },
+          {
+            "blocking_for_install": false,
+            "evidence": {
+              "affects_verdict": false,
+              "applicable": false,
+              "detection_method": "passive-filesystem-artifacts",
+              "informational_only": true
+            },
+            "group": "runtime",
+            "id": "runtime.daemon_state",
+            "remediation": null,
+            "severity": "info",
+            "status": "skip",
+            "summary": "codex daemon state check is not applicable to this runtime"
           },
           {
             "blocking_for_install": false,

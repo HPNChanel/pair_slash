@@ -1141,3 +1141,119 @@ test("doctor emit=plugin at user scope reports unsupported instead of crashing",
     fixture.cleanup();
   }
 });
+
+function withCodexHome(codexHome, fn) {
+  const previous = process.env.CODEX_HOME;
+  if (codexHome === null) {
+    delete process.env.CODEX_HOME;
+  } else {
+    process.env.CODEX_HOME = codexHome;
+  }
+  try {
+    return fn();
+  } finally {
+    if (previous === undefined) {
+      delete process.env.CODEX_HOME;
+    } else {
+      process.env.CODEX_HOME = previous;
+    }
+  }
+}
+
+test("doctor reports codex daemon artifacts present as informational only", () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
+  const codexHome = join(fixture.tempRoot, "codex-home");
+  mkdirSync(join(codexHome, "app-server-daemon"), { recursive: true });
+  mkdirSync(join(codexHome, "app-server-control"), { recursive: true });
+  writeFileSync(join(codexHome, "app-server-daemon", "settings.json"), "{}");
+  writeFileSync(
+    join(codexHome, "app-server-daemon", "app-server.pid"),
+    JSON.stringify({ pid: 4321 }),
+  );
+  writeFileSync(join(codexHome, "app-server-control", "app-server-control.sock"), "");
+  writeFileSync(join(codexHome, "config.toml"), "[daemon]\nauto_start = true\nport = 40022\n");
+  try {
+    const report = withCodexHome(codexHome, () =>
+      runDoctor({ repoRoot: fixture.tempRoot, runtime: "codex_cli", target: "repo" }),
+    );
+    const check = report.checks.find((entry) => entry.id === "runtime.daemon_state");
+    assert.equal(check.status, "pass");
+    assert.equal(check.blocking_for_install, false);
+    assert.equal(check.evidence.informational_only, true);
+    assert.equal(check.evidence.affects_verdict, false);
+    assert.equal(check.evidence.daemon_state, "present");
+    assert.equal(check.evidence.daemon_auto_start, "true");
+    assert.equal(check.evidence.recorded_pid, 4321);
+    assert.equal(check.evidence.lifecycle_management, "none");
+    assert.ok(
+      check.evidence.artifacts.some(
+        (entry) => entry.path === "app-server-daemon/app-server.pid" && entry.present,
+      ),
+    );
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("doctor reports codex daemon absent when codex home has no artifacts", () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
+  const codexHome = join(fixture.tempRoot, "codex-home");
+  mkdirSync(codexHome, { recursive: true });
+  writeFileSync(join(codexHome, "config.toml"), "[daemon]\nauto_start = false\n");
+  try {
+    const report = withCodexHome(codexHome, () =>
+      runDoctor({ repoRoot: fixture.tempRoot, runtime: "codex_cli", target: "repo" }),
+    );
+    const check = report.checks.find((entry) => entry.id === "runtime.daemon_state");
+    assert.equal(check.status, "pass");
+    assert.equal(check.evidence.daemon_state, "absent");
+    assert.equal(check.evidence.daemon_auto_start, "false");
+    assert.equal(check.evidence.recorded_pid, null);
+    assert.match(check.evidence.interpretation, /absence is expected/);
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("doctor reports codex daemon undetectable when codex home is unreadable", () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
+  const codexHome = join(fixture.tempRoot, "codex-home-file");
+  writeFileSync(codexHome, "not a directory");
+  try {
+    const report = withCodexHome(codexHome, () =>
+      runDoctor({ repoRoot: fixture.tempRoot, runtime: "codex_cli", target: "repo" }),
+    );
+    const check = report.checks.find((entry) => entry.id === "runtime.daemon_state");
+    assert.equal(check.status, "pass");
+    assert.equal(check.evidence.daemon_state, "undetectable");
+    assert.match(check.summary, /could not be determined/);
+    assert.equal(report.support_verdict === "fail", false);
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("doctor skips codex daemon check on copilot runtime", () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ copilotVersion: "1.0.88" });
+  try {
+    const report = runDoctor({
+      repoRoot: fixture.tempRoot,
+      runtime: "copilot_cli",
+      target: "repo",
+    });
+    const check = report.checks.find((entry) => entry.id === "runtime.daemon_state");
+    assert.equal(check.status, "skip");
+    assert.equal(check.evidence.applicable, false);
+    assert.equal(check.evidence.affects_verdict, false);
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});

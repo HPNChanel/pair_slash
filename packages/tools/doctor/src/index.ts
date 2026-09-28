@@ -1,4 +1,10 @@
-import { accessSync, constants as fsConstants, readdirSync, statSync } from "node:fs";
+import {
+  accessSync,
+  constants as fsConstants,
+  readdirSync,
+  readFileSync,
+  statSync,
+} from "node:fs";
 import { homedir } from "node:os";
 import process from "node:process";
 import { basename, dirname, join, resolve } from "node:path";
@@ -600,10 +606,11 @@ function surfaceProbeObservations(context) {
           },
           {
             probe: "codex.daemon_state",
-            description: "Codex daemon/exec-server state artifacts; informational only, daemon lifecycle is not probed or managed",
+            description: "Codex app-server/exec-server daemon artifacts; informational only, daemon lifecycle is not probed or managed",
             candidates: candidatePaths([
-              join(home, ".codex", "daemon"),
-              join(home, ".codex", "exec-server.log"),
+              join(home, ".codex", "app-server-daemon"),
+              join(home, ".codex", "app-server-control"),
+              join(home, ".codex", "packages", "app-server-daemon"),
             ]),
           },
           {
@@ -669,6 +676,142 @@ function runRuntimeSurfaceProbe(context) {
       informational_only: true,
       affects_verdict: false,
       observations,
+    },
+  });
+}
+
+const CODEX_DAEMON_ARTIFACT_PATHS = [
+  "app-server-control/app-server-control.sock",
+  "app-server-daemon",
+  "app-server-daemon/app-server-updater.pid",
+  "app-server-daemon/app-server.pid",
+  "app-server-daemon/settings.json",
+  "packages/app-server-daemon",
+];
+
+function codexDaemonPathKind(path) {
+  try {
+    const stat = statSync(path);
+    return { kind: stat.isDirectory() ? "dir" : "file" };
+  } catch (error) {
+    if (error && error.code === "ENOENT") {
+      return { kind: "missing" };
+    }
+    return { kind: "error", error: error.message };
+  }
+}
+
+function readCodexDaemonAutoStart(configPath) {
+  if (codexDaemonPathKind(configPath).kind !== "file") {
+    return { value: "unset", readable: true };
+  }
+  try {
+    const text = readFileSync(configPath, "utf8");
+    const section = text.match(/\[daemon\]([\s\S]*?)(?:\r?\n\s*\[|$)/);
+    const flag = section ? section[1].match(/auto_start\s*=\s*(true|false)/) : null;
+    return { value: flag ? flag[1] : "unset", readable: true };
+  } catch {
+    return { value: "unset", readable: false };
+  }
+}
+
+function readCodexDaemonRecordedPid(pidPath) {
+  try {
+    const parsed = JSON.parse(readFileSync(pidPath, "utf8"));
+    return typeof parsed?.pid === "number" ? parsed.pid : null;
+  } catch {
+    return null;
+  }
+}
+
+function runCodexDaemonState(context) {
+  if (context.runtime !== "codex_cli") {
+    return createCheckResult({
+      id: "runtime.daemon_state",
+      group: "runtime",
+      status: "skip",
+      runtime: context.runtime,
+      target: context.target,
+      inputs: {},
+      summary: "codex daemon state check is not applicable to this runtime",
+      evidence: {
+        informational_only: true,
+        affects_verdict: false,
+        applicable: false,
+        detection_method: "passive-filesystem-artifacts",
+      },
+    });
+  }
+  const codexHome = process.env.CODEX_HOME || join(homedir(), ".codex");
+  const homeKind = codexDaemonPathKind(codexHome);
+  const artifacts =
+    homeKind.kind === "dir"
+      ? CODEX_DAEMON_ARTIFACT_PATHS.map((relativePath) => {
+          const observed = codexDaemonPathKind(join(codexHome, relativePath));
+          return {
+            path: relativePath,
+            present: observed.kind === "file" || observed.kind === "dir",
+            kind: observed.kind,
+          };
+        })
+      : [];
+  const presentCount = artifacts.filter((entry) => entry.present).length;
+  const errorCount = artifacts.filter((entry) => entry.kind === "error").length;
+  const daemonState =
+    homeKind.kind === "dir"
+      ? presentCount > 0
+        ? "present"
+        : errorCount > 0
+          ? "undetectable"
+          : "absent"
+      : homeKind.kind === "missing"
+        ? "absent"
+        : "undetectable";
+  const autoStart =
+    homeKind.kind === "dir"
+      ? readCodexDaemonAutoStart(join(codexHome, "config.toml"))
+      : { value: "unset", readable: true };
+  const pidArtifact = artifacts.find(
+    (entry) => entry.path === "app-server-daemon/app-server.pid" && entry.present,
+  );
+  const recordedPid = pidArtifact
+    ? readCodexDaemonRecordedPid(join(codexHome, "app-server-daemon", "app-server.pid"))
+    : null;
+  const interpretation =
+    daemonState === "present"
+      ? "Codex >=0.157 auto-starts a shared app-server/exec-server; artifacts indicate daemon use. Live state is not probed by design (C.8)."
+      : daemonState === "absent" && autoStart.value === "false"
+        ? "no daemon artifacts observed and [daemon] auto_start is disabled in config.toml; absence is expected"
+        : daemonState === "absent"
+          ? "no daemon artifacts observed; no daemon-capable session has run here or auto_start is off"
+          : "CODEX_HOME could not be inspected; daemon state could not be determined";
+  return createCheckResult({
+    id: "runtime.daemon_state",
+    group: "runtime",
+    status: "pass",
+    runtime: context.runtime,
+    target: context.target,
+    inputs: {
+      codex_home: codexHome,
+    },
+    summary:
+      daemonState === "undetectable"
+        ? "codex daemon state could not be determined"
+        : `codex daemon artifacts ${daemonState} (informational, lifecycle unmanaged)`,
+    evidence: {
+      informational_only: true,
+      affects_verdict: false,
+      applicable: true,
+      detection_method: "passive-filesystem-artifacts",
+      lifecycle_management: "none",
+      codex_home: codexHome,
+      codex_home_error: homeKind.kind === "error" ? homeKind.error : null,
+      daemon_state: daemonState,
+      daemon_auto_start: autoStart.value,
+      config_readable: autoStart.readable,
+      recorded_pid: recordedPid,
+      artifacts,
+      interpretation,
     },
   });
 }
@@ -2709,6 +2852,7 @@ const CHECKS = [
   runRuntimePresenceMatrix,
   runRuntimeDetect,
   runRuntimeSurfaceProbe,
+  runCodexDaemonState,
   runRuntimeVersionRange,
   runRuntimeTestedRange,
   runSupportLane,
