@@ -2,13 +2,21 @@
 id: T3-05
 track: T3
 title: PairSlash marketplace strategy decision record
-status: todo
+status: done
 depends_on: [T3-02, T3-03]
 est_size: S
-claimed_by:
-claimed_at:
-completed_at:
-evidence:
+claimed_by: devin
+claimed_at: 2026-09-28
+completed_at: 2026-09-28
+evidence: >
+  ADR-0003 (docs/architecture/adr-0003-marketplace-distribution.md) records
+  the staged decision: repo-local install is the only documented path now;
+  gh skill publish via GitHub releases is the first activation path when T7
+  opens; a PairSlash marketplace and upstream submissions are deferred with
+  explicit revisit triggers (T6 GO, publish readiness, per-marketplace trust
+  review). Option evaluation table included for all 4 options against
+  charter/trust-policy/claim-ladder axes. legal-packaging-status.md
+  cross-references the ADR; no publishing machinery added.
 ---
 
 ## Objective

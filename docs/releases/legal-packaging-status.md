@@ -78,3 +78,9 @@ Keep PairSlash source public under Apache-2.0 while retaining a repo-local,
 non-published packaging posture until a specific package publication scope is
 explicitly chosen and shipped together with matching metadata, docs, and
 release evidence.
+
+For plugin/skill *distribution* channels (marketplaces, `gh skill publish`,
+upstream indexes) the staged strategy is recorded in
+`docs/architecture/adr-0003-marketplace-distribution.md`: repo-local install
+remains the documented primary path; any distribution-channel activation is
+gated on release evidence and per-channel trust review.
