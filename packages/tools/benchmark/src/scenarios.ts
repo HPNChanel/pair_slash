@@ -32,15 +32,15 @@ const REQUIRED_SCENARIO_FIELDS = [
   "artifact_requirements",
 ];
 
-function pushError(errors, code, message) {
+function pushError(errors: string[], code: string, message: string) {
   errors.push(`${code} ${message}`);
 }
 
-function hasNonEmptyString(value) {
+function hasNonEmptyString(value: unknown) {
   return typeof value === "string" && value.trim().length > 0;
 }
 
-function validateNonEmptyStringField(errors, code, scenario, fieldName) {
+function validateNonEmptyStringField(errors: string[], code: string, scenario: any, fieldName: any) {
   if (!hasNonEmptyString(scenario[fieldName])) {
     pushError(
       errors,
@@ -50,7 +50,7 @@ function validateNonEmptyStringField(errors, code, scenario, fieldName) {
   }
 }
 
-function validateNonEmptyArrayField(errors, code, scenario, fieldName) {
+function validateNonEmptyArrayField(errors: string[], code: string, scenario: any, fieldName: any) {
   const values = scenario[fieldName];
   if (!Array.isArray(values) || values.length === 0) {
     pushError(
@@ -60,7 +60,7 @@ function validateNonEmptyArrayField(errors, code, scenario, fieldName) {
     );
     return;
   }
-  if (!values.every((entry) => hasNonEmptyString(entry))) {
+  if (!values.every((entry: any) => hasNonEmptyString(entry))) {
     pushError(
       errors,
       code,
@@ -69,9 +69,9 @@ function validateNonEmptyArrayField(errors, code, scenario, fieldName) {
   }
 }
 
-export function loadScenarioDefinitions(repoRoot = process.cwd()) {
+export function loadScenarioDefinitions(repoRoot: string = process.cwd()) {
   const scenarioFiles = listScenarioFiles(repoRoot);
-  const scenarios = scenarioFiles.map((scenarioPath) => {
+  const scenarios = scenarioFiles.map((scenarioPath: any) => {
     const parsed = parseStructuredFile(scenarioPath);
     return {
       ...parsed,
@@ -79,20 +79,20 @@ export function loadScenarioDefinitions(repoRoot = process.cwd()) {
     };
   });
 
-  scenarios.sort((left, right) =>
+  scenarios.sort((left: any, right: any) =>
     `${left.task_card_id ?? ""}\u0000${left.scenario_id ?? ""}`.localeCompare(
       `${right.task_card_id ?? ""}\u0000${right.scenario_id ?? ""}`,
     ));
   return scenarios;
 }
 
-export function buildScenarioIndex(scenarios) {
-  return new Map(scenarios.map((scenario) => [scenario.scenario_id, scenario]));
+export function buildScenarioIndex(scenarios: any) {
+  return new Map(scenarios.map((scenario: any) => [scenario.scenario_id, scenario]));
 }
 
-export function validateScenarioDefinitions(scenarios, context) {
-  const errors = [];
-  const warnings = [];
+export function validateScenarioDefinitions(scenarios: any, context: any) {
+  const errors: string[] = [];
+  const warnings: string[] = [];
   const scenarioIndex = buildScenarioIndex(scenarios);
 
   if (scenarios.length === 0) {
@@ -217,6 +217,6 @@ export function validateScenarioDefinitions(scenarios, context) {
   };
 }
 
-function scenarioIndexHasTaskId(scenarios, taskId) {
-  return scenarios.some((scenario) => scenario.task_card_id === taskId);
+function scenarioIndexHasTaskId(scenarios: any, taskId: any) {
+  return scenarios.some((scenario: any) => scenario.task_card_id === taskId);
 }

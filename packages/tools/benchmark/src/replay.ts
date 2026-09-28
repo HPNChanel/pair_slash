@@ -5,15 +5,15 @@ import { sha256 } from "@pairslash/spec-core";
 
 import { buildPhase19Paths, listRunIds, resolveRunDir } from "./paths.ts";
 
-function parseJson(pathLike) {
+function parseJson(pathLike: any) {
   return JSON.parse(readFileSync(pathLike, "utf8"));
 }
 
-function digestFile(pathLike) {
+function digestFile(pathLike: any) {
   return sha256(readFileSync(pathLike));
 }
 
-export function replayBenchmarkRun({ repoRoot = process.cwd(), runId }) {
+export function replayBenchmarkRun({ repoRoot = process.cwd(), runId }: { repoRoot?: string; runId?: any }) {
   if (!runId) {
     throw new Error("replay requires runId");
   }
@@ -31,7 +31,7 @@ export function replayBenchmarkRun({ repoRoot = process.cwd(), runId }) {
   const replayManifest = parseJson(replayManifestPath);
   const artifactManifest = parseJson(artifactManifestPath);
 
-  const drifts = [];
+  const drifts: any[] = [];
   const runDigest = sha256(readFileSync(runPath));
   if (runDigest !== replayManifest.run_digest_sha256) {
     drifts.push("run.json digest drifted");
@@ -63,18 +63,18 @@ export function replayBenchmarkRun({ repoRoot = process.cwd(), runId }) {
 
 export function replayBenchmarkRuns({ repoRoot = process.cwd(), runIds = null }: any = {}) {
   const ids = runIds && runIds.length > 0 ? runIds : listRunIds(repoRoot);
-  const reports = ids.map((runId) => replayBenchmarkRun({ repoRoot, runId }));
+  const reports = ids.map((runId: any) => replayBenchmarkRun({ repoRoot, runId }));
   return {
     kind: "phase19-benchmark-replay-suite",
     generated_at: new Date().toISOString(),
     run_count: reports.length,
-    pass_count: reports.filter((report) => report.ok).length,
-    fail_count: reports.filter((report) => !report.ok).length,
+    pass_count: reports.filter((report: any) => report.ok).length,
+    fail_count: reports.filter((report: any) => !report.ok).length,
     reports,
   };
 }
 
-export function formatReplayReportText(report) {
+export function formatReplayReportText(report: any) {
   if (report.kind === "phase19-benchmark-replay") {
     const lines = [
       `Replay run: ${report.run_id}`,

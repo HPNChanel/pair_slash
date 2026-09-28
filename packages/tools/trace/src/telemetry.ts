@@ -27,7 +27,7 @@ function median(values: number[]) {
   if (values.length === 0) {
     return null;
   }
-  const sorted = values.slice().sort((left, right) => left - right);
+  const sorted = values.slice().sort((left: any, right: any) => left - right);
   const middle = Math.floor(sorted.length / 2);
   return sorted.length % 2 === 0
     ? Number(((sorted[middle - 1] + sorted[middle]) / 2).toFixed(3))
@@ -35,7 +35,7 @@ function median(values: number[]) {
 }
 
 function deriveWorkflowKey(index: TraceIndex, events: TraceEvent[]) {
-  const explicitPack = events.find((event) => typeof event.pack_id === "string" && event.pack_id.trim() !== "");
+  const explicitPack = events.find((event: any) => typeof event.pack_id === "string" && event.pack_id.trim() !== "");
   return explicitPack?.pack_id ?? index.command_name ?? "unknown";
 }
 
@@ -45,7 +45,7 @@ function deriveTtfsSeconds(index: TraceIndex, events: TraceEvent[]) {
     return null;
   }
   const successEvent = events.find(
-    (event) =>
+    (event: any) =>
       TTFS_OUTCOMES.has(event.outcome ?? "") &&
       event.event_type !== "session.started" &&
       event.event_type !== "workflow.started" &&
@@ -62,19 +62,19 @@ function deriveTtfsSeconds(index: TraceIndex, events: TraceEvent[]) {
 }
 
 function buildWorkflowEntry({ workflowKey, runtime, target, sessions }: { workflowKey: string; runtime: string | null; target: string | null; sessions: SessionRecord[] }) {
-  const successfulSessions = sessions.filter((session) => SUCCESS_OUTCOMES.has(session.index.last_outcome ?? "")).length;
+  const successfulSessions = sessions.filter((session: any) => SUCCESS_OUTCOMES.has(session.index.last_outcome ?? "")).length;
   const failedSessions = sessions.length - successfulSessions;
   const weeklyReuseDays = new Set(
     sessions
-      .map((session) => String(session.index.started_at ?? "").slice(0, 10))
+      .map((session: any) => String(session.index.started_at ?? "").slice(0, 10))
       .filter(Boolean),
   ).size;
   const supportBundleExports = sessions.reduce(
-    (total, session) => total + session.events.filter((event) => event.event_type === "support.bundle_created").length,
+    (total: any, session: any) => total + session.events.filter((event: any) => event.event_type === "support.bundle_created").length,
     0,
   );
   const ttfsSamples = sessions
-    .map((session) => deriveTtfsSeconds(session.index, session.events))
+    .map((session: any) => deriveTtfsSeconds(session.index, session.events))
     .filter((value): value is number => typeof value === "number");
   return {
     workflow_key: workflowKey,
@@ -92,10 +92,10 @@ function buildWorkflowEntry({ workflowKey, runtime, target, sessions }: { workfl
 export function buildTelemetrySummary({ repoRoot, runtime = null, target = null }: any = {}) {
   const selector = toSelector(runtime, target);
   const indexes = listTraceIndexes(repoRoot)
-    .filter((entry) => (selector.runtime ? entry.runtime === selector.runtime : true))
-    .filter((entry) => (selector.target ? entry.target === selector.target : true))
-    .sort((left, right) => (left.started_at ?? "").localeCompare(right.started_at ?? ""));
-  const sessions: SessionRecord[] = indexes.map((index) => ({
+    .filter((entry: any) => (selector.runtime ? entry.runtime === selector.runtime : true))
+    .filter((entry: any) => (selector.target ? entry.target === selector.target : true))
+    .sort((left: any, right: any) => (left.started_at ?? "").localeCompare(right.started_at ?? ""));
+  const sessions: SessionRecord[] = indexes.map((index: TraceIndex) => ({
     index,
     events: loadTraceEvents({ repoRoot, sessionId: index.session_id }),
   }));
@@ -105,15 +105,15 @@ export function buildTelemetrySummary({ repoRoot, runtime = null, target = null 
     const groupingKey = `${workflowKey}\u0000${session.index.runtime}\u0000${session.index.target}`;
     const existing = grouped.get(groupingKey) ?? {
       workflowKey,
-      runtime: session.index.runtime,
-      target: session.index.target,
+      runtime: session.index.runtime ?? null,
+      target: session.index.target ?? null,
       sessions: [],
     };
     existing.sessions.push(session);
     grouped.set(groupingKey, existing);
   }
   const workflows = [...grouped.values()]
-    .map((entry) =>
+    .map((entry: any) =>
       buildWorkflowEntry({
         workflowKey: entry.workflowKey,
         runtime: entry.runtime,
@@ -121,15 +121,15 @@ export function buildTelemetrySummary({ repoRoot, runtime = null, target = null 
         sessions: entry.sessions,
       }),
     )
-    .sort((left, right) =>
+    .sort((left: any, right: any) =>
       `${left.workflow_key}\u0000${left.runtime}\u0000${left.target}`.localeCompare(
         `${right.workflow_key}\u0000${right.runtime}\u0000${right.target}`,
       ),
     );
-  const successfulSessions = sessions.filter((session) => SUCCESS_OUTCOMES.has(session.index.last_outcome ?? "")).length;
+  const successfulSessions = sessions.filter((session: any) => SUCCESS_OUTCOMES.has(session.index.last_outcome ?? "")).length;
   const ttfsSamples = sessions
-    .map((session) => deriveTtfsSeconds(session.index, session.events))
-    .filter((value) => typeof value === "number");
+    .map((session: any) => deriveTtfsSeconds(session.index, session.events))
+    .filter((value: unknown) => typeof value === "number");
   const summary = {
     kind: "telemetry-summary",
     schema_version: TELEMETRY_SUMMARY_SCHEMA_VERSION,
@@ -146,14 +146,14 @@ export function buildTelemetrySummary({ repoRoot, runtime = null, target = null 
       successful_sessions: successfulSessions,
       failed_sessions: sessions.length - successfulSessions,
       support_bundle_exports: sessions.reduce(
-        (total, session) => total + session.events.filter((event) => event.event_type === "support.bundle_created").length,
+        (total: any, session: any) => total + session.events.filter((event: any) => event.event_type === "support.bundle_created").length,
         0,
       ),
     },
     metrics: {
       workflow_runs_started: sessions.length,
       workflow_runs_succeeded: successfulSessions,
-      weekly_reuse_days: new Set(indexes.map((index) => String(index.started_at ?? "").slice(0, 10)).filter(Boolean)).size,
+      weekly_reuse_days: new Set(indexes.map((index: TraceIndex) => String(index.started_at ?? "").slice(0, 10)).filter(Boolean)).size,
       median_ttfs_seconds: median(ttfsSamples),
     },
     workflows,

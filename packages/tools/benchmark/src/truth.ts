@@ -6,24 +6,24 @@ import {
 
 import { normalizeLaneSupportLevel } from "./run-record.ts";
 
-export function loadPhase19BenchmarkContext(repoRoot = process.cwd()) {
+export function loadPhase19BenchmarkContext(repoRoot: string = process.cwd()) {
   const benchmarkDocuments = loadBenchmarkTruth(repoRoot);
   const publicSupport = loadPublicSupportSnapshot(repoRoot);
   const catalogRecords = loadPackCatalogRecords(repoRoot, { includeAdvanced: false });
 
   const taskById = new Map(
-    (benchmarkDocuments.taskCatalog?.official_tasks ?? []).map((task) => [task.task_card_id, task]),
+    (benchmarkDocuments.taskCatalog?.official_tasks ?? []).map((task: any) => [task.task_card_id, task]),
   );
   const catalogByWorkflowId = new Map(
     catalogRecords
-      .filter((record) => record.catalog_scope === "core")
-      .map((record) => [record.id, record]),
+      .filter((record: any) => record.catalog_scope === "core")
+      .map((record: any) => [record.id, record]),
   );
   const laneById = new Map(
-    (publicSupport.runtime_lanes ?? []).map((lane) => [lane.lane_id, lane]),
+    (publicSupport.runtime_lanes ?? []).map((lane: any) => [lane.lane_id, lane]),
   );
   const laneTemplateById = new Map(
-    (benchmarkDocuments.laneWording?.round_one_lane_templates ?? []).map((lane) => [lane.lane_id, lane]),
+    (benchmarkDocuments.laneWording?.round_one_lane_templates ?? []).map((lane: any) => [lane.lane_id, lane]),
   );
 
   return {
@@ -40,7 +40,7 @@ export function loadPhase19BenchmarkContext(repoRoot = process.cwd()) {
   };
 }
 
-export function getLaneTruth(context, laneId) {
+export function getLaneTruth(context: any, laneId: any) {
   const lane = context.laneById.get(laneId) ?? null;
   if (!lane) {
     return null;

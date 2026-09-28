@@ -19,50 +19,50 @@ const HOME_PATH_PATTERNS = [
   /\/home\/[^/]+/g,
 ];
 
-function fingerprint(value) {
+function fingerprint(value: unknown) {
   return createHash("sha256").update(String(value)).digest("hex").slice(0, 16);
 }
 
-function stableValue(value) {
+function stableValue(value: unknown): any {
   if (Array.isArray(value)) {
-    return `[${value.map((entry) => stableValue(entry)).join(",")}]`;
+    return `[${value.map((entry: any) => stableValue(entry)).join(",")}]`;
   }
   if (value && typeof value === "object") {
     return `{${Object.keys(value)
       .sort()
-      .map((key) => `${key}:${stableValue(value[key])}`)
+      .map((key: string) => `${key}:${stableValue((value as Record<string, unknown>)[key])}`)
       .join(",")}}`;
   }
   return JSON.stringify(value);
 }
 
-function addRule(report, rule) {
+function addRule(report: any, rule: any) {
   report.rules_triggered.add(rule);
 }
 
-function markField(report) {
+function markField(report: any) {
   report.redacted_fields += 1;
 }
 
-function removeSecret(report, rule) {
+function removeSecret(report: any, rule: any) {
   report.secrets_removed += 1;
   markField(report);
   addRule(report, rule);
 }
 
-function hashValue(report, rule) {
+function hashValue(report: any, rule: any) {
   report.hashed_values += 1;
   markField(report);
   addRule(report, rule);
 }
 
-function fingerprintConfig(report, rule) {
+function fingerprintConfig(report: any, rule: any) {
   report.config_fingerprints += 1;
   markField(report);
   addRule(report, rule);
 }
 
-function normalizePathValue(value, { repoRoot }: any = {}) {
+function normalizePathValue(value: unknown, { repoRoot }: any = {}) {
   let normalized = String(value);
   if (repoRoot) {
     const resolvedRoot = resolve(repoRoot);
@@ -76,7 +76,7 @@ function normalizePathValue(value, { repoRoot }: any = {}) {
   return normalized;
 }
 
-function maybeNormalizePath(key, value, report, options) {
+function maybeNormalizePath(key: string, value: unknown, report: any, options: any) {
   if (typeof value !== "string") {
     return value;
   }
@@ -93,7 +93,7 @@ function maybeNormalizePath(key, value, report, options) {
   return value;
 }
 
-function redactScalar(key, value, report, options) {
+function redactScalar(key: string, value: unknown, report: any, options: any) {
   if (typeof value !== "string") {
     return value;
   }
@@ -106,7 +106,7 @@ function redactScalar(key, value, report, options) {
     removeSecret(report, "unknown-sensitive-key-removed");
     return REDACTED;
   }
-  if (SECRET_VALUE_PATTERNS.some((pattern) => pattern.test(value))) {
+  if (SECRET_VALUE_PATTERNS.some((pattern: any) => pattern.test(value))) {
     report.unknown_sensitive_hits += 1;
     removeSecret(report, "secret-value-removed");
     return REDACTED;
@@ -126,9 +126,9 @@ function redactScalar(key, value, report, options) {
   return value;
 }
 
-function redactValue(key, value, report, options) {
+function redactValue(key: string, value: unknown, report: any, options: any): any {
   if (Array.isArray(value)) {
-    return value.map((entry) => redactValue(key, entry, report, options));
+    return value.map((entry: any) => redactValue(key, entry, report, options));
   }
   if (value && typeof value === "object") {
     if (CONFIG_KEY_PATTERN.test(key)) {
@@ -140,15 +140,15 @@ function redactValue(key, value, report, options) {
     }
     return Object.keys(value)
       .sort()
-      .reduce((acc, childKey) => {
-        acc[childKey] = redactValue(childKey, value[childKey], report, options);
+      .reduce((acc: any, childKey: any) => {
+        acc[childKey] = redactValue(childKey, (value as Record<string, unknown>)[childKey], report, options);
         return acc;
       }, {});
   }
   return redactScalar(key, value, report, options);
 }
 
-export function redactTraceEvents(events, options: any = {}) {
+export function redactTraceEvents(events: any[], options: any = {}) {
   const report = {
     redacted_fields: 0,
     redacted_events: 0,
@@ -159,7 +159,7 @@ export function redactTraceEvents(events, options: any = {}) {
     config_fingerprints: 0,
     normalized_paths: 0,
   };
-  const redacted = events.map((event) => {
+  const redacted = events.map((event: any) => {
     const nextEvent = redactValue("event", event, report, options);
     if (JSON.stringify(nextEvent) !== JSON.stringify(event)) {
       report.redacted_events += 1;

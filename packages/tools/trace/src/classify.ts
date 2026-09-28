@@ -28,7 +28,7 @@ const FILESYSTEM_PATTERNS = [/\bpermission denied\b/i, /\bENOENT\b/i, /\bfilesys
 const CONFIG_PATTERNS = [/\bconfig\b/i, /\bshell profile\b/i, /\binstall root\b/i, /\bconfig home\b/i];
 
 function matchesAny(value: string, patterns: readonly RegExp[]) {
-  return patterns.some((pattern) => pattern.test(value));
+  return patterns.some((pattern: any) => pattern.test(value));
 }
 
 export function inferFailureDomain({
@@ -71,7 +71,7 @@ export function inferFailureDomain({
   return "unknown";
 }
 
-export function inferSeverity(outcome = "info") {
+export function inferSeverity(outcome: any = "info") {
   if (["failed", "denied"].includes(outcome)) {
     return "error";
   }

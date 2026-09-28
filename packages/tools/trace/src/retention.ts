@@ -112,16 +112,16 @@ export function pruneTraceStore({
 }: any = {}) {
   const resolvedPolicy = normalizePolicy(policy ?? resolveRetentionPolicy(repoRoot));
   const { traceRoot } = resolveTracePaths(repoRoot);
-  const indexes = listTraceIndexes(repoRoot).sort((left, right) => (right.started_at ?? "").localeCompare(left.started_at ?? ""));
+  const indexes = listTraceIndexes(repoRoot).sort((left: any, right: any) => (right.started_at ?? "").localeCompare(left.started_at ?? ""));
   const cutoffMs = now.getTime() - (resolvedPolicy.max_days * 24 * 60 * 60 * 1000);
   const skip = new Set(skipSessionIds.filter(Boolean));
   const keepByCount = new Set(
     indexes
-      .filter((index) => !skip.has(index.session_id))
+      .filter((index: any) => !skip.has(index.session_id))
       .slice(0, resolvedPolicy.max_sessions)
-      .map((index) => index.session_id),
+      .map((index: any) => index.session_id),
   );
-  const prunedSessionIds = [];
+  const prunedSessionIds: any[] = [];
   let prunedIndexFiles = 0;
   let prunedEventFiles = 0;
 

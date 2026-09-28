@@ -11,8 +11,8 @@ export function validatePhase19BenchmarkConfig({ repoRoot = process.cwd() }: any
   const scenarioValidation = validateScenarioDefinitions(scenarios, context);
   const scenarioIndex = buildScenarioIndex(scenarios);
 
-  const runValidationErrors = [];
-  const runValidationWarnings = [];
+  const runValidationErrors: any[] = [];
+  const runValidationWarnings: any[] = [];
 
   for (const runId of listRunIds(repoRoot)) {
     const runPath = resolveRunFile(repoRoot, runId);
@@ -23,10 +23,10 @@ export function validatePhase19BenchmarkConfig({ repoRoot = process.cwd() }: any
     const parsed = JSON.parse(readFileSync(runPath, "utf8"));
     const validation = validateBenchmarkRunRecord(parsed, context, scenarioIndex);
     if (!validation.ok) {
-      runValidationErrors.push(...validation.errors.map((error) => `${runId} ${error}`));
+      runValidationErrors.push(...validation.errors.map((error: any) => `${runId} ${error}`));
     }
     if (validation.warnings.length > 0) {
-      runValidationWarnings.push(...validation.warnings.map((warning) => `${runId} ${warning}`));
+      runValidationWarnings.push(...validation.warnings.map((warning: any) => `${runId} ${warning}`));
     }
   }
 
@@ -46,7 +46,7 @@ export function validatePhase19BenchmarkConfig({ repoRoot = process.cwd() }: any
   };
 }
 
-export function formatValidationReportText(report) {
+export function formatValidationReportText(report: any) {
   const lines = [
     "Phase 19 benchmark validation",
     `Status: ${report.ok ? "PASS" : "FAIL"}`,

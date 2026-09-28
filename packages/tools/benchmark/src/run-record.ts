@@ -1,26 +1,26 @@
 import { LANE_SUPPORT_LEVEL_ALIASES, PRIMARY_TEXT_FIELDS_FOR_WORDING_CHECK } from "./constants.ts";
 import { hasOwnValue, matchesCondition } from "./io.ts";
 
-function pushError(errors, code, message) {
+function pushError(errors: string[], code: string, message: string) {
   errors.push(`${code} ${message}`);
 }
 
-export function normalizeLaneSupportLevel(value) {
+export function normalizeLaneSupportLevel(value: unknown) {
   if (typeof value !== "string") {
     return value;
   }
   const normalized = value.trim().toLowerCase().replace(/\s+/g, "_");
-  return LANE_SUPPORT_LEVEL_ALIASES[normalized] ?? normalized;
+  return LANE_SUPPORT_LEVEL_ALIASES[normalized as keyof typeof LANE_SUPPORT_LEVEL_ALIASES] ?? normalized;
 }
 
-export function normalizeWorkflowMaturity(value) {
+export function normalizeWorkflowMaturity(value: unknown) {
   if (typeof value !== "string") {
     return value;
   }
   return value.trim().toLowerCase();
 }
 
-function toFiniteNumber(value) {
+function toFiniteNumber(value: unknown) {
   if (typeof value === "number" && Number.isFinite(value)) {
     return value;
   }
@@ -31,16 +31,16 @@ function toFiniteNumber(value) {
   return null;
 }
 
-function computeDelta(base, candidate) {
+function computeDelta(base: any, candidate: any) {
   const baseline = toFiniteNumber(base);
   const variant = toFiniteNumber(candidate);
-  if (!Number.isFinite(baseline) || !Number.isFinite(variant) || baseline <= 0) {
+  if (baseline === null || variant === null || !Number.isFinite(baseline) || !Number.isFinite(variant) || baseline <= 0) {
     return null;
   }
   return Number(((baseline - variant) / baseline).toFixed(4));
 }
 
-function computeDerivedMetrics(record) {
+function computeDerivedMetrics(record: any) {
   const taskSuccessWithoutRescue = record.task_success === true && Number(record.pairslash_manual_rescue_count) === 0;
   const trustedWeeklyReuseEligible =
     record.include_in_rollup === true &&
@@ -56,17 +56,17 @@ function computeDerivedMetrics(record) {
   };
 }
 
-function collectWordingViolations(record, context) {
+function collectWordingViolations(record: any, context: any) {
   const bannedPhrases = context.benchmarkDocuments.laneWording?.banned_phrases ?? [];
   const payload = PRIMARY_TEXT_FIELDS_FOR_WORDING_CHECK
-    .map((field) => String(record[field] ?? ""))
+    .map((field: string) => String(record[field] ?? ""))
     .join("\n")
     .toLowerCase();
 
-  return bannedPhrases.filter((phrase) => payload.includes(String(phrase).toLowerCase()));
+  return bannedPhrases.filter((phrase: any) => payload.includes(String(phrase).toLowerCase()));
 }
 
-function validateConditionalFields(normalizedRecord, logSchema, errors) {
+function validateConditionalFields(normalizedRecord: any, logSchema: any, errors: string[]) {
   for (const conditionalField of logSchema?.conditional_fields ?? []) {
     const fieldName = conditionalField?.field;
     const requiredWhen = conditionalField?.required_when ?? {};
@@ -83,7 +83,7 @@ function validateConditionalFields(normalizedRecord, logSchema, errors) {
   }
 }
 
-function validateEnumFields(normalizedRecord, logSchema, errors) {
+function validateEnumFields(normalizedRecord: any, logSchema: any, errors: string[]) {
   for (const [field, allowedValues] of Object.entries(logSchema?.enums ?? {})) {
     if (!hasOwnValue(normalizedRecord, field)) {
       continue;
@@ -101,7 +101,7 @@ function validateEnumFields(normalizedRecord, logSchema, errors) {
   }
 }
 
-function validateTaskAndScenario(normalizedRecord, context, scenarioIndex, errors) {
+function validateTaskAndScenario(normalizedRecord: any, context: any, scenarioIndex: any, errors: string[]) {
   const task = context.taskById.get(normalizedRecord.task_card_id);
   if (!task) {
     pushError(errors, "P19-RUN-008", `unknown task_card_id ${normalizedRecord.task_card_id}`);
@@ -171,7 +171,7 @@ function validateTaskAndScenario(normalizedRecord, context, scenarioIndex, error
   }
 }
 
-function validateLaneAndRuntime(normalizedRecord, context, errors) {
+function validateLaneAndRuntime(normalizedRecord: any, context: any, errors: string[]) {
   const lane = context.laneById.get(normalizedRecord.lane_id);
   if (!lane) {
     pushError(errors, "P19-RUN-018", `unknown lane_id ${normalizedRecord.lane_id}`);
@@ -205,7 +205,7 @@ function validateLaneAndRuntime(normalizedRecord, context, errors) {
   return lane;
 }
 
-function validateWorkflowMaturity(normalizedRecord, context, errors) {
+function validateWorkflowMaturity(normalizedRecord: any, context: any, errors: string[]) {
   const catalogRecord = context.catalogByWorkflowId.get(normalizedRecord.workflow_id);
   if (!catalogRecord) {
     return null;
@@ -226,9 +226,9 @@ function validateWorkflowMaturity(normalizedRecord, context, errors) {
   return catalogRecord;
 }
 
-export function validateBenchmarkRunRecord(runRecord, context, scenarioIndex) {
-  const errors = [];
-  const warnings = [];
+export function validateBenchmarkRunRecord(runRecord: any, context: any, scenarioIndex: any) {
+  const errors: string[] = [];
+  const warnings: string[] = [];
   const normalizedRecord = structuredClone(runRecord);
   const logSchema = context.benchmarkDocuments.logSchema ?? {};
 
@@ -308,10 +308,10 @@ export function validateBenchmarkRunRecord(runRecord, context, scenarioIndex) {
   };
 }
 
-export function isTrustedWeeklyReuseEligible(record) {
+export function isTrustedWeeklyReuseEligible(record: any) {
   return record?.derived_metrics?.trusted_weekly_reuse_eligible === true;
 }
 
-export function isTaskSuccessWithoutManualRescue(record) {
+export function isTaskSuccessWithoutManualRescue(record: any) {
   return record?.derived_metrics?.pairslash_task_success_without_manual_rescue === true;
 }

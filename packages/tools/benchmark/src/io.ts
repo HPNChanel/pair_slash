@@ -3,7 +3,7 @@ import { extname, resolve } from "node:path";
 
 import YAML from "yaml";
 
-export function parseStructuredFile(pathLike) {
+export function parseStructuredFile(pathLike: any) {
   const absolutePath = resolve(pathLike);
   const raw = readFileSync(absolutePath, "utf8");
   const extension = extname(absolutePath).toLowerCase();
@@ -22,7 +22,7 @@ export function parseStructuredFile(pathLike) {
   }
 }
 
-export function hasValue(value) {
+export function hasValue(value: unknown) {
   if (value === null || value === undefined) {
     return false;
   }
@@ -32,33 +32,33 @@ export function hasValue(value) {
   return true;
 }
 
-export function hasOwnValue(record, key) {
+export function hasOwnValue(record: any, key: string) {
   return Object.prototype.hasOwnProperty.call(record, key) && hasValue(record[key]);
 }
 
-export function asArray(value) {
+export function asArray(value: unknown) {
   return Array.isArray(value) ? value : [];
 }
 
-export function toBoolean(value) {
+export function toBoolean(value: unknown) {
   return value === true;
 }
 
-export function normalizeString(value) {
+export function normalizeString(value: unknown) {
   if (typeof value !== "string") {
     return "";
   }
   return value.trim();
 }
 
-export function median(values) {
+export function median(values: unknown[]) {
   if (!Array.isArray(values) || values.length === 0) {
     return null;
   }
   const sorted = values
-    .filter((value) => Number.isFinite(value))
+    .filter((value: unknown): value is number => Number.isFinite(value))
     .slice()
-    .sort((left, right) => left - right);
+    .sort((left: any, right: any) => left - right);
   if (sorted.length === 0) {
     return null;
   }
@@ -69,21 +69,21 @@ export function median(values) {
   return Number(sorted[middle].toFixed(4));
 }
 
-export function safeRate(numerator, denominator) {
+export function safeRate(numerator: any, denominator: any) {
   if (!Number.isFinite(numerator) || !Number.isFinite(denominator) || denominator <= 0) {
     return null;
   }
   return Number((numerator / denominator).toFixed(4));
 }
 
-export function percent(rate) {
+export function percent(rate: any) {
   if (!Number.isFinite(rate)) {
     return null;
   }
   return Number((rate * 100).toFixed(2));
 }
 
-export function matchesCondition(record, condition = {}) {
+export function matchesCondition(record: any, condition: any = {}) {
   for (const [key, expected] of Object.entries(condition)) {
     const actual = record?.[key];
     if (Array.isArray(expected)) {

@@ -34,17 +34,17 @@ const SUPPORT_BUNDLE_FILE_ORDER = [
 
 export function selectLatestSession(repoRoot: any, selector: any = {}) {
   const matches = listTraceIndexes(repoRoot)
-    .filter((index) => (selector.exclude_session_id ? index.session_id !== selector.exclude_session_id : true))
-    .filter((index) => (selector.runtime ? index.runtime === selector.runtime : true))
-    .filter((index) => (selector.target ? index.target === selector.target : true))
-    .sort((left, right) => (right.started_at ?? "").localeCompare(left.started_at ?? ""));
+    .filter((index: any) => (selector.exclude_session_id ? index.session_id !== selector.exclude_session_id : true))
+    .filter((index: any) => (selector.runtime ? index.runtime === selector.runtime : true))
+    .filter((index: any) => (selector.target ? index.target === selector.target : true))
+    .sort((left: any, right: any) => (right.started_at ?? "").localeCompare(left.started_at ?? ""));
   return matches[0] ?? null;
 }
 
-function sortFilesByKnownOrder(files, knownOrder) {
+function sortFilesByKnownOrder(files: any, knownOrder: any) {
   return files
     .slice()
-    .sort((left, right) => {
+    .sort((left: any, right: any) => {
       const leftIndex = knownOrder.indexOf(left.id);
       const rightIndex = knownOrder.indexOf(right.id);
       const normalizedLeft = leftIndex === -1 ? Number.MAX_SAFE_INTEGER : leftIndex;
@@ -56,8 +56,8 @@ function sortFilesByKnownOrder(files, knownOrder) {
     });
 }
 
-function summarizeEvents(events) {
-  const failureCounts = Object.fromEntries(TRACE_FAILURE_DOMAINS.map((domain) => [domain, 0]));
+function summarizeEvents(events: any) {
+  const failureCounts = Object.fromEntries(TRACE_FAILURE_DOMAINS.map((domain: any) => [domain, 0]));
   for (const event of events) {
     if (!TERMINAL_OUTCOMES.has(event.outcome)) {
       continue;
@@ -69,8 +69,8 @@ function summarizeEvents(events) {
   };
 }
 
-function assessSupportShareSafety(report) {
-  const reasons = [];
+function assessSupportShareSafety(report: any) {
+  const reasons: string[] = [];
   if (!report || typeof report !== "object") {
     reasons.push("redaction-report-missing");
   } else {
@@ -87,7 +87,7 @@ function assessSupportShareSafety(report) {
   };
 }
 
-function buildRuntimeDescriptor({ contextExplanation, debugReport }) {
+function buildRuntimeDescriptor({ contextExplanation, debugReport }: { contextExplanation?: any; debugReport?: any }) {
   return {
     runtime: contextExplanation?.runtime ?? debugReport?.runtime ?? null,
     target: contextExplanation?.target ?? debugReport?.target ?? null,
@@ -97,7 +97,7 @@ function buildRuntimeDescriptor({ contextExplanation, debugReport }) {
   };
 }
 
-function buildPrivacyDescriptor(traceExport, shareSafety) {
+function buildPrivacyDescriptor(traceExport: any, shareSafety: any) {
   return {
     redaction_state: traceExport.redaction_report?.redaction_state ?? "review-required",
     consent_required: true,
@@ -107,7 +107,7 @@ function buildPrivacyDescriptor(traceExport, shareSafety) {
   };
 }
 
-function buildIssueTemplateText({ supportBundle, debugReport, contextExplanation, failureTaxonomy }) {
+function buildIssueTemplateText({ supportBundle, debugReport, contextExplanation, failureTaxonomy }: { supportBundle?: any; debugReport?: any; contextExplanation?: any; failureTaxonomy?: any }) {
   const runtime = contextExplanation?.runtime ?? debugReport?.runtime ?? "unknown";
   const target = contextExplanation?.target ?? debugReport?.target ?? "unknown";
   const pack = contextExplanation?.pack_id ?? "unknown";
@@ -134,7 +134,7 @@ function buildIssueTemplateText({ supportBundle, debugReport, contextExplanation
     `- safe_to_share: ${supportBundle.safe_to_share ? "yes" : "no"}`,
     `- redaction_state: ${supportBundle.privacy_descriptor.redaction_state}`,
     `- share_safety_reasons: ${(supportBundle.share_safety_reasons ?? []).join(", ") || "none"}`,
-    `- Attached files: ${supportBundle.files.length > 0 ? supportBundle.files.map((file) => file.id).join(", ") : "see bundle-manifest.json"}`,
+    `- Attached files: ${supportBundle.files.length > 0 ? supportBundle.files.map((file: any) => file.id).join(", ") : "see bundle-manifest.json"}`,
     "",
     "Suggested taxonomy labels (maintainer first pass)",
     `- ${failureTaxonomy.recommended_surface_label}`,
@@ -155,7 +155,7 @@ function buildIssueTemplateText({ supportBundle, debugReport, contextExplanation
   return `${lines.join("\n")}\n`;
 }
 
-function buildPrivacyNoteText(bundle) {
+function buildPrivacyNoteText(bundle: any) {
   const lines = [
     "Privacy note",
     "",
@@ -175,7 +175,7 @@ function buildPrivacyNoteText(bundle) {
   return `${lines.join("\n")}\n`;
 }
 
-function buildReproducibilityTemplateText(bundle) {
+function buildReproducibilityTemplateText(bundle: any) {
   const lines = [
     "Reproducibility Summary",
     "",
@@ -196,7 +196,7 @@ function buildReproducibilityTemplateText(bundle) {
   return `${lines.join("\n")}\n`;
 }
 
-function buildTriageTemplateText(bundle) {
+function buildTriageTemplateText(bundle: any) {
   const taxonomy = bundle.failure_taxonomy ?? resolveFailureTaxonomy(bundle.trace_locator?.decisive_failure_domain);
   const lines = [
     "Maintainer Triage Note",
@@ -221,13 +221,13 @@ function buildTriageTemplateText(bundle) {
   return `${lines.join("\n")}\n`;
 }
 
-export function buildDebugReport({ repoRoot, sessionId, selector = {} }) {
+export function buildDebugReport({ repoRoot, sessionId, selector = {} }: { repoRoot: string; sessionId?: any; selector?: any }) {
   const latest = sessionId ? loadTraceIndex({ repoRoot, sessionId }) : selectLatestSession(repoRoot, selector);
   if (!latest) {
     throw new Error("trace-not-found: no matching trace session");
   }
   const events = loadTraceEvents({ repoRoot, sessionId: latest.session_id });
-  const decisive = events.find((event) => ["blocked", "denied", "failed"].includes(event.outcome)) ?? events.at(-1);
+  const decisive = events.find((event: any) => ["blocked", "denied", "failed"].includes(event.outcome)) ?? events.at(-1);
   return {
     kind: "debug-report",
     schema_version: "1.0.0",
@@ -245,7 +245,7 @@ export function buildDebugReport({ repoRoot, sessionId, selector = {} }) {
     outcome: latest.last_outcome ?? "finished",
     decisive_failure_domain: decisive?.failure_domain ?? "none",
     decisive_reason: decisive?.summary ?? "No decisive failure recorded.",
-    timeline: events.map((event) => ({
+    timeline: events.map((event: any) => ({
       timestamp: event.timestamp,
       event_type: event.event_type,
       severity: event.severity,
@@ -280,7 +280,7 @@ export function exportTrace({
   const eventsPath = join(exportRoot, "events.jsonl");
   const sessionsPath = join(exportRoot, "sessions.json");
   const redactionPath = join(exportRoot, "redaction-report.json");
-  writeTextFile(eventsPath, `${redactedEvents.map((event) => JSON.stringify(event)).join("\n")}\n`);
+  writeTextFile(eventsPath, `${redactedEvents.map((event: any) => JSON.stringify(event)).join("\n")}\n`);
   writeTextFile(sessionsPath, stableJson([latest]));
   writeTextFile(redactionPath, stableJson(report));
   const manifest = {
@@ -347,8 +347,8 @@ export function createSupportBundle({
   };
   const failureTaxonomy = resolveFailureTaxonomy(traceLocator.decisive_failure_domain);
   const shareSafety = assessSupportShareSafety(traceExport.redaction_report);
-  const files = [];
-  function writeArtifact(id, fileName, payload, { asText = false }: any = {}) {
+  const files: any[] = [];
+  function writeArtifact(id: string, fileName: string, payload: any, { asText = false }: any = {}) {
     const path = join(outputDir, fileName);
     writeTextFile(path, asText ? payload : stableJson(payload));
     files.push({

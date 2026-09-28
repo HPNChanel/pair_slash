@@ -5,8 +5,8 @@ import { ensureDir, relativeFrom, stableJson, writeTextFile } from "@pairslash/s
 import { buildPhase19Paths } from "./paths.ts";
 import { loadCapturedRunRecords } from "./score.ts";
 
-function buildEvidenceEntries(records) {
-  return records.map((record) => {
+function buildEvidenceEntries(records: any[]) {
+  return records.map((record: any) => {
     const artifactManifest = record._artifact_manifest ?? null;
     return {
       run_id: record.run_id,
@@ -43,7 +43,7 @@ function buildEvidenceEntries(records) {
   });
 }
 
-function renderEvidenceLogMarkdown(entries) {
+function renderEvidenceLogMarkdown(entries: any[]) {
   const lines = [
     "# Phase 19 Evidence Log (Generated)",
     "",
@@ -109,7 +109,7 @@ export function writeEvidenceLogArtifacts({ repoRoot = process.cwd(), runIds = n
   };
 }
 
-export function formatEvidenceLogReportText(report) {
+export function formatEvidenceLogReportText(report: any) {
   return [
     "Phase 19 evidence-log write",
     `Runs: ${report.run_count}`,

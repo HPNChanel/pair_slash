@@ -20,7 +20,7 @@ function parseJsonLines(path: string): TraceEvent[] {
   return readFileSync(path, "utf8")
     .split(/\r?\n/)
     .filter(Boolean)
-    .map((line) => JSON.parse(line) as TraceEvent);
+    .map((line: string) => JSON.parse(line) as TraceEvent);
 }
 
 function indexPathFor(traceRoot: string, sessionId: string) {
@@ -33,7 +33,7 @@ function eventPathFor(traceRoot: string, sessionId: string, timestamp: string) {
 }
 
 function buildSessionIndex({ traceRoot, sessionId, events }: { traceRoot: string; sessionId: string; events: TraceEvent[] }) {
-  const failures = events.filter((event) => ["blocked", "denied", "failed"].includes(event.outcome ?? ""));
+  const failures = events.filter((event: any) => ["blocked", "denied", "failed"].includes(event.outcome ?? ""));
   const first = events[0] ?? null;
   const last = events.at(-1) ?? null;
   return {
@@ -48,7 +48,7 @@ function buildSessionIndex({ traceRoot, sessionId, events }: { traceRoot: string
     decisive_failure_domain: failures[0]?.failure_domain ?? "none",
     decisive_reason: failures[0]?.summary ?? failures[0]?.error_code ?? null,
     event_file: toPosix(resolve(eventPathFor(traceRoot, sessionId, first?.timestamp ?? new Date().toISOString()))),
-    related_artifacts: [...new Set(events.flatMap((event) => event.artifact_paths ?? []))].sort((left: string, right: string) =>
+    related_artifacts: [...new Set(events.flatMap((event: any) => event.artifact_paths ?? []))].sort((left: string, right: string) =>
       left.localeCompare(right),
     ),
   };
@@ -135,8 +135,8 @@ export function listTraceIndexes(repoRoot: string) {
     return [];
   }
   return readdirSync(indexesRoot, { withFileTypes: true })
-    .filter((entry) => entry.isFile() && entry.name.endsWith(".json"))
-    .map((entry) => join(indexesRoot, entry.name))
+    .filter((entry: any) => entry.isFile() && entry.name.endsWith(".json"))
+    .map((entry: any) => join(indexesRoot, entry.name))
     .sort((left: string, right: string) => left.localeCompare(right))
-    .map((path) => JSON.parse(readFileSync(path, "utf8")) as TraceIndex);
+    .map((path: string) => JSON.parse(readFileSync(path, "utf8")) as TraceIndex);
 }

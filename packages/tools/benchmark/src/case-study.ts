@@ -6,7 +6,7 @@ import { redactTraceEvents } from "@pairslash/trace";
 import { buildPhase19Paths } from "./paths.ts";
 import { loadCapturedRunRecords } from "./score.ts";
 
-function laneSentence(context, runRecord) {
+function laneSentence(context: any, runRecord: any) {
   const template = context.laneTemplateById.get(runRecord.lane_id);
   if (template?.required_sentence) {
     return template.required_sentence;
@@ -14,7 +14,7 @@ function laneSentence(context, runRecord) {
   return `Results are lane-specific to ${runRecord.lane_id}.`;
 }
 
-function deriveClaimabilityStatus(runRecord) {
+function deriveClaimabilityStatus(runRecord: any) {
   if (runRecord.include_in_rollup !== true) {
     return "blocked";
   }
@@ -33,7 +33,7 @@ function deriveClaimabilityStatus(runRecord) {
   return "claimable";
 }
 
-function buildCaseStudySourceRecord(context, runRecord) {
+function buildCaseStudySourceRecord(context: any, runRecord: any) {
   const artifactManifest = runRecord._artifact_manifest ?? null;
   return {
     kind: "phase19-case-study-source-record",
@@ -93,7 +93,7 @@ function buildCaseStudySourceRecord(context, runRecord) {
   };
 }
 
-function renderInternalCaseStudyMarkdown(sourceRecord) {
+function renderInternalCaseStudyMarkdown(sourceRecord: any) {
   const lines = [
     `# Phase 19 Internal Case Study - ${sourceRecord.run_id}`,
     "",
@@ -115,7 +115,7 @@ function renderInternalCaseStudyMarkdown(sourceRecord) {
     "## Scenario",
     `- Task statement: ${sourceRecord.internal.task_statement}`,
     "- Success criteria:",
-    ...sourceRecord.internal.success_criteria.map((criterion) => `  - ${criterion}`),
+    ...sourceRecord.internal.success_criteria.map((criterion: any) => `  - ${criterion}`),
     "",
     "## Baseline Arm",
     `- Method: ${sourceRecord.internal.baseline_method}`,
@@ -140,7 +140,7 @@ function renderInternalCaseStudyMarkdown(sourceRecord) {
     `- Weekly reuse reason: ${sourceRecord.outcome.weekly_reuse_reason}`,
     "",
     "## Evidence",
-    ...sourceRecord.evidence_links.map((link) => `- ${link}`),
+    ...sourceRecord.evidence_links.map((link: any) => `- ${link}`),
     "",
     "## Caveats",
     `- Negative evidence: ${sourceRecord.negative_evidence_note}`,
@@ -151,7 +151,7 @@ function renderInternalCaseStudyMarkdown(sourceRecord) {
   return `${lines.join("\n")}\n`;
 }
 
-function renderPublicCaseStudyMarkdown(sourceRecord) {
+function renderPublicCaseStudyMarkdown(sourceRecord: any) {
   const lines = [
     `# Phase 19 Public-Safe Case Study - ${sourceRecord.run_id}`,
     "",
@@ -173,7 +173,7 @@ function renderPublicCaseStudyMarkdown(sourceRecord) {
     `- Preview fidelity result: ${sourceRecord.outcome.preview_fidelity_result}`,
     "",
     "## Evidence Used",
-    ...sourceRecord.evidence_links.map((link) => `- ${link}`),
+    ...sourceRecord.evidence_links.map((link: any) => `- ${link}`),
     "",
     "## Caveats",
     `- Workflow maturity: ${sourceRecord.workflow_maturity}`,
@@ -188,7 +188,7 @@ function renderPublicCaseStudyMarkdown(sourceRecord) {
   return `${lines.join("\n")}\n`;
 }
 
-function buildPublicCaseStudyJson(sourceRecord, redactionReport) {
+function buildPublicCaseStudyJson(sourceRecord: any, redactionReport: any) {
   return {
     kind: "phase19-public-case-study-record",
     schema_version: "1.0.0",
@@ -223,7 +223,7 @@ export function writeCaseStudySourceRecords({ repoRoot = process.cwd(), runIds =
   const sourcesDir = join(paths.caseStudiesDir, "sources");
   ensureDir(sourcesDir);
 
-  const outputs = [];
+  const outputs: any[] = [];
   for (const runRecord of records) {
     const sourceRecord = buildCaseStudySourceRecord(context, runRecord);
     const sourcePath = join(sourcesDir, `${runRecord.run_id}.source.json`);
@@ -254,7 +254,7 @@ export function renderCaseStudyArtifacts({ repoRoot = process.cwd(), runIds = nu
   ensureDir(internalDir);
   ensureDir(publicDir);
 
-  const outputs = [];
+  const outputs: any[] = [];
   for (const output of sourcesReport.outputs) {
     const { run_id: runId, source_record: sourceRecord, run_record: runRecord } = output;
     const internalPath = join(internalDir, `${runId}.internal.md`);
@@ -307,7 +307,7 @@ export function renderCaseStudyArtifacts({ repoRoot = process.cwd(), runIds = nu
   };
 }
 
-export function formatCaseStudyReportText(report) {
+export function formatCaseStudyReportText(report: any) {
   const lines = [
     "Phase 19 case-study rendering",
     `Sources: ${report.source_count}`,

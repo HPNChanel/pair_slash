@@ -114,9 +114,9 @@ export const FAILURE_TAXONOMY_LABELS = Object.freeze({
   }),
 });
 
-export function resolveFailureTaxonomy(decisiveFailureDomain = "unknown") {
+export function resolveFailureTaxonomy(decisiveFailureDomain: any = "unknown") {
   const normalized = typeof decisiveFailureDomain === "string" ? decisiveFailureDomain : "unknown";
-  const entry = FAILURE_TAXONOMY_LABELS[normalized] ?? FALLBACK_ENTRY;
+  const entry = FAILURE_TAXONOMY_LABELS[normalized as keyof typeof FAILURE_TAXONOMY_LABELS] ?? FALLBACK_ENTRY;
   return {
     taxonomy_version: SUPPORT_FAILURE_TAXONOMY_VERSION,
     decisive_failure_domain: normalized,

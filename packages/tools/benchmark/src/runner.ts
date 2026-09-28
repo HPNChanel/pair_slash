@@ -43,7 +43,7 @@ export function runPhase19RoundOne({
   };
 }
 
-export function formatRoundOneReportText(report) {
+export function formatRoundOneReportText(report: any) {
   const lines = [
     "Phase 19 round-one benchmark run",
     `Status: ${report.status.toUpperCase()}`,

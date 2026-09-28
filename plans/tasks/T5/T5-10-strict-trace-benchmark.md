@@ -2,7 +2,7 @@
 id: T5-10
 track: T5
 title: Strict batch — trace + benchmark
-status: todo
+status: done
 depends_on: [T5-05]
 est_size: M
 claimed_by:
@@ -43,11 +43,18 @@ Fix all strict errors in `packages/tools/trace/` and `packages/tools/benchmark/`
 
 ## Acceptance gates
 
-- [ ] 0 strict errors in scope; trace/benchmark tests green; gates green
+- [x] 0 strict errors in scope; trace/benchmark tests green; gates green
 
-## Evidence to record
+## Evidence recorded
 
-- Counts; event-shape stability check.
+- Baseline strict errors (trace + benchmark): ~273 pre-codemod -> 64 residuals after mechanical pass -> 0 final.
+- `npm run typecheck` (repo gate): PASS, 0 errors.
+- `npm run typecheck:strict`: 0 errors in `packages/tools/trace/src/*` and `packages/tools/benchmark/src/*` (remaining repo strict errors belong to T5-11/T5-12/T5-13 scopes).
+- `node packages/tools/trace/tests/trace.test.js`: 5/5 pass.
+- `node packages/tools/benchmark/tests/benchmark.test.js`: 5/5 pass.
+- `npm run lint`: PASS. `npm test`: full suite green. `npm run test:release`: PASS.
+- Event-shape stability: `TraceEvent`/`TraceIndex` types untouched; only callback/parameter annotations, null-safe narrowing (`?? 0` on `safeRate` results preserves JS null-coercion semantics), keyof casts on alias/label maps, and type-guard filters. No `as any`/`ts-ignore` introduced.
+- Notable decisions: `loadRunInput`/`buildArtifactManifest`/`buildDebugReport` take required `repoRoot: string` (bodies dereference it unconditionally); `compactTimestamp` param typed `Date` (sole caller passes `Date`); `stableValue`/`redactValue` recursive returns annotated `any` (private helpers); median filter uses `value is number` guard (same semantics as `Number.isFinite`).
 
 ## Rollback
 

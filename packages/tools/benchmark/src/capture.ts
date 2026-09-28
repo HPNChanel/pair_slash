@@ -15,7 +15,7 @@ import { validateBenchmarkRunRecord } from "./run-record.ts";
 import { buildScenarioIndex, loadScenarioDefinitions, validateScenarioDefinitions } from "./scenarios.ts";
 import { loadPhase19BenchmarkContext } from "./truth.ts";
 
-function loadRunInput(repoRoot, { inputPath = null, runRecord = null }: any = {}) {
+function loadRunInput(repoRoot: string, { inputPath = null, runRecord = null }: any = {}) {
   if (runRecord && typeof runRecord === "object") {
     return runRecord;
   }
@@ -25,7 +25,7 @@ function loadRunInput(repoRoot, { inputPath = null, runRecord = null }: any = {}
   return parseStructuredFile(resolve(repoRoot, inputPath));
 }
 
-function resolveArtifactPath(repoRoot, runDir, ref) {
+function resolveArtifactPath(repoRoot: string, runDir: any, ref: any) {
   if (isAbsolute(ref)) {
     return ref;
   }
@@ -35,7 +35,7 @@ function resolveArtifactPath(repoRoot, runDir, ref) {
   return resolve(repoRoot, ref);
 }
 
-function digestFile(path) {
+function digestFile(path: string) {
   const buffer = readFileSync(path);
   return {
     sha256: sha256(buffer),
@@ -43,9 +43,9 @@ function digestFile(path) {
   };
 }
 
-function buildArtifactManifest({ repoRoot, runDir, runRecord }) {
+function buildArtifactManifest({ repoRoot, runDir, runRecord }: { repoRoot: string; runDir?: any; runRecord?: any }) {
   const artifacts = (runRecord.artifact_refs ?? [])
-    .map((ref) => {
+    .map((ref: any) => {
       const absolutePath = resolveArtifactPath(repoRoot, runDir, ref);
       const present = existsSync(absolutePath);
       const digest = present ? digestFile(absolutePath) : { sha256: null, size_bytes: null };
@@ -58,7 +58,7 @@ function buildArtifactManifest({ repoRoot, runDir, runRecord }) {
         size_bytes: digest.size_bytes,
       };
     })
-    .sort((left, right) => left.ref.localeCompare(right.ref));
+    .sort((left: any, right: any) => left.ref.localeCompare(right.ref));
 
   return {
     kind: "phase19-benchmark-artifact-manifest",
@@ -66,12 +66,12 @@ function buildArtifactManifest({ repoRoot, runDir, runRecord }) {
     generated_at: new Date().toISOString(),
     run_id: runRecord.run_id,
     artifact_count: artifacts.length,
-    missing_artifact_count: artifacts.filter((artifact) => artifact.exists !== true).length,
+    missing_artifact_count: artifacts.filter((artifact: any) => artifact.exists !== true).length,
     artifacts,
   };
 }
 
-function buildReplayManifest({ runRecord, artifactManifest }) {
+function buildReplayManifest({ runRecord, artifactManifest }: { runRecord?: any; artifactManifest?: any }) {
   return {
     kind: "phase19-benchmark-replay-manifest",
     schema_version: "1.0.0",
@@ -80,13 +80,13 @@ function buildReplayManifest({ runRecord, artifactManifest }) {
     run_digest_sha256: sha256(stableJson(runRecord)),
     artifact_digests: Object.fromEntries(
       artifactManifest.artifacts
-        .filter((artifact) => artifact.exists)
-        .map((artifact) => [artifact.ref, artifact.sha256]),
+        .filter((artifact: any) => artifact.exists)
+        .map((artifact: any) => [artifact.ref, artifact.sha256]),
     ),
   };
 }
 
-function loadRunIndex(runIndexPath) {
+function loadRunIndex(runIndexPath: any) {
   if (!existsSync(runIndexPath)) {
     return {
       kind: "phase19-benchmark-run-index",
@@ -98,9 +98,9 @@ function loadRunIndex(runIndexPath) {
   return JSON.parse(readFileSync(runIndexPath, "utf8"));
 }
 
-function upsertRunIndex(runIndex, runEntry) {
-  const rest = (runIndex.runs ?? []).filter((entry) => entry.run_id !== runEntry.run_id);
-  const runs = [...rest, runEntry].sort((left, right) => left.run_id.localeCompare(right.run_id));
+function upsertRunIndex(runIndex: any, runEntry: any) {
+  const rest = (runIndex.runs ?? []).filter((entry: any) => entry.run_id !== runEntry.run_id);
+  const runs = [...rest, runEntry].sort((left: any, right: any) => left.run_id.localeCompare(right.run_id));
   return {
     ...runIndex,
     generated_at: new Date().toISOString(),

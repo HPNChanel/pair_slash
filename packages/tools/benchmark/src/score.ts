@@ -11,11 +11,11 @@ import {
 import { buildScenarioIndex, loadScenarioDefinitions, validateScenarioDefinitions } from "./scenarios.ts";
 import { loadPhase19BenchmarkContext } from "./truth.ts";
 
-function parseRunFile(pathLike) {
+function parseRunFile(pathLike: any) {
   return JSON.parse(readFileSync(pathLike, "utf8"));
 }
 
-function loadArtifactManifest(paths, runId) {
+function loadArtifactManifest(paths: any, runId: any) {
   const artifactManifestPath = join(paths.runsDir, runId, "artifacts.manifest.json");
   if (!existsSync(artifactManifestPath)) {
     return null;
@@ -23,7 +23,7 @@ function loadArtifactManifest(paths, runId) {
   return parseRunFile(artifactManifestPath);
 }
 
-function evaluateRule(run, ruleName) {
+function evaluateRule(run: any, ruleName: any) {
   const ruleEvaluators = {
     pairslash_beats_or_matches_baseline_with_better_orientation_accuracy: () =>
       Number.isFinite(run.ttfs_delta_vs_baseline) && run.ttfs_delta_vs_baseline >= 0,
@@ -54,22 +54,22 @@ function evaluateRule(run, ruleName) {
   if (!Object.prototype.hasOwnProperty.call(ruleEvaluators, ruleName)) {
     return false;
   }
-  return ruleEvaluators[ruleName]();
+  return ruleEvaluators[ruleName as keyof typeof ruleEvaluators]();
 }
 
-function evaluateTaskRollups(records, context) {
+function evaluateTaskRollups(records: any[], context: any) {
   const rubricRules = context.benchmarkDocuments.scoringRubric?.workflow_pass_rules ?? {};
-  const rollups = [];
+  const rollups: any[] = [];
 
   for (const task of context.benchmarkDocuments.taskCatalog?.official_tasks ?? []) {
-    const runs = records.filter((record) => record.task_card_id === task.task_card_id);
+    const runs = records.filter((record: any) => record.task_card_id === task.task_card_id);
     const requiredRules = rubricRules?.[task.task_card_id]?.required ?? [];
 
-    const runResults = runs.map((run) => {
+    const runResults = runs.map((run: any) => {
       const ruleResults = Object.fromEntries(
-        requiredRules.map((rule) => [rule, evaluateRule(run, rule)]),
+        requiredRules.map((rule: any) => [rule, evaluateRule(run, rule)]),
       );
-      const passed = requiredRules.every((rule) => ruleResults[rule] === true);
+      const passed = requiredRules.every((rule: any) => ruleResults[rule] === true);
       return {
         run_id: run.run_id,
         passed,
@@ -77,7 +77,7 @@ function evaluateTaskRollups(records, context) {
       };
     });
 
-    const passedCount = runResults.filter((result) => result.passed).length;
+    const passedCount = runResults.filter((result: any) => result.passed).length;
 
     rollups.push({
       task_card_id: task.task_card_id,
@@ -92,68 +92,68 @@ function evaluateTaskRollups(records, context) {
   return rollups;
 }
 
-function evaluateHardFailConditions(records, context, taskRollups) {
-  const hardFails = [];
+function evaluateHardFailConditions(records: any[], context: any, taskRollups: any) {
+  const hardFails: any[] = [];
 
-  const includedRuns = records.filter((record) => record.include_in_rollup === true);
-  const headlineRuns = includedRuns.filter((record) => record.reporting_mode === "lane_specific_headline");
+  const includedRuns = records.filter((record: any) => record.include_in_rollup === true);
+  const headlineRuns = includedRuns.filter((record: any) => record.reporting_mode === "lane_specific_headline");
 
   if (
     includedRuns.some(
-      (record) =>
+      (record: any) =>
         record.trust_boundary_result === "fail" &&
         /hidden[_ -]?write/i.test(String(record.negative_evidence_note ?? "")),
     )
   ) {
-    hardFails.push({ condition: "hidden_durable_write", run_ids: includedRuns.map((record) => record.run_id) });
+    hardFails.push({ condition: "hidden_durable_write", run_ids: includedRuns.map((record: any) => record.run_id) });
   }
 
-  if (records.some((record) => record.task_card_id === "W2a" && record.preview_fidelity_result === "fail")) {
+  if (records.some((record: any) => record.task_card_id === "W2a" && record.preview_fidelity_result === "fail")) {
     hardFails.push({
       condition: "preview_skipped_on_W2a",
-      run_ids: records.filter((record) => record.task_card_id === "W2a").map((record) => record.run_id),
+      run_ids: records.filter((record: any) => record.task_card_id === "W2a").map((record: any) => record.run_id),
     });
   }
 
-  if (records.some((record) => record.task_card_id === "W2b" && record.trust_boundary_result !== "pass")) {
+  if (records.some((record: any) => record.task_card_id === "W2b" && record.trust_boundary_result !== "pass")) {
     hardFails.push({
       condition: "weak_or_conflicting_memory_accepted_on_W2b",
-      run_ids: records.filter((record) => record.task_card_id === "W2b").map((record) => record.run_id),
+      run_ids: records.filter((record: any) => record.task_card_id === "W2b").map((record: any) => record.run_id),
     });
   }
 
-  const headlineRuntimeIds = new Set(headlineRuns.map((run) => run.runtime_id));
+  const headlineRuntimeIds = new Set(headlineRuns.map((run: any) => run.runtime_id));
   if (headlineRuntimeIds.size > 1) {
     hardFails.push({
       condition: "blended_cross_runtime_headline_rollup",
-      run_ids: headlineRuns.map((run) => run.run_id),
+      run_ids: headlineRuns.map((run: any) => run.run_id),
     });
   }
 
   const prepHeadlineRuns = includedRuns.filter(
-    (run) => run.lane_support_level === "prep" && run.reporting_mode === "lane_specific_headline",
+    (run: any) => run.lane_support_level === "prep" && run.reporting_mode === "lane_specific_headline",
   );
   if (prepHeadlineRuns.length > 0) {
     hardFails.push({
       condition: "prep_lane_used_for_headline_claim",
-      run_ids: prepHeadlineRuns.map((run) => run.run_id),
+      run_ids: prepHeadlineRuns.map((run: any) => run.run_id),
     });
   }
 
-  const reviewRuns = includedRuns.filter((run) => run.task_card_id === "W3");
-  if (reviewRuns.some((run) => run.explicit_user_approved_fix_handoff !== true)) {
+  const reviewRuns = includedRuns.filter((run: any) => run.task_card_id === "W3");
+  if (reviewRuns.some((run: any) => run.explicit_user_approved_fix_handoff !== true)) {
     hardFails.push({
       condition: "review_fix_becomes_generic_coding_thesis",
-      run_ids: reviewRuns.map((run) => run.run_id),
+      run_ids: reviewRuns.map((run: any) => run.run_id),
     });
   }
 
   const mandatoryTaskIds = (context.benchmarkDocuments.taskCatalog?.official_tasks ?? [])
-    .filter((task) => task.role === "headline_wedge" && task.public_claim_mode !== "conditional_shadow_until_clean")
-    .map((task) => task.task_card_id);
+    .filter((task: any) => task.role === "headline_wedge" && task.public_claim_mode !== "conditional_shadow_until_clean")
+    .map((task: any) => task.task_card_id);
 
   const missingMandatoryTasks = mandatoryTaskIds.filter(
-    (taskCardId) => !includedRuns.some((run) => run.task_card_id === taskCardId),
+    (taskCardId: any) => !includedRuns.some((run: any) => run.task_card_id === taskCardId),
   );
   if (missingMandatoryTasks.length > 0) {
     hardFails.push({
@@ -163,16 +163,16 @@ function evaluateHardFailConditions(records, context, taskRollups) {
     });
   }
 
-  if (taskRollups.some((rollup) => rollup.task_card_id === "W3" && rollup.passed_run_count > 0)) {
+  if (taskRollups.some((rollup: any) => rollup.task_card_id === "W3" && rollup.passed_run_count > 0)) {
     const nonReviewWins = taskRollups
-      .filter((rollup) => ["W1", "W2a", "W2b"].includes(rollup.task_card_id))
-      .some((rollup) => rollup.passed_run_count > 0);
+      .filter((rollup: any) => ["W1", "W2a", "W2b"].includes(rollup.task_card_id))
+      .some((rollup: any) => rollup.passed_run_count > 0);
     if (!nonReviewWins) {
       hardFails.push({
         condition: "review_fix_not_only_workflow_showing_a_win",
         run_ids: taskRollups
-          .find((rollup) => rollup.task_card_id === "W3")
-          ?.run_results.map((entry) => entry.run_id) ?? [],
+          .find((rollup: any) => rollup.task_card_id === "W3")
+          ?.run_results.map((entry: any) => entry.run_id) ?? [],
       });
     }
   }
@@ -180,22 +180,22 @@ function evaluateHardFailConditions(records, context, taskRollups) {
   return hardFails;
 }
 
-function evaluateThirtyDayGate(records, _taskRollups, hardFails) {
-  const includedRuns = records.filter((record) => record.include_in_rollup === true);
-  const trustedRuns = includedRuns.filter((record) => isTrustedWeeklyReuseEligible(record));
-  const successNoRescueRuns = includedRuns.filter((record) => isTaskSuccessWithoutManualRescue(record));
-  const onboardingRuns = includedRuns.filter((record) => record.task_card_id === "W1");
-  const memoryRuns = includedRuns.filter((record) => ["W2a", "W2b"].includes(record.task_card_id));
-  const onboardingTrusted = onboardingRuns.filter((record) => isTrustedWeeklyReuseEligible(record));
-  const memoryTrusted = memoryRuns.filter((record) => isTrustedWeeklyReuseEligible(record));
+function evaluateThirtyDayGate(records: any[], _taskRollups: any, hardFails: any) {
+  const includedRuns = records.filter((record: any) => record.include_in_rollup === true);
+  const trustedRuns = includedRuns.filter((record: any) => isTrustedWeeklyReuseEligible(record));
+  const successNoRescueRuns = includedRuns.filter((record: any) => isTaskSuccessWithoutManualRescue(record));
+  const onboardingRuns = includedRuns.filter((record: any) => record.task_card_id === "W1");
+  const memoryRuns = includedRuns.filter((record: any) => ["W2a", "W2b"].includes(record.task_card_id));
+  const onboardingTrusted = onboardingRuns.filter((record: any) => isTrustedWeeklyReuseEligible(record));
+  const memoryTrusted = memoryRuns.filter((record: any) => isTrustedWeeklyReuseEligible(record));
 
-  const evidenceCompleteRuns = records.filter((record) => record._artifact_missing_count === 0);
-  const memoryTrustPass = memoryRuns.every((record) => record.trust_boundary_result === "pass");
+  const evidenceCompleteRuns = records.filter((record: any) => record._artifact_missing_count === 0);
+  const memoryTrustPass = memoryRuns.every((record: any) => record.trust_boundary_result === "pass");
   const previewFidelityPass = memoryRuns
-    .filter((record) => record.task_card_id === "W2a")
-    .every((record) => record.preview_fidelity_result === "pass");
+    .filter((record: any) => record.task_card_id === "W2a")
+    .every((record: any) => record.preview_fidelity_result === "pass");
   const likelyOrDefaultOnOnboardingMemory = includedRuns.filter(
-    (record) =>
+    (record: any) =>
       ["W1", "W2a", "W2b"].includes(record.task_card_id)
       && ["likely_yes", "default_path"].includes(record.weekly_reuse_answer),
   ).length;
@@ -203,17 +203,17 @@ function evaluateThirtyDayGate(records, _taskRollups, hardFails) {
   const checks = [
     {
       id: "trusted_weekly_reuse_rate_overall_gte_60",
-      passed: safeRate(trustedRuns.length, includedRuns.length) >= 0.6,
+      passed: (safeRate(trustedRuns.length, includedRuns.length) ?? 0) >= 0.6,
     },
     {
       id: "onboarding_and_memory_each_gte_50",
       passed:
-        safeRate(onboardingTrusted.length, onboardingRuns.length) >= 0.5
-        && safeRate(memoryTrusted.length, memoryRuns.length) >= 0.5,
+        (safeRate(onboardingTrusted.length, onboardingRuns.length) ?? 0) >= 0.5
+        && (safeRate(memoryTrusted.length, memoryRuns.length) ?? 0) >= 0.5,
     },
     {
       id: "task_success_without_manual_rescue_overall_gte_70",
-      passed: safeRate(successNoRescueRuns.length, includedRuns.length) >= 0.7,
+      passed: (safeRate(successNoRescueRuns.length, includedRuns.length) ?? 0) >= 0.7,
     },
     {
       id: "memory_trust_boundary_integrity_eq_100",
@@ -221,7 +221,7 @@ function evaluateThirtyDayGate(records, _taskRollups, hardFails) {
     },
     {
       id: "preview_to_write_fidelity_eq_100",
-      passed: memoryRuns.filter((record) => record.task_card_id === "W2a").length > 0 && previewFidelityPass,
+      passed: memoryRuns.filter((record: any) => record.task_card_id === "W2a").length > 0 && previewFidelityPass,
     },
     {
       id: "evidence_completeness_eq_100",
@@ -233,12 +233,12 @@ function evaluateThirtyDayGate(records, _taskRollups, hardFails) {
     },
     {
       id: "review_fix_not_only_workflow_showing_a_win",
-      passed: !hardFails.some((entry) => entry.condition === "review_fix_not_only_workflow_showing_a_win"),
+      passed: !hardFails.some((entry: any) => entry.condition === "review_fix_not_only_workflow_showing_a_win"),
     },
   ];
 
   return {
-    status: checks.every((check) => check.passed) && hardFails.length === 0 ? "pass" : "fail",
+    status: checks.every((check: any) => check.passed) && hardFails.length === 0 ? "pass" : "fail",
     checks,
   };
 }
@@ -254,7 +254,7 @@ export function loadCapturedRunRecords({ repoRoot = process.cwd(), runIds = null
   const paths = buildPhase19Paths(repoRoot);
 
   const idsToLoad = runIds && runIds.length > 0 ? runIds : listRunIds(repoRoot);
-  const records = [];
+  const records: any[] = [];
 
   for (const runId of idsToLoad) {
     const runPath = resolveRunFile(repoRoot, runId);
@@ -275,7 +275,7 @@ export function loadCapturedRunRecords({ repoRoot = process.cwd(), runIds = null
     });
   }
 
-  records.sort((left, right) => left.run_id.localeCompare(right.run_id));
+  records.sort((left: any, right: any) => left.run_id.localeCompare(right.run_id));
 
   return {
     context,
@@ -291,32 +291,32 @@ export function scoreBenchmarkRuns({ repoRoot = process.cwd(), runIds = null }: 
     throw new Error("no-captured-runs-found");
   }
 
-  const includedRuns = records.filter((record) => record.include_in_rollup === true);
+  const includedRuns = records.filter((record: any) => record.include_in_rollup === true);
   const taskRollups = evaluateTaskRollups(records, context);
   const hardFails = evaluateHardFailConditions(records, context, taskRollups);
 
-  const trustedRuns = includedRuns.filter((record) => isTrustedWeeklyReuseEligible(record));
-  const successNoRescueRuns = includedRuns.filter((record) => isTaskSuccessWithoutManualRescue(record));
+  const trustedRuns = includedRuns.filter((record: any) => isTrustedWeeklyReuseEligible(record));
+  const successNoRescueRuns = includedRuns.filter((record: any) => isTaskSuccessWithoutManualRescue(record));
 
   const ttfsDeltas = includedRuns
-    .map((record) => record.ttfs_delta_vs_baseline)
-    .filter((value) => Number.isFinite(value));
+    .map((record: any) => record.ttfs_delta_vs_baseline)
+    .filter((value: unknown) => Number.isFinite(value));
   const reworkDeltas = includedRuns
-    .map((record) => record.rework_reduction_pct_vs_baseline)
-    .filter((value) => Number.isFinite(value));
+    .map((record: any) => record.rework_reduction_pct_vs_baseline)
+    .filter((value: unknown) => Number.isFinite(value));
 
-  const laneRollups = [...new Set(records.map((record) => record.lane_id))]
+  const laneRollups = [...new Set(records.map((record: any) => record.lane_id))]
     .sort((left: any, right: any) => left.localeCompare(right))
-    .map((laneId) => {
-      const laneRuns = records.filter((record) => record.lane_id === laneId);
-      const includedLaneRuns = laneRuns.filter((record) => record.include_in_rollup === true);
+    .map((laneId: any) => {
+      const laneRuns = records.filter((record: any) => record.lane_id === laneId);
+      const includedLaneRuns = laneRuns.filter((record: any) => record.include_in_rollup === true);
       return {
         lane_id: laneId,
         runtime_id: laneRuns[0]?.runtime_id ?? null,
         run_count: laneRuns.length,
         included_run_count: includedLaneRuns.length,
         trusted_weekly_reuse_rate: safeRate(
-          includedLaneRuns.filter((record) => isTrustedWeeklyReuseEligible(record)).length,
+          includedLaneRuns.filter((record: any) => isTrustedWeeklyReuseEligible(record)).length,
           includedLaneRuns.length,
         ),
       };
@@ -328,13 +328,13 @@ export function scoreBenchmarkRuns({ repoRoot = process.cwd(), runIds = null }: 
     median_ttfs_delta_vs_baseline: median(ttfsDeltas),
     median_rework_reduction_pct_vs_baseline: median(reworkDeltas),
     evidence_completeness_rate: safeRate(
-      records.filter((record) => record._artifact_missing_count === 0).length,
+      records.filter((record: any) => record._artifact_missing_count === 0).length,
       records.length,
     ),
   };
 
   const primaryLaneId = context.primaryScoredLaneId;
-  const primaryLaneRuns = includedRuns.filter((record) => record.lane_id === primaryLaneId);
+  const primaryLaneRuns = includedRuns.filter((record: any) => record.lane_id === primaryLaneId);
 
   const thirtyDayGate = evaluateThirtyDayGate(records, taskRollups, hardFails);
 
@@ -366,7 +366,7 @@ export function scoreBenchmarkRuns({ repoRoot = process.cwd(), runIds = null }: 
   };
 }
 
-export function formatScoreReportText(report) {
+export function formatScoreReportText(report: any) {
   const lines = [
     "Phase 19 benchmark score",
     `Run count: ${report.summary.run_count} (included: ${report.summary.included_run_count})`,
