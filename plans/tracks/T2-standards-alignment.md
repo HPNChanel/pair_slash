@@ -1,6 +1,6 @@
 # Track T2 — Standards alignment (Agent Skills spec, MCP 2026-07-28, AGENTS.md)
 
-**Status:** Approved | **Priority:** P1 | **Depends on:** T0, T1
+**Status:** Done (8/8 tasks, 2026-09-28) | **Priority:** P1 | **Depends on:** T0, T1
 **Goal:** Make every artifact PairSlash emits or validates comply with the current open standards: the Agent Skills specification, MCP 2026-07-28 era awareness, and the AGENTS.md convention.
 
 ## Context
