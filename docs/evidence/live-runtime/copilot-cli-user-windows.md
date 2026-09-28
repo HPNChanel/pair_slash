@@ -23,6 +23,9 @@
 
 - `2026-04-05T12:28:23.177Z`: `npm run pairslash -- doctor --runtime copilot --target user --format json`
 - `2026-04-05T12:28:38.519Z`: `npm run pairslash -- preview install pairslash-plan --runtime copilot --target user --format json`
+- `2026-09-28`: host re-probe — `gh` 2.96.0 present, `gh copilot --help` exits 0 via the
+  built-in wrapper, but the `copilot` binary is absent; wrapper presence is not
+  Copilot CLI proof (negative observation, not a promotion record)
 - Machine-readable sidecar: `docs/evidence/live-runtime/copilot-cli-user-windows.yaml`
 
 ## Claim guard

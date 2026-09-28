@@ -15,6 +15,9 @@ runtimes:
     invocation_direct: "$skill-name"
     invocation_browse: /skills
     optional_metadata: agents/openai.yaml
+    plugin_surface: codex plugin (plugin + marketplace management; observed on 0.153.x)
+    daemon_surface: app-server daemon (codex agents/app-server/remote-control; observed on 0.153.x)
+    verified_series: 0.153.x (live 2026-09-28; registry latest 0.158.0)
     documentation: https://developers.openai.com/codex/skills
 
   copilot_cli:
@@ -23,8 +26,10 @@ runtimes:
     skill_storage_user: ~/.copilot/skills/
     skill_format: SKILL.md (YAML frontmatter + Markdown)
     invocation_direct: "/skill-name"
-    invocation_browse: /skills
+    invocation_browse: /skills (unified picker/dashboard surface in the v1.0.x series)
     optional_metadata: null
+    plugin_surface: copilot plugin|skill|mcp command groups + marketplace (v1.0.x series; live re-verify deferred to T1-06)
+    verified_series: 1.0.x (registry-observed @github/copilot 1.0.88; binary absent on verification host)
     documentation: https://docs.github.com/copilot/how-tos/copilot-cli/customize-copilot/create-skills
 
 project_language: YAML + Markdown + JavaScript (Node.js validation tooling)
@@ -37,6 +42,6 @@ build_tooling:
 
 provenance:
   created_by: phase-0-scaffold
-  updated_by: repo-normalization
-  timestamp: "2026-03-27T12:15:00+07:00"
-  source: OpenAI Codex docs, GitHub Copilot CLI docs, layered Node workspace validation tooling
+  updated_by: t1-runtime-realignment
+  timestamp: "2026-09-28T00:00:00+07:00"
+  source: OpenAI Codex docs, GitHub Copilot CLI docs, layered Node workspace validation tooling; 2026-09-28 re-verification note at docs-private/compatibility/runtime-reverification-2026-09.md

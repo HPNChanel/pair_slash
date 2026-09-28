@@ -846,7 +846,7 @@ test("doctor report validator accepts phase 4 execution report shape", () => {
       install_root: join(repoRoot, ".agents", "skills"),
       state_path: join(repoRoot, ".pairslash", "install-state", "repo-codex_cli.json"),
       runtime_executable: "codex",
-      runtime_version: "0.116.0",
+      runtime_version: "0.153.4",
       runtime_available: true,
     },
     scope_probes: {

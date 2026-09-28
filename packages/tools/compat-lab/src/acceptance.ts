@@ -61,8 +61,8 @@ export const DEFAULT_ACCEPTANCE_LANES = [
 ];
 
 const RUNTIME_VERSIONS = Object.freeze({
-  codex_cli: "0.116.0",
-  copilot_cli: "2.50.0",
+  codex_cli: "0.153.4",
+  copilot_cli: "2.96.0",
 });
 
 function buildAcceptanceEvidencePartition() {

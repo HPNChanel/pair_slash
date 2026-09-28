@@ -32,7 +32,7 @@ function createDirectoryLink(targetPath, linkPath) {
 
 test("install creates managed repo-target runtime footprint", serial, () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     const envelope = planInstall({
       repoRoot: fixture.tempRoot,
@@ -87,7 +87,7 @@ test("install accepts Codex version output with executable prefix", serial, () =
 
 test("install plan is blocked when lint bridge finds blocking errors", serial, () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     updatePackManifest({
       repoRoot: fixture.tempRoot,
@@ -120,7 +120,7 @@ test("install plan is blocked when lint bridge finds blocking errors", serial, (
 
 test("install targeted pack ignores unrelated invalid manifest in repo", serial, () => {
   const fixture = createTempRepo({ packs: ["pairslash-plan", "pairslash-review"] });
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     updatePackManifest({
       repoRoot: fixture.tempRoot,
@@ -148,7 +148,7 @@ test("install targeted pack ignores unrelated invalid manifest in repo", serial,
 
 test("install preview emits local-source trust delta for repo manifests", serial, () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     const envelope = planInstall({
       repoRoot: fixture.tempRoot,
@@ -173,7 +173,7 @@ test("install preview emits local-source trust delta for repo manifests", serial
 
 test("install blocks stale install-state metadata mismatch", serial, () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     mkdirSync(join(fixture.tempRoot, ".pairslash", "install-state"), { recursive: true });
     writeFileSync(
@@ -219,7 +219,7 @@ test("install tolerates case-only install-state path drift on Windows", serial, 
     return;
   }
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     const configHome = join(fixture.tempRoot, ".agents");
     const installRoot = join(fixture.tempRoot, ".agents", "skills");
@@ -263,7 +263,7 @@ test("install tolerates case-only install-state path drift on Windows", serial, 
 
 test("install preview blocks when pack install root exists as a file", serial, () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     mkdirSync(join(fixture.tempRoot, ".agents", "skills"), { recursive: true });
     writeFileSync(join(fixture.tempRoot, ".agents", "skills", "pairslash-plan"), "blocked-root\n");
@@ -291,7 +291,7 @@ test("install preview blocks when pack install root exists as a file", serial, (
 
 test("install preview blocks symlinked install roots", serial, (t) => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     mkdirSync(join(fixture.tempRoot, ".agents", "skills"), { recursive: true });
     const externalRoot = join(fixture.tempRoot, "external-skill-root");
@@ -330,7 +330,7 @@ test("install preview blocks symlinked install roots", serial, (t) => {
 
 test("install blocks unmanaged ownership receipt even when content is identical", serial, () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     const seed = planInstall({
       repoRoot: fixture.tempRoot,
@@ -373,7 +373,7 @@ test("install blocks unmanaged ownership receipt even when content is identical"
 
 test("install preview emits reconcile_unmanaged for override-eligible unmanaged files", serial, () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     writeManualInstallFile({
       repoRoot: fixture.tempRoot,
@@ -405,7 +405,7 @@ test("install preview emits reconcile_unmanaged for override-eligible unmanaged 
 
 test("install redirects already-managed packs to update semantics", serial, () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     applyInstall(
       planInstall({
@@ -440,7 +440,7 @@ test("install redirects already-managed packs to update semantics", serial, () =
 
 test("install state records reconciled unmanaged ownership explicitly", serial, () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     writeManualInstallFile({
       repoRoot: fixture.tempRoot,
@@ -470,7 +470,7 @@ test("install state records reconciled unmanaged ownership explicitly", serial, 
 
 test("update blocks capability expansion until pack trust is re-reviewed", serial, () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     applyInstall(
       planInstall({
@@ -522,7 +522,7 @@ test("update blocks capability expansion until pack trust is re-reviewed", seria
 
 test("update preserves valid local overrides", serial, () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     applyInstall(
       planInstall({
@@ -574,7 +574,7 @@ test("update preserves valid local overrides", serial, () => {
 test("update blocks external unverified manifest source by default", serial, () => {
   const fixture = createTempRepo();
   const externalFixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     applyInstall(
       planInstall({
@@ -616,7 +616,7 @@ test("update blocks external unverified manifest source by default", serial, () 
 
 test("update plan is blocked when lint bridge finds blocking errors", serial, () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     applyInstall(
       planInstall({
@@ -657,7 +657,7 @@ test("update plan is blocked when lint bridge finds blocking errors", serial, ()
 
 test("update unchanged emits skip-only plan without replace/create/remove", serial, () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     applyInstall(
       planInstall({
@@ -690,7 +690,7 @@ test("update unchanged emits skip-only plan without replace/create/remove", seri
 
 test("update blocks local modification on non-override file", serial, () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     applyInstall(
       planInstall({
@@ -732,7 +732,7 @@ test("update blocks local modification on non-override file", serial, () => {
 
 test("update blocks when ownership metadata was modified locally", serial, () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     applyInstall(
       planInstall({
@@ -769,7 +769,7 @@ test("update blocks when ownership metadata was modified locally", serial, () =>
 
 test("update rollback restores filesystem when state write fails", serial, () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     applyInstall(
       planInstall({
@@ -816,7 +816,7 @@ test("update rollback restores filesystem when state write fails", serial, () =>
 
 test("update removes orphaned managed asset when upstream manifest no longer emits it", serial, () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     applyInstall(
       planInstall({
@@ -879,7 +879,7 @@ test("update removes orphaned managed asset when upstream manifest no longer emi
 
 test("uninstall removes only PairSlash-owned files", serial, () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     writeManualInstallFile({
       repoRoot: fixture.tempRoot,
@@ -920,7 +920,7 @@ test("uninstall removes only PairSlash-owned files", serial, () => {
 
 test("uninstall preserves edited managed file and detaches pack state", serial, () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     applyInstall(
       planInstall({
@@ -962,7 +962,7 @@ test("uninstall preserves edited managed file and detaches pack state", serial, 
 
 test("uninstall warns and detaches when tracked file is already missing", serial, () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     applyInstall(
       planInstall({
@@ -1008,7 +1008,7 @@ test("uninstall warns and detaches when tracked file is already missing", serial
 
 test("uninstall preview blocks when managed install root is no longer a directory", serial, () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     applyInstall(
       planInstall({
@@ -1045,7 +1045,7 @@ test("uninstall preview blocks when managed install root is no longer a director
 
 test("uninstall preserves unknown file and keeps shared container directory", serial, () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     applyInstall(
       planInstall({
@@ -1083,7 +1083,7 @@ test("uninstall preserves unknown file and keeps shared container directory", se
 
 test("uninstall rollback restores removed files when state removal fails", serial, () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     applyInstall(
       planInstall({
@@ -1120,7 +1120,7 @@ test("uninstall rollback restores removed files when state removal fails", seria
 
 test("uninstall rollback does not recreate missing managed file when backup is unavailable", serial, () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     applyInstall(
       planInstall({
@@ -1158,7 +1158,7 @@ test("uninstall rollback does not recreate missing managed file when backup is u
 
 test("cleanup never removes outside directories that only share an install-root prefix", serial, () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     applyInstall(
       planInstall({
@@ -1218,7 +1218,7 @@ test("uninstall blocks requested pack that is not installed", serial, () => {
 
 test("install rollback restores filesystem when state write fails", serial, () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     const envelope = planInstall({
       repoRoot: fixture.tempRoot,
@@ -1249,7 +1249,7 @@ test("install rollback restores filesystem when state write fails", serial, () =
 
 test("user-scope copilot install resolves to user home", serial, () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ copilotVersion: "2.50.0" });
+  const runtime = installFakeRuntime({ copilotVersion: "2.96.0" });
   try {
     const fakeHome = join(fixture.tempRoot, "fake-home");
     mkdirSync(fakeHome, { recursive: true });
@@ -1274,7 +1274,7 @@ test("user-scope copilot install resolves to user home", serial, () => {
 
 test("user-scope copilot update writes journal and refreshes managed files", serial, () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ copilotVersion: "2.50.0" });
+  const runtime = installFakeRuntime({ copilotVersion: "2.96.0" });
   try {
     const fakeHome = join(fixture.tempRoot, "fake-home");
     mkdirSync(fakeHome, { recursive: true });
@@ -1316,7 +1316,7 @@ test("user-scope copilot update writes journal and refreshes managed files", ser
 
 test("user-scope copilot uninstall removes managed footprint and state", serial, () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ copilotVersion: "2.50.0" });
+  const runtime = installFakeRuntime({ copilotVersion: "2.96.0" });
   try {
     const fakeHome = join(fixture.tempRoot, "fake-home");
     mkdirSync(fakeHome, { recursive: true });
@@ -1354,7 +1354,7 @@ test("user-scope copilot uninstall removes managed footprint and state", serial,
 
 test("update rejects unsupported runtime version from target manifest", serial, () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     applyInstall(
       planInstall({

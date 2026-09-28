@@ -210,13 +210,13 @@
                   "available": true,
                   "error": null,
                   "executable": "codex",
-                  "version": "0.116.0"
+                  "version": "0.153.4"
                 },
                 "copilot_cli": {
                   "available": true,
                   "error": null,
                   "executable": "gh",
-                  "version": "2.50.0"
+                  "version": "2.96.0"
                 }
               }
             },
@@ -230,19 +230,19 @@
           {
             "blocking_for_install": false,
             "evidence": {
-              "version": "0.116.0"
+              "version": "0.153.4"
             },
             "group": "runtime",
             "id": "runtime.detect",
             "remediation": null,
             "severity": "info",
             "status": "pass",
-            "summary": "runtime available via codex (0.116.0)"
+            "summary": "runtime available via codex (0.153.4)"
           },
           {
             "blocking_for_install": false,
             "evidence": {
-              "version": "0.116.0"
+              "version": "0.153.4"
             },
             "group": "runtime",
             "id": "runtime.version_range",
@@ -255,7 +255,7 @@
             "blocking_for_install": false,
             "evidence": {
               "lane_status": "supported",
-              "runtime_version": "0.116.0"
+              "runtime_version": "0.153.4"
             },
             "group": "runtime",
             "id": "runtime.tested_range",
@@ -556,7 +556,7 @@
           "repo_root": "<repo>",
           "runtime_available": true,
           "runtime_executable": "codex",
-          "runtime_version": "0.116.0",
+          "runtime_version": "0.153.4",
           "shell": "<host-shell>",
           "shell_profile_candidates": [
             "<repo>\\.compat-home\\.<host-shell>rc",
@@ -588,7 +588,7 @@
             "code": "DOC-RUNTIME-TESTED_RANGE",
             "evidence": {
               "lane_status": "supported",
-              "runtime_version": "0.116.0"
+              "runtime_version": "0.153.4"
             },
             "message": "no recorded tested runtime version exists for this lane yet",
             "remediation": "Proceed with preview/doctor evidence, but treat the lane as unrecorded until live pilot evidence is captured.",
@@ -994,13 +994,13 @@
                   "available": true,
                   "error": null,
                   "executable": "codex",
-                  "version": "0.116.0"
+                  "version": "0.153.4"
                 },
                 "copilot_cli": {
                   "available": true,
                   "error": null,
                   "executable": "gh",
-                  "version": "2.50.0"
+                  "version": "2.96.0"
                 }
               }
             },
@@ -1014,19 +1014,19 @@
           {
             "blocking_for_install": false,
             "evidence": {
-              "version": "2.50.0"
+              "version": "2.96.0"
             },
             "group": "runtime",
             "id": "runtime.detect",
             "remediation": null,
             "severity": "info",
             "status": "pass",
-            "summary": "runtime available via gh (2.50.0)"
+            "summary": "runtime available via gh (2.96.0)"
           },
           {
             "blocking_for_install": false,
             "evidence": {
-              "version": "2.50.0"
+              "version": "2.96.0"
             },
             "group": "runtime",
             "id": "runtime.version_range",
@@ -1301,7 +1301,7 @@
           "repo_root": "<repo>",
           "runtime_available": true,
           "runtime_executable": "gh",
-          "runtime_version": "2.50.0",
+          "runtime_version": "2.96.0",
           "shell": "<host-shell>",
           "shell_profile_candidates": [
             "<repo>\\.compat-home\\.<host-shell>rc",

@@ -108,7 +108,7 @@ test("phase5 smoke: pairslash lint emits policy verdicts for shippable packs", s
 
 test("phase5 smoke: pairslash preview install stays preview-only", serial, async () => {
   const fixture = createTempRepo({ packs: ["pairslash-plan"] });
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     let output = "";
     const exitCode = await runCli({

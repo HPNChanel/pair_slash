@@ -23,6 +23,7 @@
 
 - `2026-04-05T12:28:24.545Z`: `npm run pairslash -- doctor --runtime codex --target repo --format json`
 - `2026-04-05T12:28:31.982Z`: `npm run pairslash -- preview install pairslash-plan --runtime codex --target repo --format json`
+- `2026-09-28`: `codex --version` → `codex-cli 0.153.4` (runtime version capture only; not an install or `/skills` record)
 - Machine-readable sidecar: `docs/evidence/live-runtime/codex-cli-repo-windows.yaml`
 
 ## Claim guard

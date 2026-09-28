@@ -41,7 +41,7 @@ function previewFixturePath(name) {
 
 test("preview install includes asset diff and stays preview-only", serial, async () => {
   const fixture = createTempRepo({ packs: ["pairslash-plan"] });
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   let output = "";
   try {
     const exitCode = await runCli({
@@ -113,7 +113,7 @@ test("preview memory-write-global shows patch details without committing", seria
 
 test("preview lifecycle payload includes policy verdict summary", serial, async () => {
   const fixture = createTempRepo({ packs: ["pairslash-plan"] });
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   let output = "";
   try {
     const exitCode = await runCli({
@@ -175,7 +175,7 @@ test("preview memory-write-global is blocked for invalid source payload", serial
 
 test("preview install reports unsupported runtime capability explicitly with no-silent-fallback", serial, async () => {
   const fixture = createTempRepo({ packs: ["pairslash-plan"] });
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   let output = "";
   try {
     updatePackManifest({

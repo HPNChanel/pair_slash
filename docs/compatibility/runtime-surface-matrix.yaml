@@ -136,7 +136,7 @@ evidence_policy:
           - npm run pairslash -- install pairslash-plan --runtime copilot --target user --apply --yes
         required_tool_presence:
           - gh
-          - gh_copilot_extension
+          - copilot
     smoke_boundary:
       counts_as:
         - runtime_version_capture
@@ -347,10 +347,10 @@ runtime_lanes:
       - docs/runtime-mapping/pilot-acceptance.md
       - packages/tools/compat-lab/tests/acceptance.test.js
       - packages/tools/compat-lab/tests/matrix.test.js
-    deterministic_lab_baseline: 0.116.0
+    deterministic_lab_baseline: 0.153.4
     evidence_data_ref: docs/evidence/live-runtime/codex-cli-repo-macos.yaml
     evidence_source: docs/evidence/live-runtime/codex-cli-repo-macos.md
-    evidence_summary: Archived direct-invocation live smoke exists for Codex CLI 0.116.0 on macOS repo scope, but canonical /skills evidence is still unrecorded.
+    evidence_summary: Archived direct-invocation live smoke exists for Codex CLI 0.116.0 on macOS repo scope, but canonical /skills evidence is still unrecorded. Version fields realigned 2026-09-28 to the live-observed 0.153.x series without new macOS evidence.
     fake_evidence_refs:
       - packages/tools/compat-lab/src/acceptance.ts
     freshness_state: fresh
@@ -364,7 +364,7 @@ runtime_lanes:
       - .pairslash/project-memory/70-known-good-patterns/codex-exec-as-non-interactive-skill-testing-surface.yaml
     os_lane: macOS
     owner_id: runtime-truth
-    recommended_version: 0.116.0
+    recommended_version: 0.153.4
     release_gate: required
     required_evidence_class: live_verification
     runtime: Codex CLI
@@ -390,10 +390,10 @@ runtime_lanes:
       - docs/runtime-mapping/pilot-acceptance.md
       - packages/tools/compat-lab/tests/acceptance.test.js
       - packages/tools/compat-lab/tests/matrix.test.js
-    deterministic_lab_baseline: 2.50.0
+    deterministic_lab_baseline: 2.96.0
     evidence_data_ref: docs/evidence/live-runtime/copilot-cli-user-linux.yaml
     evidence_source: docs/evidence/live-runtime/copilot-cli-user-linux.md
-    evidence_summary: Deterministic installability coverage exists, but no checked-in Linux user /skills verification or live install record is present.
+    evidence_summary: "Deterministic installability coverage exists, but no checked-in Linux user /skills verification or live install record is present. Corrected 2026-09-28: the prior 2.50.x value reflected the gh host CLI version emitted by detection (and faked by compat-lab shims), not the Copilot CLI product series; recommended_version now tracks the observed @github/copilot v1.0.x stable line while deterministic_lab_baseline reflects the gh host version the lab models."
     fake_evidence_refs:
       - packages/tools/compat-lab/src/acceptance.ts
     freshness_state: none-recorded
@@ -405,7 +405,7 @@ runtime_lanes:
     negative_evidence_refs: []
     os_lane: Linux
     owner_id: runtime-truth
-    recommended_version: 2.50.x
+    recommended_version: 1.0.88
     release_gate: required
     required_evidence_class: live_verification
     runtime: GitHub Copilot CLI
@@ -431,10 +431,10 @@ runtime_lanes:
       - docs/runtime-mapping/pilot-acceptance.md
       - packages/tools/compat-lab/tests/acceptance.test.js
       - packages/tools/compat-lab/tests/matrix.test.js
-    deterministic_lab_baseline: 0.116.0
+    deterministic_lab_baseline: 0.153.4
     evidence_data_ref: docs/evidence/live-runtime/codex-cli-repo-windows.yaml
     evidence_source: docs/evidence/live-runtime/codex-cli-repo-windows.md
-    evidence_summary: Real Windows doctor and preview smoke were recorded on 2026-04-05, but install apply and canonical /skills evidence remain unrecorded.
+    evidence_summary: Real Windows doctor and preview smoke were recorded on 2026-04-05, but install apply and canonical /skills evidence remain unrecorded. Runtime version re-captured live on 2026-09-28 (codex-cli 0.153.4 on the Windows host); version fields realigned accordingly.
     fake_evidence_refs:
       - packages/tools/compat-lab/src/acceptance.ts
     freshness_state: fresh
@@ -447,7 +447,7 @@ runtime_lanes:
     negative_evidence_refs: []
     os_lane: Windows
     owner_id: runtime-truth
-    recommended_version: 0.118.0
+    recommended_version: 0.153.4
     release_gate: nightly-only
     required_evidence_class: live_verification
     runtime: Codex CLI
@@ -473,10 +473,10 @@ runtime_lanes:
       - docs/runtime-mapping/pilot-acceptance.md
       - packages/tools/compat-lab/tests/acceptance.test.js
       - packages/tools/compat-lab/tests/matrix.test.js
-    deterministic_lab_baseline: 2.50.0
+    deterministic_lab_baseline: 2.96.0
     evidence_data_ref: docs/evidence/live-runtime/copilot-cli-user-windows.yaml
     evidence_source: docs/evidence/live-runtime/copilot-cli-user-windows.md
-    evidence_summary: A real Windows host probe was recorded on 2026-04-05, but gh was unavailable locally and preview blocked explicitly.
+    evidence_summary: "A real Windows host probe was recorded on 2026-04-05, but gh was unavailable locally and preview blocked explicitly. Re-probed 2026-09-28: gh 2.96.0 is present and gh copilot --help exits 0 via the built-in wrapper, but the copilot binary is absent — wrapper presence is not Copilot CLI proof. Corrected 2026-09-28: the prior 2.50.x value reflected the gh host CLI version, not the Copilot CLI product series; recommended_version now tracks the observed @github/copilot v1.0.x stable line while deterministic_lab_baseline reflects the gh host version the lab models."
     fake_evidence_refs:
       - packages/tools/compat-lab/src/acceptance.ts
     freshness_state: fresh
@@ -490,7 +490,7 @@ runtime_lanes:
       - docs/evidence/live-runtime/copilot-cli-user-windows.md
     os_lane: Windows
     owner_id: runtime-truth
-    recommended_version: 2.50.x
+    recommended_version: 1.0.88
     release_gate: nightly-only
     required_evidence_class: live_verification
     runtime: GitHub Copilot CLI

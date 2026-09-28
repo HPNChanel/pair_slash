@@ -110,8 +110,8 @@ function writeCopilotShim(binDir, version) {
 }
 
 export function installCompatRuntimeShims({
-  codexVersion = "0.116.0",
-  copilotVersion = "2.50.0",
+  codexVersion = "0.153.4",
+  copilotVersion = "2.96.0",
 }: any = {}) {
   const binDir = join(tmpdir(), `pairslash-compat-runtime-${process.pid}-${Date.now()}`);
   mkdirSync(binDir, { recursive: true });

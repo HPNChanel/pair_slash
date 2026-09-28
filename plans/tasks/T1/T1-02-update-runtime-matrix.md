@@ -2,13 +2,13 @@
 id: T1-02
 track: T1
 title: Update runtime-surface-matrix.yaml + stack profile to verified reality
-status: todo
+status: done
 depends_on: [T1-01]
 est_size: M
-claimed_by:
-claimed_at:
-completed_at:
-evidence:
+claimed_by: devin-session
+claimed_at: 2026-09-28
+completed_at: 2026-09-28
+evidence: docs-private/compatibility/runtime-reverification-2026-09.md; regenerated compatibility-matrix.md + compat-lab goldens in same commit
 ---
 
 ## Objective
@@ -51,11 +51,11 @@ Update `docs/compatibility/runtime-surface-matrix.yaml` (the machine-readable tr
 
 ## Acceptance gates
 
-- [ ] `npm run sync:compat-lab -- --check` green after regeneration
-- [ ] `npm run lint`, `npm run test`, `npm run typecheck` green
-- [ ] `npm run test:release` green
-- [ ] No `support_level` field changed
-- [ ] Compatibility-matrix diff shows version/surface updates only, no label promotions
+- [x] `npm run sync:compat-lab -- --check` green after regeneration
+- [x] `npm run lint`, `npm run test`, `npm run typecheck` green
+- [x] `npm run test:release` green
+- [x] No `support_level` field changed
+- [x] Compatibility-matrix diff shows version/surface updates only, no label promotions
 
 ## Evidence to record
 

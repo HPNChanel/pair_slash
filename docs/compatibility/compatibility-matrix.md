@@ -52,7 +52,7 @@ canonical core pack manifests.
 - One-off runs are not enough for `stable-tested`.
 - Scripted live-run steps allowed: `host_profile_capture`, `runtime_version_capture`, `doctor`, `preview_install`, `install_apply`
 - Manual live-run steps required: `canonical_skills_listing`, `workflow_selection_from_skills`, `workflow_prompt_and_response_capture`, `memory_write_preview_observation`
-- Copilot required tool presence: `gh`, `gh_copilot_extension`
+- Copilot required tool presence: `gh`, `copilot`
 - Windows promotion gate requires: `install_apply`, `canonical_picker`, `workflow_execution`
 
 ## Support semantics
@@ -126,10 +126,10 @@ Interpretation rules:
 
 | Runtime | Target | OS lane | Support level | Required evidence | Best live evidence | Freshness | Last verified | Recommended version | Live tested range | Deterministic baseline | Release gate |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Codex CLI | repo | macOS | degraded | live_verification | live_smoke | fresh | 2026-03-21 | 0.116.0 | none recorded | 0.116.0 | required |
-| GitHub Copilot CLI | user | Linux | prep | live_verification | none recorded | none-recorded | none recorded | 2.50.x | none recorded | 2.50.0 | required |
-| Codex CLI | repo | Windows | prep | live_verification | live_smoke | fresh | 2026-04-05T12:28:24.545Z | 0.118.0 | none recorded | 0.116.0 | nightly-only |
-| GitHub Copilot CLI | user | Windows | prep | live_verification | live_smoke | fresh | 2026-04-05T12:28:23.177Z | 2.50.x | none recorded | 2.50.0 | nightly-only |
+| Codex CLI | repo | macOS | degraded | live_verification | live_smoke | fresh | 2026-03-21 | 0.153.4 | none recorded | 0.153.4 | required |
+| GitHub Copilot CLI | user | Linux | prep | live_verification | none recorded | none-recorded | none recorded | 1.0.88 | none recorded | 2.96.0 | required |
+| Codex CLI | repo | Windows | prep | live_verification | live_smoke | fresh | 2026-04-05T12:28:24.545Z | 0.153.4 | none recorded | 0.153.4 | nightly-only |
+| GitHub Copilot CLI | user | Windows | prep | live_verification | live_smoke | fresh | 2026-04-05T12:28:23.177Z | 1.0.88 | none recorded | 2.96.0 | nightly-only |
 
 ## Known issues
 

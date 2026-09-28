@@ -21,7 +21,7 @@ function repoStatePath(tempRoot, runtime = "codex_cli", target = "repo") {
 
 function buildCodexTestAdapter({
   runtimeAvailable = true,
-  runtimeVersion = "0.116.0",
+  runtimeVersion = "0.153.4",
   writable = true,
   writableError = "permission denied",
   resolveConfigHome = null,
@@ -78,7 +78,7 @@ function buildCodexTestAdapter({
 
 test("doctor reports structured environment summary for codex repo lane", () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     const report = runDoctor({
       repoRoot: fixture.tempRoot,
@@ -125,7 +125,7 @@ test("doctor reports structured environment summary for codex repo lane", () => 
 
 test("doctor fails when a manifest workflow maturity claim outruns effective evidence-backed maturity", () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     updatePackManifest({
       repoRoot: fixture.tempRoot,
@@ -165,7 +165,7 @@ test("doctor fails when a manifest workflow maturity claim outruns effective evi
 
 test("doctor first workflow guidance honors catalog default recommendation", () => {
   const fixture = createTempRepo({ packs: ["pairslash-plan", "pairslash-review"] });
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     updatePackManifest({
       repoRoot: fixture.tempRoot,
@@ -197,7 +197,7 @@ test("doctor first workflow guidance honors catalog default recommendation", () 
 
 test("doctor surfaces installed pack trust posture from install state", () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     applyInstall(planInstall({ repoRoot: fixture.tempRoot, runtime: "codex", target: "repo" }));
     const report = runDoctor({
@@ -238,7 +238,7 @@ test("doctor marks unsupported operating systems with blocking verdict", () => {
 
 test("doctor reports both scope probes and blocks only the selected scope", () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     mkdirSync(join(fixture.tempRoot, ".agents", "skills"), { recursive: true });
     mkdirSync(join(fixture.tempRoot, "home", ".agents", "skills"), { recursive: true });
@@ -270,7 +270,7 @@ test("doctor reports both scope probes and blocks only the selected scope", () =
 
 test("doctor returns degraded when override-eligible file is edited after install", () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     applyInstall(planInstall({ repoRoot: fixture.tempRoot, runtime: "codex", target: "repo" }));
     const skillPath = join(fixture.tempRoot, ".agents", "skills", "pairslash-plan", "SKILL.md");
@@ -293,7 +293,7 @@ test("doctor returns degraded when override-eligible file is edited after instal
 
 test("doctor mirrors install preview when unmanaged pack directories are non-blocking", () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     const sourceSkillPath = join(
       fixture.tempRoot,
@@ -350,7 +350,7 @@ test("doctor mirrors install preview when unmanaged pack directories are non-blo
 
 test("doctor blocks when selected pack install root is not a directory", () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     mkdirSync(join(fixture.tempRoot, ".agents", "skills"), { recursive: true });
     writeFileSync(join(fixture.tempRoot, ".agents", "skills", "pairslash-plan"), "blocked-root\n");
@@ -373,7 +373,7 @@ test("doctor blocks when selected pack install root is not a directory", () => {
 
 test("doctor default install intent does not block on off-intent unmanaged collisions", () => {
   const fixture = createTempRepo({ packs: ["pairslash-plan", "pairslash-review"] });
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     writeManualInstallFile({
       repoRoot: fixture.tempRoot,
@@ -405,7 +405,7 @@ test("doctor default install intent does not block on off-intent unmanaged colli
 
 test("doctor emits blocked remediation command decisions for unmanaged conflicts", () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     writeManualInstallFile({
       repoRoot: fixture.tempRoot,
@@ -445,7 +445,7 @@ test("doctor emits blocked remediation command decisions for unmanaged conflicts
 
 test("doctor blocks stale install-state metadata with the same lifecycle reason code", () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     mkdirSync(join(fixture.tempRoot, ".pairslash", "install-state"), { recursive: true });
     writeFileSync(
@@ -485,7 +485,7 @@ test("doctor blocks stale install-state metadata with the same lifecycle reason 
 
 test("doctor keeps reconciled unmanaged files visible after install", () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     writeManualInstallFile({
       repoRoot: fixture.tempRoot,
@@ -513,7 +513,7 @@ test("doctor keeps reconciled unmanaged files visible after install", () => {
 
 test("doctor blocks explicit install intent when requested packs are already managed", () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     applyInstall(planInstall({ repoRoot: fixture.tempRoot, runtime: "codex", target: "repo" }));
 
@@ -621,7 +621,7 @@ test("doctor remediation status is blocked whenever install is blocked", () => {
 
 test("doctor fails when config home path is a file", () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     writeFileSync(join(fixture.tempRoot, ".agents"), "not-a-directory");
     const report = runDoctor({
@@ -646,7 +646,7 @@ test("doctor fails permission-denied check with explicit remediation", () => {
       target: "repo",
       _adapter_override: buildCodexTestAdapter({
         runtimeAvailable: true,
-        runtimeVersion: "0.116.0",
+        runtimeVersion: "0.153.4",
         writable: false,
         writableError: "mocked permission denied",
       }),
@@ -664,7 +664,7 @@ test("doctor fails permission-denied check with explicit remediation", () => {
 
 test("doctor fails direct invocation naming conflicts", () => {
   const fixture = createTempRepo({ packs: ["pairslash-plan", "pairslash-review"] });
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     updatePackManifest({
       repoRoot: fixture.tempRoot,
@@ -695,7 +695,7 @@ test("doctor fails direct invocation naming conflicts", () => {
 
 test("doctor targeted pack ignores unrelated invalid manifest", () => {
   const fixture = createTempRepo({ packs: ["pairslash-plan", "pairslash-review"] });
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     updatePackManifest({
       repoRoot: fixture.tempRoot,
@@ -728,7 +728,7 @@ test("doctor targeted pack ignores unrelated invalid manifest", () => {
 
 test("doctor fails missing required tool checks", () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     updatePackManifest({
       repoRoot: fixture.tempRoot,
@@ -762,7 +762,7 @@ test("doctor fails missing required tool checks", () => {
 
 test("doctor fails missing MCP config for installed pack", () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     updatePackTrustAuthority({
       repoRoot: fixture.tempRoot,
@@ -811,7 +811,7 @@ test("doctor fails missing MCP config for installed pack", () => {
 
 test("doctor fails when install state shows runtime-native asset placement drift", () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     applyInstall(planInstall({ repoRoot: fixture.tempRoot, runtime: "codex", target: "repo" }));
     const statePath = join(
@@ -839,7 +839,7 @@ test("doctor fails when install state shows runtime-native asset placement drift
 
 test("doctor supports copilot user scope smoke lane", () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ copilotVersion: "2.50.0" });
+  const runtime = installFakeRuntime({ copilotVersion: "2.96.0" });
   const homePath = join(fixture.tempRoot, "home");
   mkdirSync(homePath, { recursive: true });
   runtime.setHome(homePath);

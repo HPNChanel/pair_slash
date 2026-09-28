@@ -653,7 +653,7 @@ test("onboarding path keeps workflow labels and recommendation boundaries explic
 });
 
 test("catalog, doctor, and compatibility artifacts stay semantically aligned on core workflow selection", () => {
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     const catalogRecords = loadPackCatalogRecords(repoRoot, { includeAdvanced: false });
     const defaultRecord = selectDefaultCatalogPack(catalogRecords);

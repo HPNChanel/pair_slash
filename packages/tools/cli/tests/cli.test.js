@@ -91,7 +91,7 @@ function readOptionalFile(path) {
 }
 
 test("pairslash preview install emits json plan", serial, async () => {
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   let output = "";
   try {
     const exitCode = await runCli({
@@ -125,7 +125,7 @@ test("pairslash preview install emits json plan", serial, async () => {
 
 test("pairslash preview install json includes lifecycle reason codes and remediation actions", serial, async () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   let output = "";
   try {
     writeManualInstallFile({
@@ -182,7 +182,7 @@ test("pairslash preview rejects unknown action", serial, async () => {
 });
 
 test("pairslash install --apply requires confirmation in non-interactive mode", serial, async () => {
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     await assert.rejects(
       () =>
@@ -206,7 +206,7 @@ test("pairslash install --apply requires confirmation in non-interactive mode", 
 
 test("pairslash install without pack id selects bootstrap pack-set", serial, async () => {
   const fixture = createTempRepo({ packs: ["pairslash-plan", "pairslash-review"] });
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   let output = "";
   try {
     const exitCode = await runCli({
@@ -229,7 +229,7 @@ test("pairslash install without pack id selects bootstrap pack-set", serial, asy
 
 test("pairslash install without pack id honors catalog default recommendation", serial, async () => {
   const fixture = createTempRepo({ packs: ["pairslash-plan", "pairslash-review"] });
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   let output = "";
   try {
     updatePackManifest({
@@ -268,7 +268,7 @@ test("pairslash install without pack id honors catalog default recommendation", 
 
 test("pairslash install --all selects all valid manifests in the repo", serial, async () => {
   const fixture = createTempRepo({ packs: ["pairslash-plan", "pairslash-review"] });
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   let output = "";
   try {
     const exitCode = await runCli({
@@ -319,7 +319,7 @@ test("pairslash update rejects install-only --pack-set flags", serial, async () 
 
 test("pairslash install writes preview plan to disk", serial, async () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   let output = "";
   try {
     const exitCode = await runCli({
@@ -354,7 +354,7 @@ test("pairslash install writes preview plan to disk", serial, async () => {
 
 test("pairslash install --dry-run emits preview without mutating state", serial, async () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ copilotVersion: "2.50.0" });
+  const runtime = installFakeRuntime({ copilotVersion: "2.96.0" });
   let output = "";
   try {
     const exitCode = await runCli({
@@ -393,8 +393,8 @@ test("pairslash install --dry-run emits preview without mutating state", serial,
 test("pairslash install with --runtime auto rejects ambiguous runtime detection", serial, async () => {
   const fixture = createTempRepo();
   const runtime = installFakeRuntime({
-    codexVersion: "0.116.0",
-    copilotVersion: "2.50.0",
+    codexVersion: "0.153.4",
+    copilotVersion: "2.96.0",
   });
   try {
     await assert.rejects(
@@ -415,7 +415,7 @@ test("pairslash install with --runtime auto rejects ambiguous runtime detection"
 });
 
 test("pairslash install rejects conflicting --apply and --dry-run", serial, async () => {
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     await assert.rejects(
       () =>
@@ -442,7 +442,7 @@ test("pairslash install rejects conflicting --apply and --dry-run", serial, asyn
 
 test("pairslash update --dry-run emits preview with from/to metadata", serial, async () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   let output = "";
   try {
     await runCli({
@@ -484,7 +484,7 @@ test("pairslash update --dry-run emits preview with from/to metadata", serial, a
 
 test("pairslash update without pack id selects all installed packs", serial, async () => {
   const fixture = createTempRepo({ packs: ["pairslash-plan", "pairslash-review"] });
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   let output = "";
   try {
     await runCli({
@@ -512,7 +512,7 @@ test("pairslash update without pack id selects all installed packs", serial, asy
 });
 
 test("pairslash update rejects --force in phase 4", serial, async () => {
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     await assert.rejects(
       () =>
@@ -530,7 +530,7 @@ test("pairslash update rejects --force in phase 4", serial, async () => {
 
 test("pairslash uninstall without pack id selects all installed packs", serial, async () => {
   const fixture = createTempRepo({ packs: ["pairslash-plan", "pairslash-review"] });
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   let output = "";
   try {
     await runCli({
@@ -559,7 +559,7 @@ test("pairslash uninstall without pack id selects all installed packs", serial, 
 
 test("pairslash uninstall --apply emits lifecycle summary and removes state", serial, async () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   let output = "";
   try {
     await runCli({
@@ -593,7 +593,7 @@ test("pairslash uninstall --apply emits lifecycle summary and removes state", se
 
 test("pairslash doctor emits structured json report", serial, async () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   let output = "";
   try {
     const exitCode = await runCli({
@@ -628,7 +628,7 @@ test("pairslash doctor emits structured json report", serial, async () => {
 
 test("pairslash doctor json includes lifecycle reason codes and remediation actions", serial, async () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   let output = "";
   try {
     writeManualInstallFile({
@@ -675,7 +675,7 @@ test("pairslash doctor json includes lifecycle reason codes and remediation acti
 
 test("pairslash preview install and doctor --packs share managed reinstall reason code", serial, async () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   let previewOutput = "";
   let doctorOutput = "";
   try {
@@ -753,7 +753,7 @@ test("pairslash preview install and doctor --packs share managed reinstall reaso
 
 test("pairslash preview install and doctor block non-directory pack install root", serial, async () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   let previewOutput = "";
   let doctorOutput = "";
   try {
@@ -806,7 +806,7 @@ test("pairslash preview install and doctor block non-directory pack install root
 
 test("pairslash doctor text output includes immediate next action", serial, async () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   let output = "";
   try {
     const exitCode = await runCli({
@@ -834,7 +834,7 @@ test("pairslash doctor text output includes immediate next action", serial, asyn
 
 test("pairslash doctor --strict fails on non-blocking warnings", serial, async () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     const exitCode = await runCli({
       argv: ["doctor", "--runtime", "codex", "--target", "repo", "--strict"],
@@ -850,7 +850,7 @@ test("pairslash doctor --strict fails on non-blocking warnings", serial, async (
 
 test("pairslash doctor auto runtime resolves from install state", serial, async () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   let output = "";
   try {
     await runCli({
@@ -932,7 +932,7 @@ test("pairslash preview memory-write-global emits preview without mutating memor
 
 test("pairslash preview memory-write-global resolves --runtime auto from the detected runtime", serial, async () => {
   const fixture = createTempRepo({ packs: ["pairslash-memory-write-global"] });
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   let output = "";
   try {
     seedMemoryIndex(fixture.tempRoot);
@@ -979,7 +979,7 @@ test("pairslash preview memory-write-global resolves --runtime auto from the det
 
 test("pairslash preview memory-write-global fails --runtime auto when multiple runtimes are detected", serial, async () => {
   const fixture = createTempRepo({ packs: ["pairslash-memory-write-global"] });
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0", copilotVersion: "1.2.3" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4", copilotVersion: "1.2.3" });
   try {
     seedMemoryIndex(fixture.tempRoot);
     await assert.rejects(
@@ -1626,7 +1626,7 @@ test("pairslash memory candidate fails clearly when source records are malformed
 
 test("pairslash memory audit emits schema-valid read-only report with shared-loader conflict surfacing", serial, async () => {
   const fixture = createTempRepo({ packs: ["pairslash-memory-audit"] });
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   let output = "";
   try {
     mkdirSync(join(fixture.tempRoot, ".pairslash", "task-memory"), { recursive: true });
@@ -1732,7 +1732,7 @@ test("pairslash memory audit fails clearly when audit scope is missing", serial,
 
 test("pairslash explain-context keeps read-authority resolution consistent across codex and copilot lanes", serial, async () => {
   const fixture = createTempRepo({ packs: ["pairslash-memory-candidate"] });
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0", copilotVersion: "2.50.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4", copilotVersion: "2.96.0" });
   let codexOutput = "";
   let copilotOutput = "";
   try {
@@ -1828,7 +1828,7 @@ test("pairslash explain-context keeps read-authority resolution consistent acros
 
 test("authoritative read-path journey surfaces session conflict and keeps read workflows non-mutating", serial, async () => {
   const fixture = createTempRepo({ packs: ["pairslash-memory-candidate"] });
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   let candidateOutput = "";
   let explanationOutput = "";
   try {
@@ -1945,7 +1945,7 @@ test("authoritative read-path journey surfaces session conflict and keeps read w
 
 test("pairslash explain-context emits structured json report", serial, async () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   let output = "";
   try {
     mkdirSync(join(fixture.tempRoot, ".pairslash", "project-memory"), { recursive: true });
@@ -2005,7 +2005,7 @@ test("pairslash explain-context emits structured json report", serial, async () 
 
 test("pairslash explain-context resolves candidate read authority with authoritative and supporting layers", serial, async () => {
   const fixture = createTempRepo({ packs: ["pairslash-plan", "pairslash-memory-candidate"] });
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   let output = "";
   try {
     mkdirSync(join(fixture.tempRoot, ".pairslash", "task-memory"), { recursive: true });
@@ -2104,7 +2104,7 @@ test("pairslash explain-context resolves candidate read authority with authorita
 
 test("pairslash explain-context emits runtime host probe event", serial, async () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   try {
     await runCli({
       argv: ["explain-context", "pairslash-plan", "--runtime", "codex", "--format", "json"],
@@ -2130,7 +2130,7 @@ test("pairslash explain-context emits runtime host probe event", serial, async (
 
 test("pairslash explain-policy emits preview requirement for memory write apply", serial, async () => {
   const fixture = createTempRepo({ packs: ["pairslash-memory-write-global"] });
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   let output = "";
   try {
     const exitCode = await runCli({
@@ -2164,7 +2164,7 @@ test("pairslash explain-policy emits preview requirement for memory write apply"
 
 test("pairslash debug emits latest prior session report", serial, async () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   let output = "";
   try {
     await runCli({
@@ -2195,7 +2195,7 @@ test("pairslash debug emits latest prior session report", serial, async () => {
 
 test("pairslash trace export can emit support bundle", serial, async () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   let output = "";
   try {
     await runCli({
@@ -2249,7 +2249,7 @@ test("pairslash trace export can emit support bundle", serial, async () => {
 
 test("pairslash telemetry summary derives local metrics from trace sessions", serial, async () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
   let output = "";
   try {
     await runCli({
