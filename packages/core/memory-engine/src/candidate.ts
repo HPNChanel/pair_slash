@@ -34,14 +34,14 @@ const DIRECTORY_FILES = {
   "incident-lesson": "80-incidents-and-lessons",
 };
 
-function normalizeText(value) {
+function normalizeText(value: unknown) {
   return String(value ?? "")
     .trim()
     .toLowerCase()
     .replace(/\s+/g, " ");
 }
 
-function slugify(value) {
+function slugify(value: unknown) {
   return String(value ?? "")
     .toLowerCase()
     .normalize("NFKD")
@@ -52,17 +52,17 @@ function slugify(value) {
     .slice(0, 60);
 }
 
-function candidateId(seed) {
+function candidateId(seed: any) {
   return createHash("sha256").update(seed).digest("hex").slice(0, 16);
 }
 
-function parseYamlDocuments(path) {
+function parseYamlDocuments(path: string) {
   return YAML.parseAllDocuments(readFileSync(path, "utf8"))
-    .map((document) => document.toJSON())
+    .map((document: any) => document.toJSON())
     .filter(Boolean);
 }
 
-function buildClaimKey(record) {
+function buildClaimKey(record: any) {
   return [
     normalizeText(record.kind),
     normalizeText(record.title),
@@ -71,17 +71,17 @@ function buildClaimKey(record) {
   ].join("|");
 }
 
-function routeTargetFile(record) {
-  if (DIRECTORY_FILES[record.kind]) {
-    return `${DIRECTORY_FILES[record.kind]}/${slugify(record.title)}.yaml`;
+function routeTargetFile(record: any) {
+  if (DIRECTORY_FILES[record.kind as keyof typeof DIRECTORY_FILES]) {
+    return `${DIRECTORY_FILES[record.kind as keyof typeof DIRECTORY_FILES]}/${slugify(record.title)}.yaml`;
   }
-  return ROOT_FILES[record.kind] ?? "90-memory-index.yaml";
+  return ROOT_FILES[record.kind as keyof typeof ROOT_FILES] ?? "90-memory-index.yaml";
 }
 
-function normalizeEvidence(value) {
+function normalizeEvidence(value: unknown) {
   const values = Array.isArray(value) ? value : typeof value === "string" ? [value] : [];
   const unique = new Set();
-  const out = [];
+  const out: any[] = [];
   for (const entry of values) {
     const normalized = String(entry ?? "").trim();
     if (!normalized || unique.has(normalized)) {
@@ -93,7 +93,7 @@ function normalizeEvidence(value) {
   return out;
 }
 
-function coerceLayerRecord(layerId, rawRecord) {
+function coerceLayerRecord(layerId: any, rawRecord: any) {
   if (!rawRecord || typeof rawRecord !== "object") {
     return null;
   }
@@ -126,9 +126,9 @@ function coerceLayerRecord(layerId, rawRecord) {
   };
 }
 
-function collectLayerRecords({ repoRoot, layer }) {
-  const records = [];
-  const warnings = [];
+function collectLayerRecords({ repoRoot, layer }: { repoRoot: string; layer?: any }) {
+  const records: any[] = [];
+  const warnings: string[] = [];
   const sortedPaths = (layer.resolved_paths ?? []).slice().sort((left: any, right: any) => left.localeCompare(right));
   for (const relativePath of sortedPaths) {
     if (!RECORD_EXTENSIONS.has(extname(relativePath).toLowerCase())) {
@@ -151,13 +151,13 @@ function collectLayerRecords({ repoRoot, layer }) {
         });
       }
     } catch (error) {
-      warnings.push(`unreadable:${relativePath}:${error.message}`);
+      warnings.push(`unreadable:${relativePath}:${error instanceof Error ? error.message : String(error)}`);
     }
   }
   return { records, warnings };
 }
 
-function deriveConfidence(record) {
+function deriveConfidence(record: any) {
   if (record.confidence && VALID_CONFIDENCE.has(record.confidence)) {
     return {
       confidence: record.confidence,
@@ -182,7 +182,7 @@ function deriveConfidence(record) {
   };
 }
 
-function classifyCandidate({ duplicate, conflict, evidenceCount }) {
+function classifyCandidate({ duplicate, conflict, evidenceCount }: { duplicate?: any; conflict?: any; evidenceCount?: any }) {
   if (duplicate) {
     return {
       novelty: "duplicate",
@@ -219,7 +219,7 @@ function classifyCandidate({ duplicate, conflict, evidenceCount }) {
   };
 }
 
-function findGlobalMatch(record, globalByClaimKey, globalByIdentity) {
+function findGlobalMatch(record: any, globalByClaimKey: any, globalByIdentity: any) {
   const byClaim = globalByClaimKey.get(record.claim_key);
   if (byClaim) {
     return byClaim;
@@ -233,18 +233,18 @@ function findGlobalMatch(record, globalByClaimKey, globalByIdentity) {
   return globalByIdentity.get(identity) ?? null;
 }
 
-function chooseNextAction(candidates) {
+function chooseNextAction(candidates: any[]) {
   if (candidates.length === 0) {
     return "REJECT_CANDIDATES";
   }
   if (
-    candidates.some((candidate) =>
+    candidates.some((candidate: any) =>
       ["keep-as-candidate", "needs-supersede-review"].includes(candidate.classification),
     )
   ) {
     return "USE_PAIRSLASH_MEMORY_WRITE_GLOBAL";
   }
-  if (candidates.every((candidate) => candidate.classification === "too-weak-do-not-promote")) {
+  if (candidates.every((candidate: any) => candidate.classification === "too-weak-do-not-promote")) {
     return "REJECT_CANDIDATES";
   }
   return "KEEP_IN_TASK_MEMORY";
@@ -270,7 +270,7 @@ export function buildMemoryCandidateReport({
     repoRoot,
     packId: "pairslash-memory-candidate",
   });
-  const globalLayer = (resolution.layers ?? []).find((layer) => layer.layer === "global-project-memory");
+  const globalLayer = (resolution.layers ?? []).find((layer: any) => layer.layer === "global-project-memory");
   if (!globalLayer || (globalLayer.resolved_paths ?? []).length === 0) {
     throw new Error("candidate-context-insufficient: authoritative Global Project Memory could not be resolved");
   }
@@ -294,10 +294,10 @@ export function buildMemoryCandidateReport({
   }
 
   const sourceLayers = (resolution.layers ?? [])
-    .filter((layer) => SOURCE_LAYERS.includes(layer.layer))
-    .sort((left, right) => left.precedence - right.precedence);
-  const sourceRecords = [];
-  const sourceWarnings = [];
+    .filter((layer: any) => SOURCE_LAYERS.includes(layer.layer))
+    .sort((left: any, right: any) => left.precedence - right.precedence);
+  const sourceRecords: any[] = [];
+  const sourceWarnings: any[] = [];
   for (const layer of sourceLayers) {
     const collected = collectLayerRecords({ repoRoot, layer });
     sourceRecords.push(...collected.records);
@@ -312,7 +312,7 @@ export function buildMemoryCandidateReport({
 
   const sortedSourceRecords = sourceRecords
     .slice()
-    .sort((left, right) => {
+    .sort((left: any, right: any) => {
       if (left.precedence !== right.precedence) {
         return left.precedence - right.precedence;
       }
@@ -321,7 +321,7 @@ export function buildMemoryCandidateReport({
       }
       return left.claim_key.localeCompare(right.claim_key);
     });
-  const allCandidates = sortedSourceRecords.map((record, sortedIndex) => {
+  const allCandidates = sortedSourceRecords.map((record: any, sortedIndex: any) => {
     const matchedGlobal = findGlobalMatch(record, globalByClaimKey, globalByIdentity);
     const candidateStatement = normalizeText(record.statement);
     const globalStatement = normalizeText(matchedGlobal?.statement);
@@ -344,7 +344,7 @@ export function buildMemoryCandidateReport({
       conflict,
       evidenceCount: record.evidence.length,
     });
-    const reasons = [];
+    const reasons: string[] = [];
     if (duplicate) {
       reasons.push("statement-match-with-global");
     }
@@ -399,19 +399,19 @@ export function buildMemoryCandidateReport({
   });
   const candidates = allCandidates.slice(0, maxCandidates);
 
-  if (allCandidates.every((candidate) => candidate.evidence.length === 0)) {
+  if (allCandidates.every((candidate: any) => candidate.evidence.length === 0)) {
     throw new Error("candidate-context-insufficient: extracted candidates have no evidence");
   }
 
   const duplicatesFound = allCandidates
-    .filter((candidate) => candidate.suspicion.duplicate)
-    .map((candidate) => candidate.id);
+    .filter((candidate: any) => candidate.suspicion.duplicate)
+    .map((candidate: any) => candidate.id);
   const conflictsFound = allCandidates
-    .filter((candidate) => candidate.suspicion.conflict)
-    .map((candidate) => candidate.id);
+    .filter((candidate: any) => candidate.suspicion.conflict)
+    .map((candidate: any) => candidate.id);
   const missingEvidence = allCandidates
-    .filter((candidate) => candidate.evidence.length === 0)
-    .map((candidate) => candidate.id);
+    .filter((candidate: any) => candidate.evidence.length === 0)
+    .map((candidate: any) => candidate.id);
   const unresolvedContext = [
     ...(resolution.missing_paths ?? []),
     ...(resolution.warnings ?? []),
@@ -438,15 +438,15 @@ export function buildMemoryCandidateReport({
       evidence_sources:
         evidenceSources.length > 0
           ? evidenceSources.slice()
-          : sourceLayers.flatMap((layer) => layer.resolved_paths ?? []),
+          : sourceLayers.flatMap((layer: any) => layer.resolved_paths ?? []),
       candidate_count_estimate: sortedSourceRecords.length,
       risk_notes: resolvedContext,
     },
     candidates,
     reconciliation: {
       existing_records_checked: globalCollected.records
-        .map((record) => record.file)
-        .filter((value, index, values) => values.indexOf(value) === index)
+        .map((record: any) => record.file)
+        .filter((value: unknown, index: number, values: unknown[]) => values.indexOf(value) === index)
         .sort((left: any, right: any) => left.localeCompare(right)),
       duplicates_found: duplicatesFound,
       conflicts_found: conflictsFound,

@@ -78,8 +78,8 @@ export function buildCommonAnalysis({
   if (payload.record.action === "reject-candidate-if-conflict" && candidateConflicts.length === 0) {
     pipelineErrors.push("reject-candidate-if-conflict requires a conflicting task/session/staging candidate");
   }
-  pipelineErrors.push(...duplicates.map((entry) => `duplicate:${buildRecordId(entry.record)}`));
-  pipelineErrors.push(...conflicts.map((entry) => `conflict:${buildRecordId(entry.record)}`));
+  pipelineErrors.push(...duplicates.map((entry: any) => `duplicate:${buildRecordId(entry.record)}`));
+  pipelineErrors.push(...conflicts.map((entry: any) => `conflict:${buildRecordId(entry.record)}`));
   const lowConfidenceWarning =
     payload.record.confidence === "low"
       ? "low-confidence: prefer task-memory or staging unless authoritative commit is explicitly justified"
@@ -97,7 +97,7 @@ export function buildCommonAnalysis({
       apply: false,
       preview_requested: true,
       approval: "none",
-      conflicts: pipelineErrors.filter((entry) => entry.startsWith("duplicate:") || entry.startsWith("conflict:")),
+      conflicts: pipelineErrors.filter((entry: any) => entry.startsWith("duplicate:") || entry.startsWith("conflict:")),
       workflow_class: policyContext.workflow_class,
       authority_mode: policyContext.authority_mode,
       read_only_workflow: policyContext.read_only_workflow,
@@ -124,7 +124,7 @@ export function buildCommonAnalysis({
       requestErrors.length > 0
         ? ["blocked by invalid request"]
         : duplicates.length > 0
-          ? duplicates.map((entry) => buildRecordId(entry.record))
+          ? duplicates.map((entry: any) => buildRecordId(entry.record))
           : ["no authoritative duplicates found"],
     ),
     buildStage(
@@ -132,18 +132,18 @@ export function buildCommonAnalysis({
       requestErrors.length > 0
         ? "skipped"
         : conflicts.length > 0 ||
-            pipelineErrors.some((entry) => entry.startsWith("supersede-target-missing")) ||
+            pipelineErrors.some((entry: any) => entry.startsWith("supersede-target-missing")) ||
             pipelineErrors.includes("reject-candidate-if-conflict requires a conflicting task/session/staging candidate")
           ? "blocked"
           : "ok",
       requestErrors.length > 0
         ? ["blocked by invalid request"]
         : [
-            ...conflicts.map((entry) => buildRecordId(entry.record)),
-            ...pipelineErrors.filter((entry) => entry.startsWith("supersede-target-missing")),
+            ...conflicts.map((entry: any) => buildRecordId(entry.record)),
+            ...pipelineErrors.filter((entry: any) => entry.startsWith("supersede-target-missing")),
             ...(payload.record.action === "reject-candidate-if-conflict"
               ? candidateConflicts.length > 0
-                ? candidateConflicts.map((entry) => `candidate:${buildRecordId(entry.record)}`)
+                ? candidateConflicts.map((entry: any) => `candidate:${buildRecordId(entry.record)}`)
                 : ["no conflicting candidate found"]
               : ["no authoritative conflicts found"]),
           ],
@@ -216,7 +216,7 @@ export function persistStagingArtifact({
   readyForApply,
   warnings,
   errors,
-}) {
+}: { absolutePath?: any; artifactReference?: any; payload?: any; previewPatch?: any; pipelineStages?: any; relatedRecords?: any; duplicateMatches?: any; conflictMatches?: any; scopeWarnings?: any; recordDisposition?: any; approval?: any; policyVerdict?: any; readyForApply?: any; warnings?: string[]; errors?: string[] }) {
   const artifact = {
     kind: "memory-write-staging-artifact",
     schema_version: MEMORY_WRITE_STAGING_SCHEMA_VERSION,
@@ -255,7 +255,7 @@ export function loadStagingArtifactForRequest({
   runtime = "codex_cli",
   target = "repo",
   requestSource = "cli",
-}) {
+}: { repoRoot: string; request?: any; runtime?: string; target?: any; requestSource?: any }) {
   const { payload, requestIdentity, errors } = buildRequest({
     request,
     runtime,
@@ -281,7 +281,7 @@ export function loadStagingArtifactForRequest({
   return artifact;
 }
 
-export function createPreviewFromArtifact(artifact) {
+export function createPreviewFromArtifact(artifact: any) {
   const preview = {
     kind: "memory-write-preview",
     schema_version: MEMORY_WRITE_PREVIEW_SCHEMA_VERSION,
@@ -334,7 +334,7 @@ export function createResultBase({
   indexUpdated = false,
   warnings = [],
   errors = [],
-}) {
+}: { status?: any; committed?: any; request?: any; policyVerdict?: any; pipelineStages?: any; relatedRecords?: any; duplicateMatches?: any; conflictMatches?: any; scopeWarnings?: any; recordDisposition?: any; stagingArtifact?: any; approval?: any; targetFile?: any; auditLogPath?: any; indexUpdated?: any; warnings?: string[]; errors?: string[] }) {
   const result = {
     kind: "memory-write-result",
     schema_version: MEMORY_WRITE_RESULT_SCHEMA_VERSION,

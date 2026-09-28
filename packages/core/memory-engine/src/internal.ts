@@ -41,7 +41,7 @@ export const ALLOWED_RECORD_FIELDS = new Set([
   "timestamp",
 ]);
 
-export function slugify(value) {
+export function slugify(value: unknown) {
   return String(value ?? "")
     .toLowerCase()
     .normalize("NFKD")
@@ -52,27 +52,27 @@ export function slugify(value) {
     .slice(0, 60);
 }
 
-export function normalizeText(value) {
+export function normalizeText(value: unknown) {
   return String(value ?? "")
     .trim()
     .toLowerCase()
     .replace(/\s+/g, " ");
 }
 
-export function normalizeStringList(value) {
+export function normalizeStringList(value: unknown) {
   if (!Array.isArray(value)) {
     return value ?? [];
   }
-  return [...new Set(value.map((entry) => String(entry).trim()).filter(Boolean))].sort((left, right) =>
+  return [...new Set(value.map((entry: any) => String(entry).trim()).filter(Boolean))].sort((left: any, right: any) =>
     left.localeCompare(right),
   );
 }
 
-export function stableHash(value) {
+export function stableHash(value: unknown) {
   return createHash("sha256").update(stableYaml(value)).digest("hex");
 }
 
-export function buildStage(name, status, notes = []) {
+export function buildStage(name: string, status: any, notes: any = []) {
   return {
     name,
     status,
@@ -89,7 +89,7 @@ export function buildApproval({ required = true, state = "pending" }: any = {}) 
   };
 }
 
-export function buildArtifactReference({ artifactId, artifactPath, requestKey, contentFingerprint, exists: present }) {
+export function buildArtifactReference({ artifactId, artifactPath, requestKey, contentFingerprint, exists: present }: { artifactId?: any; artifactPath?: any; requestKey?: any; contentFingerprint?: any; exists?: any }) {
   return {
     artifact_id: artifactId,
     path: artifactPath,
@@ -99,7 +99,7 @@ export function buildArtifactReference({ artifactId, artifactPath, requestKey, c
   };
 }
 
-export function buildArtifactPath({ repoRoot, requestIdentity, record }) {
+export function buildArtifactPath({ repoRoot, requestIdentity, record }: { repoRoot: string; requestIdentity?: any; record?: any }) {
   const artifactId = stableHash(requestIdentity).slice(0, 16);
   const relativePath = `.pairslash/staging/memory-write-${artifactId}-${slugify(record.title)}.yaml`;
   return {
@@ -110,7 +110,7 @@ export function buildArtifactPath({ repoRoot, requestIdentity, record }) {
 }
 
 export function authorityErrors(contract: any, policyContext: any = {}) {
-  const errors = [];
+  const errors: string[] = [];
   if (
     contract.memory_contract?.authoritative_write_allowed &&
     (policyContext.read_only_workflow === true ||
@@ -125,21 +125,21 @@ export function authorityErrors(contract: any, policyContext: any = {}) {
   return errors;
 }
 
-export function buildRecordId(record) {
+export function buildRecordId(record: any) {
   return `${record.kind}/${record.title}`;
 }
 
-export function scopesMatch(left, right) {
+export function scopesMatch(left: any, right: any) {
   return (
     left.scope === right.scope &&
     normalizeText(left.scope_detail ?? "") === normalizeText(right.scope_detail ?? "")
   );
 }
 
-export function titlesMatch(left, right) {
+export function titlesMatch(left: any, right: any) {
   return normalizeText(left.title) === normalizeText(right.title);
 }
 
-export function statementsMatch(left, right) {
+export function statementsMatch(left: any, right: any) {
   return normalizeText(left.statement) === normalizeText(right.statement);
 }

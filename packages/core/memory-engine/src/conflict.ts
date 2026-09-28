@@ -10,11 +10,11 @@ import {
 } from "./internal.ts";
 import { routeTargetFile } from "./records.ts";
 
-export function relativeFromProjectMemory(repoRoot, absolutePath) {
+export function relativeFromProjectMemory(repoRoot: string, absolutePath: any) {
   return relative(resolve(repoRoot, ".pairslash", "project-memory"), absolutePath).replace(/\\/g, "/");
 }
 
-export function summarizeEntry(entry, reasons = []) {
+export function summarizeEntry(entry: any, reasons: any = []) {
   return {
     layer: entry.layer,
     file: entry.file.replace(/\\/g, "/"),
@@ -28,18 +28,18 @@ export function summarizeEntry(entry, reasons = []) {
   };
 }
 
-export function findSupersedeTarget(existingRecords, record) {
+export function findSupersedeTarget(existingRecords: any, record: any) {
   return existingRecords.find(
-    (entry) =>
+    (entry: any) =>
       entry.layer === "global-project-memory" &&
       (buildRecordId(entry.record) === record.supersedes ||
         (entry.record.kind === record.kind && titlesMatch(entry.record, record))),
   );
 }
 
-export function detectDuplicates(existingRecords, record) {
+export function detectDuplicates(existingRecords: any, record: any) {
   return existingRecords.filter(
-    (entry) =>
+    (entry: any) =>
       AUTHORITATIVE_LAYERS.has(entry.layer) &&
       entry.record.kind === record.kind &&
       titlesMatch(entry.record, record) &&
@@ -48,8 +48,8 @@ export function detectDuplicates(existingRecords, record) {
   );
 }
 
-export function detectConflicts(existingRecords, record) {
-  return existingRecords.filter((entry) => {
+export function detectConflicts(existingRecords: any, record: any) {
+  return existingRecords.filter((entry: any) => {
     if (!AUTHORITATIVE_LAYERS.has(entry.layer)) {
       return false;
     }
@@ -66,22 +66,22 @@ export function detectConflicts(existingRecords, record) {
   });
 }
 
-export function detectShadowWarnings(existingRecords, record) {
+export function detectShadowWarnings(existingRecords: any, record: any) {
   if (record.scope === "whole-project") {
     return [];
   }
   return existingRecords
     .filter(
-      (entry) =>
+      (entry: any) =>
         entry.layer === "global-project-memory" &&
         entry.record.kind === record.kind &&
         entry.record.scope === "whole-project",
     )
-    .map((entry) => `scope-shadow:${buildRecordId(entry.record)}`);
+    .map((entry: any) => `scope-shadow:${buildRecordId(entry.record)}`);
 }
 
-export function findCandidateConflicts(existingRecords, record) {
-  return existingRecords.filter((entry) => {
+export function findCandidateConflicts(existingRecords: any, record: any) {
+  return existingRecords.filter((entry: any) => {
     if (!CANDIDATE_LAYERS.has(entry.layer)) {
       return false;
     }
@@ -95,9 +95,9 @@ export function findCandidateConflicts(existingRecords, record) {
   });
 }
 
-export function collectRelatedRecords(existingRecords, record) {
+export function collectRelatedRecords(existingRecords: any, record: any) {
   return existingRecords
-    .filter((entry) => {
+    .filter((entry: any) => {
       if (entry.record.kind !== record.kind) {
         return false;
       }
@@ -108,8 +108,8 @@ export function collectRelatedRecords(existingRecords, record) {
         (record.scope !== "whole-project" && entry.record.scope === "whole-project")
       );
     })
-    .map((entry) => {
-      const reasons = [];
+    .map((entry: any) => {
+      const reasons: string[] = [];
       if (titlesMatch(entry.record, record)) {
         reasons.push("title-match");
       }
@@ -124,14 +124,14 @@ export function collectRelatedRecords(existingRecords, record) {
       }
       return summarizeEntry(entry, reasons);
     })
-    .sort((left, right) =>
+    .sort((left: any, right: any) =>
       `${left.layer}\u0000${left.kind}\u0000${left.title}\u0000${left.file}`.localeCompare(
         `${right.layer}\u0000${right.kind}\u0000${right.title}\u0000${right.file}`,
       ),
     );
 }
 
-export function resolveTargetRelativeFile(repoRoot, existingRecords, record) {
+export function resolveTargetRelativeFile(repoRoot: string, existingRecords: any, record: any) {
   const supersedeTarget = record.action === "supersede" ? findSupersedeTarget(existingRecords, record) : null;
   if (supersedeTarget?.layer === "global-project-memory") {
     return relativeFromProjectMemory(repoRoot, supersedeTarget.file);

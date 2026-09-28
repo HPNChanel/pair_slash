@@ -39,10 +39,10 @@ export function previewMemoryWrite({
     contract,
     policyContext,
   });
-  const duplicateMatches = analysis.duplicates.map((entry) => summarizeEntry(entry, ["duplicate"]));
+  const duplicateMatches = analysis.duplicates.map((entry: any) => summarizeEntry(entry, ["duplicate"]));
   const conflictMatches = [
-    ...analysis.conflicts.map((entry) => summarizeEntry(entry, ["conflict"])),
-    ...analysis.candidateConflicts.map((entry) => summarizeEntry(entry, ["candidate-conflict"])),
+    ...analysis.conflicts.map((entry: any) => summarizeEntry(entry, ["conflict"])),
+    ...analysis.candidateConflicts.map((entry: any) => summarizeEntry(entry, ["candidate-conflict"])),
   ];
   const artifact = analysis.previewPatch.target_file
     ? persistStagingArtifact({

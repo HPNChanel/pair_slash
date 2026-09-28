@@ -21,46 +21,46 @@ import {
   titlesMatch,
 } from "./internal.ts";
 
-export function loadRequestFile(path) {
+export function loadRequestFile(path: string) {
   const content = readFileSync(path, "utf8");
   return extname(path).toLowerCase() === ".json" ? JSON.parse(content) : YAML.parse(content);
 }
 
-export function parseAllYamlDocuments(path) {
+export function parseAllYamlDocuments(path: string) {
   if (!exists(path)) {
     return [];
   }
   return YAML.parseAllDocuments(readFileSync(path, "utf8"))
-    .map((document) => document.toJSON())
+    .map((document: any) => document.toJSON())
     .filter(Boolean);
 }
 
-export function listYamlFiles(rootDir) {
+export function listYamlFiles(rootDir: string) {
   if (!exists(rootDir)) {
     return [];
   }
-  return walkFiles(rootDir).filter((filePath) => /\.(yaml|yml)$/i.test(filePath));
+  return walkFiles(rootDir).filter((filePath: string) => /\.(yaml|yml)$/i.test(filePath));
 }
 
-export function buildEntry({ record, file, layer, artifactPath = null }) {
+export function buildEntry({ record, file, layer, artifactPath = null }: { record?: any; file?: any; layer?: any; artifactPath?: any }) {
   return { record, file, layer, artifact_path: artifactPath };
 }
 
-export function readDirectoryRecords(rootDir, layer, { includeSystemFiles = true }: any = {}) {
-  return listYamlFiles(rootDir).flatMap((filePath) => {
-    const fileName = filePath.split(/[\\/]/).pop();
+export function readDirectoryRecords(rootDir: string, layer: any, { includeSystemFiles = true }: any = {}) {
+  return listYamlFiles(rootDir).flatMap((filePath: string) => {
+    const fileName = filePath.split(/[\\/]/).pop() ?? "";
     if (!includeSystemFiles && SYSTEM_RECORD_FILES.has(fileName)) {
       return [];
     }
     return parseAllYamlDocuments(filePath)
-      .filter((record) => record?.kind && record?.title)
-      .map((record) => buildEntry({ record, file: filePath, layer }));
+      .filter((record: any) => record?.kind && record?.title)
+      .map((record: any) => buildEntry({ record, file: filePath, layer }));
   });
 }
 
-export function readStagingRecords(stagingRoot) {
-  return listYamlFiles(stagingRoot).flatMap((filePath) =>
-    parseAllYamlDocuments(filePath).flatMap((document) => {
+export function readStagingRecords(stagingRoot: any) {
+  return listYamlFiles(stagingRoot).flatMap((filePath: string) =>
+    parseAllYamlDocuments(filePath).flatMap((document: any) => {
       if (document?.kind === "memory-write-staging-artifact" && document.request?.record) {
         return [
           buildEntry({
@@ -79,7 +79,7 @@ export function readStagingRecords(stagingRoot) {
   );
 }
 
-export function loadExistingRecords(repoRoot, { ignoreArtifactPath = null }: any = {}) {
+export function loadExistingRecords(repoRoot: string, { ignoreArtifactPath = null }: any = {}) {
   const projectRoot = resolve(repoRoot, ".pairslash", "project-memory");
   const taskRoot = resolve(repoRoot, ".pairslash", "task-memory");
   const sessionsRoot = resolve(repoRoot, ".pairslash", "sessions");
@@ -93,29 +93,29 @@ export function loadExistingRecords(repoRoot, { ignoreArtifactPath = null }: any
     return combined;
   }
   const ignored = resolve(repoRoot, ignoreArtifactPath);
-  return combined.filter((entry) => resolve(entry.file) !== ignored);
+  return combined.filter((entry: any) => resolve(entry.file) !== ignored);
 }
 
-export function routeTargetFile(record) {
-  if (DIRECTORY_FILES[record.kind]) {
-    return join(DIRECTORY_FILES[record.kind], `${slugify(record.title)}.yaml`).replace(/\\/g, "/");
+export function routeTargetFile(record: any) {
+  if (DIRECTORY_FILES[record.kind as keyof typeof DIRECTORY_FILES]) {
+    return join(DIRECTORY_FILES[record.kind as keyof typeof DIRECTORY_FILES], `${slugify(record.title)}.yaml`).replace(/\\/g, "/");
   }
-  return ROOT_FILES[record.kind];
+  return ROOT_FILES[record.kind as keyof typeof ROOT_FILES];
 }
 
-export function stringifyYamlDocuments(records) {
-  return `${records.map((record) => stableYaml(record).trimEnd()).join("\n---\n")}\n`;
+export function stringifyYamlDocuments(records: any[]) {
+  return `${records.map((record: any) => stableYaml(record).trimEnd()).join("\n---\n")}\n`;
 }
 
-export function loadMutableDocuments(path) {
-  return parseAllYamlDocuments(path).filter((record) => record?.kind && record?.title);
+export function loadMutableDocuments(path: string) {
+  return parseAllYamlDocuments(path).filter((record: any) => record?.kind && record?.title);
 }
 
-export function upsertMemoryDocument(path, record) {
+export function upsertMemoryDocument(path: string, record: any) {
   const existing = loadMutableDocuments(path);
   if (record.action === "supersede") {
     const index = existing.findIndex(
-      (entry) => buildRecordId(entry) === record.supersedes || (entry.kind === record.kind && titlesMatch(entry, record)),
+      (entry: any) => buildRecordId(entry) === record.supersedes || (entry.kind === record.kind && titlesMatch(entry, record)),
     );
     if (index === -1) {
       throw new Error(`no record found matching ${record.supersedes ?? buildRecordId(record)}`);
@@ -127,12 +127,12 @@ export function upsertMemoryDocument(path, record) {
   writeTextFile(path, stringifyYamlDocuments(existing));
 }
 
-export function updateMemoryIndex({ repoRoot, record, relativeTargetFile, updatedBy }) {
+export function updateMemoryIndex({ repoRoot, record, relativeTargetFile, updatedBy }: { repoRoot: string; record?: any; relativeTargetFile?: any; updatedBy?: any }) {
   const indexPath = resolve(repoRoot, ".pairslash", "project-memory", "90-memory-index.yaml");
   const index = exists(indexPath)
     ? YAML.parse(readFileSync(indexPath, "utf8"))
     : { version: "0.1.0", last_updated: null, updated_by: updatedBy, records: [] };
-  index.records = (index.records ?? []).map((entry) => {
+  index.records = (index.records ?? []).map((entry: any) => {
     if (record.action === "supersede" && `${entry.kind}/${entry.title}` === record.supersedes) {
       return {
         ...entry,
@@ -151,13 +151,13 @@ export function updateMemoryIndex({ repoRoot, record, relativeTargetFile, update
     record_family: "mutable",
   };
   const entryId = buildRecordId(record);
-  const existingIndex = index.records.findIndex((entry) => `${entry.kind}/${entry.title}` === entryId);
+  const existingIndex = index.records.findIndex((entry: any) => `${entry.kind}/${entry.title}` === entryId);
   if (existingIndex >= 0) {
     index.records[existingIndex] = nextEntry;
   } else {
     index.records.push(nextEntry);
   }
-  index.records.sort((left, right) =>
+  index.records.sort((left: any, right: any) =>
     `${left.file}\u0000${left.kind}\u0000${left.title}`.localeCompare(
       `${right.file}\u0000${right.kind}\u0000${right.title}`,
     ),
@@ -168,7 +168,7 @@ export function updateMemoryIndex({ repoRoot, record, relativeTargetFile, update
   return indexPath;
 }
 
-export function nextAvailablePath(basePath) {
+export function nextAvailablePath(basePath: string) {
   if (!exists(basePath)) {
     return basePath;
   }
@@ -184,16 +184,16 @@ export function nextAvailablePath(basePath) {
   }
 }
 
-export function compareWrittenRecord(path, record) {
-  return loadMutableDocuments(path).some((entry) => stableYaml(entry) === stableYaml(record));
+export function compareWrittenRecord(path: string, record: any) {
+  return loadMutableDocuments(path).some((entry: any) => stableYaml(entry) === stableYaml(record));
 }
 
-export function writeAuthoritativeRecord({ repoRoot, preview }) {
+export function writeAuthoritativeRecord({ repoRoot, preview }: { repoRoot: string; preview?: any }) {
   const targetFile = preview.preview_patch.target_file;
   const relativeTargetFile = targetFile.replace(".pairslash/project-memory/", "");
   const absoluteTargetFile = resolve(repoRoot, ".pairslash", "project-memory", relativeTargetFile);
   ensureDir(dirname(absoluteTargetFile));
-  if (DIRECTORY_FILES[preview.request.record.kind]) {
+  if (DIRECTORY_FILES[preview.request.record.kind as keyof typeof DIRECTORY_FILES]) {
     writeTextFile(absoluteTargetFile, stableYaml(preview.request.record));
   } else {
     upsertMemoryDocument(absoluteTargetFile, preview.request.record);

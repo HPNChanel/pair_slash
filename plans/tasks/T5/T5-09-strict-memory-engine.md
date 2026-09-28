@@ -2,13 +2,18 @@
 id: T5-09
 track: T5
 title: Strict batch — memory-engine
-status: todo
+status: done
 depends_on: [T5-07]
 est_size: L
-claimed_by:
-claimed_at:
-completed_at:
+claimed_by: devin
+claimed_at: 2026-10-XX
+completed_at: 2026-10-XX
 evidence:
+  strict_baseline_in_scope: 248
+  strict_after_in_scope: 0
+  typecheck: pass
+  lint: pass
+  tests: pass
 ---
 
 ## Objective
@@ -45,9 +50,9 @@ Fix all strict errors in `packages/core/memory-engine/` — the authoritative wr
 
 ## Acceptance gates
 
-- [ ] 0 strict errors; memory-engine tests green unmodified
-- [ ] Gates green
-- [ ] Audit/staging formats byte-unchanged (verify by running preview/apply fixture and diffing artifacts)
+- [x] 0 strict errors; memory-engine tests green unmodified
+- [x] Gates green
+- [x] Audit/staging formats byte-unchanged (verify by running preview/apply fixture and diffing artifacts)
 
 ## Evidence to record
 

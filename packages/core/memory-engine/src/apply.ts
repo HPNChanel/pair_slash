@@ -76,7 +76,7 @@ export function applyMemoryWrite({
       apply: true,
       preview_requested: Boolean(stagedPreview),
       approval: "explicit",
-      conflicts: analysis.requestErrors.filter((entry) => entry.startsWith("duplicate:") || entry.startsWith("conflict:")),
+      conflicts: analysis.requestErrors.filter((entry: any) => entry.startsWith("duplicate:") || entry.startsWith("conflict:")),
       workflow_class: policyContext.workflow_class,
       authority_mode: policyContext.authority_mode,
       read_only_workflow: policyContext.read_only_workflow,
@@ -95,10 +95,10 @@ export function applyMemoryWrite({
       contentFingerprint: analysis.artifactReference.content_fingerprint,
       exists: Boolean(stagedPreview),
     });
-  const duplicateMatches = analysis.duplicates.map((entry) => summarizeEntry(entry, ["duplicate"]));
+  const duplicateMatches = analysis.duplicates.map((entry: any) => summarizeEntry(entry, ["duplicate"]));
   const conflictMatches = [
-    ...analysis.conflicts.map((entry) => summarizeEntry(entry, ["conflict"])),
-    ...analysis.candidateConflicts.map((entry) => summarizeEntry(entry, ["candidate-conflict"])),
+    ...analysis.conflicts.map((entry: any) => summarizeEntry(entry, ["conflict"])),
+    ...analysis.candidateConflicts.map((entry: any) => summarizeEntry(entry, ["candidate-conflict"])),
   ];
   const stagePrefix = analysis.stages.slice(0, 7);
   const blocked =
@@ -113,7 +113,7 @@ export function applyMemoryWrite({
             repoRoot,
             record: stagedPayload.record,
             relativeTargetFile,
-            result: analysis.requestErrors.some((entry) => entry.startsWith("duplicate:") || entry.startsWith("conflict:"))
+            result: analysis.requestErrors.some((entry: any) => entry.startsWith("duplicate:") || entry.startsWith("conflict:"))
               ? "conflict"
               : "failed",
             notes: analysis.requestErrors.join("; "),
@@ -125,7 +125,7 @@ export function applyMemoryWrite({
           })
         : null;
     return createResultBase({
-      status: analysis.requestErrors.some((entry) => entry.startsWith("duplicate:") || entry.startsWith("conflict:"))
+      status: analysis.requestErrors.some((entry: any) => entry.startsWith("duplicate:") || entry.startsWith("conflict:"))
         ? "conflict"
         : "denied",
       committed: false,
@@ -209,7 +209,7 @@ export function applyMemoryWrite({
             record: stagedPayload.record,
             relativeTargetFile,
             result: "failed",
-            notes: error.message,
+            notes: error instanceof Error ? error.message : String(error),
             stagingArtifact,
             duplicateCount: duplicateMatches.length,
             conflictCount: conflictMatches.length,
@@ -224,7 +224,7 @@ export function applyMemoryWrite({
       policyVerdict: explicitVerdict,
       pipelineStages: [
         ...stagePrefix,
-        buildStage("commit-path", "blocked", [error.message]),
+        buildStage("commit-path", "blocked", [error instanceof Error ? error.message : String(error)]),
         buildStage("audit-log-append", auditLogPath ? "ok" : "skipped", auditLogPath ? [auditLogPath] : ["no audit path"]),
         buildStage("memory-index-update", "skipped", ["commit failed"]),
       ],
@@ -238,7 +238,7 @@ export function applyMemoryWrite({
       targetFile,
       auditLogPath,
       warnings: analysis.warnings,
-      errors: [error.message],
+      errors: [error instanceof Error ? error.message : String(error)],
     });
   }
 }

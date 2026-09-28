@@ -37,21 +37,21 @@ const FINDING_TYPE_ORDER = [
 ];
 const SEVERITY_ORDER = ["critical", "high", "medium", "low"];
 const TYPE_COUNTS_TEMPLATE = Object.freeze(
-  Object.fromEntries([...VALID_FINDING_TYPES].map((type) => [type, 0])),
+  Object.fromEntries([...VALID_FINDING_TYPES].map((type: any) => [type, 0])),
 );
 const SEVERITY_COUNTS_TEMPLATE = Object.freeze(
-  Object.fromEntries(SEVERITY_ORDER.map((severity) => [severity, 0])),
+  Object.fromEntries(SEVERITY_ORDER.map((severity: any) => [severity, 0])),
 );
 const INDEX_PATH = ".pairslash/project-memory/90-memory-index.yaml";
 
-function normalizeText(value) {
+function normalizeText(value: unknown) {
   return String(value ?? "")
     .trim()
     .toLowerCase()
     .replace(/\s+/g, " ");
 }
 
-function buildClaimKey(record) {
+function buildClaimKey(record: any) {
   return [
     normalizeText(record.kind),
     normalizeText(record.title),
@@ -60,11 +60,11 @@ function buildClaimKey(record) {
   ].join("|");
 }
 
-function relativeMemoryPath(file) {
+function relativeMemoryPath(file: any) {
   return `.pairslash/project-memory/${String(file ?? "").replace(/^\/+/, "")}`;
 }
 
-function nextFindingId(index) {
+function nextFindingId(index: number) {
   return `F-${String(index + 1).padStart(3, "0")}`;
 }
 
@@ -72,7 +72,7 @@ function uniqueSorted(values: any): any[] {
   return [...new Set(values.filter(Boolean))].sort((left: any, right: any) => left.localeCompare(right));
 }
 
-function loadIndexRecord(repoRoot) {
+function loadIndexRecord(repoRoot: string) {
   const absolutePath = resolve(repoRoot, INDEX_PATH);
   if (!exists(absolutePath)) {
     return { record: null, parseError: null };
@@ -85,12 +85,12 @@ function loadIndexRecord(repoRoot) {
   } catch (error) {
     return {
       record: null,
-      parseError: error.message,
+      parseError: error instanceof Error ? error.message : String(error),
     };
   }
 }
 
-function allowFindingType(type, auditScope) {
+function allowFindingType(type: any, auditScope: any) {
   if (auditScope === "index-only") {
     return ["orphan-ref", "index-gap", "schema-drift"].includes(type);
   }
@@ -100,7 +100,7 @@ function allowFindingType(type, auditScope) {
   return true;
 }
 
-function buildDuplicateFindings(loaded) {
+function buildDuplicateFindings(loaded: any) {
   const groups = new Map();
   for (const entry of loaded.mutableEntries) {
     const record = entry.record ?? {};
@@ -113,8 +113,8 @@ function buildDuplicateFindings(loaded) {
     groups.set(key, bucket);
   }
   return [...groups.values()]
-    .filter((entries) => entries.length > 1)
-    .map((entries) => {
+    .filter((entries: any[]) => entries.length > 1)
+    .map((entries: any[]) => {
       const first = entries[0];
       return {
         severity: "medium",
@@ -124,7 +124,7 @@ function buildDuplicateFindings(loaded) {
         shadowed_layer: "global-project-memory",
         file_or_record: `${first.record.kind}/${first.record.title}`,
         explanation: "Authoritative project memory contains duplicate active records for the same claim and statement.",
-        evidence: uniqueSorted(entries.map((entry) => relativeMemoryPath(entry.relativePath))),
+        evidence: uniqueSorted(entries.map((entry: any) => relativeMemoryPath(entry.relativePath))),
         recommended_fix:
           "Collapse duplicate authoritative records into one active claim and route any durable replacement through pairslash-memory-write-global.",
         write_workflow_needed: true,
@@ -132,8 +132,8 @@ function buildDuplicateFindings(loaded) {
     });
 }
 
-function buildStructureFindings(repoRoot) {
-  return validateProjectMemoryStructure(repoRoot).map((error) => {
+function buildStructureFindings(repoRoot: string) {
+  return validateProjectMemoryStructure(repoRoot).map((error: any) => {
     const missingPath = error.split(": ").slice(1).join(": ");
     return {
       severity: missingPath === INDEX_PATH ? "high" : "medium",
@@ -153,8 +153,8 @@ function buildStructureFindings(repoRoot) {
   });
 }
 
-function buildValidationFindings(loaded) {
-  const findings = [];
+function buildValidationFindings(loaded: any) {
+  const findings: any[] = [];
 
   for (const error of loaded.errors) {
     const [file] = error.split(" :: ");
@@ -213,8 +213,8 @@ function buildValidationFindings(loaded) {
   return findings;
 }
 
-function buildIndexFindings({ repoRoot, indexRecord, parseError, loaded }) {
-  const findings = [];
+function buildIndexFindings({ repoRoot, indexRecord, parseError, loaded }: { repoRoot: string; indexRecord?: any; parseError?: any; loaded?: any }) {
+  const findings: any[] = [];
   if (parseError) {
     findings.push({
       severity: "high",
@@ -277,8 +277,8 @@ function buildIndexFindings({ repoRoot, indexRecord, parseError, loaded }) {
   return findings;
 }
 
-function buildConflictFindings(resolution) {
-  return (resolution.record_resolution?.conflicts ?? []).map((conflict) => ({
+function buildConflictFindings(resolution: any) {
+  return (resolution.record_resolution?.conflicts ?? []).map((conflict: any) => ({
     severity:
       conflict.selected_layer === "global-project-memory" && conflict.shadowed_layer !== "global-project-memory"
         ? "high"
@@ -299,8 +299,8 @@ function buildConflictFindings(resolution) {
   }));
 }
 
-function applyScopeAndFocus(findings, { auditScope, focus }) {
-  return findings.filter((finding) => {
+function applyScopeAndFocus(findings: any, { auditScope, focus }: { auditScope?: any; focus?: any }) {
+  return findings.filter((finding: any) => {
     if (!allowFindingType(finding.type, auditScope)) {
       return false;
     }
@@ -311,10 +311,10 @@ function applyScopeAndFocus(findings, { auditScope, focus }) {
   });
 }
 
-function sortFindings(findings) {
+function sortFindings(findings: any) {
   return findings
     .slice()
-    .sort((left, right) => {
+    .sort((left: any, right: any) => {
       const severityDelta = SEVERITY_ORDER.indexOf(left.severity) - SEVERITY_ORDER.indexOf(right.severity);
       if (severityDelta !== 0) {
         return severityDelta;
@@ -327,13 +327,13 @@ function sortFindings(findings) {
         `${right.file_or_record}\u0000${right.explanation}`,
       );
     })
-    .map((finding, index) => ({
+    .map((finding: any, index: number) => ({
       id: nextFindingId(index),
       ...finding,
     }));
 }
 
-function summarizeFindings(findings, unresolvedContext) {
+function summarizeFindings(findings: any, unresolvedContext: any) {
   const severityCounts: any = structuredClone(SEVERITY_COUNTS_TEMPLATE);
   const typeCounts: any = structuredClone(TYPE_COUNTS_TEMPLATE);
   for (const finding of findings) {
@@ -345,20 +345,20 @@ function summarizeFindings(findings, unresolvedContext) {
     severity_counts: severityCounts,
     type_counts: typeCounts,
     unresolved_context: unresolvedContext,
-    hard_conflict_count: findings.filter((finding) => finding.type === "conflict").length,
-    write_handoff_count: findings.filter((finding) => finding.write_workflow_needed).length,
+    hard_conflict_count: findings.filter((finding: any) => finding.type === "conflict").length,
+    write_handoff_count: findings.filter((finding: any) => finding.write_workflow_needed).length,
   };
 }
 
-function buildRemediationOrder(findings) {
-  const ordered = uniqueSorted(findings.map((finding) => finding.recommended_fix));
+function buildRemediationOrder(findings: any) {
+  const ordered = uniqueSorted(findings.map((finding: any) => finding.recommended_fix));
   return ordered.length > 0
     ? ordered
     : ["No remediation required; rerun the audit after authoritative memory changes or new supporting evidence."];
 }
 
-function chooseNextAction(findings) {
-  if (findings.some((finding) => finding.write_workflow_needed)) {
+function chooseNextAction(findings: any) {
+  if (findings.some((finding: any) => finding.write_workflow_needed)) {
     return "USE_PAIRSLASH_MEMORY_WRITE_GLOBAL";
   }
   if (findings.length > 0) {
@@ -384,8 +384,8 @@ export function buildMemoryAuditReport({
   if (!Array.isArray(focus)) {
     throw new Error("audit-input-invalid: --focus must be a comma-separated list");
   }
-  const normalizedFocus = uniqueSorted(focus.map((entry) => String(entry).trim()).filter(Boolean));
-  const invalidFocus = normalizedFocus.filter((entry) => !VALID_FINDING_TYPES.has(entry));
+  const normalizedFocus = uniqueSorted(focus.map((entry: any) => String(entry).trim()).filter(Boolean));
+  const invalidFocus = normalizedFocus.filter((entry: any) => !VALID_FINDING_TYPES.has(entry));
   if (invalidFocus.length > 0) {
     throw new Error(`audit-input-invalid: unsupported --focus values: ${invalidFocus.join(", ")}`);
   }
@@ -433,7 +433,7 @@ export function buildMemoryAuditReport({
       mode,
       focus: normalizedFocus,
       files_checked: uniqueSorted(
-        (resolution.layers ?? []).flatMap((layer) => layer.resolved_paths ?? []),
+        (resolution.layers ?? []).flatMap((layer: any) => layer.resolved_paths ?? []),
       ),
       authoritative_sources: uniqueSorted(resolution.authoritative_sources ?? []),
       risk_notes: unresolvedContext,

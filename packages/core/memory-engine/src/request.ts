@@ -25,7 +25,7 @@ import {
 } from "./internal.ts";
 import { loadRequestFile, nextAvailablePath } from "./records.ts";
 
-export function loadManifest(repoRoot) {
+export function loadManifest(repoRoot: string) {
   const manifestPath = resolve(
     repoRoot,
     "packs",
@@ -45,7 +45,7 @@ export function loadManifest(repoRoot) {
 }
 
 export function normalizeRequestRecord(request: any = {}) {
-  const unknownFields = Object.keys(request).filter((field) => !ALLOWED_RECORD_FIELDS.has(field));
+  const unknownFields = Object.keys(request).filter((field: string) => !ALLOWED_RECORD_FIELDS.has(field));
   const record: any = {
     kind: request.kind,
     title: request.title,
@@ -98,7 +98,7 @@ export function buildRequestIdentity({ runtime, target, requestSource, normalize
   };
 }
 
-export function buildRequest({ request, runtime, target, requestSource = "cli" }) {
+export function buildRequest({ request, runtime, target, requestSource = "cli" }: { request?: any; runtime?: string; target?: any; requestSource?: any }) {
   const normalizedRuntime = normalizeRuntime(runtime);
   const normalizedTarget = normalizeTarget(target);
   const { record, unknownFields } = normalizeRequestRecord(request);
@@ -112,7 +112,7 @@ export function buildRequest({ request, runtime, target, requestSource = "cli" }
   };
   const errors = [
     ...validateMemoryWriteRequest(payload),
-    ...unknownFields.map((field) => `record.${field} is not allowed in authoritative memory writes`),
+    ...unknownFields.map((field: string) => `record.${field} is not allowed in authoritative memory writes`),
   ];
   return {
     payload,
@@ -127,7 +127,7 @@ export function buildRequest({ request, runtime, target, requestSource = "cli" }
   };
 }
 
-export function resolveContract(repoRoot, runtime, target) {
+export function resolveContract(repoRoot: string, runtime: string, target: any) {
   const manifest = loadManifest(repoRoot);
   return buildMemoryWriteContract({
     manifest,
@@ -136,7 +136,7 @@ export function resolveContract(repoRoot, runtime, target) {
   });
 }
 
-export function buildPreviewPatch(request, relativeTargetFile) {
+export function buildPreviewPatch(request: any, relativeTargetFile: any) {
   const wrapper = {
     target_file: relativeTargetFile ? `.pairslash/project-memory/${relativeTargetFile}` : null,
     action: request.record.action,
@@ -166,7 +166,7 @@ export function buildAuditEntry({
   conflictCount = 0,
   approvalState = "not-required",
   relatedRecords = [],
-}) {
+}: { repoRoot: string; record?: any; relativeTargetFile?: any; result?: any; notes?: any; stagingArtifact?: any; duplicateCount?: any; conflictCount?: any; approvalState?: any; relatedRecords?: any }) {
   const baseTimestamp = String(record.timestamp)
     .replace(/[-:]/g, "")
     .replace(/\..+$/, "")
@@ -189,7 +189,7 @@ export function buildAuditEntry({
     approval: approvalState,
     duplicate_count: duplicateCount,
     conflict_count: conflictCount,
-    related_layers: [...new Set(relatedRecords.map((entry) => entry.layer))].sort((left, right) =>
+    related_layers: [...new Set(relatedRecords.map((entry: any) => entry.layer))].sort((left: any, right: any) =>
       left.localeCompare(right),
     ),
     ...(stagingArtifact?.path ? { preview_artifact: stagingArtifact.path } : {}),
