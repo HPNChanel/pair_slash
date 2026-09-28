@@ -13,6 +13,7 @@ evidence:
   doctor: dependencies.required_mcp_servers now emits spec_era_map/legacy_declarations/era_guidance evidence; legacy era => warn advisory with server/discover + UnsupportedProtocolVersionError guidance; local-only, no probing
   gates: lint=0, test=0, typecheck=0, test:compat=0, sync:compat-lab clean
   tests: lint-bridge 23/23, doctor 28/28
+  commit: ad96ed5
 ---
 
 ## Objective
