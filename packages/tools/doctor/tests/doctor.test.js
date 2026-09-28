@@ -962,3 +962,104 @@ test("doctor supports copilot user scope smoke lane", () => {
     fixture.cleanup();
   }
 });
+
+test("doctor shared_skill_root check passes for runtime-default selections", () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
+  try {
+    const report = runDoctor({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      target: "repo",
+    });
+    const check = report.checks.find((entry) => entry.id === "install_state.shared_skill_root");
+    assert.equal(check.status, "pass");
+    assert.equal(check.evidence.skill_root, "runtime-default");
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("doctor shared_skill_root check verifies copilot floor when shared root selected", () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ copilotVersion: "1.0.88" });
+  try {
+    const report = runDoctor({
+      repoRoot: fixture.tempRoot,
+      runtime: "copilot_cli",
+      target: "repo",
+      skillRoot: "shared-agents",
+    });
+    const check = report.checks.find((entry) => entry.id === "install_state.shared_skill_root");
+    assert.equal(check.status, "pass");
+    assert.equal(check.evidence.skill_root, "shared-agents");
+    assert.equal(check.evidence.minimum_version, "1.0.11");
+    assert.ok(check.evidence.install_root.includes(".agents"));
+    assert.equal(report.environment_summary.install_root.includes(".agents"), true);
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("doctor shared_skill_root warns when copilot version is below the shared-root floor", () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ copilotVersion: "1.0.4" });
+  try {
+    const report = runDoctor({
+      repoRoot: fixture.tempRoot,
+      runtime: "copilot_cli",
+      target: "repo",
+      skillRoot: "shared-agents",
+    });
+    const check = report.checks.find((entry) => entry.id === "install_state.shared_skill_root");
+    assert.equal(check.status, "warn");
+    assert.equal(check.evidence.detected_version, "1.0.4");
+    assert.ok(check.remediation.includes("runtime-default"));
+    assert.ok(report.issues.some((issue) => issue.check_id === "install_state.shared_skill_root"));
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("doctor reads shared-root install state separately from default-root state", () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ copilotVersion: "1.0.88" });
+  try {
+    applyInstall(
+      planInstall({
+        repoRoot: fixture.tempRoot,
+        runtime: "copilot_cli",
+        target: "repo",
+        packs: ["pairslash-plan"],
+        skillRoot: "shared-agents",
+      }),
+    );
+    const sharedReport = runDoctor({
+      repoRoot: fixture.tempRoot,
+      runtime: "copilot_cli",
+      target: "repo",
+      skillRoot: "shared-agents",
+    });
+    const sharedStateCheck = sharedReport.checks.find((entry) => entry.id === "install_state.load");
+    assert.equal(sharedStateCheck.status, "pass");
+    assert.ok(sharedReport.environment_summary.state_path.includes("repo-copilot_cli-shared-agents"));
+
+    const defaultReport = runDoctor({
+      repoRoot: fixture.tempRoot,
+      runtime: "copilot_cli",
+      target: "repo",
+    });
+    const defaultStateCheck = defaultReport.checks.find((entry) => entry.id === "install_state.load");
+    assert.equal(defaultStateCheck.status, "pass");
+    assert.equal(
+      defaultReport.environment_summary.state_path.includes("repo-copilot_cli-shared-agents"),
+      false,
+    );
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});

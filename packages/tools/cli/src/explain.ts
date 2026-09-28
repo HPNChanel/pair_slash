@@ -47,6 +47,7 @@ export function buildContextExplanationArtifact({ repoRoot, options }) {
     runtime: options.runtime,
     target: options.target,
     packs: packId ? [packId] : [],
+    skillRoot: options.skillRoot,
   });
   const adapter = getRuntimeAdapter(report.runtime);
   const manifest = record?.manifest ?? null;
@@ -99,6 +100,7 @@ export function buildPolicyExplanationArtifact({ repoRoot, options }) {
     runtime: options.runtime,
     target: options.target,
     packs: [record.packId],
+    skillRoot: options.skillRoot,
   });
   const action =
     record.packId === "pairslash-memory-write-global" || record.manifest.workflow_class === "write-authority"

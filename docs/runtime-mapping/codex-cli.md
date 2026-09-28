@@ -7,6 +7,12 @@ Codex bundles are emitted as `codex-skill-bundle`.
 - Repo target: `.agents/skills/<pack-id>/`
 - User target: `~/.agents/skills/<pack-id>/`
 
+Codex scans `.agents/skills` natively, so both `--skill-root runtime-default`
+and `--skill-root shared-agents` resolve to the same directories. The shared
+root matters when the same repo also installs for Copilot: one `.agents/skills`
+tree is then scanned by both runtimes. Shared-root installs keep a separate
+state file (`<target>-codex_cli-shared-agents.json`).
+
 ## Surface mapping
 
 | Logical surface | Runtime path |

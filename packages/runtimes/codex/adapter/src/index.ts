@@ -251,7 +251,13 @@ export function renderDirectInvocation(packId) {
   return `$${packId}`;
 }
 
-export function resolveConfigHome({ repoRoot, target }) {
+const SKILL_ROOTS = ["runtime-default", "shared-agents"];
+
+export function resolveConfigHome({ repoRoot, target, skillRoot = "runtime-default" }) {
+  if (!SKILL_ROOTS.includes(skillRoot)) {
+    throw new Error(`unsupported skill_root: ${skillRoot}`);
+  }
+  // Codex scans .agents natively; shared-agents is the same root.
   return target === "repo" ? join(repoRoot, ".agents") : join(homedir(), ".agents");
 }
 

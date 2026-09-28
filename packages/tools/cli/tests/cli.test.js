@@ -2292,3 +2292,92 @@ test("pairslash telemetry summary derives local metrics from trace sessions", se
     fixture.cleanup();
   }
 });
+
+test("pairslash preview install --skill-root shared-agents resolves .agents paths", serial, async () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ copilotVersion: "1.0.88" });
+  let output = "";
+  try {
+    const exitCode = await runCli({
+      argv: [
+        "preview",
+        "install",
+        "pairslash-plan",
+        "--runtime",
+        "copilot",
+        "--target",
+        "repo",
+        "--skill-root",
+        "shared-agents",
+        "--format",
+        "json",
+      ],
+      cwd: fixture.tempRoot,
+      stdout: {
+        write(chunk) {
+          output += chunk;
+        },
+      },
+    });
+    assert.equal(exitCode, 0);
+    const payload = JSON.parse(output);
+    assert.equal(payload.action, "install");
+    assert.equal(payload.runtime, "copilot_cli");
+    assert.equal(payload.skill_root, "shared-agents");
+    const fileOps = payload.operations.filter((operation) => operation.install_surface);
+    assert.ok(fileOps.length > 0);
+    assert.ok(fileOps.every((operation) => operation.absolute_path.includes(".agents")));
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("pairslash preview install defaults skill_root to runtime-default", serial, async () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
+  let output = "";
+  try {
+    const exitCode = await runCli({
+      argv: [
+        "preview",
+        "install",
+        "pairslash-plan",
+        "--runtime",
+        "codex",
+        "--target",
+        "repo",
+        "--format",
+        "json",
+      ],
+      cwd: fixture.tempRoot,
+      stdout: {
+        write(chunk) {
+          output += chunk;
+        },
+      },
+    });
+    assert.equal(exitCode, 0);
+    const payload = JSON.parse(output);
+    assert.equal(payload.skill_root, "runtime-default");
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("pairslash install rejects unsupported --skill-root values", serial, async () => {
+  const fixture = createTempRepo();
+  try {
+    await assert.rejects(
+      runCli({
+        argv: ["preview", "install", "pairslash-plan", "--runtime", "codex", "--skill-root", "bogus"],
+        cwd: fixture.tempRoot,
+        stdout: { write() {} },
+      }),
+      /unsupported skill_root/,
+    );
+  } finally {
+    fixture.cleanup();
+  }
+});

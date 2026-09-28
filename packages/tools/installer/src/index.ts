@@ -20,6 +20,7 @@ import {
   loadPackManifest,
   loadPackManifestRecords,
   normalizeRuntime,
+  normalizeSkillRoot,
   normalizeTarget,
   readFileNormalized,
   relativeFrom,
@@ -345,6 +346,7 @@ function createPlan({
   action,
   runtime,
   target,
+  skillRoot = "runtime-default",
   installRoot,
   statePath,
   operations,
@@ -392,6 +394,7 @@ function createPlan({
     action,
     runtime,
     target,
+    skill_root: skillRoot,
     install_root: installRoot,
     state_path: statePath,
     can_apply:
@@ -534,8 +537,8 @@ function buildCandidateTrustReceipts({
   return receipts;
 }
 
-function buildPackInstallDir(adapter, repoRoot, target, packId) {
-  return adapter.resolvePackInstallDir({ repoRoot, target }, packId);
+function buildPackInstallDir(adapter, repoRoot, target, packId, skillRoot) {
+  return adapter.resolvePackInstallDir({ repoRoot, target, skillRoot }, packId);
 }
 
 function getPlannedOperation(operations, packId, relativePath) {
@@ -614,6 +617,7 @@ function applyWriteOperations(envelope) {
       envelope.repoRoot,
       envelope.target,
       compiledPack.pack_id,
+      envelope.skillRoot,
     );
     ensureDir(installDir);
     for (const file of compiledPack.files) {
@@ -638,6 +642,7 @@ function updateStateAfterWrite(envelope, transactionId = null) {
       envelope.repoRoot,
       envelope.target,
       compiledPack.pack_id,
+      envelope.skillRoot,
     );
     const previousStatePack = findStatePack(nextState, compiledPack.pack_id);
     const nextPack = buildStatePack({
@@ -875,6 +880,7 @@ function resolveInstallEnvironment({
   runtime,
   target,
   adapter,
+  skillRoot,
   errors,
   reasonCodes = [],
   remediationActions = [],
@@ -882,14 +888,14 @@ function resolveInstallEnvironment({
   let state;
   let statePath;
   try {
-    const loaded = loadInstallState({ repoRoot, runtime, target, adapter });
+    const loaded = loadInstallState({ repoRoot, runtime, target, adapter, skillRoot });
     state = loaded.state;
     statePath = loaded.statePath;
   } catch (error) {
     errors.push(`state-invalid: ${error.message}`);
     reasonCodes.push(REASON_CODE_INSTALL_STATE_INVALID);
-    statePath = resolveStatePath({ repoRoot, runtime, target });
-    state = buildEmptyState({ repoRoot, runtime, target, adapter });
+    statePath = resolveStatePath({ repoRoot, runtime, target, skillRoot });
+    state = buildEmptyState({ repoRoot, runtime, target, adapter, skillRoot });
     remediationActions.push(
       buildStateReviewAction({
         runtime,
@@ -900,8 +906,8 @@ function resolveInstallEnvironment({
     );
   }
 
-  const installRoot = adapter.resolveInstallRoot({ repoRoot, target });
-  const configHome = adapter.resolveConfigHome({ repoRoot, target });
+  const installRoot = adapter.resolveInstallRoot({ repoRoot, target, skillRoot });
+  const configHome = adapter.resolveConfigHome({ repoRoot, target, skillRoot });
   const journalDir = resolve(repoRoot, ".pairslash", INSTALL_JOURNAL_DIR);
   const mismatches = buildInstallStateMetadataMismatches({
     state,
@@ -950,18 +956,19 @@ function resolveUpdateEnvironment({
   runtime,
   target,
   adapter,
+  skillRoot,
   errors,
   reasonCodes = [],
   remediationActions = [],
 }) {
-  const installRoot = adapter.resolveInstallRoot({ repoRoot, target });
-  const configHome = adapter.resolveConfigHome({ repoRoot, target });
+  const installRoot = adapter.resolveInstallRoot({ repoRoot, target, skillRoot });
+  const configHome = adapter.resolveConfigHome({ repoRoot, target, skillRoot });
   const journalDir = resolve(repoRoot, ".pairslash", INSTALL_JOURNAL_DIR);
-  const statePath = resolveStatePath({ repoRoot, runtime, target });
+  const statePath = resolveStatePath({ repoRoot, runtime, target, skillRoot });
 
-  let state = buildEmptyState({ repoRoot, runtime, target, adapter });
+  let state = buildEmptyState({ repoRoot, runtime, target, adapter, skillRoot });
   try {
-    const loaded = loadInstallState({ repoRoot, runtime, target, adapter });
+    const loaded = loadInstallState({ repoRoot, runtime, target, adapter, skillRoot });
     state = loaded.state;
   } catch (error) {
     errors.push(`state-invalid: ${error.message}`);
@@ -1019,14 +1026,14 @@ function resolveUpdateEnvironment({
   };
 }
 
-function resolveUninstallRuntime(requestedRuntime, repoRoot, target) {
+function resolveUninstallRuntime(requestedRuntime, repoRoot, target, skillRoot) {
   const normalized = normalizeRuntime(requestedRuntime);
   if (normalized && normalized !== "auto") {
     return normalized;
   }
 
   const candidates = SUPPORTED_RUNTIMES.filter((runtime) =>
-    exists(resolveStatePath({ repoRoot, runtime, target })),
+    exists(resolveStatePath({ repoRoot, runtime, target, skillRoot })),
   );
   if (candidates.length === 1) {
     return candidates[0];
@@ -1122,6 +1129,7 @@ function buildInstallOperations({
   repoRoot,
   target,
   adapter,
+  skillRoot,
   statePath,
   journalDir,
   state,
@@ -1130,10 +1138,10 @@ function buildInstallOperations({
 }) {
   const operations = [];
   const mkdirs = new Set<string>();
-  const installRoot = adapter.resolveInstallRoot({ repoRoot, target });
+  const installRoot = adapter.resolveInstallRoot({ repoRoot, target, skillRoot });
 
   for (const compiledPack of compiledPacks) {
-    const installDir = buildPackInstallDir(adapter, repoRoot, target, compiledPack.pack_id);
+    const installDir = buildPackInstallDir(adapter, repoRoot, target, compiledPack.pack_id, skillRoot);
     const existingStatePack = findStatePack(state, compiledPack.pack_id);
     if (existingStatePack) {
       operations.push(
@@ -1423,14 +1431,15 @@ function cleanupEmptyDirectories(startDir, stopDir) {
   }
 }
 
-function resolveJournalPath({ repoRoot, runtime, target }) {
+function resolveJournalPath({ repoRoot, runtime, target, skillRoot }) {
   const stamp = new Date().toISOString().replace(/[-:.]/g, "").replace("T", "T");
   const suffix = Math.random().toString(16).slice(2, 8);
+  const rootSuffix = normalizeSkillRoot(skillRoot) === "runtime-default" ? "" : `-${skillRoot}`;
   return resolve(
     repoRoot,
     ".pairslash",
     INSTALL_JOURNAL_DIR,
-    `${target}-${runtime}-${stamp}-${suffix}.json`,
+    `${target}-${runtime}${rootSuffix}-${stamp}-${suffix}.json`,
   );
 }
 
@@ -1590,6 +1599,7 @@ function applyMutationWithRollback(envelope, action, finalizeState = buildDefaul
     repoRoot: envelope.repoRoot,
     runtime: envelope.runtime,
     target: envelope.target,
+    skillRoot: envelope.skillRoot,
   });
   const journal = buildMutationJournal(envelope, journalPath, action);
 
@@ -1634,8 +1644,9 @@ function applyMutationWithRollback(envelope, action, finalizeState = buildDefaul
   }
 }
 
-export function planInstall({ repoRoot, runtime = "auto", target = "repo", packs = [] }) {
+export function planInstall({ repoRoot, runtime = "auto", target = "repo", packs = [], skillRoot = "runtime-default" }) {
   const normalizedTarget = normalizeTarget(target);
+  const normalizedSkillRoot = normalizeSkillRoot(skillRoot);
   const runtimeSelection = detectRuntimeSelection(runtime);
   if (runtimeSelection.ambiguous) {
     throw new Error(
@@ -1667,6 +1678,7 @@ export function planInstall({ repoRoot, runtime = "auto", target = "repo", packs
     runtime: normalizedRuntime,
     target: normalizedTarget,
     adapter,
+    skillRoot: normalizedSkillRoot,
     errors,
     reasonCodes,
     remediationActions,
@@ -1732,6 +1744,7 @@ export function planInstall({ repoRoot, runtime = "auto", target = "repo", packs
     repoRoot,
     target: normalizedTarget,
     adapter,
+    skillRoot: normalizedSkillRoot,
     statePath,
     journalDir,
     state,
@@ -1743,6 +1756,7 @@ export function planInstall({ repoRoot, runtime = "auto", target = "repo", packs
     action: "install",
     runtime: normalizedRuntime,
     target: normalizedTarget,
+    skillRoot: normalizedSkillRoot,
     installRoot,
     statePath,
     operations,
@@ -1766,6 +1780,7 @@ export function planInstall({ repoRoot, runtime = "auto", target = "repo", packs
     repoRoot,
     runtime: normalizedRuntime,
     target: normalizedTarget,
+    skillRoot: normalizedSkillRoot,
     adapter,
     detection: runtimeSelection.detection,
     statePath,
@@ -1917,6 +1932,7 @@ function buildUpdateOperations({
   repoRoot,
   target,
   adapter,
+  skillRoot,
   state,
   compiledPacks,
   selectedPackIds,
@@ -1924,7 +1940,7 @@ function buildUpdateOperations({
   errors,
 }: any) {
   const operations = [];
-  const installRoot = adapter.resolveInstallRoot({ repoRoot, target });
+  const installRoot = adapter.resolveInstallRoot({ repoRoot, target, skillRoot });
 
   for (const packId of selectedPackIds) {
     const existingStatePack = findStatePack(state, packId);
@@ -1933,7 +1949,7 @@ function buildUpdateOperations({
         buildOperation("blocked_conflict", {
           packId,
           relativePath: ".",
-          absolutePath: buildPackInstallDir(adapter, repoRoot, target, packId),
+          absolutePath: buildPackInstallDir(adapter, repoRoot, target, packId, skillRoot),
           ownership: "unmanaged",
           reason: "pack is not managed by PairSlash; run install instead",
           reasonCode: REASON_CODE_UPDATE_CONFLICT,
@@ -2473,8 +2489,10 @@ export function planUpdate({
   packs = [],
   from = null,
   to = null,
+  skillRoot = "runtime-default",
 }) {
   const normalizedTarget = normalizeTarget(target);
+  const normalizedSkillRoot = normalizeSkillRoot(skillRoot);
   const runtimeSelection = detectRuntimeSelection(runtime);
   if (runtimeSelection.ambiguous) {
     throw new Error(
@@ -2506,6 +2524,7 @@ export function planUpdate({
     runtime: normalizedRuntime,
     target: normalizedTarget,
     adapter,
+    skillRoot: normalizedSkillRoot,
     errors,
     reasonCodes,
     remediationActions,
@@ -2592,6 +2611,7 @@ export function planUpdate({
     repoRoot,
     target: normalizedTarget,
     adapter,
+    skillRoot: normalizedSkillRoot,
     state,
     compiledPacks,
     selectedPackIds,
@@ -2624,6 +2644,7 @@ export function planUpdate({
     action: "update",
     runtime: normalizedRuntime,
     target: normalizedTarget,
+    skillRoot: normalizedSkillRoot,
     installRoot,
     statePath,
     operations,
@@ -2644,6 +2665,7 @@ export function planUpdate({
     repoRoot,
     runtime: normalizedRuntime,
     target: normalizedTarget,
+    skillRoot: normalizedSkillRoot,
     adapter,
     detection: runtimeSelection.detection,
     statePath,
@@ -2673,6 +2695,7 @@ function buildStateAfterUninstall({ envelope, transactionId }) {
       runtime: envelope.runtime,
       target: envelope.target,
       adapter: envelope.adapter,
+      skillRoot: envelope.skillRoot,
     });
     emptyState.updated_at = nextState.updated_at;
     emptyState.last_transaction_id = transactionId;
@@ -2869,9 +2892,10 @@ function buildUninstallOperations({ selectedPacks, warnings, installRoot }) {
   return operations;
 }
 
-export function planUninstall({ repoRoot, runtime, target = "repo", packs = [] }) {
+export function planUninstall({ repoRoot, runtime, target = "repo", packs = [], skillRoot = "runtime-default" }) {
   const normalizedTarget = normalizeTarget(target);
-  const normalizedRuntime = resolveUninstallRuntime(runtime, repoRoot, normalizedTarget);
+  const normalizedSkillRoot = normalizeSkillRoot(skillRoot);
+  const normalizedRuntime = resolveUninstallRuntime(runtime, repoRoot, normalizedTarget, normalizedSkillRoot);
   const adapter = getRuntimeAdapter(normalizedRuntime);
   const warnings = [];
   const errors = [];
@@ -2882,6 +2906,7 @@ export function planUninstall({ repoRoot, runtime, target = "repo", packs = [] }
     runtime: normalizedRuntime,
     target: normalizedTarget,
     adapter,
+    skillRoot: normalizedSkillRoot,
     errors,
     reasonCodes,
     remediationActions,
@@ -2923,6 +2948,7 @@ export function planUninstall({ repoRoot, runtime, target = "repo", packs = [] }
     action: "uninstall",
     runtime: normalizedRuntime,
     target: normalizedTarget,
+    skillRoot: normalizedSkillRoot,
     installRoot,
     statePath,
     operations,
@@ -2936,6 +2962,7 @@ export function planUninstall({ repoRoot, runtime, target = "repo", packs = [] }
     repoRoot,
     runtime: normalizedRuntime,
     target: normalizedTarget,
+    skillRoot: normalizedSkillRoot,
     adapter,
     detection: null,
     statePath,
@@ -2952,15 +2979,17 @@ export function applyUninstall(envelope) {
   return applyMutationWithRollback(envelope, "uninstall", buildStateAfterUninstall);
 }
 
-export function loadStateForDoctor({ repoRoot, runtime, target }) {
+export function loadStateForDoctor({ repoRoot, runtime, target, skillRoot }) {
   const normalizedRuntime = normalizeRuntime(runtime);
   const normalizedTarget = normalizeTarget(target);
+  const normalizedSkillRoot = normalizeSkillRoot(skillRoot);
   const adapter = getRuntimeAdapter(normalizedRuntime);
   return loadInstallState({
     repoRoot,
     runtime: normalizedRuntime,
     target: normalizedTarget,
     adapter,
+    skillRoot: normalizedSkillRoot,
   });
 }
 

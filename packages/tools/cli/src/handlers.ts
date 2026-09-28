@@ -199,7 +199,7 @@ export async function handleApply(action, repoRoot, options, stdout, stdin) {
 
 export async function handleMemoryWrite(repoRoot, options, stdout, stdin, { forcePreview = false } = {}) {
   const request = buildMemoryRequest(repoRoot, options);
-  const runtime = resolveExecutionRuntime(repoRoot, options.runtime, options.target);
+  const runtime = resolveExecutionRuntime(repoRoot, options.runtime, options.target, options.skillRoot);
   const target = options.target;
   if (!options.apply || options.preview || forcePreview) {
     try {
@@ -318,7 +318,7 @@ export function handleMemoryCandidate(repoRoot, options, stdout) {
   if (options.apply || options.preview || options.dryRun) {
     throw new Error("unsupported-flag: memory candidate is read-only and does not support --apply/--preview/--dry-run");
   }
-  const runtime = resolveExecutionRuntime(repoRoot, options.runtime, options.target);
+  const runtime = resolveExecutionRuntime(repoRoot, options.runtime, options.target, options.skillRoot);
   const target = options.target;
   const input = buildMemoryCandidateInput(options);
   const report = buildMemoryCandidateReport({
@@ -344,7 +344,7 @@ export function handleMemoryAudit(repoRoot, options, stdout) {
   if (options.apply || options.preview || options.dryRun) {
     throw new Error("unsupported-flag: memory audit is read-only and does not support --apply/--preview/--dry-run");
   }
-  const runtime = resolveExecutionRuntime(repoRoot, options.runtime, options.target);
+  const runtime = resolveExecutionRuntime(repoRoot, options.runtime, options.target, options.skillRoot);
   const target = options.target;
   const input = buildMemoryAuditInput(options);
   const report = buildMemoryAuditReport({

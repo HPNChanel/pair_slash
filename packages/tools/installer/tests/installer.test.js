@@ -1390,3 +1390,152 @@ test("update rejects unsupported runtime version from target manifest", serial, 
     fixture.cleanup();
   }
 });
+
+test("shared-agents skill root installs copilot packs under .agents/skills", serial, () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ copilotVersion: "1.0.88" });
+  try {
+    const envelope = planInstall({
+      repoRoot: fixture.tempRoot,
+      runtime: "copilot_cli",
+      target: "repo",
+      packs: ["pairslash-plan"],
+      skillRoot: "shared-agents",
+    });
+    assert.equal(envelope.plan.skill_root, "shared-agents");
+    assert.equal(envelope.statePath, join(fixture.tempRoot, ".pairslash", "install-state", "repo-copilot_cli-shared-agents.json"));
+    const fileOps = envelope.plan.operations.filter((operation) => operation.install_surface);
+    assert.ok(fileOps.length > 0);
+    assert.ok(fileOps.every((operation) => operation.absolute_path.startsWith(join(fixture.tempRoot, ".agents"))));
+
+    const result = applyInstall(envelope);
+    assert.equal(result.action, "install");
+    assert.equal(result.state.packs[0].id, "pairslash-plan");
+    const skillPath = join(fixture.tempRoot, ".agents", "skills", "pairslash-plan", "SKILL.md");
+    assert.ok(existsSync(skillPath));
+    assert.ok(!existsSync(join(fixture.tempRoot, ".github", "skills")));
+
+    const state = JSON.parse(readFileSync(envelope.statePath, "utf8"));
+    assert.equal(state.skill_root, "shared-agents");
+    assert.ok(!existsSync(join(fixture.tempRoot, ".pairslash", "install-state", "repo-copilot_cli.json")));
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("runtime-default skill root keeps legacy state path and roots", serial, () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ copilotVersion: "1.0.88" });
+  try {
+    const envelope = planInstall({
+      repoRoot: fixture.tempRoot,
+      runtime: "copilot_cli",
+      target: "repo",
+      packs: ["pairslash-plan"],
+    });
+    assert.equal(envelope.plan.skill_root, "runtime-default");
+    assert.equal(envelope.statePath, join(fixture.tempRoot, ".pairslash", "install-state", "repo-copilot_cli.json"));
+    applyInstall(envelope);
+    assert.ok(existsSync(join(fixture.tempRoot, ".github", "skills", "pairslash-plan", "SKILL.md")));
+    const state = JSON.parse(readFileSync(envelope.statePath, "utf8"));
+    assert.equal(state.skill_root, "runtime-default");
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("shared and default roots keep separate state files and uninstall independently", serial, () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
+  try {
+    const sharedEnv = planInstall({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      target: "repo",
+      packs: ["pairslash-plan"],
+      skillRoot: "shared-agents",
+    });
+    applyInstall(sharedEnv);
+    const sharedStatePath = join(fixture.tempRoot, ".pairslash", "install-state", "repo-codex_cli-shared-agents.json");
+    const defaultStatePath = join(fixture.tempRoot, ".pairslash", "install-state", "repo-codex_cli.json");
+    assert.ok(existsSync(sharedStatePath));
+    assert.ok(!existsSync(defaultStatePath));
+
+    const uninstallEnv = planUninstall({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      target: "repo",
+      packs: ["pairslash-plan"],
+      skillRoot: "shared-agents",
+    });
+    const uninstallResult = applyUninstall(uninstallEnv);
+    assert.equal(uninstallResult.action, "uninstall");
+    assert.equal(uninstallResult.state.packs.length, 0);
+    assert.ok(!existsSync(join(fixture.tempRoot, ".agents", "skills", "pairslash-plan", "SKILL.md")));
+    assert.ok(!existsSync(sharedStatePath));
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("unsupported skill_root values fail closed in planInstall", serial, () => {
+  const fixture = createTempRepo();
+  try {
+    assert.throws(
+      () =>
+        planInstall({
+          repoRoot: fixture.tempRoot,
+          runtime: "codex_cli",
+          target: "repo",
+          packs: ["pairslash-plan"],
+          skillRoot: "bogus-root",
+        }),
+      /unsupported skill_root/,
+    );
+  } finally {
+    fixture.cleanup();
+  }
+});
+
+test("shared-agents install preserves foreign files under .agents/skills", serial, () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ copilotVersion: "1.0.88" });
+  try {
+    const foreignDir = join(fixture.tempRoot, ".agents", "skills", "foreign-tool");
+    mkdirSync(foreignDir, { recursive: true });
+    const foreignFile = join(foreignDir, "keep.txt");
+    writeFileSync(foreignFile, "not pairslash\n");
+
+    const result = applyInstall(
+      planInstall({
+        repoRoot: fixture.tempRoot,
+        runtime: "copilot_cli",
+        target: "repo",
+        packs: ["pairslash-plan"],
+        skillRoot: "shared-agents",
+      }),
+    );
+    assert.equal(result.action, "install");
+    assert.equal(readFileSync(foreignFile, "utf8"), "not pairslash\n");
+    assert.ok(
+      result.state.packs[0].files.every((file) => !file.absolute_path.endsWith("keep.txt")),
+    );
+
+    applyUninstall(
+      planUninstall({
+        repoRoot: fixture.tempRoot,
+        runtime: "copilot_cli",
+        target: "repo",
+        packs: ["pairslash-plan"],
+        skillRoot: "shared-agents",
+      }),
+    );
+    assert.equal(readFileSync(foreignFile, "utf8"), "not pairslash\n");
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});

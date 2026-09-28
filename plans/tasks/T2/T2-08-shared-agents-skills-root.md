@@ -2,13 +2,25 @@
 id: T2-08
 track: T2
 title: Shared .agents/skills repo-root feasibility + installer flag
-status: todo
+status: done
 depends_on: [T2-01]
 est_size: M
-claimed_by:
-claimed_at:
-completed_at:
-evidence:
+claimed_by: devin
+claimed_at: 2026-09-28
+completed_at: 2026-09-28
+evidence: >
+  Implemented --skill-root {runtime-default, shared-agents} end-to-end
+  (spec-core constants/normalize, both adapters, installer state/plan/apply/
+  update/uninstall/journal, CLI flag + usage, doctor check
+  install_state.shared_skill_root with fail-closed floor warning).
+  Copilot .agents/skills floor verified at >=1.0.11 via github/copilot-cli
+  changelog v1.0.11 (2026-03-23: ".agents/skills auto-loading" +
+  "~/.agents/skills personal"). Codex floor 0.0.0 (native .agents scan).
+  Tests: adapters path resolution + invalid rejection; installer shared-root
+  install/uninstall/state separation/foreign-file preservation/invalid root;
+  CLI flag parsing + preview plan.skill_root; doctor floor pass/warn +
+  state-path separation. Gates: typecheck, lint, npm test (0 fail),
+  test:release, test:compat all green; goldens resynced.
 ---
 
 ## Objective

@@ -2,12 +2,16 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { join } from "node:path";
 import { readFileSync } from "node:fs";
+import { homedir } from "node:os";
 
 import { loadPackManifest } from "@pairslash/spec-core";
 
 import {
   enforceWorkflow,
   listSupportedTriggerSurfaces,
+  resolveConfigHome,
+  resolveInstallRoot,
+  resolvePackInstallDir,
   RUNTIME_CODEX_ADAPTER_ERROR_CODES,
 } from "../src/index.ts";
 import { repoRoot } from "../../../../../tests/phase4-helpers.js";
@@ -17,6 +21,26 @@ const fixturesDir = join(repoRoot, "tests", "fixtures", "phase5", "runtime-enfor
 function readJson(name) {
   return JSON.parse(readFileSync(join(fixturesDir, name), "utf8"));
 }
+
+test("codex path resolution maps both skill roots to .agents/skills", () => {
+  const root = join("X:", "repo");
+  for (const skillRoot of ["runtime-default", "shared-agents"]) {
+    assert.equal(resolveConfigHome({ repoRoot: root, target: "repo", skillRoot }), join(root, ".agents"));
+    assert.equal(resolveInstallRoot({ repoRoot: root, target: "repo", skillRoot }), join(root, ".agents", "skills"));
+    assert.equal(
+      resolvePackInstallDir({ repoRoot: root, target: "repo", skillRoot }, "pairslash-plan"),
+      join(root, ".agents", "skills", "pairslash-plan"),
+    );
+    assert.equal(resolveConfigHome({ repoRoot: root, target: "user", skillRoot }), join(homedir(), ".agents"));
+  }
+});
+
+test("codex path resolution rejects unsupported skill_root values", () => {
+  assert.throws(
+    () => resolveConfigHome({ repoRoot: repoRoot, target: "repo", skillRoot: "bogus" }),
+    /unsupported skill_root/,
+  );
+});
 
 function loadManifest(packId) {
   return loadPackManifest(join(repoRoot, "packs", "core", packId, "pack.manifest.yaml"));

@@ -660,6 +660,18 @@
           },
           {
             "blocking_for_install": false,
+            "evidence": {
+              "skill_root": "runtime-default"
+            },
+            "group": "install_state",
+            "id": "install_state.shared_skill_root",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "shared .agents/skills root not selected; runtime-default install root in use"
+          },
+          {
+            "blocking_for_install": false,
             "evidence": {},
             "group": "dependencies",
             "id": "dependencies.required_mcp_servers",
@@ -1537,6 +1549,18 @@
             "severity": "info",
             "status": "pass",
             "summary": "required tool checks passed"
+          },
+          {
+            "blocking_for_install": false,
+            "evidence": {
+              "skill_root": "runtime-default"
+            },
+            "group": "install_state",
+            "id": "install_state.shared_skill_root",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "shared .agents/skills root not selected; runtime-default install root in use"
           },
           {
             "blocking_for_install": false,

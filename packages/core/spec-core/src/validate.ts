@@ -57,6 +57,7 @@ import {
   SUPPORT_BUNDLE_SCHEMA_VERSION,
   SUPPORT_VERDICTS,
   SUPPORTED_RUNTIMES,
+  SUPPORTED_SKILL_ROOTS,
   SUPPORTED_TARGETS,
   TELEMETRY_MODES,
   TELEMETRY_SUMMARY_SCHEMA_VERSION,
@@ -1905,6 +1906,9 @@ export function validateInstallState(record) {
   }
   if (!SUPPORTED_TARGETS.includes(record?.target)) {
     errors.push(`unsupported target: ${record?.target}`);
+  }
+  if ("skill_root" in (record ?? {}) && !SUPPORTED_SKILL_ROOTS.includes(record?.skill_root)) {
+    errors.push(`unsupported skill_root: ${record?.skill_root}`);
   }
   if ("updated_at" in (record ?? {}) && typeof record?.updated_at !== "string" && record?.updated_at !== null) {
     errors.push("updated_at must be string or null");

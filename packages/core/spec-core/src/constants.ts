@@ -35,6 +35,11 @@ export const TELEMETRY_SUMMARY_SCHEMA_VERSION = "1.0.0";
 
 export const SUPPORTED_RUNTIMES = ["codex_cli", "copilot_cli"] as const;
 export const SUPPORTED_TARGETS = ["repo", "user"] as const;
+export const SUPPORTED_SKILL_ROOTS = ["runtime-default", "shared-agents"] as const;
+export const SHARED_AGENTS_SKILL_ROOT_MIN_VERSIONS = {
+  codex_cli: "0.0.0",
+  copilot_cli: "1.0.11",
+} as const;
 export const PACK_STATUSES = ["active", "draft", "deprecated"] as const;
 export const RELEASE_CHANNELS = ["stable", "preview", "canary"] as const;
 export const WORKFLOW_CLASSES = ["read-oriented", "dual-mode", "write-authority"] as const;

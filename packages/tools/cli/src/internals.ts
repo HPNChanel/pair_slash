@@ -152,7 +152,7 @@ export function selectorFromOptions(options, traceContext = null) {
   };
 }
 
-export function resolveExecutionRuntime(repoRoot, requestedRuntime, target) {
+export function resolveExecutionRuntime(repoRoot, requestedRuntime, target, skillRoot = "runtime-default") {
   if (requestedRuntime === "all") {
     throw new Error("runtime-selection-failed: --runtime all is not supported for this command");
   }
@@ -161,7 +161,7 @@ export function resolveExecutionRuntime(repoRoot, requestedRuntime, target) {
   }
   const normalizedTarget = normalizeTarget(target);
   const stateCandidates = SUPPORTED_RUNTIMES.filter((runtime) =>
-    exists(resolveStatePath({ repoRoot, runtime, target: normalizedTarget })),
+    exists(resolveStatePath({ repoRoot, runtime, target: normalizedTarget, skillRoot })),
   );
   if (stateCandidates.length === 1) {
     return stateCandidates[0];
@@ -192,7 +192,13 @@ export function buildLifecycleEnvelope(action, repoRoot, options) {
   }
   const packs = action === "install" ? resolveInstallPacks(repoRoot, options) : options.packs;
   return action === "install"
-    ? planInstall({ repoRoot, runtime: options.runtime, target: options.target, packs })
+    ? planInstall({
+        repoRoot,
+        runtime: options.runtime,
+        target: options.target,
+        packs,
+        skillRoot: options.skillRoot,
+      })
     : action === "update"
       ? planUpdate({
           repoRoot,
@@ -201,11 +207,13 @@ export function buildLifecycleEnvelope(action, repoRoot, options) {
           packs,
           from: options.from,
           to: options.to,
+          skillRoot: options.skillRoot,
         })
       : planUninstall({
           repoRoot,
           runtime: options.runtime,
           target: options.target,
           packs,
+          skillRoot: options.skillRoot,
         });
 }

@@ -4,12 +4,20 @@ Copilot bundles are emitted as `copilot-package-bundle`.
 
 ## Install roots
 
-- Repo target: `.github/skills/<pack-id>/`
-- User target: `~/.copilot/skills/<pack-id>/`
+- Repo target (default): `.github/skills/<pack-id>/`
+- User target (default): `~/.copilot/skills/<pack-id>/`
 
-Additional runtime-scanned roots exist in the Copilot CLI v1.0.x series —
-`.agents/skills/` (repo) and `~/.agents/skills/` (personal) — but PairSlash does
-not emit there yet (tracked in plan track T2).
+Opt-in shared root (`--skill-root shared-agents`):
+
+- Repo target: `.agents/skills/<pack-id>/`
+- User target: `~/.agents/skills/<pack-id>/`
+
+The shared root lets one repo-level install serve both runtimes. It requires
+Copilot CLI >= 1.0.11 (the `.agents/skills` project scan shipped in that line);
+`pairslash doctor --skill-root shared-agents` warns when the detected runtime is
+below the floor or cannot be verified. Shared-root installs keep their own state
+file (`<target>-<runtime>-shared-agents.json`) so they never collide with
+default-root state.
 
 ## Surface mapping
 

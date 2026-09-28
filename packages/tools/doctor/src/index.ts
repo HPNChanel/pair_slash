@@ -19,6 +19,7 @@ import {
 import {
   DOCTOR_REPORT_SCHEMA_VERSION,
   isOneOf,
+  SHARED_AGENTS_SKILL_ROOT_MIN_VERSIONS,
   SUPPORT_VERDICTS,
   SUPPORTED_TARGETS,
   SUPPORTED_RUNTIMES,
@@ -27,6 +28,7 @@ import {
   loadPackCatalogRecords,
   loadPackManifestRecords,
   normalizeRuntime,
+  normalizeSkillRoot,
   normalizeTarget,
   readFileNormalized,
   relativeFrom,
@@ -286,10 +288,10 @@ function pickScopeVerdict(current, candidate) {
   return order.indexOf(candidate) > order.indexOf(current) ? candidate : current;
 }
 
-function buildScopeProbe({ repoRoot, runtime, target, adapter, selectedTarget }) {
-  const configHome = adapter.resolveConfigHome({ repoRoot, target });
-  const installRoot = adapter.resolveInstallRoot({ repoRoot, target });
-  const statePath = resolveStatePath({ repoRoot, runtime, target });
+function buildScopeProbe({ repoRoot, runtime, target, adapter, selectedTarget, skillRoot = "runtime-default" }) {
+  const configHome = adapter.resolveConfigHome({ repoRoot, target, skillRoot });
+  const installRoot = adapter.resolveInstallRoot({ repoRoot, target, skillRoot });
+  const statePath = resolveStatePath({ repoRoot, runtime, target, skillRoot });
   const selected = target === selectedTarget;
   let verdict = "pass";
   const issues = [];
@@ -360,7 +362,7 @@ function buildScopeProbe({ repoRoot, runtime, target, adapter, selectedTarget })
   };
 }
 
-function resolveDoctorRuntime(requestedRuntime, repoRoot, target, runtimeSelectionOverride = null) {
+function resolveDoctorRuntime(requestedRuntime, repoRoot, target, runtimeSelectionOverride = null, skillRoot = "runtime-default") {
   if (runtimeSelectionOverride) {
     return normalizeRuntime(runtimeSelectionOverride);
   }
@@ -370,7 +372,7 @@ function resolveDoctorRuntime(requestedRuntime, repoRoot, target, runtimeSelecti
   }
 
   const stateCandidates = SUPPORTED_RUNTIMES.filter((runtime) =>
-    exists(resolveStatePath({ repoRoot, runtime, target })),
+    exists(resolveStatePath({ repoRoot, runtime, target, skillRoot })),
   );
   if (stateCandidates.length === 1) {
     return stateCandidates[0];
@@ -398,6 +400,7 @@ function buildBaseContext({
   runtime,
   target = "repo",
   packs = [],
+  skillRoot = "runtime-default",
   adapterOverride = null,
   runtimeSelectionOverride = null,
   osOverride = null,
@@ -405,11 +408,13 @@ function buildBaseContext({
   cwdOverride = null,
 }) {
   const normalizedTarget = normalizeTarget(target);
+  const normalizedSkillRoot = normalizeSkillRoot(skillRoot);
   const normalizedRuntime = resolveDoctorRuntime(
     runtime,
     repoRoot,
     normalizedTarget,
     runtimeSelectionOverride,
+    normalizedSkillRoot,
   );
   const adapter = adapterOverride ?? getAdapter(normalizedRuntime);
   const catalogRecords = loadPackCatalogRecords(repoRoot, { includeAdvanced: false });
@@ -436,6 +441,7 @@ function buildBaseContext({
     repoRoot,
     runtime: normalizedRuntime,
     target: normalizedTarget,
+    skillRoot: normalizedSkillRoot,
   });
 
   let state = null;
@@ -446,6 +452,7 @@ function buildBaseContext({
       repoRoot,
       runtime: normalizedRuntime,
       target: normalizedTarget,
+      skillRoot: normalizedSkillRoot,
     }).state;
   } catch (error) {
     stateError = error.message;
@@ -473,8 +480,9 @@ function buildBaseContext({
     runtimePresence,
     detection,
     supportLane,
-    configHome: adapter.resolveConfigHome({ repoRoot, target: normalizedTarget }),
-    installRoot: adapter.resolveInstallRoot({ repoRoot, target: normalizedTarget }),
+    skillRoot: normalizedSkillRoot,
+    configHome: adapter.resolveConfigHome({ repoRoot, target: normalizedTarget, skillRoot: normalizedSkillRoot }),
+    installRoot: adapter.resolveInstallRoot({ repoRoot, target: normalizedTarget, skillRoot: normalizedSkillRoot }),
     statePath,
     stateFileExists,
     state,
@@ -495,6 +503,7 @@ function buildBaseContext({
           target: supportedTarget,
           adapter,
           selectedTarget: normalizedTarget,
+          skillRoot: normalizedSkillRoot,
         }),
       ]),
     ),
@@ -1492,7 +1501,7 @@ function runManifestNamingConflicts(context) {
 
   for (const record of context.selectedManifests) {
     const installDir = context.adapter.resolvePackInstallDir(
-      { repoRoot: context.repoRoot, target: context.target },
+      { repoRoot: context.repoRoot, target: context.target, skillRoot: context.skillRoot },
       record.packId,
     );
     if (installDirs.has(installDir)) {
@@ -1640,6 +1649,58 @@ function buildExpectedMcpPath(context, installDir) {
     file_name: "servers.yaml",
   });
   return join(installDir, relativePath);
+}
+
+function runSharedSkillRootSupport(context) {
+  const base = {
+    id: "install_state.shared_skill_root",
+    group: "install_state",
+    runtime: context.runtime,
+    target: context.target,
+    inputs: {},
+  };
+  const skillRoot = context.skillRoot ?? "runtime-default";
+  if (skillRoot !== "shared-agents") {
+    return createCheckResult({
+      ...base,
+      status: "pass",
+      summary: "shared .agents/skills root not selected; runtime-default install root in use",
+      evidence: { skill_root: skillRoot },
+    });
+  }
+  const minVersion = SHARED_AGENTS_SKILL_ROOT_MIN_VERSIONS[context.runtime];
+  const detection = context.detection;
+  const detectedVersion = detection?.version ?? null;
+  const floorSatisfied =
+    detection?.available && detectedVersion && detectedVersion !== "unknown"
+      ? satisfiesRuntimeRange(detectedVersion, `>=${minVersion}`)
+      : null;
+  const evidence = {
+    skill_root: skillRoot,
+    install_root: context.installRoot,
+    runtime: context.runtime,
+    detected_version: detectedVersion,
+    minimum_version: minVersion,
+  };
+  if (floorSatisfied === true) {
+    return createCheckResult({
+      ...base,
+      status: "pass",
+      summary: `runtime supports the shared .agents/skills root (${context.runtime} ${detectedVersion} >= ${minVersion})`,
+      evidence,
+    });
+  }
+  return createCheckResult({
+    ...base,
+    status: "warn",
+    summary:
+      floorSatisfied === false
+        ? `runtime ${context.runtime} ${detectedVersion} may not scan ${context.installRoot}; .agents/skills project scan requires >= ${minVersion}`
+        : `could not verify ${context.runtime} supports the shared .agents/skills root (requires >= ${minVersion}); failing closed`,
+    remediation:
+      "Either upgrade the runtime or reinstall with the default --skill-root runtime-default surface.",
+    evidence,
+  });
 }
 
 function runRequiredMcpServers(context) {
@@ -2599,6 +2660,7 @@ const CHECKS = [
   runManifestNamingConflicts,
   runWorkflowMaturityAlignment,
   runRequiredTools,
+  runSharedSkillRootSupport,
   runRequiredMcpServers,
   runInstalledTrustPosture,
   runOwnedFilesIntegrity,
@@ -3045,6 +3107,7 @@ export function runDoctor({
   runtime,
   target = "repo",
   packs = [],
+  skillRoot = "runtime-default",
   _adapter_override = null,
   _runtime_selection_override = null,
   _os_override = null,
@@ -3056,6 +3119,7 @@ export function runDoctor({
     runtime,
     target,
     packs,
+    skillRoot,
     adapterOverride: _adapter_override,
     runtimeSelectionOverride: _runtime_selection_override,
     osOverride: _os_override,

@@ -33,6 +33,16 @@ export function normalizeTarget(value) {
   return value;
 }
 
+export function normalizeSkillRoot(value) {
+  if (value === undefined || value === null || value === "" || value === "runtime-default") {
+    return "runtime-default";
+  }
+  if (value === "shared-agents") {
+    return value;
+  }
+  throw new Error(`unsupported skill_root: ${value}; expected one of runtime-default, shared-agents`);
+}
+
 export function ensureDir(path) {
   mkdirSync(path, { recursive: true });
 }

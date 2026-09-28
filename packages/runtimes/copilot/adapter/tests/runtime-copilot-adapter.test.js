@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { delimiter, join } from "node:path";
 import { chmodSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { homedir, tmpdir } from "node:os";
 
 import { loadPackManifest } from "@pairslash/spec-core";
 
@@ -10,6 +10,9 @@ import {
   detectRuntime,
   enforceWorkflow,
   listSupportedTriggerSurfaces,
+  resolveConfigHome,
+  resolveInstallRoot,
+  resolvePackInstallDir,
   RUNTIME_COPILOT_ADAPTER_ERROR_CODES,
 } from "../src/index.ts";
 import { dropPathDirsWithExecutable, repoRoot } from "../../../../../tests/phase4-helpers.js";
@@ -234,4 +237,40 @@ test("copilot detectRuntime reports the fake-env detection path for test harness
       process.env.PAIRSLASH_FAKE_COPILOT_VERSION = previousFake;
     }
   }
+});
+
+test("copilot path resolution maps runtime-default and shared-agents roots", () => {
+  const root = join("X:", "repo");
+  assert.equal(
+    resolveConfigHome({ repoRoot: root, target: "repo", skillRoot: "runtime-default" }),
+    join(root, ".github"),
+  );
+  assert.equal(
+    resolvePackInstallDir({ repoRoot: root, target: "repo", skillRoot: "runtime-default" }, "pairslash-plan"),
+    join(root, ".github", "skills", "pairslash-plan"),
+  );
+  assert.equal(
+    resolveConfigHome({ repoRoot: root, target: "user", skillRoot: "runtime-default" }),
+    join(homedir(), ".copilot"),
+  );
+  assert.equal(
+    resolveConfigHome({ repoRoot: root, target: "repo", skillRoot: "shared-agents" }),
+    join(root, ".agents"),
+  );
+  assert.equal(
+    resolvePackInstallDir({ repoRoot: root, target: "repo", skillRoot: "shared-agents" }, "pairslash-plan"),
+    join(root, ".agents", "skills", "pairslash-plan"),
+  );
+  assert.equal(
+    resolveConfigHome({ repoRoot: root, target: "user", skillRoot: "shared-agents" }),
+    join(homedir(), ".agents"),
+  );
+  assert.equal(resolveConfigHome({ repoRoot: root, target: "repo" }), join(root, ".github"));
+});
+
+test("copilot path resolution rejects unsupported skill_root values", () => {
+  assert.throws(
+    () => resolveConfigHome({ repoRoot, target: "repo", skillRoot: "bogus" }),
+    /unsupported skill_root/,
+  );
 });

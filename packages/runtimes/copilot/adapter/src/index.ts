@@ -277,7 +277,17 @@ export function renderDirectInvocation(packId) {
   return `/${packId}`;
 }
 
-export function resolveConfigHome({ repoRoot, target }) {
+const SKILL_ROOTS = ["runtime-default", "shared-agents"];
+
+export function resolveConfigHome({ repoRoot, target, skillRoot = "runtime-default" }) {
+  if (!SKILL_ROOTS.includes(skillRoot)) {
+    throw new Error(`unsupported skill_root: ${skillRoot}`);
+  }
+  if (skillRoot === "shared-agents") {
+    // Copilot v1.0.x scans .agents/skills at repo scope and ~/.agents/skills at
+    // user scope (project-scan floor verified in plan T2-08 evidence).
+    return target === "repo" ? join(repoRoot, ".agents") : join(homedir(), ".agents");
+  }
   return target === "repo" ? join(repoRoot, ".github") : join(homedir(), ".copilot");
 }
 
