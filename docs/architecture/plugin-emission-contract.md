@@ -68,7 +68,7 @@ screenshots[]}`. Repo/team marketplace entries live at
 | — | `skills: "skills/"` | `skills: "skills/"` |
 | `author` | *omitted — manifest has no author field* | *omitted* |
 | `required_mcp_servers` | *not emitted* | *not emitted* |
-| `hook` assets | *not emitted* | *not emitted* |
+| `hooks.preflight` (resolved) | `hooks: "hooks/hooks.json"` + `hooks/hooks.json` + `scripts/pairslash-preflight.mjs` | `hooks/hooks.json` + `scripts/pairslash-preflight.mjs` (dir convention) |
 | `agent` assets | *never emitted* | *never emitted* |
 | trust/policy material | provenance sidecar only | provenance sidecar only |
 
@@ -88,11 +88,22 @@ screenshots[]}`. Repo/team marketplace entries live at
 4. **No `agents/` emission.** Agent files are never emitted from workflow
    packs (write-authority stays skill-disciplined; agent emission is T4-03's
    restricted domain).
-5. **No `hooks`/`mcpServers` emission in v1.** `required_mcp_servers` entries
-   are `{id, spec_era}` requirement declarations, not endpoint configs — a
-   plugin `.mcp.json` cannot be synthesized from them. PairSlash hook assets
-   (`hooks/preflight.yaml`) are PairSlash-format, not runtime-native
-   `hooks.json`. Both deferred until the manifest can describe native shapes.
+5. **`mcpServers` still not emitted.** `required_mcp_servers` entries are
+   `{id, spec_era}` requirement declarations, not endpoint configs — a plugin
+   `.mcp.json` cannot be synthesized from them.
+5a. **Preflight hooks emitted in plugin mode (T4-01).** When the resolved
+   `hooks.preflight.emit` is true (default: `workflow_class ===
+   "write-authority"`, overridable via manifest `hooks.preflight`), the plugin
+   bundle gains a runtime-native `hooks/hooks.json` plus
+   `scripts/pairslash-preflight.mjs`. The script maps PairSlash canonical event
+   names (`session-start`, `turn-stop`, …) to each runtime's native hook event
+   and advisory output shape; canonical events without an advisory channel on a
+   runtime are skipped rather than wired dead. Scripts are advisory-only — they
+   print at most one JSON object, never block, deny, or mutate. Codex consumes
+   `hooks/hooks.json` via plugin-directory convention; Copilot receives an
+   explicit `hooks` pointer in `plugin.json` (legacy format). Skill-mode
+   installs continue to emit only the advisory `preflight.yaml` declaration —
+   hook files are never auto-activated outside plugin distribution.
 6. **No secrets or absolute/user-local paths** in emitted plugin metadata —
    all paths are bundle-relative.
 7. **`enabledPlugins` / marketplace writes are out of scope.** The installer

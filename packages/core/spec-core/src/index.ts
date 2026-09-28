@@ -1,6 +1,7 @@
 export * from "./compile.ts";
 export * from "./benchmark-truth.ts";
 export * from "./constants.ts";
+export * from "./hooks-ir.ts";
 export * from "./ir.ts";
 export * from "./manifest.ts";
 export * from "./mcp-era.ts";

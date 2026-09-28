@@ -9,6 +9,7 @@ import { loadPackManifest } from "@pairslash/spec-core";
 import {
   enforceWorkflow,
   listSupportedTriggerSurfaces,
+  resolveAssetPath,
   resolveConfigHome,
   resolveInstallRoot,
   resolvePackInstallDir,
@@ -110,4 +111,41 @@ test("codex adapter blocks write-authority workflow when preview is missing", as
     ),
   );
   assert.equal(result.selected_launch_path, null);
+});
+
+test("codex adapter resolves hook install surface under fragments/hooks", () => {
+  const resolved = resolveAssetPath({
+    install_surface: "hook",
+    file_name: "preflight.yaml",
+  });
+  assert.equal(resolved, "fragments/hooks/preflight.yaml");
+});
+
+test("codex adapter reports hook assist as advisory for write-authority packs", async () => {
+  const manifest = loadManifest("pairslash-memory-write-global");
+  const result = await enforceWorkflow({
+    manifest,
+    action: "memory.write-global",
+    request: readJson("hook-request.json"),
+  });
+  assert.equal(result.hook_assist.status, "available");
+  assert.equal(result.hook_assist.mode, "advisory");
+  assert.equal(result.hook_assist.path, "fragments/hooks/preflight.yaml");
+  assert.ok(listSupportedTriggerSurfaces({ manifest }).includes("hook"));
+});
+
+test("codex adapter blocks hook trigger surface when no hook asset is declared", async () => {
+  const manifest = loadManifest("pairslash-plan");
+  const result = await enforceWorkflow({
+    manifest,
+    request: readJson("hook-request.json"),
+  });
+  assert.equal(result.status, "blocked");
+  assert.ok(
+    result.blocking_errors.some(
+      (entry) =>
+        entry.code === RUNTIME_CODEX_ADAPTER_ERROR_CODES.HOOK_ASSIST_UNAVAILABLE ||
+        entry.code === RUNTIME_CODEX_ADAPTER_ERROR_CODES.UNSUPPORTED_TRIGGER_SURFACE,
+    ),
+  );
 });

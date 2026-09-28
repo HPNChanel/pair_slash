@@ -3,6 +3,14 @@ export type PairSlashTarget = "repo" | "user";
 export type PairSlashReleaseChannel = "stable" | "preview" | "canary";
 export type PairSlashWorkflowClass = "read-oriented" | "dual-mode" | "write-authority";
 export type PairSlashRiskLevel = "low" | "medium" | "high" | "critical";
+export type PairSlashHookEvent =
+  | "post-tool-use"
+  | "pre-compact"
+  | "pre-tool-use"
+  | "prompt-submit"
+  | "session-end"
+  | "session-start"
+  | "turn-stop";
 export type PairSlashWorkflowMaturity =
   | "canary"
   | "preview"
@@ -42,6 +50,7 @@ export interface RuntimeAssetEntry {
     | "codex_config"
     | "codex_write_authority"
     | "codex_mcp"
+    | "codex_preflight"
     | "copilot_package"
     | "copilot_agent"
     | "copilot_preflight"
@@ -90,6 +99,12 @@ export interface PackManifestV2 {
     check_command: string;
   }>;
   required_mcp_servers: Array<{ id: string; spec_era?: "legacy" | "modern" | "dual" }>;
+  hooks?: {
+    preflight?: {
+      emit?: boolean;
+      events?: PairSlashHookEvent[];
+    };
+  };
   memory_permissions: {
     authority_mode: "read-only" | "write-authority";
     explicit_write_only: true;

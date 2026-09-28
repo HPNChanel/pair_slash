@@ -36,6 +36,7 @@ default-root state.
 - `package/pairslash-bundle.json`
 - `agents/runtime-context.md`
 - `hooks/preflight.yaml` for write-authority or MCP-dependent packs
+  (advisory declaration; native hook wiring ships in plugin emit mode)
 - `mcp/servers.yaml` when MCP dependencies are declared
 - `pairslash.install.json`
 
@@ -51,8 +52,15 @@ These are runtime capabilities, not PairSlash support claims (see claim policy):
   absent — wrapper presence is not Copilot CLI proof. Version reported by
   `gh --version` is the gh host CLI version, not the Copilot CLI version.
 - Command groups: `copilot plugin`, `copilot skill`, `copilot mcp` exist in the
-  v1.0.x series; `gh skill` is a distribution channel. PairSlash does not emit
-  plugin manifests or use these surfaces yet (tracked in plan tracks T2–T3).
+  v1.0.x series; `gh skill` is a distribution channel. PairSlash emits plugin
+  bundles via `--emit plugin` (track T3) but never invokes `copilot plugin
+  install` — user activation stays on the runtime's own command path.
+- Plugin hooks: legacy-format `plugin.json` supports a `hooks` pointer to a
+  `hooks/hooks.json` config. PairSlash emits advisory-only hook wiring for
+  write-authority packs in plugin emit mode (track T4-01); canonical events
+  without an advisory channel on Copilot (`turn-stop` → `agentStop`,
+  `pre-tool-use`, `session-end`, `pre-compact`) are skipped rather than wired
+  dead.
 - Other runtime surfaces observed upstream: `enabledPlugins` settings and
   `.agent.md` agent files; PairSlash emission is unverified/deferred.
 - Direct invocation (`-p`/prompt mode): remains `blocked` per known issue K1

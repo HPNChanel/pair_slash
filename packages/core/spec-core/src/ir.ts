@@ -2,6 +2,7 @@ import {
   NORMALIZED_IR_SCHEMA_VERSION,
   PHASE4_COMPILER_VERSION,
 } from "./constants.ts";
+import { resolvePreflightHooks } from "./hooks-ir.ts";
 import { getPackId, loadPackManifest, resolvePackDir } from "./manifest.ts";
 import { buildLogicalAssetsFromManifest } from "./runtime-asset-ir.ts";
 import { readFileNormalized, relativeFrom, sha256, summarizeCounts } from "./utils.ts";
@@ -73,6 +74,9 @@ export function buildNormalizedIr({ repoRoot, manifestPath }) {
       uninstall_strategy: manifest.uninstall_strategy,
     },
     runtime_support: buildRuntimeSupport(manifest),
+    hooks: {
+      preflight: resolvePreflightHooks(manifest),
+    },
     logical_assets: logicalAssets,
     asset_summary: {
       total_assets: logicalAssets.length,

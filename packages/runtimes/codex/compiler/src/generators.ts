@@ -1,4 +1,9 @@
-import { buildMcpServerDescriptors, buildNormalizedIr, stableYaml } from "@pairslash/spec-core";
+import {
+  buildMcpServerDescriptors,
+  buildNormalizedIr,
+  buildPreflightAdvisory,
+  stableYaml,
+} from "@pairslash/spec-core";
 
 type NormalizedIr = ReturnType<typeof buildNormalizedIr>;
 
@@ -74,10 +79,41 @@ function renderMcpServers(ir: NormalizedIr) {
   });
 }
 
+function renderCodexPreflight(ir: NormalizedIr) {
+  return stableYaml({
+    kind: "pairslash-codex-preflight",
+    schema_version: "1.0.0",
+    pack_id: ir.pack.id,
+    runtime: "codex_cli",
+    checks: [
+      ...(ir.pack.workflow_class === "write-authority"
+        ? [
+            {
+              id: "write-authority-guard",
+              required: true,
+              global_project_memory: ir.policy.memory_permissions.global_project_memory,
+            },
+          ]
+        : []),
+      ...(ir.policy.required_mcp_servers.length > 0
+        ? [
+            {
+              id: "mcp-dependencies",
+              required: true,
+              servers: ir.policy.required_mcp_servers.map((server: { id: string }) => server.id),
+            },
+          ]
+        : []),
+    ],
+    hooks: buildPreflightAdvisory({ ir, runtime: "codex_cli" }),
+  });
+}
+
 export const codexGenerators = {
   codex_metadata: renderCodexMetadata,
   codex_context: renderCodexContext,
   codex_config: renderCodexConfig,
   codex_write_authority: renderWriteAuthorityGuard,
+  codex_preflight: renderCodexPreflight,
   codex_mcp: renderMcpServers,
 };

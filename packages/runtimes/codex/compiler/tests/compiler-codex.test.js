@@ -268,3 +268,48 @@ test("buildCodexMarketplaceManifest emits the verified local-source shape", () =
     assert.equal(plugin.policy.authentication, "ON_INSTALL");
   }
 });
+
+test("compileCodexPack emitMode=plugin wires advisory hooks for write-authority packs", () => {
+  const manifestPath = join(
+    repoRoot,
+    "packs",
+    "core",
+    "pairslash-memory-write-global",
+    "pack.manifest.yaml",
+  );
+  const compiled = compileCodexPack({ repoRoot, manifestPath, emitMode: "plugin" });
+  const paths = compiled.files.map((file) => file.relative_path);
+  assert.ok(paths.includes("hooks/hooks.json"));
+  assert.ok(paths.includes("scripts/pairslash-preflight.mjs"));
+  assert.ok(paths.includes("skills/pairslash-memory-write-global/fragments/hooks/preflight.yaml"));
+
+  const hooks = JSON.parse(
+    compiled.files.find((file) => file.relative_path === "hooks/hooks.json").content,
+  );
+  assert.deepEqual(Object.keys(hooks.hooks).sort(), ["SessionStart", "Stop"]);
+  assert.ok(hooks.description.toLowerCase().includes("advisory"));
+
+  const manifest = JSON.parse(
+    compiled.files.find((file) => file.relative_path === ".codex-plugin/plugin.json").content,
+  );
+  // Codex plugins auto-discover hooks/ by convention; no manifest pointer.
+  assert.ok(!("hooks" in manifest));
+
+  const provenance = JSON.parse(
+    compiled.files.find((file) => file.relative_path === "pairslash-plugin.json").content,
+  );
+  assert.equal(provenance.hooks.advisory_only, true);
+  assert.equal(provenance.hooks.config_relpath, "hooks/hooks.json");
+});
+
+test("compileCodexPack emitMode=plugin emits no hook files for read-oriented packs", () => {
+  const manifestPath = join(repoRoot, "packs", "core", "pairslash-plan", "pack.manifest.yaml");
+  const compiled = compileCodexPack({ repoRoot, manifestPath, emitMode: "plugin" });
+  const paths = compiled.files.map((file) => file.relative_path);
+  assert.ok(!paths.some((path) => path.startsWith("hooks/")));
+  assert.ok(!paths.some((path) => path.startsWith("scripts/")));
+  const provenance = JSON.parse(
+    compiled.files.find((file) => file.relative_path === "pairslash-plugin.json").content,
+  );
+  assert.ok(!("hooks" in provenance));
+});

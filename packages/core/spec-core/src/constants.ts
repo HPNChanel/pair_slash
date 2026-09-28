@@ -40,6 +40,16 @@ export const SUPPORTED_SKILL_ROOTS = ["runtime-default", "shared-agents"] as con
 // "plugin" installs the wrapped plugin bundle into the runtime plugin dir.
 export const SUPPORTED_EMIT_MODES = ["skill", "plugin"] as const;
 export const DEFAULT_EMIT_MODE = "skill" as const;
+export const PAIRSLASH_HOOK_EVENTS = [
+  "post-tool-use",
+  "pre-compact",
+  "pre-tool-use",
+  "prompt-submit",
+  "session-end",
+  "session-start",
+  "turn-stop",
+] as const;
+export const DEFAULT_PREFLIGHT_EVENTS = ["session-start", "turn-stop"] as const;
 export const SHARED_AGENTS_SKILL_ROOT_MIN_VERSIONS = {
   codex_cli: "0.0.0",
   copilot_cli: "1.0.11",
@@ -82,6 +92,7 @@ export const RUNTIME_ASSET_GENERATORS = [
   "codex_config",
   "codex_write_authority",
   "codex_mcp",
+  "codex_preflight",
   "copilot_package",
   "copilot_agent",
   "copilot_preflight",

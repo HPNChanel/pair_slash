@@ -19,6 +19,7 @@ import {
   PACK_SUPPORT_LEVELS,
   PACK_TRUST_TIERS,
   PACK_STATUSES,
+  PAIRSLASH_HOOK_EVENTS,
   PHASE4_SCHEMA_VERSION,
   PREVIOUS_PHASE4_SCHEMA_VERSION,
   RELEASE_CHANNELS,
@@ -231,6 +232,20 @@ const supportSchema = v.object({
   }),
 });
 
+const hooksSchema = v.object({
+  preflight: v.optional(
+    v.object({
+      emit: v.optional(v.boolean()),
+      events: v.optional(
+        v.pipe(
+          v.array(v.picklist(PAIRSLASH_HOOK_EVENTS)),
+          v.nonEmpty("hooks.preflight.events must be a non-empty canonical event list"),
+        ),
+      ),
+    }),
+  ),
+});
+
 export const packManifestV2Schema = v.object({
   kind: v.literal("pack-manifest-v2"),
   schema_version: v.picklist([PREVIOUS_PHASE4_SCHEMA_VERSION, PHASE4_SCHEMA_VERSION]),
@@ -259,6 +274,7 @@ export const packManifestV2Schema = v.object({
   required_tools: v.array(requiredToolSchema),
   required_mcp_servers: v.array(requiredMcpServerSchema),
   memory_permissions: memoryPermissionsSchema,
+  hooks: v.optional(hooksSchema),
   runtime_assets: v.object({
     source_root: nonEmptyString("runtime_assets.source_root must be a non-empty string"),
     primary_skill: nonEmptyString("runtime_assets.primary_skill must be a non-empty string"),

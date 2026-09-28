@@ -2,13 +2,32 @@
 id: T4-01
 track: T4
 title: Hook emission model — write-authority preflight hooks (both runtimes)
-status: todo
+status: done
 depends_on: []
 est_size: M
-claimed_by:
-claimed_at:
-completed_at:
-evidence:
+claimed_by: devin
+claimed_at: 2026-09-28
+completed_at: 2026-09-28
+evidence: |
+  - spec-core/src/hooks-ir.ts: canonical PAIRSLASH_HOOK_EVENTS, per-runtime
+    native bindings with advisory channels, resolvePreflightHooks(),
+    renderPluginHooksConfig(), renderPreflightScript(), buildPreflightAdvisory().
+  - Manifest schema: optional `hooks.preflight {emit, events}` at schema 2.2.0
+    (additive optional field — no version bump; unknown events fail closed via
+    valibot picklist -> PSM000).
+  - Plugin emit: write-authority packs gain hooks/hooks.json +
+    scripts/pairslash-preflight.mjs on both runtimes; Copilot plugin.json gains
+    "hooks" pointer; provenance sidecar records hooks {advisory_only, paths}.
+  - Skill emit: advisory preflight.yaml now on BOTH runtimes (Codex gains
+    codex-preflight asset -> fragments/hooks/preflight.yaml; adapter gains
+    "hook" install surface + advisory hook_assist).
+  - Event coverage: Codex advisory events SessionStart/UserPromptSubmit/
+    PreToolUse/PostToolUse/PreCompact/Stop (SessionEnd has no advisory channel);
+    Copilot advisory sessionStart/userPromptSubmitted/postToolUse (agentStop,
+    preToolUse, sessionEnd, preCompact skipped — no advisory output).
+  - Tests: hooks-ir.test.js (14), codex/copilot compiler plugin-hook tests,
+    codex adapter hook surface tests — all green.
+  - Gates: lint 0 errors, typecheck pass, npm test pass, test:release pass.
 ---
 
 ## Objective

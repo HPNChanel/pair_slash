@@ -15,9 +15,10 @@ export const supportedInstallSurfaces = [
   "metadata",
   "context",
   "config",
+  "hook",
   "mcp",
 ];
-export const supportedTriggerSurfaces = ["canonical_skill", "direct_invocation"];
+export const supportedTriggerSurfaces = ["canonical_skill", "direct_invocation", "hook"];
 const FAKE_RUNTIME_ENV = "PAIRSLASH_FAKE_CODEX_VERSION";
 
 export const RUNTIME_CODEX_ADAPTER_ERROR_CODES = Object.freeze({
@@ -26,6 +27,7 @@ export const RUNTIME_CODEX_ADAPTER_ERROR_CODES = Object.freeze({
   CONTRACT_BUILD_FAILED: "PRA-CODEX-CONTRACT-002",
   UNSUPPORTED_TRIGGER_SURFACE: "PRA-CODEX-SURFACE-001",
   DIRECT_INVOCATION_UNAVAILABLE: "PRA-CODEX-SURFACE-002",
+  HOOK_ASSIST_UNAVAILABLE: "PRA-CODEX-SURFACE-003",
   POLICY_BLOCKED: "PRA-CODEX-POLICY-002",
   PREVIEW_REQUIRED: "PRA-CODEX-POLICY-003",
   APPROVAL_REQUIRED: "PRA-CODEX-POLICY-004",
@@ -92,17 +94,42 @@ function listSupportedTriggerSurfacesInternal({ manifest = null, contract = null
       supported.push("direct_invocation");
     }
   }
+  if (buildHookAssist(manifest).status === "available") {
+    supported.push("hook");
+  }
   return uniqueSorted(supported);
 }
 
-function buildHookAssist() {
+function getHookAsset(manifest) {
+  return (
+    manifest?.runtime_assets?.entries?.find(
+      (entry) =>
+        (entry.runtime === runtime || entry.runtime === "shared") &&
+        entry.install_surface === "hook",
+    ) ?? null
+  );
+}
+
+function buildHookAssist(manifest = null) {
+  const hookAsset = getHookAsset(manifest);
+  if (!hookAsset) {
+    return {
+      status: "unsupported",
+      mode: "advisory",
+      path: null,
+      notes: [
+        "Codex hook assist was not declared for this workflow.",
+        "PairSlash wrapper/runtime adapter remains authoritative even when hooks exist.",
+      ],
+    };
+  }
   return {
-    status: "unsupported",
-    mode: "none",
-    path: null,
+    status: "available",
+    mode: "advisory",
+    path: hookAsset.generated_path ?? hookAsset.source_path ?? hookAsset.file_name ?? null,
     notes: [
-      "Codex CLI does not expose a native hook enforcement surface.",
-      "PairSlash wrapper/runtime adapter remains the sole enforcement boundary.",
+      "Codex file-based hooks may assist preflight enforcement, but they do not replace wrapper enforcement.",
+      "No permission escalation is granted by hook presence alone.",
     ],
   };
 }
@@ -183,7 +210,7 @@ function buildResult({
     blocking_errors: blockingErrors,
     no_silent_fallback: true,
     primary_enforcement: "pairslash-wrapper",
-    hook_assist: buildHookAssist(),
+    hook_assist: buildHookAssist(manifest),
     notes: uniqueSorted(notes),
   };
   result.explanation = buildExplanation(result);
@@ -310,6 +337,8 @@ export function resolveAssetPath(asset) {
       return posix.join("fragments", "context", asset.file_name);
     case "config":
       return posix.join("fragments", "config", asset.file_name);
+    case "hook":
+      return posix.join("fragments", "hooks", asset.file_name);
     case "mcp":
       return posix.join("fragments", "mcp", asset.file_name);
     default:
@@ -379,19 +408,20 @@ export function describePolicyEnforcement() {
   return {
     runtime,
     primary_enforcement: "pairslash-wrapper",
-    hook_support: "none",
+    hook_support: "advisory",
     supported_surfaces: [
       "canonical_skill",
       "config",
       "context",
       "direct_invocation",
+      "hook",
       "mcp",
       "metadata",
       "support_doc",
     ],
     surface_notes: [
       "PairSlash wrapper/runtime adapter is the primary enforcement boundary for Codex CLI.",
-      "Codex CLI is not assumed to provide a native hook enforcement surface.",
+      "Codex file-based hooks are emitted as advisory wiring only; policy must not rely on hooks alone.",
       "Direct invocation never overrides /skills as the canonical entrypoint.",
     ],
   };
@@ -459,6 +489,24 @@ export function enforceContract({ manifest = null, contract = null, policyVerdic
     });
   }
 
+  if (requestedSurface === "hook" && buildHookAssist(manifest).status !== "available") {
+    return buildResult({
+      manifest,
+      contract,
+      request: normalizedRequest,
+      policyVerdict,
+      status: "blocked",
+      blockingErrors: [
+        buildBlockingError({
+          code: RUNTIME_CODEX_ADAPTER_ERROR_CODES.HOOK_ASSIST_UNAVAILABLE,
+          message: "hook assist was requested but this workflow does not declare a Codex hook surface",
+          contractFields: ["runtime_assets.entries"],
+          runtimeFactors: ["requested_surface:hook"],
+        }),
+      ],
+    });
+  }
+
   const selectedLaunchPath = resolveSelectedLaunchPath(requestedSurface, { manifest, contract });
   if (requestedSurface === "direct_invocation" && !selectedLaunchPath) {
     return buildResult({
@@ -490,6 +538,10 @@ export function enforceContract({ manifest = null, contract = null, policyVerdic
     });
   }
 
+  const notes = ["Canonical /skills entrypoint remains authoritative for Codex workflows."];
+  if (requestedSurface === "hook") {
+    notes.push("Hook assist is advisory; execution still resolves through wrapper-governed semantics.");
+  }
   return buildResult({
     manifest,
     contract,
@@ -497,7 +549,7 @@ export function enforceContract({ manifest = null, contract = null, policyVerdic
     policyVerdict,
     status: "allow",
     selectedLaunchPath,
-    notes: ["Canonical /skills entrypoint remains authoritative for Codex workflows."],
+    notes,
   });
 }
 

@@ -7,8 +7,12 @@ import {
   COPILOT_PLUGIN_MANIFEST_NAME,
   enrichSkillFrontmatter,
   materializeCompiledFile,
+  PLUGIN_HOOKS_CONFIG_RELPATH,
+  PLUGIN_PREFLIGHT_SCRIPT_RELPATH,
   PLUGIN_PROVENANCE_FILENAME,
   PLUGIN_SKILLS_DIR,
+  renderPluginHooksConfig,
+  renderPreflightScript,
   stableJson,
 } from "@pairslash/spec-core";
 
@@ -94,13 +98,49 @@ function emitCopilotPluginBundle({ ir }: { ir: NormalizedIr }) {
     category: ir.pack.category,
     display_name: ir.pack.display_name,
   };
+  // Plugin hook wiring (T4-01): emitted only when the resolved preflight hooks
+  // are enabled and at least one canonical event has an advisory channel on
+  // Copilot. The legacy plugin manifest carries a "hooks" pointer to the
+  // emitted hooks/hooks.json.
+  const hooksConfig =
+    ir.hooks?.preflight?.emit === true
+      ? renderPluginHooksConfig({ ir, runtime: "copilot_cli" })
+      : null;
   const manifestFile = materializeCompiledFile({
     logicalAsset: { ...PLUGIN_WRAPPER_ASSET_BASE, asset_id: "plugin-manifest" },
     relativePath: COPILOT_PLUGIN_MANIFEST_NAME,
     content: stableJson(
-      buildPluginManifest({ manifest: manifestShape, runtime: "copilot_cli" }),
+      buildPluginManifest({
+        manifest: manifestShape,
+        runtime: "copilot_cli",
+        hooks: hooksConfig ? PLUGIN_HOOKS_CONFIG_RELPATH : null,
+      }),
     ),
   });
+  const hookFiles = hooksConfig
+    ? [
+        materializeCompiledFile({
+          logicalAsset: {
+            ...PLUGIN_WRAPPER_ASSET_BASE,
+            generator: "copilot_plugin_hooks",
+            asset_id: "plugin-hooks-config",
+            asset_kind: "hook_script",
+          },
+          relativePath: PLUGIN_HOOKS_CONFIG_RELPATH,
+          content: hooksConfig,
+        }),
+        materializeCompiledFile({
+          logicalAsset: {
+            ...PLUGIN_WRAPPER_ASSET_BASE,
+            generator: "copilot_plugin_hooks",
+            asset_id: "plugin-preflight-script",
+            asset_kind: "hook_script",
+          },
+          relativePath: PLUGIN_PREFLIGHT_SCRIPT_RELPATH,
+          content: renderPreflightScript({ ir, runtime: "copilot_cli" }),
+        }),
+      ]
+    : [];
   const provenanceFile = materializeCompiledFile({
     logicalAsset: {
       ...PLUGIN_WRAPPER_ASSET_BASE,
@@ -113,10 +153,17 @@ function emitCopilotPluginBundle({ ir }: { ir: NormalizedIr }) {
         manifest: manifestShape,
         runtime: "copilot_cli",
         manifestDigest: ir.manifest_digest,
+        hooks: hooksConfig
+          ? {
+              advisory_only: true,
+              config_relpath: PLUGIN_HOOKS_CONFIG_RELPATH,
+              script_relpath: PLUGIN_PREFLIGHT_SCRIPT_RELPATH,
+            }
+          : null,
       }),
     ),
   });
-  return [...skillFiles, manifestFile, provenanceFile];
+  return [...skillFiles, manifestFile, ...hookFiles, provenanceFile];
 }
 
 export function compileCopilotPack(options: CompileOptions & { emitMode?: string }) {

@@ -581,6 +581,17 @@ function enableMcpServers(manifest, servers) {
       override_eligible: false,
     },
     {
+      asset_id: "codex-preflight",
+      runtime: "codex_cli",
+      asset_kind: "hook_script",
+      install_surface: "hook",
+      source_path: null,
+      generated_path: "fragments/hooks/preflight.yaml",
+      generator: "codex_preflight",
+      required: true,
+      override_eligible: false,
+    },
+    {
       asset_id: "copilot-preflight",
       runtime: "copilot_cli",
       asset_kind: "hook_script",
@@ -605,6 +616,7 @@ function enableMcpServers(manifest, servers) {
   );
   manifest.asset_ownership.records.push(
     { asset_id: "codex-mcp", owner: "pairslash", uninstall_behavior: "detach_if_modified" },
+    { asset_id: "codex-preflight", owner: "pairslash", uninstall_behavior: "detach_if_modified" },
     { asset_id: "copilot-preflight", owner: "pairslash", uninstall_behavior: "detach_if_modified" },
     { asset_id: "copilot-mcp", owner: "pairslash", uninstall_behavior: "detach_if_modified" },
   );

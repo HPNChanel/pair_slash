@@ -22,6 +22,7 @@ state file (`<target>-codex_cli-shared-agents.json`).
 | `metadata` | `agents/openai.yaml` |
 | `context` | `fragments/context/<file>` |
 | `config` | `fragments/config/<file>` |
+| `hook` | `fragments/hooks/<file>` |
 | `mcp` | `fragments/mcp/<file>` |
 | ownership receipt | `pairslash.install.json` |
 
@@ -31,6 +32,8 @@ state file (`<target>-codex_cli-shared-agents.json`).
 - `fragments/context/runtime-context.md`
 - `fragments/config/pack-config.yaml`
 - `fragments/config/write-authority.yaml` for write-authority packs
+- `fragments/hooks/preflight.yaml` for write-authority or MCP-dependent packs
+  (advisory declaration; native hook wiring ships in plugin emit mode)
 - `fragments/mcp/servers.yaml` when MCP dependencies are declared
 - `pairslash.install.json`
 
@@ -39,7 +42,14 @@ state file (`<target>-codex_cli-shared-agents.json`).
 These are runtime capabilities, not PairSlash support claims (see claim policy):
 
 - Plugin system: `codex plugin` manages plugins and marketplace installs.
-  PairSlash does not yet emit plugin manifests (tracked in plan track T3).
+  PairSlash emits plugin bundles via `--emit plugin` (track T3); repo-scope
+  placement is file-level only and PairSlash never invokes `codex plugin add`.
+- File-based hooks: Codex loads `hooks/hooks.json` from plugin directories.
+  PairSlash emits advisory-only hook configs in plugin emit mode (track T4-01);
+  PairSlash hooks never block, deny, or mutate — wrapper enforcement stays
+  authoritative. Codex skips untrusted hook configs until the user reviews them
+  (`/hooks` trust flow); PairSlash never pre-trusts its own emitted hooks — the
+  emitted `description` field and this note are the trust-review surface.
 - Daemon: a shared local app-server daemon backs `codex agents`,
   `codex app-server`, and `codex remote-control` (experimental surfaces).
 - Built-in diagnostics: `codex doctor`, `codex features` (feature flags),

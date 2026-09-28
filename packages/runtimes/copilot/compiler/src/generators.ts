@@ -1,4 +1,10 @@
-import { buildMcpServerDescriptors, buildNormalizedIr, stableJson, stableYaml } from "@pairslash/spec-core";
+import {
+  buildMcpServerDescriptors,
+  buildNormalizedIr,
+  buildPreflightAdvisory,
+  stableJson,
+  stableYaml,
+} from "@pairslash/spec-core";
 
 type NormalizedIr = ReturnType<typeof buildNormalizedIr>;
 
@@ -63,6 +69,7 @@ function renderCopilotPreflight(ir: NormalizedIr) {
           ]
         : []),
     ],
+    hooks: buildPreflightAdvisory({ ir, runtime: "copilot_cli" }),
   });
 }
 

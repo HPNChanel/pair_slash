@@ -8,6 +8,7 @@ const testFiles = [
   "packages/core/spec-core/tests/release-trust.test.js",
   "packages/core/spec-core/tests/skill-spec.test.js",
   "packages/core/spec-core/tests/plugin-ir.test.js",
+  "packages/core/spec-core/tests/hooks-ir.test.js",
   "packages/core/contract-engine/tests/contract-engine.test.js",
   "tests/contracts/contract-engine.contracts.test.js",
   "packages/core/policy-engine/tests/policy-engine.test.js",

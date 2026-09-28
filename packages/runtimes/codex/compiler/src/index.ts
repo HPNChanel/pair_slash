@@ -7,8 +7,12 @@ import {
   CODEX_PLUGIN_MANIFEST_RELPATH,
   enrichSkillFrontmatter,
   materializeCompiledFile,
+  PLUGIN_HOOKS_CONFIG_RELPATH,
+  PLUGIN_PREFLIGHT_SCRIPT_RELPATH,
   PLUGIN_PROVENANCE_FILENAME,
   PLUGIN_SKILLS_DIR,
+  renderPluginHooksConfig,
+  renderPreflightScript,
   stableJson,
 } from "@pairslash/spec-core";
 
@@ -101,6 +105,38 @@ function emitCodexPluginBundle({ ir }: { ir: NormalizedIr }) {
       buildPluginManifest({ manifest: manifestShape, runtime: "codex_cli" }),
     ),
   });
+  // Plugin hook wiring (T4-01): emitted only when the resolved preflight hooks
+  // are enabled and at least one canonical event has an advisory channel on
+  // Codex. Codex loads hooks/hooks.json from the plugin directory by
+  // convention; no manifest pointer exists in the Codex plugin.json shape.
+  const hooksConfig =
+    ir.hooks?.preflight?.emit === true
+      ? renderPluginHooksConfig({ ir, runtime: "codex_cli" })
+      : null;
+  const hookFiles = hooksConfig
+    ? [
+        materializeCompiledFile({
+          logicalAsset: {
+            ...PLUGIN_WRAPPER_ASSET_BASE,
+            generator: "codex_plugin_hooks",
+            asset_id: "plugin-hooks-config",
+            asset_kind: "hook_script",
+          },
+          relativePath: PLUGIN_HOOKS_CONFIG_RELPATH,
+          content: hooksConfig,
+        }),
+        materializeCompiledFile({
+          logicalAsset: {
+            ...PLUGIN_WRAPPER_ASSET_BASE,
+            generator: "codex_plugin_hooks",
+            asset_id: "plugin-preflight-script",
+            asset_kind: "hook_script",
+          },
+          relativePath: PLUGIN_PREFLIGHT_SCRIPT_RELPATH,
+          content: renderPreflightScript({ ir, runtime: "codex_cli" }),
+        }),
+      ]
+    : [];
   const provenanceFile = materializeCompiledFile({
     logicalAsset: {
       ...PLUGIN_WRAPPER_ASSET_BASE,
@@ -113,10 +149,17 @@ function emitCodexPluginBundle({ ir }: { ir: NormalizedIr }) {
         manifest: manifestShape,
         runtime: "codex_cli",
         manifestDigest: ir.manifest_digest,
+        hooks: hooksConfig
+          ? {
+              advisory_only: true,
+              config_relpath: PLUGIN_HOOKS_CONFIG_RELPATH,
+              script_relpath: PLUGIN_PREFLIGHT_SCRIPT_RELPATH,
+            }
+          : null,
       }),
     ),
   });
-  return [...skillFiles, manifestFile, provenanceFile];
+  return [...skillFiles, manifestFile, ...hookFiles, provenanceFile];
 }
 
 export function compileCodexPack(options: CompileOptions & { emitMode?: string }) {

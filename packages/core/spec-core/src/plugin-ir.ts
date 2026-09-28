@@ -10,7 +10,7 @@ export const PLUGIN_SKILLS_DIR = "skills";
 // not carry author identity, and emitting a fabricated value would violate the
 // provenance rules in plans/CONSTRAINTS.md (D-section). Bundle provenance lives
 // in the pairslash-plugin.json sidecar instead.
-export function buildPluginManifest({ manifest, runtime }) {
+export function buildPluginManifest({ manifest, runtime, hooks = null }) {
   const base = {
     name: manifest.pack_name,
     description: String(manifest.summary ?? manifest.display_name ?? "").slice(0, 1024),
@@ -22,6 +22,9 @@ export function buildPluginManifest({ manifest, runtime }) {
   if (runtime === "copilot_cli") {
     return {
       ...base,
+      // Legacy-format hook pointer; hooks/ is auto-discovered on Codex plugins
+      // so the Codex manifest intentionally carries no hooks field.
+      ...(typeof hooks === "string" ? { hooks } : {}),
       category: manifest.category,
     };
   }
@@ -39,7 +42,7 @@ export function buildPluginManifest({ manifest, runtime }) {
   throw new Error(`unsupported runtime for plugin manifest: ${runtime}`);
 }
 
-export function buildPluginProvenance({ manifest, runtime, manifestDigest }) {
+export function buildPluginProvenance({ manifest, runtime, manifestDigest, hooks = null }) {
   return {
     kind: "pairslash-plugin-provenance",
     format_version: PLUGIN_FORMAT_VERSION,
@@ -49,6 +52,7 @@ export function buildPluginProvenance({ manifest, runtime, manifestDigest }) {
     manifest_digest: manifestDigest,
     distribution_mode: "plugin",
     invocation_surface: "/skills",
+    ...(hooks ? { hooks } : {}),
   };
 }
 

@@ -488,18 +488,31 @@ function defaultGeneratedEntries(record) {
     });
   }
 
-  if (workflowClass === "write-authority" || mcpEnabled) {
-    generated.push({
-      asset_id: "copilot-preflight",
-      runtime: "copilot_cli",
-      asset_kind: "hook_script",
-      install_surface: "hook",
-      source_path: null,
-      generated_path: "hooks/preflight.yaml",
-      generator: "copilot_preflight",
-      required: true,
-      override_eligible: false,
-    });
+  if (workflowClass === "write-authority" || mcpEnabled || record.hooks?.preflight?.emit === true) {
+    generated.push(
+      {
+        asset_id: "codex-preflight",
+        runtime: "codex_cli",
+        asset_kind: "hook_script",
+        install_surface: "hook",
+        source_path: null,
+        generated_path: "fragments/hooks/preflight.yaml",
+        generator: "codex_preflight",
+        required: true,
+        override_eligible: false,
+      },
+      {
+        asset_id: "copilot-preflight",
+        runtime: "copilot_cli",
+        asset_kind: "hook_script",
+        install_surface: "hook",
+        source_path: null,
+        generated_path: "hooks/preflight.yaml",
+        generator: "copilot_preflight",
+        required: true,
+        override_eligible: false,
+      },
+    );
   }
 
   if (mcpEnabled) {
@@ -778,6 +791,7 @@ function toCanonicalManifest(record, { preferCanonicalOverride }: any = {}) {
     required_tools: requiredTools,
     required_mcp_servers: requiredMcpServers,
     memory_permissions: memoryPermissions,
+    ...(isObject(record.hooks) ? { hooks: normalizeHooksDeclaration(record.hooks) } : {}),
     runtime_assets: runtimeAssets,
     asset_ownership: buildAssetOwnership(record, runtimeAssets.entries),
     local_override_policy: localOverridePolicy,
@@ -800,6 +814,24 @@ function toCanonicalManifest(record, { preferCanonicalOverride }: any = {}) {
       ...mcpSpecEraWarnings,
     ],
   });
+}
+
+// Declared hooks are passed through verbatim (clamped to known keys) so schema
+// validation can fail closed on invalid emit values or unknown event names;
+// defaults are resolved later per runtime by resolvePreflightHooks().
+function normalizeHooksDeclaration(declared) {
+  const normalized: any = {};
+  if (isObject(declared.preflight)) {
+    const preflight: any = {};
+    if (declared.preflight.emit !== undefined) {
+      preflight.emit = declared.preflight.emit;
+    }
+    if (declared.preflight.events !== undefined) {
+      preflight.events = declared.preflight.events;
+    }
+    normalized.preflight = preflight;
+  }
+  return normalized;
 }
 
 function normalizeRequiredMcpServers(record) {

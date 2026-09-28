@@ -238,3 +238,52 @@ test("compileCopilotPack default emit is unchanged by plugin mode", () => {
   assert.ok(compiled.files.some((file) => file.relative_path === "SKILL.md"));
   assert.ok(!compiled.files.some((file) => file.relative_path === "plugin.json"));
 });
+
+test("compileCopilotPack emitMode=plugin wires advisory hooks for write-authority packs", () => {
+  const manifestPath = join(
+    repoRoot,
+    "packs",
+    "core",
+    "pairslash-memory-write-global",
+    "pack.manifest.yaml",
+  );
+  const compiled = compileCopilotPack({ repoRoot, manifestPath, emitMode: "plugin" });
+  const paths = compiled.files.map((file) => file.relative_path);
+  assert.ok(paths.includes("hooks/hooks.json"));
+  assert.ok(paths.includes("scripts/pairslash-preflight.mjs"));
+  assert.ok(paths.includes("skills/pairslash-memory-write-global/hooks/preflight.yaml"));
+
+  const plugin = JSON.parse(
+    compiled.files.find((file) => file.relative_path === "plugin.json").content,
+  );
+  assert.equal(plugin.hooks, "hooks/hooks.json");
+
+  const hooks = JSON.parse(
+    compiled.files.find((file) => file.relative_path === "hooks/hooks.json").content,
+  );
+  assert.equal(hooks.version, 1);
+  // turn-stop has no advisory channel on Copilot; only sessionStart is wired.
+  assert.deepEqual(Object.keys(hooks.hooks), ["sessionStart"]);
+  const entry = hooks.hooks.sessionStart[0];
+  assert.equal(entry.type, "command");
+  assert.ok(entry.bash.includes("$PLUGIN_ROOT"));
+  assert.ok(entry.powershell.includes("$env:PLUGIN_ROOT"));
+
+  const provenance = JSON.parse(
+    compiled.files.find((file) => file.relative_path === "pairslash-plugin.json").content,
+  );
+  assert.equal(provenance.hooks.advisory_only, true);
+  assert.equal(provenance.hooks.script_relpath, "scripts/pairslash-preflight.mjs");
+});
+
+test("compileCopilotPack emitMode=plugin emits no hook files for read-oriented packs", () => {
+  const manifestPath = join(repoRoot, "packs", "core", "pairslash-plan", "pack.manifest.yaml");
+  const compiled = compileCopilotPack({ repoRoot, manifestPath, emitMode: "plugin" });
+  const paths = compiled.files.map((file) => file.relative_path);
+  assert.ok(!paths.some((path) => path.startsWith("hooks/hooks.json")));
+  assert.ok(!paths.some((path) => path.startsWith("scripts/")));
+  const plugin = JSON.parse(
+    compiled.files.find((file) => file.relative_path === "plugin.json").content,
+  );
+  assert.ok(!("hooks" in plugin));
+});
