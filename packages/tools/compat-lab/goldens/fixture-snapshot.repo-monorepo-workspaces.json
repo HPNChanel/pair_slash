@@ -374,15 +374,17 @@
               "runtimes": {
                 "codex_cli": {
                   "available": true,
+                  "detection_path": "fake-env",
                   "error": null,
                   "executable": "codex",
                   "version": "0.153.4"
                 },
                 "copilot_cli": {
                   "available": true,
+                  "detection_path": "fake-env",
                   "error": null,
                   "executable": "gh",
-                  "version": "2.96.0"
+                  "version": "1.0.88"
                 }
               }
             },
@@ -396,6 +398,8 @@
           {
             "blocking_for_install": false,
             "evidence": {
+              "detection_path": "fake-env",
+              "gh_version": null,
               "version": "0.153.4"
             },
             "group": "runtime",
@@ -404,6 +408,39 @@
             "severity": "info",
             "status": "pass",
             "summary": "runtime available via codex (0.153.4)"
+          },
+          {
+            "blocking_for_install": false,
+            "evidence": {
+              "affects_verdict": false,
+              "informational_only": true,
+              "observations": [
+                {
+                  "description": "Codex config dir (CODEX_HOME or ~/.codex); informational only",
+                  "detected": false,
+                  "paths": [],
+                  "probe": "codex.config_home"
+                },
+                {
+                  "description": "Codex daemon/exec-server state artifacts; informational only, daemon lifecycle is not probed or managed",
+                  "detected": false,
+                  "paths": [],
+                  "probe": "codex.daemon_state"
+                },
+                {
+                  "description": "Codex hooks configuration candidates; informational only",
+                  "detected": false,
+                  "paths": [],
+                  "probe": "codex.hooks_config"
+                }
+              ]
+            },
+            "group": "runtime",
+            "id": "runtime.surface_probe",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "0/3 informational surface probe(s) detected artifacts"
           },
           {
             "blocking_for_install": false,
@@ -1212,15 +1249,17 @@
               "runtimes": {
                 "codex_cli": {
                   "available": true,
+                  "detection_path": "fake-env",
                   "error": null,
                   "executable": "codex",
                   "version": "0.153.4"
                 },
                 "copilot_cli": {
                   "available": true,
+                  "detection_path": "fake-env",
                   "error": null,
                   "executable": "gh",
-                  "version": "2.96.0"
+                  "version": "1.0.88"
                 }
               }
             },
@@ -1234,19 +1273,54 @@
           {
             "blocking_for_install": false,
             "evidence": {
-              "version": "2.96.0"
+              "detection_path": "fake-env",
+              "gh_version": null,
+              "version": "1.0.88"
             },
             "group": "runtime",
             "id": "runtime.detect",
             "remediation": null,
             "severity": "info",
             "status": "pass",
-            "summary": "runtime available via gh (2.96.0)"
+            "summary": "runtime available via gh (1.0.88)"
           },
           {
             "blocking_for_install": false,
             "evidence": {
-              "version": "2.96.0"
+              "affects_verdict": false,
+              "informational_only": true,
+              "observations": [
+                {
+                  "description": "Copilot user config dir (~/.copilot); informational only",
+                  "detected": false,
+                  "paths": [],
+                  "probe": "copilot.config_home"
+                },
+                {
+                  "description": "Copilot hooks configuration candidates; informational only",
+                  "detected": false,
+                  "paths": [],
+                  "probe": "copilot.hooks_config"
+                },
+                {
+                  "description": "Copilot plugin directory candidates; informational only",
+                  "detected": false,
+                  "paths": [],
+                  "probe": "copilot.plugin_dirs"
+                }
+              ]
+            },
+            "group": "runtime",
+            "id": "runtime.surface_probe",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "0/3 informational surface probe(s) detected artifacts"
+          },
+          {
+            "blocking_for_install": false,
+            "evidence": {
+              "version": "1.0.88"
             },
             "group": "runtime",
             "id": "runtime.version_range",
@@ -1537,7 +1611,7 @@
           "repo_root": "<repo>",
           "runtime_available": true,
           "runtime_executable": "gh",
-          "runtime_version": "2.96.0",
+          "runtime_version": "1.0.88",
           "shell": "<host-shell>",
           "shell_profile_candidates": [
             "<repo>\\.compat-home\\.<host-shell>rc",

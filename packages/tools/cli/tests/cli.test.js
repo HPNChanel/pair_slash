@@ -354,7 +354,7 @@ test("pairslash install writes preview plan to disk", serial, async () => {
 
 test("pairslash install --dry-run emits preview without mutating state", serial, async () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ copilotVersion: "2.96.0" });
+  const runtime = installFakeRuntime({ copilotVersion: "1.0.88" });
   let output = "";
   try {
     const exitCode = await runCli({
@@ -394,7 +394,7 @@ test("pairslash install with --runtime auto rejects ambiguous runtime detection"
   const fixture = createTempRepo();
   const runtime = installFakeRuntime({
     codexVersion: "0.153.4",
-    copilotVersion: "2.96.0",
+    copilotVersion: "1.0.88",
   });
   try {
     await assert.rejects(
@@ -1732,7 +1732,7 @@ test("pairslash memory audit fails clearly when audit scope is missing", serial,
 
 test("pairslash explain-context keeps read-authority resolution consistent across codex and copilot lanes", serial, async () => {
   const fixture = createTempRepo({ packs: ["pairslash-memory-candidate"] });
-  const runtime = installFakeRuntime({ codexVersion: "0.153.4", copilotVersion: "2.96.0" });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4", copilotVersion: "1.0.88" });
   let codexOutput = "";
   let copilotOutput = "";
   try {

@@ -127,9 +127,9 @@ Interpretation rules:
 | Runtime | Target | OS lane | Support level | Required evidence | Best live evidence | Freshness | Last verified | Recommended version | Live tested range | Deterministic baseline | Release gate |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | Codex CLI | repo | macOS | degraded | live_verification | live_smoke | fresh | 2026-03-21 | 0.153.4 | none recorded | 0.153.4 | required |
-| GitHub Copilot CLI | user | Linux | prep | live_verification | none recorded | none-recorded | none recorded | 1.0.88 | none recorded | 2.96.0 | required |
+| GitHub Copilot CLI | user | Linux | prep | live_verification | none recorded | none-recorded | none recorded | 1.0.88 | none recorded | 1.0.88 | required |
 | Codex CLI | repo | Windows | prep | live_verification | live_smoke | fresh | 2026-04-05T12:28:24.545Z | 0.153.4 | none recorded | 0.153.4 | nightly-only |
-| GitHub Copilot CLI | user | Windows | prep | live_verification | live_smoke | fresh | 2026-04-05T12:28:23.177Z | 1.0.88 | none recorded | 2.96.0 | nightly-only |
+| GitHub Copilot CLI | user | Windows | prep | live_verification | live_smoke | fresh | 2026-04-05T12:28:23.177Z | 1.0.88 | none recorded | 1.0.88 | nightly-only |
 
 ## Known issues
 

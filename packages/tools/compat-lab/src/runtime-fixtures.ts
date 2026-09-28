@@ -69,17 +69,21 @@ function writeCodexShim(binDir, version) {
   );
 }
 
-function writeCopilotShim(binDir, version) {
+function writeCopilotShim(binDir, copilotVersion, ghVersion, { standaloneBinary = true } = {}) {
   writeFileSync(
     join(binDir, "gh.cmd"),
     [
       "@echo off",
       "if \"%1\"==\"--version\" (",
-      `  echo gh version ${version}`,
+      `  echo gh version ${ghVersion}`,
       "  exit /b 0",
       ")",
       "if \"%1\"==\"copilot\" if \"%2\"==\"--help\" (",
       "  echo gh copilot help",
+      "  exit /b 0",
+      ")",
+      "if \"%1\"==\"copilot\" if \"%2\"==\"--version\" (",
+      `  echo ${copilotVersion}`,
       "  exit /b 0",
       ")",
       "echo unsupported gh command 1>&2",
@@ -87,6 +91,25 @@ function writeCopilotShim(binDir, version) {
       "",
     ].join("\r\n"),
   );
+  if (standaloneBinary) {
+    writeFileSync(
+      join(binDir, "copilot.cmd"),
+      [
+        "@echo off",
+        "if \"%1\"==\"--version\" (",
+        `  echo ${copilotVersion}`,
+        "  exit /b 0",
+        ")",
+        "if \"%1\"==\"--help\" (",
+        "  echo copilot help",
+        "  exit /b 0",
+        ")",
+        "echo unsupported copilot command 1>&2",
+        "exit /b 1",
+        "",
+      ].join("\r\n"),
+    );
+  }
   if (process.platform === "win32") {
     return;
   }
@@ -95,11 +118,15 @@ function writeCopilotShim(binDir, version) {
     [
       "#!/bin/sh",
       "if [ \"$1\" = \"--version\" ]; then",
-      `  printf '%s\\n' 'gh version ${version}'`,
+      `  printf '%s\\n' 'gh version ${ghVersion}'`,
       "  exit 0",
       "fi",
       "if [ \"$1\" = \"copilot\" ] && [ \"$2\" = \"--help\" ]; then",
       "  printf '%s\\n' 'gh copilot help'",
+      "  exit 0",
+      "fi",
+      "if [ \"$1\" = \"copilot\" ] && [ \"$2\" = \"--version\" ]; then",
+      `  printf '%s\\n' '${copilotVersion}'`,
       "  exit 0",
       "fi",
       "printf '%s\\n' 'unsupported gh command' >&2",
@@ -107,11 +134,32 @@ function writeCopilotShim(binDir, version) {
       "",
     ].join("\n"),
   );
+  if (standaloneBinary) {
+    writeExecutable(
+      join(binDir, "copilot"),
+      [
+        "#!/bin/sh",
+        "if [ \"$1\" = \"--version\" ]; then",
+        `  printf '%s\\n' '${copilotVersion}'`,
+        "  exit 0",
+        "fi",
+        "if [ \"$1\" = \"--help\" ]; then",
+        "  printf '%s\\n' 'copilot help'",
+        "  exit 0",
+        "fi",
+        "printf '%s\\n' 'unsupported copilot command' >&2",
+        "exit 1",
+        "",
+      ].join("\n"),
+    );
+  }
 }
 
 export function installCompatRuntimeShims({
   codexVersion = "0.153.4",
-  copilotVersion = "2.96.0",
+  copilotVersion = "1.0.88",
+  ghVersion = "2.96.0",
+  standaloneCopilotBinary = true,
 }: any = {}) {
   const binDir = join(tmpdir(), `pairslash-compat-runtime-${process.pid}-${Date.now()}`);
   mkdirSync(binDir, { recursive: true });
@@ -123,7 +171,7 @@ export function installCompatRuntimeShims({
   const previousCopilotVersion = process.env.PAIRSLASH_FAKE_COPILOT_VERSION;
 
   writeCodexShim(binDir, codexVersion);
-  writeCopilotShim(binDir, copilotVersion);
+  writeCopilotShim(binDir, copilotVersion, ghVersion, { standaloneBinary: standaloneCopilotBinary });
 
   process.env.PATH = `${binDir}${delimiter}${previousPath}`;
   process.env.PAIRSLASH_FAKE_CODEX_VERSION = codexVersion;

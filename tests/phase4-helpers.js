@@ -48,20 +48,41 @@ function writeCodexShim(binDir, version) {
   );
 }
 
-function writeCopilotShim(binDir, version) {
+function writeCopilotShim(binDir, copilotVersion, ghVersion) {
   writeFileSync(
     join(binDir, "gh.cmd"),
     [
       "@echo off",
       "if \"%1\"==\"--version\" (",
-      `  echo gh version ${version}`,
+      `  echo gh version ${ghVersion}`,
       "  exit /b 0",
       ")",
       "if \"%1\"==\"copilot\" if \"%2\"==\"--help\" (",
       "  echo gh copilot help",
       "  exit /b 0",
       ")",
+      "if \"%1\"==\"copilot\" if \"%2\"==\"--version\" (",
+      `  echo ${copilotVersion}`,
+      "  exit /b 0",
+      ")",
       "echo unsupported gh command 1>&2",
+      "exit /b 1",
+      "",
+    ].join("\r\n"),
+  );
+  writeFileSync(
+    join(binDir, "copilot.cmd"),
+    [
+      "@echo off",
+      "if \"%1\"==\"--version\" (",
+      `  echo ${copilotVersion}`,
+      "  exit /b 0",
+      ")",
+      "if \"%1\"==\"--help\" (",
+      "  echo copilot help",
+      "  exit /b 0",
+      ")",
+      "echo unsupported copilot command 1>&2",
       "exit /b 1",
       "",
     ].join("\r\n"),
@@ -74,14 +95,35 @@ function writeCopilotShim(binDir, version) {
     [
       "#!/bin/sh",
       "if [ \"$1\" = \"--version\" ]; then",
-      `  printf '%s\\n' 'gh version ${version}'`,
+      `  printf '%s\\n' 'gh version ${ghVersion}'`,
       "  exit 0",
       "fi",
       "if [ \"$1\" = \"copilot\" ] && [ \"$2\" = \"--help\" ]; then",
       "  printf '%s\\n' 'gh copilot help'",
       "  exit 0",
       "fi",
+      "if [ \"$1\" = \"copilot\" ] && [ \"$2\" = \"--version\" ]; then",
+      `  printf '%s\\n' '${copilotVersion}'`,
+      "  exit 0",
+      "fi",
       "printf '%s\\n' 'unsupported gh command' >&2",
+      "exit 1",
+      "",
+    ].join("\n"),
+  );
+  writeExecutable(
+    join(binDir, "copilot"),
+    [
+      "#!/bin/sh",
+      "if [ \"$1\" = \"--version\" ]; then",
+      `  printf '%s\\n' '${copilotVersion}'`,
+      "  exit 0",
+      "fi",
+      "if [ \"$1\" = \"--help\" ]; then",
+      "  printf '%s\\n' 'copilot help'",
+      "  exit 0",
+      "fi",
+      "printf '%s\\n' 'unsupported copilot command' >&2",
       "exit 1",
       "",
     ].join("\n"),
@@ -181,14 +223,14 @@ function dirContainsExecutable(dir, executable) {
   return candidates.some((name) => existsSync(join(dir, name)));
 }
 
-function dropPathDirsWithExecutable(pathValue, executable) {
+export function dropPathDirsWithExecutable(pathValue, executable) {
   return pathValue
     .split(delimiter)
     .filter((dir) => dir === "" || !dirContainsExecutable(dir, executable))
     .join(delimiter);
 }
 
-export function installFakeRuntime({ codexVersion = null, copilotVersion = null } = {}) {
+export function installFakeRuntime({ codexVersion = null, copilotVersion = null, ghVersion = "2.96.0" } = {}) {
   const binDir = mkdtempSync(join(tmpdir(), "pairslash-runtime-"));
   const previousPath = process.env.PATH ?? "";
   const previousHome = process.env.HOME;
@@ -202,13 +244,13 @@ export function installFakeRuntime({ codexVersion = null, copilotVersion = null 
   }
 
   if (copilotVersion) {
-    writeCopilotShim(binDir, copilotVersion);
+    writeCopilotShim(binDir, copilotVersion, ghVersion);
     process.env.PAIRSLASH_FAKE_COPILOT_VERSION = copilotVersion;
   }
 
   // Real runtime executables on PATH would leak into auto-detection when only
   // one runtime is faked (the fake env var only covers the provided runtime).
-  // Drop PATH entries that contain the unfaked runtime's executable so
+  // Drop PATH entries that contain the unfaked runtime's executables so
   // detection sees exactly the runtimes this helper installed.
   let nextPath = `${binDir}${delimiter}${previousPath}`;
   if (!codexVersion) {
@@ -216,6 +258,7 @@ export function installFakeRuntime({ codexVersion = null, copilotVersion = null 
   }
   if (!copilotVersion) {
     nextPath = dropPathDirsWithExecutable(nextPath, "gh");
+    nextPath = dropPathDirsWithExecutable(nextPath, "copilot");
   }
   process.env.PATH = nextPath;
 

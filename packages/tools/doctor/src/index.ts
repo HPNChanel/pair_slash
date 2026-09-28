@@ -1,4 +1,5 @@
 import { accessSync, constants as fsConstants, readdirSync, statSync } from "node:fs";
+import { homedir } from "node:os";
 import process from "node:process";
 import { basename, dirname, join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
@@ -515,6 +516,8 @@ function runRuntimeDetect(context) {
       summary: `runtime available via ${detection.executable} (${detection.version})`,
       evidence: {
         version: detection.version,
+        detection_path: detection.detection_path ?? null,
+        gh_version: detection.gh_version ?? null,
       },
     });
   }
@@ -531,11 +534,100 @@ function runRuntimeDetect(context) {
     remediation:
       context.runtime === "codex_cli"
         ? "Install Codex CLI and verify `codex --version` succeeds."
-        : "Install GitHub CLI with Copilot CLI enabled and verify `gh copilot --help` succeeds.",
+        : "Install Copilot CLI and verify `copilot --version` or `gh copilot --version` succeeds.",
     evidence: {
       error: detection.error,
+      gh_version: detection.gh_version ?? null,
     },
     blockingForInstall: true,
+  });
+}
+
+function surfaceProbeObservations(context) {
+  const home = homedir();
+  const repoRoot = context.repoRoot;
+  const candidatePaths = (paths) =>
+    paths.filter((value) => typeof value === "string" && value.length > 0);
+  const probeDefinitions =
+    context.runtime === "codex_cli"
+      ? [
+          {
+            probe: "codex.config_home",
+            description: "Codex config dir (CODEX_HOME or ~/.codex); informational only",
+            candidates: candidatePaths([process.env.CODEX_HOME, join(home, ".codex")]),
+          },
+          {
+            probe: "codex.daemon_state",
+            description: "Codex daemon/exec-server state artifacts; informational only, daemon lifecycle is not probed or managed",
+            candidates: candidatePaths([
+              join(home, ".codex", "daemon"),
+              join(home, ".codex", "exec-server.log"),
+            ]),
+          },
+          {
+            probe: "codex.hooks_config",
+            description: "Codex hooks configuration candidates; informational only",
+            candidates: candidatePaths([
+              join(home, ".codex", "hooks"),
+              join(home, ".codex", "hooks.json"),
+              join(repoRoot, ".codex", "hooks"),
+            ]),
+          },
+        ]
+      : [
+          {
+            probe: "copilot.config_home",
+            description: "Copilot user config dir (~/.copilot); informational only",
+            candidates: candidatePaths([join(home, ".copilot")]),
+          },
+          {
+            probe: "copilot.plugin_dirs",
+            description: "Copilot plugin directory candidates; informational only",
+            candidates: candidatePaths([
+              join(home, ".copilot", "plugins"),
+              join(home, ".copilot", "extensions"),
+              join(repoRoot, ".github", "plugins"),
+            ]),
+          },
+          {
+            probe: "copilot.hooks_config",
+            description: "Copilot hooks configuration candidates; informational only",
+            candidates: candidatePaths([
+              join(home, ".copilot", "hooks.json"),
+              join(home, ".copilot", "hooks"),
+              join(repoRoot, ".github", "hooks"),
+            ]),
+          },
+        ];
+  return probeDefinitions
+    .map((definition) => {
+      const detectedPaths = definition.candidates.filter((path) => exists(path)).sort();
+      return {
+        probe: definition.probe,
+        description: definition.description,
+        detected: detectedPaths.length > 0,
+        paths: detectedPaths,
+      };
+    })
+    .sort((left, right) => left.probe.localeCompare(right.probe));
+}
+
+function runRuntimeSurfaceProbe(context) {
+  const observations = surfaceProbeObservations(context);
+  const detectedCount = observations.filter((observation) => observation.detected).length;
+  return createCheckResult({
+    id: "runtime.surface_probe",
+    group: "runtime",
+    status: "pass",
+    runtime: context.runtime,
+    target: context.target,
+    inputs: {},
+    summary: `${detectedCount}/${observations.length} informational surface probe(s) detected artifacts`,
+    evidence: {
+      informational_only: true,
+      affects_verdict: false,
+      observations,
+    },
   });
 }
 
@@ -547,6 +639,7 @@ function runRuntimePresenceMatrix(context) {
         available: Boolean(context.runtimePresence[runtime]?.available),
         executable: context.runtimePresence[runtime]?.executable ?? null,
         version: context.runtimePresence[runtime]?.version ?? null,
+        detection_path: context.runtimePresence[runtime]?.detection_path ?? null,
         error: context.runtimePresence[runtime]?.error ?? null,
       },
     ]),
@@ -2457,6 +2550,7 @@ function runWorkflowMaturityAlignment(context) {
 const CHECKS = [
   runRuntimePresenceMatrix,
   runRuntimeDetect,
+  runRuntimeSurfaceProbe,
   runRuntimeVersionRange,
   runRuntimeTestedRange,
   runSupportLane,

@@ -556,6 +556,7 @@ export function detectRuntime() {
       available: true,
       executable,
       version: extractSemver(fakeVersion) || fakeVersion,
+      detection_path: "fake-env",
     };
   }
   const result = spawnRuntime(["--version"]);
@@ -566,12 +567,14 @@ export function detectRuntime() {
       available: true,
       executable,
       version,
+      detection_path: "codex",
     };
   }
   return {
     available: false,
     executable,
     version: null,
+    detection_path: null,
     error: result.error?.message || result.stderr?.trim() || "codex not found",
   };
 }

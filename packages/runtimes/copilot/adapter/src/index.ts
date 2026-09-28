@@ -580,16 +580,20 @@ export async function enforceWorkflow({
   });
 }
 
-function spawnRuntime(args) {
+function spawnBinary(name, args) {
   const options: any = { encoding: "utf8" };
-  const direct = spawnSync(executable, args, options);
+  const direct = spawnSync(name, args, options);
   if (
     process.platform !== "win32" ||
     !["ENOENT", "EINVAL", "EPERM"].includes((direct.error as NodeJS.ErrnoException | null)?.code ?? "")
   ) {
     return direct;
   }
-  return spawnSync(process.env.ComSpec || "cmd.exe", ["/d", "/s", "/c", executable, ...args], options);
+  return spawnSync(process.env.ComSpec || "cmd.exe", ["/d", "/s", "/c", name, ...args], options);
+}
+
+function spawnRuntime(args) {
+  return spawnBinary(executable, args);
 }
 
 function extractSemver(rawValue) {
@@ -604,24 +608,48 @@ export function detectRuntime() {
       available: true,
       executable,
       version: extractSemver(fakeVersion) || fakeVersion,
+      gh_version: null,
+      detection_path: "fake-env",
     };
   }
-  const copilot = spawnRuntime(["copilot", "--help"]);
-  const ghVersion = spawnRuntime(["--version"]);
-  const versionLine = ghVersion.stdout?.trim().split(/\r?\n/, 1)[0] ?? "";
-  const version = extractSemver(versionLine) || versionLine || "unknown";
-  if (copilot.status === 0) {
+  const ghVersionProbe = spawnRuntime(["--version"]);
+  const ghVersionLine = ghVersionProbe.stdout?.trim().split(/\r?\n/, 1)[0] ?? "";
+  const ghVersion = extractSemver(ghVersionLine);
+  // Direct Copilot CLI probe first — it reports the Copilot CLI product version.
+  const direct = spawnBinary("copilot", ["--version"]);
+  if (direct.status === 0) {
     return {
       available: true,
       executable,
-      version,
+      version: extractSemver((direct.stdout ?? "").trim()) ?? "unknown",
+      gh_version: ghVersion,
+      detection_path: "copilot",
     };
   }
+  // `gh copilot --version` delegates to the Copilot binary and exits non-zero
+  // when it is absent — unlike `gh copilot --help`, which the built-in `gh`
+  // wrapper answers itself even when Copilot CLI is not installed.
+  const wrapped = spawnRuntime(["copilot", "--version"]);
+  if (wrapped.status === 0) {
+    const wrappedOutput = `${(wrapped.stdout ?? "").trim()}\n${(wrapped.stderr ?? "").trim()}`;
+    return {
+      available: true,
+      executable,
+      version: extractSemver(wrappedOutput) ?? "unknown",
+      gh_version: ghVersion,
+      detection_path: "gh-wrapper",
+    };
+  }
+  const detail = [wrapped.stderr, wrapped.stdout, wrapped.error?.message]
+    .map((value: any) => (typeof value === "string" ? value.trim() : ""))
+    .filter(Boolean)[0];
   return {
     available: false,
     executable,
     version: null,
-    error: copilot.error?.message || copilot.stderr?.trim() || "gh copilot not found",
+    gh_version: ghVersion,
+    detection_path: null,
+    error: detail ?? "copilot CLI not found (checked `copilot --version` and `gh copilot --version`)",
   };
 }
 

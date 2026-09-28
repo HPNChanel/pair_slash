@@ -2,13 +2,19 @@
 id: T1-05
 track: T1
 title: Update doctor version-detection surfaces
-status: todo
+status: done
 depends_on: [T1-02]
 est_size: M
-claimed_by:
-claimed_at:
-completed_at:
+claimed_by: devin-session
+claimed_at: 2026-09-28
+completed_at: 2026-09-28
 evidence:
+  - npm run test (green, all suites)
+  - npm run typecheck (green)
+  - npm run lint (green)
+  - npm run sync:compat-lab -- --check (green)
+  - live doctor re-run: copilot lane reports `runtime unavailable: ! Copilot CLI not installed` with gh_version 2.96.0 captured separately; repeated runs deterministic modulo timestamps
+  - new check `runtime.surface_probe` emits informational-only observations (codex config_home/daemon_state/hooks, copilot config_home/plugin_dirs/hooks)
 ---
 
 ## Objective

@@ -186,11 +186,17 @@ Capture:
 
 ```bash
 gh --version
-gh copilot --help
+copilot --version
 ```
 
-If either command fails, record negative evidence and stop promotion work for
-that lane.
+If the `copilot` binary is not on PATH, `gh copilot --version` is an
+acceptable substitute: it delegates to the Copilot CLI binary and exits
+non-zero when Copilot CLI is not installed. `gh copilot --help` must not be
+used as a presence proof — the built-in `gh` wrapper answers it even when the
+Copilot CLI binary is absent.
+
+If neither command can confirm the Copilot CLI product, record negative
+evidence and stop promotion work for that lane.
 
 ### Required commands
 
@@ -218,7 +224,8 @@ After install apply:
 
 ### Expected outputs
 
-- `gh --version` and `gh copilot --help` both succeed.
+- `gh --version` succeeds, and `copilot --version` or `gh copilot --version`
+  reports the Copilot CLI product version.
 - `doctor` returns a machine-readable `doctor-report`.
 - `preview install` returns a machine-readable preview plan or explicit block.
 - `install --apply --yes` completes into the Copilot install root for the

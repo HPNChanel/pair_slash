@@ -109,14 +109,14 @@ export const DEFAULT_PUBLIC_COMPATIBILITY_LANES = Object.freeze([
     support_level: "prep",
     recommended_version: "1.0.88",
     live_tested_range: "none recorded",
-    deterministic_lab_baseline: "2.96.0",
+    deterministic_lab_baseline: "1.0.88",
     support_semantics:
       "Deterministic coverage exists, but no checked-in canonical /skills verification or live install record exists for the Linux user lane. Keep this lane prep-only.",
     release_gate: "required",
     evidence_source: `${LIVE_RUNTIME_EVIDENCE_ROOT}/copilot-cli-user-linux.md`,
     evidence_data_ref: `${LIVE_RUNTIME_EVIDENCE_ROOT}/copilot-cli-user-linux.yaml`,
     evidence_summary:
-      "Deterministic installability coverage exists, but no checked-in Linux user /skills verification or live install record is present. Corrected 2026-09-28: the prior 2.50.x value reflected the gh host CLI version emitted by detection (and faked by compat-lab shims), not the Copilot CLI product series; recommended_version now tracks the observed @github/copilot v1.0.x stable line while deterministic_lab_baseline reflects the gh host version the lab models.",
+      "Deterministic installability coverage exists, but no checked-in Linux user /skills verification or live install record is present. Corrected 2026-09-28: the prior 2.50.x value reflected the gh host CLI version emitted by detection (and faked by compat-lab shims), not the Copilot CLI product series; recommended_version now tracks the observed @github/copilot v1.0.x stable line while deterministic_lab_baseline tracks the Copilot CLI product version the lab shims emit (the gh host version is modeled separately at 2.96.0).",
     freshness_state: "none-recorded",
     host_profile_count: 0,
     last_verified_at: null,
@@ -201,14 +201,14 @@ export const DEFAULT_PUBLIC_COMPATIBILITY_LANES = Object.freeze([
     support_level: "prep",
     recommended_version: "1.0.88",
     live_tested_range: "none recorded",
-    deterministic_lab_baseline: "2.96.0",
+    deterministic_lab_baseline: "1.0.88",
     support_semantics:
       "A real Windows host probe was captured, but gh was unavailable locally and no canonical /skills or install proof exists. Keep this lane prep-only.",
     release_gate: "nightly-only",
     evidence_source: `${LIVE_RUNTIME_EVIDENCE_ROOT}/copilot-cli-user-windows.md`,
     evidence_data_ref: `${LIVE_RUNTIME_EVIDENCE_ROOT}/copilot-cli-user-windows.yaml`,
     evidence_summary:
-      "A real Windows host probe was recorded on 2026-04-05, but gh was unavailable locally and preview blocked explicitly. Re-probed 2026-09-28: gh 2.96.0 is present and gh copilot --help exits 0 via the built-in wrapper, but the copilot binary is absent — wrapper presence is not Copilot CLI proof. Corrected 2026-09-28: the prior 2.50.x value reflected the gh host CLI version, not the Copilot CLI product series; recommended_version now tracks the observed @github/copilot v1.0.x stable line while deterministic_lab_baseline reflects the gh host version the lab models.",
+      "A real Windows host probe was recorded on 2026-04-05, but gh was unavailable locally and preview blocked explicitly. Re-probed 2026-09-28: gh 2.96.0 is present and gh copilot --help exits 0 via the built-in wrapper, but the copilot binary is absent — wrapper presence is not Copilot CLI proof. Corrected 2026-09-28: the prior 2.50.x value reflected the gh host CLI version, not the Copilot CLI product series; recommended_version now tracks the observed @github/copilot v1.0.x stable line while deterministic_lab_baseline tracks the Copilot CLI product version the lab shims emit (the gh host version is modeled separately at 2.96.0).",
     freshness_state: "fresh",
     host_profile_count: 1,
     last_verified_at: "2026-04-05T12:28:23.177Z",

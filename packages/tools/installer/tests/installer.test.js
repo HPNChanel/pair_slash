@@ -1249,7 +1249,7 @@ test("install rollback restores filesystem when state write fails", serial, () =
 
 test("user-scope copilot install resolves to user home", serial, () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ copilotVersion: "2.96.0" });
+  const runtime = installFakeRuntime({ copilotVersion: "1.0.88" });
   try {
     const fakeHome = join(fixture.tempRoot, "fake-home");
     mkdirSync(fakeHome, { recursive: true });
@@ -1274,7 +1274,7 @@ test("user-scope copilot install resolves to user home", serial, () => {
 
 test("user-scope copilot update writes journal and refreshes managed files", serial, () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ copilotVersion: "2.96.0" });
+  const runtime = installFakeRuntime({ copilotVersion: "1.0.88" });
   try {
     const fakeHome = join(fixture.tempRoot, "fake-home");
     mkdirSync(fakeHome, { recursive: true });
@@ -1316,7 +1316,7 @@ test("user-scope copilot update writes journal and refreshes managed files", ser
 
 test("user-scope copilot uninstall removes managed footprint and state", serial, () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ copilotVersion: "2.96.0" });
+  const runtime = installFakeRuntime({ copilotVersion: "1.0.88" });
   try {
     const fakeHome = join(fixture.tempRoot, "fake-home");
     mkdirSync(fakeHome, { recursive: true });

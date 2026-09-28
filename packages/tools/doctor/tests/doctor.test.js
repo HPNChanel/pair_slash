@@ -839,7 +839,7 @@ test("doctor fails when install state shows runtime-native asset placement drift
 
 test("doctor supports copilot user scope smoke lane", () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ copilotVersion: "2.96.0" });
+  const runtime = installFakeRuntime({ copilotVersion: "1.0.88" });
   const homePath = join(fixture.tempRoot, "home");
   mkdirSync(homePath, { recursive: true });
   runtime.setHome(homePath);
@@ -854,6 +854,18 @@ test("doctor supports copilot user scope smoke lane", () => {
     assert.ok(report.environment_summary.config_home.includes(".copilot"));
     assert.equal(report.scope_probes.user.selected, true);
     assert.ok(report.checks.some((check) => check.id === "runtime.detect"));
+    const detectCheck = report.checks.find((check) => check.id === "runtime.detect");
+    assert.equal(detectCheck.evidence.version, "1.0.88");
+    assert.equal(detectCheck.evidence.detection_path, "fake-env");
+    const surfaceProbe = report.checks.find((check) => check.id === "runtime.surface_probe");
+    assert.equal(surfaceProbe.status, "pass");
+    assert.equal(surfaceProbe.evidence.informational_only, true);
+    assert.equal(surfaceProbe.evidence.affects_verdict, false);
+    assert.ok(
+      surfaceProbe.evidence.observations.some(
+        (observation) => observation.probe === "copilot.plugin_dirs",
+      ),
+    );
     assert.equal(report.support_lane.evidence_source, "docs/evidence/live-runtime/copilot-cli-user-windows.md");
     assert.equal(report.support_lane.claim_status, "prep");
     assert.equal(report.support_lane.required_evidence_class, "live_verification");
