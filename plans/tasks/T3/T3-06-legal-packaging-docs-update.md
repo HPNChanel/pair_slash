@@ -2,13 +2,21 @@
 id: T3-06
 track: T3
 title: Legal/packaging docs update for plugin distribution
-status: todo
+status: done
 depends_on: [T3-05]
 est_size: S
-claimed_by:
-claimed_at:
-completed_at:
-evidence:
+claimed_by: devin
+claimed_at: 2026-09-28
+completed_at: 2026-09-28
+evidence: >
+  legal-packaging-status.md: added packaging-truth bullet covering emitted
+  plugin-bundle artifacts (plugin.json, .codex-plugin/plugin.json,
+  pairslash-plugin.json, marketplace manifests) as Apache-2.0 generated
+  artifacts that are distributable-shaped but not published; added
+  not-safe-today clause against marketplace/gh-skill availability claims;
+  references ADR-0003. public-claim-policy.md: added disallowed claim for
+  marketplace/gh-skill availability ("can emit" ok, availability not) and a
+  "Do not say" entry. private posture and README untouched.
 ---
 
 ## Objective

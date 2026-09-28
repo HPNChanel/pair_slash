@@ -221,6 +221,11 @@ Use an opening paragraph like this:
   current legal/package metadata.
 - Any statement that treats Apache-2.0 repo source licensing as proof that a
   package-manager artifact is already public.
+- Any statement that PairSlash packs are available in a plugin marketplace
+  or published via `gh skill` — the compilers emit plugin bundles and
+  marketplace-shape manifests as artifacts, but no channel is active
+  (`docs/architecture/adr-0003-marketplace-distribution.md`). Capability may
+  be described as "can emit"; availability may not be claimed.
 - Any OSS or open-source-packaging claim stronger than current legal/package
   metadata supports.
 
@@ -244,3 +249,4 @@ Use an opening paragraph like this:
 - "PairSlash is production-proven across environments."
 - "PairSlash is already a published npm package."
 - "The Apache-2.0 repo license means every `@pairslash/*` package is public."
+- "PairSlash packs are published in a plugin marketplace."

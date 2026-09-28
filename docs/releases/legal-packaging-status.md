@@ -34,6 +34,14 @@ product-validation truth.
   the repo into a published package-manager surface.
 - Runtime install paths such as `.agents/skills/` and `.github/skills/` are
   derived install artifacts, not canonical source.
+- Plugin-bundle artifacts emitted by the compilers (`plugin.json`,
+  `.codex-plugin/plugin.json`, `pairslash-plugin.json`, and any emitted
+  marketplace manifest) are generated artifacts governed by the repository's
+  Apache-2.0 license. Their `license`/`author` metadata fields describe the
+  source-licensed artifact; they do not constitute publication. Emitting a
+  marketplace-shape manifest is a capability, not a distribution event —
+  strategy and activation gating are recorded in
+  `docs/architecture/adr-0003-marketplace-distribution.md`.
 
 ## Current public-claim truth for this boundary
 
@@ -58,6 +66,9 @@ Not safe today:
 - Saying Apache-2.0 source licensing means package-manager publication already
   exists.
 - Saying derived runtime install artifacts are the source distribution.
+- Saying PairSlash packs are published in or available through any plugin
+  marketplace or `gh skill` release channel. Emission capability exists;
+  availability does not.
 
 ## Evidence required before changing this boundary
 
