@@ -1,6 +1,7 @@
 import {
   CONTEXT_EXPLANATION_SCHEMA_VERSION,
   DEBUG_REPORT_SCHEMA_VERSION,
+  isOneOf,
   POLICY_DECISIONS,
   POLICY_EXPLANATION_SCHEMA_VERSION,
   SUPPORTED_RUNTIMES,
@@ -18,8 +19,8 @@ import {
   validateStringArray,
 } from "../primitives.ts";
 
-export function validateContextExplanation(record) {
-  const errors = [];
+export function validateContextExplanation(record: any) {
+  const errors: string[] = [];
   if (record?.kind !== "context-explanation") {
     errors.push("kind must be context-explanation");
   }
@@ -27,10 +28,10 @@ export function validateContextExplanation(record) {
     errors.push(`schema_version must be ${CONTEXT_EXPLANATION_SCHEMA_VERSION}`);
   }
   validateNonEmptyString(record?.generated_at, "generated_at", errors, "CTX001");
-  if (!SUPPORTED_RUNTIMES.includes(record?.runtime)) {
+  if (!isOneOf(record?.runtime, SUPPORTED_RUNTIMES)) {
     errors.push(`unsupported runtime: ${record?.runtime}`);
   }
-  if (!SUPPORTED_TARGETS.includes(record?.target)) {
+  if (!isOneOf(record?.target, SUPPORTED_TARGETS)) {
     errors.push(`unsupported target: ${record?.target}`);
   }
   for (const field of [
@@ -71,7 +72,7 @@ export function validateContextExplanation(record) {
       validateNonEmptyString(item, "supported_trigger_surfaces[]", errors, "CTX001");
     }
   }
-  if (!TELEMETRY_MODES.includes(record?.telemetry_mode)) {
+  if (!isOneOf(record?.telemetry_mode, TELEMETRY_MODES)) {
     errors.push(`unsupported telemetry_mode: ${record?.telemetry_mode}`);
   }
   if ("tool_availability" in record) {
@@ -196,7 +197,7 @@ export function validateContextExplanation(record) {
               errors,
               "CTX001",
             );
-            if (!validAuthorities.includes(claim.selected?.authority)) {
+            if (!isOneOf(claim.selected?.authority, validAuthorities)) {
               errors.push(
                 `memory_resolution.record_resolution.resolved_claims[].selected.authority must be one of ${validAuthorities.join(", ")}`,
               );
@@ -208,7 +209,7 @@ export function validateContextExplanation(record) {
               "CTX001",
             );
           }
-          if (!validResolutionTypes.includes(claim?.resolution_type)) {
+          if (!isOneOf(claim?.resolution_type, validResolutionTypes)) {
             errors.push(
               `memory_resolution.record_resolution.resolved_claims[].resolution_type must be one of ${validResolutionTypes.join(", ")}`,
             );
@@ -229,7 +230,7 @@ export function validateContextExplanation(record) {
                 errors,
                 "CTX001",
               );
-              if (!validAuthorities.includes(shadowedEntry?.authority)) {
+              if (!isOneOf(shadowedEntry?.authority, validAuthorities)) {
                 errors.push(
                   `memory_resolution.record_resolution.resolved_claims[].shadowed[].authority must be one of ${validAuthorities.join(", ")}`,
                 );
@@ -240,7 +241,7 @@ export function validateContextExplanation(record) {
                 errors,
                 "CTX001",
               );
-              if (!validShadowReasons.includes(shadowedEntry?.reason)) {
+              if (!isOneOf(shadowedEntry?.reason, validShadowReasons)) {
                 errors.push(
                   `memory_resolution.record_resolution.resolved_claims[].shadowed[].reason must be one of ${validShadowReasons.join(", ")}`,
                 );
@@ -269,7 +270,7 @@ export function validateContextExplanation(record) {
             errors,
             "CTX001",
           );
-          if (!validAuthorities.includes(conflict?.selected_authority)) {
+          if (!isOneOf(conflict?.selected_authority, validAuthorities)) {
             errors.push(
               `memory_resolution.record_resolution.conflicts[].selected_authority must be one of ${validAuthorities.join(", ")}`,
             );
@@ -286,7 +287,7 @@ export function validateContextExplanation(record) {
             errors,
             "CTX001",
           );
-          if (!validAuthorities.includes(conflict?.shadowed_authority)) {
+          if (!isOneOf(conflict?.shadowed_authority, validAuthorities)) {
             errors.push(
               `memory_resolution.record_resolution.conflicts[].shadowed_authority must be one of ${validAuthorities.join(", ")}`,
             );
@@ -297,7 +298,7 @@ export function validateContextExplanation(record) {
             errors,
             "CTX001",
           );
-          if (!validShadowReasons.includes(conflict?.reason)) {
+          if (!isOneOf(conflict?.reason, validShadowReasons)) {
             errors.push(
               `memory_resolution.record_resolution.conflicts[].reason must be one of ${validShadowReasons.join(", ")}`,
             );
@@ -355,20 +356,20 @@ export function validateContextExplanation(record) {
         }
         validateNonEmptyString(layer?.layer, "memory_resolution.layers[].layer", errors, "CTX001");
         validateNonEmptyString(layer?.label, "memory_resolution.layers[].label", errors, "CTX001");
-        if (!Number.isInteger(layer?.precedence) || layer.precedence < 1) {
+        if (!Number.isInteger(layer?.precedence) || (layer.precedence as number) < 1) {
           errors.push("memory_resolution.layers[].precedence must be a positive integer");
         }
-        if (!validAuthorities.includes(layer?.authority)) {
+        if (!isOneOf(layer?.authority, validAuthorities)) {
           errors.push(
             `memory_resolution.layers[].authority must be one of ${validAuthorities.join(", ")}`,
           );
         }
-        if (!validResolutionModes.includes(layer?.resolution_mode)) {
+        if (!isOneOf(layer?.resolution_mode, validResolutionModes)) {
           errors.push(
             `memory_resolution.layers[].resolution_mode must be one of ${validResolutionModes.join(", ")}`,
           );
         }
-        if (!validResolutionStatuses.includes(layer?.resolution_status)) {
+        if (!isOneOf(layer?.resolution_status, validResolutionStatuses)) {
           errors.push(
             `memory_resolution.layers[].resolution_status must be one of ${validResolutionStatuses.join(", ")}`,
           );
@@ -442,8 +443,8 @@ export function validateContextExplanation(record) {
   return errors;
 }
 
-export function validatePolicyExplanation(record) {
-  const errors = [];
+export function validatePolicyExplanation(record: any) {
+  const errors: string[] = [];
   if (record?.kind !== "policy-explanation") {
     errors.push("kind must be policy-explanation");
   }
@@ -451,15 +452,15 @@ export function validatePolicyExplanation(record) {
     errors.push(`schema_version must be ${POLICY_EXPLANATION_SCHEMA_VERSION}`);
   }
   validateNonEmptyString(record?.generated_at, "generated_at", errors, "POLX001");
-  if (!SUPPORTED_RUNTIMES.includes(record?.runtime)) {
+  if (!isOneOf(record?.runtime, SUPPORTED_RUNTIMES)) {
     errors.push(`unsupported runtime: ${record?.runtime}`);
   }
-  if (!SUPPORTED_TARGETS.includes(record?.target)) {
+  if (!isOneOf(record?.target, SUPPORTED_TARGETS)) {
     errors.push(`unsupported target: ${record?.target}`);
   }
   validateNonEmptyString(record?.action, "action", errors, "POLX001");
   validateNonEmptyString(record?.overall_verdict, "overall_verdict", errors, "POLX001");
-  if (!POLICY_DECISIONS.includes(record?.overall_verdict)) {
+  if (!isOneOf(record?.overall_verdict, POLICY_DECISIONS)) {
     errors.push(`unsupported overall_verdict: ${record?.overall_verdict}`);
   }
   if (record?.contract_id !== null && typeof record?.contract_id !== "string") {
@@ -499,8 +500,8 @@ export function validatePolicyExplanation(record) {
   return errors;
 }
 
-export function validateDebugReport(record) {
-  const errors = [];
+export function validateDebugReport(record: any) {
+  const errors: string[] = [];
   if (record?.kind !== "debug-report") {
     errors.push("kind must be debug-report");
   }
@@ -518,18 +519,18 @@ export function validateDebugReport(record) {
   if (record?.correlation_id !== null && typeof record?.correlation_id !== "string") {
     errors.push("correlation_id must be string or null");
   }
-  if (record?.runtime !== null && !SUPPORTED_RUNTIMES.includes(record?.runtime)) {
+  if (record?.runtime !== null && !isOneOf(record?.runtime, SUPPORTED_RUNTIMES)) {
     errors.push(`unsupported runtime: ${record?.runtime}`);
   }
-  if (record?.target !== null && !SUPPORTED_TARGETS.includes(record?.target)) {
+  if (record?.target !== null && !isOneOf(record?.target, SUPPORTED_TARGETS)) {
     errors.push(`unsupported target: ${record?.target}`);
   }
   validateNonEmptyString(record?.command_name, "command_name", errors, "DBG001");
   validateNonEmptyString(record?.outcome, "outcome", errors, "DBG001");
-  if (!TRACE_OUTCOMES.includes(record?.outcome)) {
+  if (!isOneOf(record?.outcome, TRACE_OUTCOMES)) {
     errors.push(`unsupported outcome: ${record?.outcome}`);
   }
-  if (!TRACE_FAILURE_DOMAINS.includes(record?.decisive_failure_domain)) {
+  if (!isOneOf(record?.decisive_failure_domain, TRACE_FAILURE_DOMAINS)) {
     errors.push(`unsupported decisive_failure_domain: ${record?.decisive_failure_domain}`);
   }
   validateNonEmptyString(record?.decisive_reason, "decisive_reason", errors, "DBG001");
@@ -543,17 +544,17 @@ export function validateDebugReport(record) {
       }
       validateNonEmptyString(event?.timestamp, "timeline[].timestamp", errors, "DBG001");
       validateNonEmptyString(event?.event_type, "timeline[].event_type", errors, "DBG001");
-      if (!TRACE_EVENT_TYPES.includes(event?.event_type)) {
+      if (!isOneOf(event?.event_type, TRACE_EVENT_TYPES)) {
         errors.push(`unsupported timeline[].event_type: ${event?.event_type}`);
       }
-      if (!TRACE_SEVERITIES.includes(event?.severity)) {
+      if (!isOneOf(event?.severity, TRACE_SEVERITIES)) {
         errors.push(`unsupported timeline[].severity: ${event?.severity}`);
       }
-      if (!TRACE_FAILURE_DOMAINS.includes(event?.failure_domain)) {
+      if (!isOneOf(event?.failure_domain, TRACE_FAILURE_DOMAINS)) {
         errors.push(`unsupported timeline[].failure_domain: ${event?.failure_domain}`);
       }
       validateNonEmptyString(event?.outcome, "timeline[].outcome", errors, "DBG001");
-      if (!TRACE_OUTCOMES.includes(event?.outcome)) {
+      if (!isOneOf(event?.outcome, TRACE_OUTCOMES)) {
         errors.push(`unsupported timeline[].outcome: ${event?.outcome}`);
       }
       validateNonEmptyString(event?.summary, "timeline[].summary", errors, "DBG001");

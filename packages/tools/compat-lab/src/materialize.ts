@@ -22,7 +22,7 @@ const fixtureRepoRoot = join(compatLabRoot, "fixtures", "repos");
 
 function writeOverlayFiles(tempRoot, overlayFiles = {}) {
   for (const [relativePath, content] of Object.entries(overlayFiles)) {
-    writeTextFile(join(tempRoot, relativePath), content);
+    writeTextFile(join(tempRoot, relativePath), content as string);
   }
 }
 

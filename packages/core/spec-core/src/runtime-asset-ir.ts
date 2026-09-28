@@ -2,7 +2,7 @@ import { basename, extname, join } from "node:path";
 
 import { readFileNormalized, sha256, stableJson, toPosix } from "./utils.ts";
 
-function detectContentType(relativePath) {
+function detectContentType(relativePath: string) {
   const extension = extname(relativePath ?? "").toLowerCase();
   switch (extension) {
     case ".json":
@@ -17,7 +17,7 @@ function detectContentType(relativePath) {
   }
 }
 
-function buildGeneratedSignature({ entry, ownershipRecord, writeAuthorityGuarded }) {
+function buildGeneratedSignature({ entry, ownershipRecord, writeAuthorityGuarded }: { entry?: any; ownershipRecord?: any; writeAuthorityGuarded?: boolean }) {
   return stableJson({
     asset_id: entry.asset_id,
     runtime: entry.runtime,
@@ -38,7 +38,7 @@ function buildSourceLogicalAsset({
   entry,
   ownershipRecord,
   writeAuthorityGuarded,
-}) {
+}: { sourceDir: string; entry: any; ownershipRecord: any; writeAuthorityGuarded: boolean }) {
   const absolutePath = join(sourceDir, entry.source_path);
   const content = readFileNormalized(absolutePath);
   return {
@@ -69,7 +69,7 @@ function buildGeneratedLogicalAsset({
   entry,
   ownershipRecord,
   writeAuthorityGuarded,
-}) {
+}: { entry?: any; ownershipRecord?: any; writeAuthorityGuarded?: boolean }) {
   const signature = buildGeneratedSignature({
     entry,
     ownershipRecord,
@@ -98,16 +98,16 @@ function buildGeneratedLogicalAsset({
   };
 }
 
-export function buildLogicalAssetsFromManifest({ manifest, sourceDir }) {
+export function buildLogicalAssetsFromManifest({ manifest, sourceDir }: { manifest: any; sourceDir: string }) {
   const ownershipById = new Map(
-    manifest.asset_ownership.records.map((record) => [record.asset_id, record]),
+    manifest.asset_ownership.records.map((record: any) => [record.asset_id, record]),
   );
   const writeAuthorityGuarded = manifest.workflow_class === "write-authority";
 
   return manifest.runtime_assets.entries
     .slice()
-    .sort((left, right) => left.asset_id.localeCompare(right.asset_id))
-    .map((entry) => {
+    .sort((left: any, right: any) => left.asset_id.localeCompare(right.asset_id))
+    .map((entry: any) => {
       const ownershipRecord = ownershipById.get(entry.asset_id);
       if (!ownershipRecord) {
         throw new Error(`missing ownership metadata for asset ${entry.asset_id}`);

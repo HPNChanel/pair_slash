@@ -11,19 +11,19 @@ import { buildOwnershipReceipt } from "./ownership-receipt.ts";
 import { ensureDir, sha256, stableJson, toPosix, writeTextFile } from "./utils.ts";
 import { validateCompiledPack } from "./validate.ts";
 
-function stripCompiledFileContent(file) {
+function stripCompiledFileContent(file: any) {
   const { content, ...rest } = file;
   return rest;
 }
 
-export function stripCompiledContent(compiledPack) {
+export function stripCompiledContent(compiledPack: any) {
   return {
     ...compiledPack,
     files: compiledPack.files.map(stripCompiledFileContent),
   };
 }
 
-function assertUniqueRelativePaths(emittedAssets) {
+function assertUniqueRelativePaths(emittedAssets: any) {
   const seen = new Set();
   for (const asset of emittedAssets) {
     if (seen.has(asset.relative_path)) {
@@ -33,21 +33,21 @@ function assertUniqueRelativePaths(emittedAssets) {
   }
 }
 
-function normalizeEmittedAssets(emittedAssets) {
+function normalizeEmittedAssets(emittedAssets: any) {
   assertUniqueRelativePaths(emittedAssets);
   return emittedAssets
-    .map((asset) => ({
+    .map((asset: any) => ({
       ...asset,
       relative_path: toPosix(asset.relative_path),
       sha256: asset.sha256 ?? sha256(asset.content),
       size: asset.size ?? Buffer.byteLength(asset.content),
     }))
-    .sort((left, right) => left.relative_path.localeCompare(right.relative_path));
+    .sort((left: any, right: any) => left.relative_path.localeCompare(right.relative_path));
 }
 
-function getOwnershipReceiptAsset(ir) {
+function getOwnershipReceiptAsset(ir: any) {
   const receiptAsset =
-    ir.logical_assets.find((asset) => asset.asset_id === "ownership-receipt") ?? null;
+    ir.logical_assets.find((asset: any) => asset.asset_id === "ownership-receipt") ?? null;
   if (!receiptAsset) {
     throw new Error(`normalized ir ${ir.pack.id} is missing ownership-receipt asset`);
   }
@@ -58,7 +58,7 @@ export function materializeCompiledFile({
   logicalAsset,
   relativePath,
   content,
-}) {
+}: { logicalAsset: any; relativePath: string; content: any }) {
   const normalizedPath = toPosix(relativePath);
   return {
     asset_id: logicalAsset.asset_id,
@@ -87,7 +87,7 @@ export function finalizeCompiledPack({
   emittedAssets,
   write = false,
   distRoot = resolve(repoRoot, "dist", "compiled"),
-}) {
+}: { repoRoot: string; ir: any; runtime: string; runtimeAdapter: any; emittedAssets: any; write?: any; distRoot?: any }) {
   const runtimeTarget = ir.runtime_support[runtime];
   if (!runtimeTarget) {
     throw new Error(`normalized ir ${ir.pack.id} does not support runtime ${runtime}`);
@@ -104,12 +104,12 @@ export function finalizeCompiledPack({
       emittedAssets: files,
     }),
   });
-  const compiledFiles = [...files, ownershipFile].sort((left, right) =>
+  const compiledFiles = [...files, ownershipFile].sort((left: any, right: any) =>
     left.relative_path.localeCompare(right.relative_path),
   );
   const digestInput = compiledFiles
     .map(
-      (file) =>
+      (file: any) =>
         `${file.asset_id}:${file.relative_path}:${file.sha256}:${file.generator}:${file.owner}:${file.uninstall_behavior}`,
     )
     .join("\n");
@@ -152,7 +152,7 @@ export function compilePack({
   emitOptions,
   write = false,
   distRoot,
-}) {
+}: { repoRoot: string; manifestPath: string; runtime: string; runtimeAdapter?: any; emitBundle?: any; emitOptions?: any; write?: any; distRoot?: any }) {
   if (typeof emitBundle !== "function") {
     throw new Error("compilePack requires emitBundle");
   }
@@ -169,7 +169,7 @@ export function compilePack({
   });
 }
 
-export function writeCompiledPack(compiledPack) {
+export function writeCompiledPack(compiledPack: any) {
   ensureDir(compiledPack.output_dir);
   for (const file of compiledPack.files) {
     writeTextFile(join(compiledPack.output_dir, file.relative_path), file.content);

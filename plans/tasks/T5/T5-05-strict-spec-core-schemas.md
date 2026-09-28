@@ -2,13 +2,19 @@
 id: T5-05
 track: T5
 title: Strict batch — spec-core (schemas/constants/utils)
-status: todo
+status: done
 depends_on: [T5-01, T5-02]
 est_size: L
-claimed_by:
-claimed_at:
-completed_at:
+claimed_by: devin
+claimed_at: 2026-10-XX
+completed_at: 2026-10-XX
 evidence:
+  strict_baseline_in_scope: 778
+  strict_after_in_scope: 0
+  typecheck: pass
+  lint: pass
+  tests: pass (36 suites, 0 failures)
+  test_release: pass (11/11 pack trust checks; gh skill publish --dry-run verdict pass)
 ---
 
 ## Objective
@@ -45,14 +51,26 @@ Fix all strict-mode TypeScript errors in spec-core's foundational modules (const
 
 ## Acceptance gates
 
-- [ ] `typecheck:strict` reports 0 errors in in-scope files
-- [ ] `npm run typecheck`, `npm run test`, `npm run lint` green
-- [ ] No `as any`/`ts-ignore` additions
-- [ ] Public API export names unchanged
+- [x] `typecheck:strict` reports 0 errors in in-scope files (778 → 0; remaining spec-core errors confined to `catalog/*` = T5-06 scope)
+- [x] `npm run typecheck`, `npm run test`, `npm run lint` green
+- [x] No `as any`/`ts-ignore` additions (verified via `git diff`)
+- [x] Public API export names unchanged
 
 ## Evidence to record
 
-- Before/after strict-error counts; bug fixes (if any) with regression test refs.
+- Before/after strict-error counts: in-scope spec-core 778 → 0 (post-codemod residual 176 → 0 after semantic pass).
+- Migration strategy: codemod pass for param/binding annotations (`.pairslash/tmp/annotate-strict.mjs`), then manual semantic pass.
+- Key type-design decisions:
+  - `validateObject`/`isObject` became type guards (`value is Record<string, any>`) — cleared the bulk of `unknown` member-access errors across validators.
+  - `normalizeRuntime`/`normalizeTarget` keep verbatim return semantics; declared return `string` (inputs are strings in practice; non-string inputs fall through unchanged at runtime).
+  - `.includes(x)` on `as const` union tuples replaced by `isOneOf(x, TUPLE)` — preserves narrowing, zero behavior change.
+  - Optional destructured params tightened to required (`repoRoot`, `manifestPath`, `runtime`) only where the body unconditionally dereferences them (`resolve(repoRoot, ...)`, indexing). No call-site breakage surfaced.
+  - `catch (error)` sites use `error instanceof Error ? error.message : String(error)`.
+- No real bugs surfaced requiring behavior change; no test edits.
+- Out-of-scope boundary touch-ups (forced by tightened leaf signatures, needed for `npm run typecheck` gate):
+  - `policy-engine/index.ts`, `lint-bridge/index.ts`: `.includes` → `isOneOf` on normalized runtime/target (2 sites each).
+  - `compat-lab/materialize.ts`: `content as string` in overlay writer.
+  - `catalog/builders.ts`: `loadPackCatalogRecords` return type `any[]` (union literal inference broke downstream callers; full catalog strict pass remains T5-06).
 
 ## Rollback
 

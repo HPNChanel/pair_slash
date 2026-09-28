@@ -11,7 +11,7 @@ export const BENCHMARK_TRUTH_FILES = Object.freeze({
   laneWording: "docs/validation/phase-3-5/benchmark-lane-wording.yaml",
 });
 
-function readYamlDocument(repoRoot, relativePath) {
+function readYamlDocument(repoRoot: string, relativePath: string) {
   const absolutePath = resolve(repoRoot, relativePath);
   if (!exists(absolutePath)) {
     throw new Error(`benchmark-truth-missing:${relativePath}`);
@@ -19,25 +19,25 @@ function readYamlDocument(repoRoot, relativePath) {
   return YAML.parse(readFileNormalized(absolutePath) as string);
 }
 
-function recordError(errors, code, message) {
+function recordError(errors: string[], code: string, message: string) {
   errors.push(`${code} ${message}`);
 }
 
-function ensure(errors, condition, code, message) {
+function ensure(errors: string[], condition: any, code: string, message: string) {
   if (!condition) {
     recordError(errors, code, message);
   }
 }
 
-function exactSetMatch(values, expected) {
+function exactSetMatch(values: unknown[], expected: any) {
   if (!Array.isArray(values) || values.length !== expected.length) {
     return false;
   }
   const actualSet = new Set(values);
-  return expected.every((value) => actualSet.has(value));
+  return expected.every((value: unknown) => actualSet.has(value));
 }
 
-function buildTaskMap(taskCatalog) {
+function buildTaskMap(taskCatalog: any) {
   const map = new Map();
   for (const task of taskCatalog?.official_tasks ?? []) {
     map.set(task.task_card_id, task);
@@ -45,12 +45,12 @@ function buildTaskMap(taskCatalog) {
   return map;
 }
 
-function unique(values) {
+function unique(values: unknown[]) {
   return new Set(values).size === values.length;
 }
 
-export function validateBenchmarkTruth(documents, { throwOnError = false } = {}) {
-  const errors = [];
+export function validateBenchmarkTruth(documents: any, { throwOnError = false }: { throwOnError?: any } = {}) {
+  const errors: string[] = [];
   const { benchmarkTruth, taskCatalog, logSchema, scoringRubric, laneWording } = documents;
   const supportedRuntimes = benchmarkTruth?.fixed_boundary?.supported_runtimes ?? [];
   const headlineWedges = benchmarkTruth?.round_one_policy?.headline_wedges ?? [];
@@ -109,7 +109,7 @@ export function validateBenchmarkTruth(documents, { throwOnError = false } = {})
     );
     ensure(
       errors,
-      (task.required_runtime_ids ?? []).every((runtimeId) => supportedRuntimes.includes(runtimeId)),
+      (task.required_runtime_ids ?? []).every((runtimeId: any) => supportedRuntimes.includes(runtimeId)),
       "PBT009",
       `task ${task.task_card_id} references an unsupported runtime`,
     );
@@ -181,7 +181,7 @@ export function validateBenchmarkTruth(documents, { throwOnError = false } = {})
   );
   ensure(
     errors,
-    roundOneLaneTemplates.some((lane) => lane.lane_id === "codex-cli-repo-macos" && lane.reporting_mode === "lane_specific_headline"),
+    roundOneLaneTemplates.some((lane: any) => lane.lane_id === "codex-cli-repo-macos" && lane.reporting_mode === "lane_specific_headline"),
     "PBT019",
     "lane wording must keep codex-cli-repo-macos as the lane-specific headline template",
   );
@@ -201,7 +201,7 @@ export function validateBenchmarkTruth(documents, { throwOnError = false } = {})
   return errors;
 }
 
-export function loadBenchmarkTruth(repoRoot = process.cwd()) {
+export function loadBenchmarkTruth(repoRoot: string = process.cwd()) {
   const documents = {
     benchmarkTruth: readYamlDocument(repoRoot, BENCHMARK_TRUTH_FILES.benchmarkTruth),
     taskCatalog: readYamlDocument(repoRoot, BENCHMARK_TRUTH_FILES.taskCatalog),

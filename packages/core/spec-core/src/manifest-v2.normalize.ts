@@ -29,19 +29,19 @@ function sortStrings(values: any): any {
   );
 }
 
-function sortByKey(items, key) {
-  return items.slice().sort((left, right) => `${left[key]}`.localeCompare(`${right[key]}`));
+function sortByKey(items: any[], key: string) {
+  return items.slice().sort((left: any, right: any) => `${left[key]}`.localeCompare(`${right[key]}`));
 }
 
-function clone(value) {
+function clone(value: unknown) {
   return JSON.parse(JSON.stringify(value));
 }
 
-function isObject(value) {
+function isObject(value: unknown) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
-function pickFirstString(...values) {
+function pickFirstString(...values: unknown[]) {
   for (const value of values) {
     if (typeof value === "string" && value.trim() !== "") {
       return value;
@@ -50,7 +50,7 @@ function pickFirstString(...values) {
   return null;
 }
 
-function pickFirstInteger(...values) {
+function pickFirstInteger(...values: unknown[]) {
   for (const value of values) {
     if (Number.isInteger(value)) {
       return value;
@@ -59,23 +59,23 @@ function pickFirstInteger(...values) {
   return null;
 }
 
-function sourceAssetId(relativePath) {
+function sourceAssetId(relativePath: string) {
   return relativePath === "SKILL.md" ? "skill" : `source:${relativePath}`;
 }
 
 function sourcePathsFromEntries(entries: any[] = []) {
-  return sortStrings(entries.map((entry) => entry.source_path).filter(Boolean));
+  return sortStrings(entries.map((entry: any) => entry.source_path).filter(Boolean));
 }
 
-function inferAssetKind(relativePath, primarySkill) {
+function inferAssetKind(relativePath: string, primarySkill: any) {
   return relativePath === primarySkill ? "skill_markdown" : "support_doc";
 }
 
-function inferInstallSurface(relativePath, primarySkill) {
+function inferInstallSurface(relativePath: string, primarySkill: any) {
   return relativePath === primarySkill ? "canonical_skill" : "support_doc";
 }
 
-function normalizeCompatibility(source: any = {}, runtime) {
+function normalizeCompatibility(source: any = {}, runtime: string) {
   const defaultDirect = runtime === "codex_cli" ? "supported" : "unverified";
   const canonicalPicker = COMPATIBILITY_STATUSES.includes(source.canonical_picker)
     ? source.canonical_picker
@@ -89,8 +89,8 @@ function normalizeCompatibility(source: any = {}, runtime) {
   };
 }
 
-function normalizeRuntimeBindings(record, packName, { preferCanonical = false }: any = {}) {
-  const bindings = {};
+function normalizeRuntimeBindings(record: any, packName: string, { preferCanonical = false }: any = {}) {
+  const bindings: Record<string, any> = {};
   for (const runtime of SUPPORTED_RUNTIMES) {
     const canonicalBinding = isObject(record.runtime_bindings?.[runtime]) ? record.runtime_bindings[runtime] : {};
     const legacyBinding = isObject(record.runtime_targets?.[runtime]) ? record.runtime_targets[runtime] : {};
@@ -130,18 +130,18 @@ function normalizeRuntimeBindings(record, packName, { preferCanonical = false }:
   return bindings;
 }
 
-function deriveSupportedRuntimes(record) {
+function deriveSupportedRuntimes(record: any) {
   const runtimeKeys = [
     ...(Array.isArray(record.supported_runtimes) ? record.supported_runtimes : []),
     ...Object.keys(record.supported_runtime_ranges ?? {}),
     ...Object.keys(record.runtime_bindings ?? {}),
     ...Object.keys(record.runtime_targets ?? {}),
   ];
-  const runtimes = sortStrings(runtimeKeys.filter((runtime) => isOneOf(runtime, SUPPORTED_RUNTIMES)));
+  const runtimes = sortStrings(runtimeKeys.filter((runtime: string) => isOneOf(runtime, SUPPORTED_RUNTIMES)));
   return runtimes.length > 0 ? runtimes : SUPPORTED_RUNTIMES.slice();
 }
 
-function deriveSupportedRuntimeRanges(record) {
+function deriveSupportedRuntimeRanges(record: any) {
   const legacyRanges = isObject(record.supported_runtime_ranges) ? record.supported_runtime_ranges : {};
   return {
     codex_cli: pickFirstString(legacyRanges.codex_cli) ?? ">=0.153.4",
@@ -149,7 +149,7 @@ function deriveSupportedRuntimeRanges(record) {
   };
 }
 
-function deriveDocsRefs(record) {
+function deriveDocsRefs(record: any) {
   const docsRefs = isObject(record.docs_refs) ? record.docs_refs : {};
   const legacyDocs = isObject(record.assets?.docs) ? record.assets.docs : {};
   return {
@@ -163,7 +163,7 @@ function deriveDocsRefs(record) {
   };
 }
 
-function deriveRuntimeSupportStatus(runtimeBindings, runtime) {
+function deriveRuntimeSupportStatus(runtimeBindings: any, runtime: string) {
   const compatibility = runtimeBindings?.[runtime]?.compatibility ?? {};
   const canonicalStatus = COMPATIBILITY_STATUSES.includes(compatibility.canonical_picker)
     ? compatibility.canonical_picker
@@ -185,7 +185,7 @@ function deriveRuntimeSupportStatus(runtimeBindings, runtime) {
   return "partial";
 }
 
-function deriveCatalog(record, packName, releaseChannel, status) {
+function deriveCatalog(record: any, packName: any, releaseChannel: any, status: any) {
   const catalog = isObject(record.catalog) ? record.catalog : {};
   const deprecationStatus =
     pickFirstString(catalog.deprecation_status) ?? (status === "deprecated" ? "deprecated" : "active");
@@ -212,7 +212,7 @@ function deriveCatalog(record, packName, releaseChannel, status) {
   };
 }
 
-function deriveSupport(record, packName, runtimeBindings, memoryPermissions) {
+function deriveSupport(record: any, packName: any, runtimeBindings: any, memoryPermissions: any) {
   const support = isObject(record.support) ? record.support : {};
   const publisher = isObject(support.publisher) ? support.publisher : {};
   const defaultPublisherClass =
@@ -237,7 +237,7 @@ function deriveSupport(record, packName, runtimeBindings, memoryPermissions) {
     ? support.promotion_checklist.claimed_lanes
     : {};
   const runtimeSupport = Object.fromEntries(
-    SUPPORTED_RUNTIMES.map((runtime) => {
+    SUPPORTED_RUNTIMES.map((runtime: string) => {
       const runtimeSupportRecord = isObject(support.runtime_support?.[runtime]) ? support.runtime_support[runtime] : {};
       const evidenceRef = pickFirstString(runtimeSupportRecord.evidence_ref);
       return [
@@ -280,7 +280,7 @@ function deriveSupport(record, packName, runtimeBindings, memoryPermissions) {
           : true,
     },
     runtime_support: Object.fromEntries(
-      SUPPORTED_RUNTIMES.map((runtime) => {
+      SUPPORTED_RUNTIMES.map((runtime: string) => {
         const runtimeRecord = runtimeSupport[runtime];
         return [
           runtime,
@@ -317,7 +317,7 @@ function deriveSupport(record, packName, runtimeBindings, memoryPermissions) {
         "docs/compatibility/runtime-surface-matrix.yaml",
       ]),
       live_workflow_refs: Object.fromEntries(
-        SUPPORTED_RUNTIMES.map((runtime) => [
+        SUPPORTED_RUNTIMES.map((runtime: string) => [
           runtime,
           sortStrings(liveWorkflowRefs?.[runtime] ?? []),
         ]),
@@ -333,7 +333,7 @@ function deriveSupport(record, packName, runtimeBindings, memoryPermissions) {
             ? workflowMaturity
             : "canary",
       claimed_lanes: Object.fromEntries(
-        SUPPORTED_RUNTIMES.map((runtime) => [
+        SUPPORTED_RUNTIMES.map((runtime: string) => [
           runtime,
           sortStrings(checklistClaimedLanes?.[runtime] ?? []),
         ]),
@@ -361,7 +361,7 @@ function deriveSupport(record, packName, runtimeBindings, memoryPermissions) {
           : "canary",
       trigger_codes: sortStrings(
         (support.demotion_policy?.trigger_codes ?? WORKFLOW_DEMOTION_TRIGGER_CODES).filter(
-          (triggerCode) => isOneOf(triggerCode, WORKFLOW_DEMOTION_TRIGGER_CODES),
+          (triggerCode: any) => isOneOf(triggerCode, WORKFLOW_DEMOTION_TRIGGER_CODES),
         ),
       ),
     },
@@ -377,12 +377,12 @@ function deriveSupport(record, packName, runtimeBindings, memoryPermissions) {
   };
 }
 
-function buildSourceEntries(record, primarySkill, { preferCanonical = false }: any = {}) {
+function buildSourceEntries(record: any, primarySkill: any, { preferCanonical = false }: any = {}) {
   const overridePaths = new Set(record.local_override_policy?.eligible_paths ?? []);
   const canonicalEntries = Array.isArray(record.runtime_assets?.entries)
-    ? record.runtime_assets.entries.filter((entry) => entry?.source_path)
+    ? record.runtime_assets.entries.filter((entry: any) => entry?.source_path)
     : [];
-  const canonicalByPath = new Map(canonicalEntries.map((entry) => [entry.source_path, entry]));
+  const canonicalByPath = new Map(canonicalEntries.map((entry: any) => [entry.source_path, entry]));
   const sourcePaths =
     preferCanonical
       ? canonicalEntries.length > 0
@@ -392,7 +392,7 @@ function buildSourceEntries(record, primarySkill, { preferCanonical = false }: a
         ? sortStrings(record.assets.include)
         : sourcePathsFromEntries(canonicalEntries);
 
-  return sourcePaths.map((relativePath) => {
+  return sourcePaths.map((relativePath: string) => {
     const existing: any = canonicalByPath.get(relativePath) ?? {};
     return {
       asset_id: existing.asset_id ?? sourceAssetId(relativePath),
@@ -408,7 +408,7 @@ function buildSourceEntries(record, primarySkill, { preferCanonical = false }: a
   });
 }
 
-function defaultGeneratedEntries(record) {
+function defaultGeneratedEntries(record: any) {
   const workflowClass = pickFirstString(record.workflow_class, record.pack?.workflow_class) ?? "read-oriented";
   const mcpEnabled = Array.isArray(record.required_mcp_servers) && record.required_mcp_servers.length > 0;
   const packId = pickFirstString(record.pack_name, record.pack?.id);
@@ -567,11 +567,11 @@ function defaultGeneratedEntries(record) {
   return generated;
 }
 
-function buildGeneratedEntries(record) {
+function buildGeneratedEntries(record: any) {
   const existingGenerated = Array.isArray(record.runtime_assets?.entries)
-    ? record.runtime_assets.entries.filter((entry) => entry?.generated_path)
+    ? record.runtime_assets.entries.filter((entry: any) => entry?.generated_path)
     : [];
-  const derivedById = new Map(defaultGeneratedEntries(record).map((entry) => [entry.asset_id, entry]));
+  const derivedById = new Map(defaultGeneratedEntries(record).map((entry: any) => [entry.asset_id, entry]));
   for (const entry of existingGenerated) {
     if (!entry.asset_id) {
       continue;
@@ -584,15 +584,15 @@ function buildGeneratedEntries(record) {
   return sortByKey([...derivedById.values()], "asset_id");
 }
 
-function buildEligibleAssetIds(record, sourceEntries, { preferCanonical = false }: any = {}) {
-  const pathToAssetId = new Map(sourceEntries.map((entry) => [entry.source_path, entry.asset_id]));
+function buildEligibleAssetIds(record: any, sourceEntries: any, { preferCanonical = false }: any = {}) {
+  const pathToAssetId = new Map(sourceEntries.map((entry: any) => [entry.source_path, entry.asset_id]));
   const explicitIds = Array.isArray(record.local_override_policy?.eligible_asset_ids)
     ? sortStrings(record.local_override_policy.eligible_asset_ids)
     : [];
   const derivedIds = Array.isArray(record.local_override_policy?.eligible_paths)
     ? sortStrings(
         record.local_override_policy.eligible_paths
-          .map((relativePath) => pathToAssetId.get(relativePath))
+          .map((relativePath: string) => pathToAssetId.get(relativePath))
           .filter(Boolean),
       )
     : [];
@@ -602,7 +602,7 @@ function buildEligibleAssetIds(record, sourceEntries, { preferCanonical = false 
   return Array.isArray(record.local_override_policy?.eligible_paths) ? derivedIds : explicitIds;
 }
 
-function buildAssetOwnership(record, assetEntries) {
+function buildAssetOwnership(record: any, assetEntries: any) {
   const canonicalOwnership = isObject(record.asset_ownership) ? record.asset_ownership : {};
   const legacyOwnership = isObject(record.ownership) ? record.ownership : {};
   const existing = new Map<string, any>(
@@ -611,7 +611,7 @@ function buildAssetOwnership(record, assetEntries) {
       : [],
   );
   const records = sortByKey(
-    assetEntries.map((entry) => ({
+    assetEntries.map((entry: any) => ({
       asset_id: entry.asset_id,
       owner: existing.get(entry.asset_id)?.owner ?? "pairslash",
       uninstall_behavior:
@@ -632,11 +632,11 @@ function buildAssetOwnership(record, assetEntries) {
   };
 }
 
-function buildSmokeChecks(record, supportedRuntimes, installTargets) {
+function buildSmokeChecks(record: any, supportedRuntimes: any, installTargets: any) {
   if (Array.isArray(record.smoke_checks) && record.smoke_checks.length > 0) {
-    return sortByKey(record.smoke_checks.map((entry) => clone(entry)), "id");
+    return sortByKey(record.smoke_checks.map((entry: any) => clone(entry)), "id");
   }
-  const checks = [];
+  const checks: any[] = [];
   for (const runtime of supportedRuntimes) {
     const preferredTarget =
       runtime === "codex_cli"
@@ -668,7 +668,7 @@ function buildSmokeChecks(record, supportedRuntimes, installTargets) {
   return sortByKey(checks, "id");
 }
 
-function attachManifestMeta(manifest, meta) {
+function attachManifestMeta(manifest: any, meta: any) {
   Object.defineProperty(manifest, "__pairslash", {
     value: meta,
     enumerable: false,
@@ -678,7 +678,7 @@ function attachManifestMeta(manifest, meta) {
   return manifest;
 }
 
-export function detectPackManifestShape(record) {
+export function detectPackManifestShape(record: any) {
   if (isObject(record) && (record.pack_name || record.runtime_assets || record.asset_ownership)) {
     return "canonical-v2.1.0";
   }
@@ -694,14 +694,14 @@ export function detectPackManifestShape(record) {
   return "unknown";
 }
 
-function resolveCanonicalPreference(record, preferCanonicalOverride) {
+function resolveCanonicalPreference(record: any, preferCanonicalOverride: boolean) {
   if (typeof preferCanonicalOverride === "boolean") {
     return preferCanonicalOverride;
   }
   return detectPackManifestShape(record) === "canonical-v2.1.0";
 }
 
-function toCanonicalManifest(record, { preferCanonicalOverride }: any = {}) {
+function toCanonicalManifest(record: any, { preferCanonicalOverride }: any = {}) {
   const preferCanonical = resolveCanonicalPreference(record, preferCanonicalOverride);
   const packName = pickFirstString(record.pack?.id, record.pack_name) ?? "unknown-pack";
   const displayName = pickFirstString(record.pack?.display_name, record.display_name) ?? packName;
@@ -843,7 +843,7 @@ function toCanonicalManifest(record, { preferCanonicalOverride }: any = {}) {
 // Declared hooks are passed through verbatim (clamped to known keys) so schema
 // validation can fail closed on invalid emit values or unknown event names;
 // defaults are resolved later per runtime by resolvePreflightHooks().
-function normalizeHooksDeclaration(declared) {
+function normalizeHooksDeclaration(declared: any) {
   const normalized: any = {};
   if (isObject(declared.preflight)) {
     const preflight: any = {};
@@ -858,12 +858,12 @@ function normalizeHooksDeclaration(declared) {
   return normalized;
 }
 
-function normalizeRequiredMcpServers(record) {
+function normalizeRequiredMcpServers(record: any) {
   if (!Array.isArray(record.required_mcp_servers)) {
     return { entries: [], warnings: [] };
   }
-  const warnings = [];
-  const entries = record.required_mcp_servers.map((entry) => {
+  const warnings: string[] = [];
+  const entries = record.required_mcp_servers.map((entry: any) => {
     const cloned = clone(entry);
     if (isObject(cloned) && cloned.spec_era === undefined) {
       cloned.spec_era = "dual";
@@ -876,8 +876,8 @@ function normalizeRequiredMcpServers(record) {
   return { entries, warnings };
 }
 
-function legacyAssets(manifest) {
-  const sourceEntries = manifest.runtime_assets.entries.filter((entry) => entry.source_path);
+function legacyAssets(manifest: any) {
+  const sourceEntries = manifest.runtime_assets.entries.filter((entry: any) => entry.source_path);
   return {
     pack_dir: manifest.runtime_assets.source_root,
     primary_skill_file: manifest.runtime_assets.primary_skill,
@@ -891,7 +891,7 @@ function legacyAssets(manifest) {
   };
 }
 
-function legacyOwnership(manifest) {
+function legacyOwnership(manifest: any) {
   return {
     ownership_file: manifest.asset_ownership.ownership_file,
     ownership_scope: manifest.asset_ownership.ownership_scope,
@@ -901,14 +901,14 @@ function legacyOwnership(manifest) {
   };
 }
 
-function legacyLocalOverridePolicy(manifest) {
+function legacyLocalOverridePolicy(manifest: any) {
   const eligiblePaths = manifest.runtime_assets.entries
     .filter(
-      (entry) =>
+      (entry: any) =>
         entry.source_path &&
         manifest.local_override_policy.eligible_asset_ids.includes(entry.asset_id),
     )
-    .map((entry) => entry.source_path);
+    .map((entry: any) => entry.source_path);
   return {
     ...clone(manifest.local_override_policy),
     strategy: manifest.update_strategy.mode,
@@ -917,9 +917,9 @@ function legacyLocalOverridePolicy(manifest) {
   };
 }
 
-function legacyRuntimeTargets(manifest) {
+function legacyRuntimeTargets(manifest: any) {
   return Object.fromEntries(
-    SUPPORTED_RUNTIMES.map((runtime) => [
+    SUPPORTED_RUNTIMES.map((runtime: string) => [
       runtime,
       {
         direct_invocation: manifest.runtime_bindings[runtime].direct_invocation,
@@ -931,7 +931,7 @@ function legacyRuntimeTargets(manifest) {
   );
 }
 
-function attachCompatibilityAliases(canonical, shape) {
+function attachCompatibilityAliases(canonical: any, shape: any) {
   const manifest = clone(canonical);
   manifest.version = manifest.pack_version;
   manifest.pack = {
@@ -956,7 +956,7 @@ function attachCompatibilityAliases(canonical, shape) {
 }
 
 export function normalizePackManifestV2(
-  record,
+  record: any,
   { attachAliases = false, preferCanonicalOverride }: any = {},
 ) {
   const shape = detectPackManifestShape(record);
@@ -967,14 +967,14 @@ export function normalizePackManifestV2(
   return attachAliases ? attachCompatibilityAliases(canonical, shape) : canonical;
 }
 
-export function serializePackManifestV2(record) {
+export function serializePackManifestV2(record: any) {
   const hasCompatibilityAliases =
     Boolean(record?.pack) || Boolean(record?.assets) || Boolean(record?.runtime_targets) || Boolean(record?.ownership);
   const preferCanonicalOverride = hasCompatibilityAliases ? false : undefined;
   return toSerializablePackManifestV2(record, { preferCanonicalOverride });
 }
 
-export function toSerializablePackManifestV2(record, { preferCanonicalOverride }: any = {}) {
+export function toSerializablePackManifestV2(record: any, { preferCanonicalOverride }: any = {}) {
   const canonical = normalizePackManifestV2(record, {
     attachAliases: false,
     preferCanonicalOverride,

@@ -2,6 +2,7 @@ import {
   DOCTOR_CHECK_GROUPS,
   DOCTOR_CHECK_SEVERITIES,
   DOCTOR_CHECK_STATUSES,
+  isOneOf,
   DOCTOR_REPORT_SCHEMA_VERSION,
   LINT_CHECK_RESULTS,
   LINT_REPORT_SCHEMA_VERSION,
@@ -26,12 +27,12 @@ import {
   validateRemediationActions,
 } from "../primitives.ts";
 
-function validateDoctorRemediation(record, errors) {
+function validateDoctorRemediation(record: any, errors: string[]) {
   if (!isObject(record)) {
     errors.push("remediation must be an object");
     return;
   }
-  if (!REMEDIATION_STATUSES.includes(record?.status)) {
+  if (!isOneOf(record?.status, REMEDIATION_STATUSES)) {
     errors.push(`unsupported remediation.status: ${record?.status}`);
   }
   if (!Array.isArray(record?.commands)) {
@@ -62,7 +63,7 @@ function validateDoctorRemediation(record, errors) {
         }
       }
       validateLifecycleReasonCodes(command?.reason_codes, "remediation.commands[].reason_codes", errors, "DCR001");
-      if (!REMEDIATION_DECISIONS.includes(command?.decision)) {
+      if (!isOneOf(command?.decision, REMEDIATION_DECISIONS)) {
         errors.push(`unsupported remediation.commands[].decision: ${command?.decision}`);
       }
     }
@@ -76,7 +77,7 @@ function validateDoctorRemediation(record, errors) {
         continue;
       }
       validateNonEmptyString(action?.action_id, "remediation.actions[].action_id", errors, "DCR001");
-      if (!REMEDIATION_ACTION_KINDS.includes(action?.action_kind)) {
+      if (!isOneOf(action?.action_kind, REMEDIATION_ACTION_KINDS)) {
         errors.push(`remediation.actions[].action_kind must be one of ${REMEDIATION_ACTION_KINDS.join(", ")}`);
       }
       validateNonEmptyString(action?.summary, "remediation.actions[].summary", errors, "DCR001");
@@ -103,15 +104,15 @@ function validateDoctorRemediation(record, errors) {
         }
       }
       validateLifecycleReasonCodes(action?.reason_codes, "remediation.actions[].reason_codes", errors, "DCR001");
-      if (!REMEDIATION_DECISIONS.includes(action?.decision)) {
+      if (!isOneOf(action?.decision, REMEDIATION_DECISIONS)) {
         errors.push(`unsupported remediation.actions[].decision: ${action?.decision}`);
       }
     }
   }
 }
 
-export function validateDoctorReport(record) {
-  const errors = [];
+export function validateDoctorReport(record: any) {
+  const errors: string[] = [];
   if (record?.kind !== "doctor-report") {
     errors.push("kind must be doctor-report");
   }
@@ -197,7 +198,7 @@ export function validateDoctorReport(record) {
           errors.push(`scope_probes.${target}.${field} must be boolean`);
         }
       }
-      if (!SUPPORT_VERDICTS.includes(probe?.verdict)) {
+      if (!isOneOf(probe?.verdict, SUPPORT_VERDICTS)) {
         errors.push(`unsupported scope_probes.${target}.verdict: ${probe?.verdict}`);
       }
       if (!Array.isArray(probe?.issue_codes)) {
@@ -537,8 +538,8 @@ export function validateDoctorReport(record) {
   return errors;
 }
 
-export function validateLintReport(record) {
-  const errors = [];
+export function validateLintReport(record: any) {
+  const errors: string[] = [];
   if (record?.kind !== "lint-report") {
     errors.push("kind must be lint-report");
   }

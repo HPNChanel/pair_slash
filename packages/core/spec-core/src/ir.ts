@@ -23,19 +23,22 @@ function buildRuntimeSupport(manifest: any) {
   );
 }
 
-function stripLogicalAssetContent(asset) {
+function stripLogicalAssetContent(asset: Record<string, unknown>): Record<string, unknown> {
   const { content, ...rest } = asset;
   return rest;
 }
 
-export function stripNormalizedIrContent(ir) {
+export function stripNormalizedIrContent(ir: {
+  logical_assets: Array<Record<string, unknown>>;
+  [key: string]: unknown;
+}): Record<string, unknown> {
   return {
     ...ir,
     logical_assets: ir.logical_assets.map(stripLogicalAssetContent),
   };
 }
 
-export function buildNormalizedIr({ repoRoot, manifestPath }) {
+export function buildNormalizedIr({ repoRoot, manifestPath }: { repoRoot: string; manifestPath: string }) {
   const manifest = loadPackManifest(manifestPath);
   const sourceDir = resolvePackDir(repoRoot, manifest);
   const logicalAssets = buildLogicalAssetsFromManifest({

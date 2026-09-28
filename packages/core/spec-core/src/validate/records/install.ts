@@ -4,6 +4,7 @@ import {
   INSTALL_JOURNAL_SCHEMA_VERSION,
   INSTALL_STATE_SCHEMA_VERSION,
   INSTALL_SURFACES,
+  isOneOf,
   LIFECYCLE_REASON_CODES,
   LOGICAL_ASSET_KINDS,
   MANAGEMENT_MODES,
@@ -37,18 +38,18 @@ import {
   validateRemediationActions,
 } from "../primitives.ts";
 
-export function validateCompiledPack(record) {
-  const errors = [];
+export function validateCompiledPack(record: any) {
+  const errors: string[] = [];
   if (record?.kind !== "compiled-pack") {
     errors.push("kind must be compiled-pack");
   }
   if (record?.schema_version !== COMPILED_PACK_SCHEMA_VERSION) {
     errors.push(`schema_version must be ${COMPILED_PACK_SCHEMA_VERSION}`);
   }
-  if (!SUPPORTED_RUNTIMES.includes(record?.runtime)) {
+  if (!isOneOf(record?.runtime, SUPPORTED_RUNTIMES)) {
     errors.push(`unsupported runtime: ${record?.runtime}`);
   }
-  if (!BUNDLE_KINDS.includes(record?.bundle_kind)) {
+  if (!isOneOf(record?.bundle_kind, BUNDLE_KINDS)) {
     errors.push(`unsupported bundle_kind: ${record?.bundle_kind}`);
   }
   validateNonEmptyString(record?.pack_id, "pack_id", errors, "CPK001");
@@ -63,13 +64,13 @@ export function validateCompiledPack(record) {
     validateNonEmptyString(file?.generator, "files[].generator", errors, "CPK001");
     validateNonEmptyString(file?.relative_path, "files[].relative_path", errors, "CPK001");
     validateNonEmptyString(file?.sha256, "files[].sha256", errors, "CPK001");
-    if (!LOGICAL_ASSET_KINDS.includes(file?.asset_kind)) {
+    if (!isOneOf(file?.asset_kind, LOGICAL_ASSET_KINDS)) {
       errors.push(`unsupported files[].asset_kind: ${file?.asset_kind}`);
     }
-    if (!INSTALL_SURFACES.includes(file?.install_surface)) {
+    if (!isOneOf(file?.install_surface, INSTALL_SURFACES)) {
       errors.push(`unsupported files[].install_surface: ${file?.install_surface}`);
     }
-    if (!RUNTIME_SELECTORS.includes(file?.runtime_selector)) {
+    if (!isOneOf(file?.runtime_selector, RUNTIME_SELECTORS)) {
       errors.push(`unsupported files[].runtime_selector: ${file?.runtime_selector}`);
     }
     if (typeof file?.generated !== "boolean") {
@@ -84,7 +85,7 @@ export function validateCompiledPack(record) {
     if (!["pairslash", "user", "system"].includes(file?.owner)) {
       errors.push(`unsupported files[].owner: ${file?.owner}`);
     }
-    if (!UNINSTALL_BEHAVIORS.includes(file?.uninstall_behavior)) {
+    if (!isOneOf(file?.uninstall_behavior, UNINSTALL_BEHAVIORS)) {
       errors.push(`unsupported files[].uninstall_behavior: ${file?.uninstall_behavior}`);
     }
     if (typeof file?.write_authority_guarded !== "boolean") {
@@ -94,7 +95,7 @@ export function validateCompiledPack(record) {
   return errors;
 }
 
-function validateVersionPolicyDecision(value, field, errors) {
+function validateVersionPolicyDecision(value: unknown, field: string, errors: string[]) {
   if (!isObject(value)) {
     errors.push(`${field} must be an object`);
     return;
@@ -119,7 +120,7 @@ function validateVersionPolicyDecision(value, field, errors) {
   }
 }
 
-function validateTrustReceipt(value, field, errors) {
+function validateTrustReceipt(value: unknown, field: string, errors: string[]) {
   if (!isObject(value)) {
     errors.push(`${field} must be an object`);
     return;
@@ -133,27 +134,27 @@ function validateTrustReceipt(value, field, errors) {
   if (value?.compiled_digest !== null && typeof value?.compiled_digest !== "string") {
     errors.push(`${field}.compiled_digest must be string or null`);
   }
-  if (!TRUST_SOURCE_CLASSES.includes(value?.source_class)) {
+  if (!isOneOf(value?.source_class, TRUST_SOURCE_CLASSES)) {
     errors.push(`${field}.source_class must be one of ${TRUST_SOURCE_CLASSES.join(", ")}`);
   }
-  if (!TRUST_VERIFICATION_STATUSES.includes(value?.verification_status)) {
+  if (!isOneOf(value?.verification_status, TRUST_VERIFICATION_STATUSES)) {
     errors.push(
       `${field}.verification_status must be one of ${TRUST_VERIFICATION_STATUSES.join(", ")}`,
     );
   }
-  if (!TRUST_POLICY_ACTIONS.includes(value?.policy_action)) {
+  if (!isOneOf(value?.policy_action, TRUST_POLICY_ACTIONS)) {
     errors.push(`${field}.policy_action must be one of ${TRUST_POLICY_ACTIONS.join(", ")}`);
   }
-  if ("trust_tier" in value && !PACK_TRUST_TIERS.includes(value?.trust_tier)) {
+  if ("trust_tier" in value && !isOneOf(value?.trust_tier, PACK_TRUST_TIERS)) {
     errors.push(`${field}.trust_tier must be one of ${PACK_TRUST_TIERS.join(", ")}`);
   }
-  if ("tier_claim" in value && value?.tier_claim !== null && !PACK_TRUST_TIERS.includes(value?.tier_claim)) {
+  if ("tier_claim" in value && value?.tier_claim !== null && !isOneOf(value?.tier_claim, PACK_TRUST_TIERS)) {
     errors.push(`${field}.tier_claim must be one of ${PACK_TRUST_TIERS.join(", ")} or null`);
   }
   if (value?.publisher !== null && typeof value?.publisher !== "string") {
     errors.push(`${field}.publisher must be string or null`);
   }
-  if ("publisher_class" in value && value?.publisher_class !== null && !PACK_PUBLISHER_CLASSES.includes(value?.publisher_class)) {
+  if ("publisher_class" in value && value?.publisher_class !== null && !isOneOf(value?.publisher_class, PACK_PUBLISHER_CLASSES)) {
     errors.push(
       `${field}.publisher_class must be one of ${PACK_PUBLISHER_CLASSES.join(", ")} or null`,
     );
@@ -170,18 +171,18 @@ function validateTrustReceipt(value, field, errors) {
   if (value?.manifest_path !== null && typeof value?.manifest_path !== "string") {
     errors.push(`${field}.manifest_path must be string or null`);
   }
-  if ("signature_status" in value && !PACK_SIGNATURE_STATUSES.includes(value?.signature_status)) {
+  if ("signature_status" in value && !isOneOf(value?.signature_status, PACK_SIGNATURE_STATUSES)) {
     errors.push(
       `${field}.signature_status must be one of ${PACK_SIGNATURE_STATUSES.join(", ")}`,
     );
   }
-  if ("support_level" in value && !PACK_SUPPORT_LEVELS.includes(value?.support_level)) {
+  if ("support_level" in value && !isOneOf(value?.support_level, PACK_SUPPORT_LEVELS)) {
     errors.push(`${field}.support_level must be one of ${PACK_SUPPORT_LEVELS.join(", ")}`);
   }
   if (
     "support_level_claim" in value &&
     value?.support_level_claim !== null &&
-    !PACK_SUPPORT_LEVELS.includes(value?.support_level_claim)
+    !isOneOf(value?.support_level_claim, PACK_SUPPORT_LEVELS)
   ) {
     errors.push(
       `${field}.support_level_claim must be one of ${PACK_SUPPORT_LEVELS.join(", ")} or null`,
@@ -201,7 +202,7 @@ function validateTrustReceipt(value, field, errors) {
         errors.push(`${field}.runtime_support.runtime must be string or null`);
       }
       for (const supportField of ["manifest_status", "declared_status", "resolved_status"]) {
-        if (!PACK_RUNTIME_SUPPORT_STATUSES.includes(value.runtime_support?.[supportField])) {
+        if (!isOneOf(value.runtime_support?.[supportField], PACK_RUNTIME_SUPPORT_STATUSES)) {
           errors.push(
             `${field}.runtime_support.${supportField} must be one of ${PACK_RUNTIME_SUPPORT_STATUSES.join(", ")}`,
           );
@@ -216,7 +217,7 @@ function validateTrustReceipt(value, field, errors) {
       if (typeof value.runtime_support?.evidence_present !== "boolean") {
         errors.push(`${field}.runtime_support.evidence_present must be boolean`);
       }
-      if (!TRUST_POLICY_ACTIONS.includes(value.runtime_support?.policy_action)) {
+      if (!isOneOf(value.runtime_support?.policy_action, TRUST_POLICY_ACTIONS)) {
         errors.push(
           `${field}.runtime_support.policy_action must be one of ${TRUST_POLICY_ACTIONS.join(", ")}`,
         );
@@ -239,12 +240,12 @@ function validateTrustReceipt(value, field, errors) {
     if (!isObject(value?.memory_authority)) {
       errors.push(`${field}.memory_authority must be an object`);
     } else {
-      if (!MEMORY_AUTHORITY_MODES.includes(value.memory_authority?.authority_mode)) {
+      if (!isOneOf(value.memory_authority?.authority_mode, MEMORY_AUTHORITY_MODES)) {
         errors.push(
           `${field}.memory_authority.authority_mode must be one of ${MEMORY_AUTHORITY_MODES.join(", ")}`,
         );
       }
-      if (!MEMORY_ACCESS_LEVELS.includes(value.memory_authority?.global_project_memory)) {
+      if (!isOneOf(value.memory_authority?.global_project_memory, MEMORY_ACCESS_LEVELS)) {
         errors.push(
           `${field}.memory_authority.global_project_memory must be one of ${MEMORY_ACCESS_LEVELS.join(", ")}`,
         );
@@ -265,11 +266,11 @@ function validateTrustReceipt(value, field, errors) {
   validateVersionPolicyDecision(value?.version_policy, `${field}.version_policy`, errors);
 }
 
-function validateDescriptorRuntimeSupport(value, field, errors) {
+function validateDescriptorRuntimeSupport(value: unknown, field: string, errors: string[]) {
   if (!validateObject(value, field, errors, "PTD001")) {
     return;
   }
-  if (!PACK_RUNTIME_SUPPORT_STATUSES.includes(value?.status)) {
+  if (!isOneOf(value?.status, PACK_RUNTIME_SUPPORT_STATUSES)) {
     errors.push(
       `${field}.status must be one of ${PACK_RUNTIME_SUPPORT_STATUSES.join(", ")}`,
     );
@@ -279,8 +280,8 @@ function validateDescriptorRuntimeSupport(value, field, errors) {
   }
 }
 
-export function validatePackTrustDescriptor(record, { manifest = null } = {}) {
-  const errors = [];
+export function validatePackTrustDescriptor(record: any, { manifest = null }: { manifest?: any } = {}) {
+  const errors: string[] = [];
   if (record?.kind !== "pack-trust-descriptor") {
     errors.push("kind must be pack-trust-descriptor");
   }
@@ -295,15 +296,15 @@ export function validatePackTrustDescriptor(record, { manifest = null } = {}) {
   validateNonEmptyString(record.publisher?.publisher_id, "publisher.publisher_id", errors, "PTD001");
   validateNonEmptyString(record.publisher?.display_name, "publisher.display_name", errors, "PTD001");
   validateNonEmptyString(record.publisher?.contact, "publisher.contact", errors, "PTD001");
-  if (!PACK_PUBLISHER_CLASSES.includes(record.publisher?.publisher_class)) {
+  if (!isOneOf(record.publisher?.publisher_class, PACK_PUBLISHER_CLASSES)) {
     errors.push(
       `publisher.publisher_class must be one of ${PACK_PUBLISHER_CLASSES.join(", ")}`,
     );
   }
-  if (!PACK_TRUST_TIERS.includes(record?.tier_claim)) {
+  if (!isOneOf(record?.tier_claim, PACK_TRUST_TIERS)) {
     errors.push(`tier_claim must be one of ${PACK_TRUST_TIERS.join(", ")}`);
   }
-  if (!PACK_SUPPORT_LEVELS.includes(record?.support_level_claim)) {
+  if (!isOneOf(record?.support_level_claim, PACK_SUPPORT_LEVELS)) {
     errors.push(
       `support_level_claim must be one of ${PACK_SUPPORT_LEVELS.join(", ")}`,
     );
@@ -378,24 +379,24 @@ export function validatePackTrustDescriptor(record, { manifest = null } = {}) {
   return errors;
 }
 
-export function validateInstallState(record) {
-  const errors = [];
+export function validateInstallState(record: any) {
+  const errors: string[] = [];
   if (record?.kind !== "install-state") {
     errors.push("kind must be install-state");
   }
   if (record?.schema_version !== INSTALL_STATE_SCHEMA_VERSION) {
     errors.push(`schema_version must be ${INSTALL_STATE_SCHEMA_VERSION}`);
   }
-  if (!SUPPORTED_RUNTIMES.includes(record?.runtime)) {
+  if (!isOneOf(record?.runtime, SUPPORTED_RUNTIMES)) {
     errors.push(`unsupported runtime: ${record?.runtime}`);
   }
-  if (!SUPPORTED_TARGETS.includes(record?.target)) {
+  if (!isOneOf(record?.target, SUPPORTED_TARGETS)) {
     errors.push(`unsupported target: ${record?.target}`);
   }
-  if ("skill_root" in (record ?? {}) && !SUPPORTED_SKILL_ROOTS.includes(record?.skill_root)) {
+  if ("skill_root" in (record ?? {}) && !isOneOf(record?.skill_root, SUPPORTED_SKILL_ROOTS)) {
     errors.push(`unsupported skill_root: ${record?.skill_root}`);
   }
-  if ("emit" in (record ?? {}) && !SUPPORTED_EMIT_MODES.includes(record?.emit)) {
+  if ("emit" in (record ?? {}) && !isOneOf(record?.emit, SUPPORTED_EMIT_MODES)) {
     errors.push(`unsupported emit mode: ${record?.emit}`);
   }
   if ("updated_at" in (record ?? {}) && typeof record?.updated_at !== "string" && record?.updated_at !== null) {
@@ -439,13 +440,13 @@ export function validateInstallState(record) {
       validateNonEmptyString(file?.absolute_path, "packs[].files[].absolute_path", errors, "IST001");
       validateNonEmptyString(file?.source_digest, "packs[].files[].source_digest", errors, "IST001");
       validateNonEmptyString(file?.current_digest, "packs[].files[].current_digest", errors, "IST001");
-      if (!LOGICAL_ASSET_KINDS.includes(file?.asset_kind)) {
+      if (!isOneOf(file?.asset_kind, LOGICAL_ASSET_KINDS)) {
         errors.push(`unsupported packs[].files[].asset_kind: ${file?.asset_kind}`);
       }
-      if (!INSTALL_SURFACES.includes(file?.install_surface)) {
+      if (!isOneOf(file?.install_surface, INSTALL_SURFACES)) {
         errors.push(`unsupported packs[].files[].install_surface: ${file?.install_surface}`);
       }
-      if (!RUNTIME_SELECTORS.includes(file?.runtime_selector)) {
+      if (!isOneOf(file?.runtime_selector, RUNTIME_SELECTORS)) {
         errors.push(`unsupported packs[].files[].runtime_selector: ${file?.runtime_selector}`);
       }
       if (typeof file?.generated !== "boolean") {
@@ -457,7 +458,7 @@ export function validateInstallState(record) {
       if (typeof file?.owned_by_pairslash !== "boolean") {
         errors.push("packs[].files[].owned_by_pairslash must be boolean");
       }
-      if ("management_mode" in file && !MANAGEMENT_MODES.includes(file?.management_mode)) {
+      if ("management_mode" in file && !isOneOf(file?.management_mode, MANAGEMENT_MODES)) {
         errors.push(`unsupported packs[].files[].management_mode: ${file?.management_mode}`);
       }
       if (typeof file?.override_eligible !== "boolean") {
@@ -469,7 +470,7 @@ export function validateInstallState(record) {
       if ("declared_owner" in file && !["pairslash", "user", "system"].includes(file?.declared_owner)) {
         errors.push(`unsupported packs[].files[].declared_owner: ${file?.declared_owner}`);
       }
-      if ("uninstall_behavior" in file && !UNINSTALL_BEHAVIORS.includes(file?.uninstall_behavior)) {
+      if ("uninstall_behavior" in file && !isOneOf(file?.uninstall_behavior, UNINSTALL_BEHAVIORS)) {
         errors.push(`unsupported packs[].files[].uninstall_behavior: ${file?.uninstall_behavior}`);
       }
       if (typeof file?.local_override !== "boolean") {
@@ -478,7 +479,7 @@ export function validateInstallState(record) {
       if (
         "reconciled_reason_code" in file &&
         file?.reconciled_reason_code !== null &&
-        !LIFECYCLE_REASON_CODES.includes(file?.reconciled_reason_code)
+        !isOneOf(file?.reconciled_reason_code, LIFECYCLE_REASON_CODES)
       ) {
         errors.push(
           `unsupported packs[].files[].reconciled_reason_code: ${file?.reconciled_reason_code}`,
@@ -492,8 +493,8 @@ export function validateInstallState(record) {
   return errors;
 }
 
-export function validatePreviewPlan(record) {
-  const errors = [];
+export function validatePreviewPlan(record: any) {
+  const errors: string[] = [];
   if (record?.kind !== "preview-plan") {
     errors.push("kind must be preview-plan");
   }
@@ -503,10 +504,10 @@ export function validatePreviewPlan(record) {
   if (!["install", "update", "uninstall"].includes(record?.action)) {
     errors.push(`unsupported action: ${record?.action}`);
   }
-  if (!SUPPORTED_RUNTIMES.includes(record?.runtime)) {
+  if (!isOneOf(record?.runtime, SUPPORTED_RUNTIMES)) {
     errors.push(`unsupported runtime: ${record?.runtime}`);
   }
-  if (!SUPPORTED_TARGETS.includes(record?.target)) {
+  if (!isOneOf(record?.target, SUPPORTED_TARGETS)) {
     errors.push(`unsupported target: ${record?.target}`);
   }
   if (typeof record?.can_apply !== "boolean") {
@@ -579,16 +580,16 @@ export function validatePreviewPlan(record) {
     return errors;
   }
   for (const op of record.operations) {
-    if (!PREVIEW_OPERATION_KINDS.includes(op?.kind)) {
+    if (!isOneOf(op?.kind, PREVIEW_OPERATION_KINDS)) {
       errors.push(`unsupported operation kind: ${op?.kind}`);
     }
     validateNonEmptyString(op?.pack_id, "operations[].pack_id", errors, "PPL001");
     validateNonEmptyString(op?.absolute_path, "operations[].absolute_path", errors, "PPL001");
     validateNonEmptyString(op?.reason, "operations[].reason", errors, "PPL001");
-    if ("asset_kind" in op && !LOGICAL_ASSET_KINDS.includes(op?.asset_kind)) {
+    if ("asset_kind" in op && !isOneOf(op?.asset_kind, LOGICAL_ASSET_KINDS)) {
       errors.push(`unsupported operations[].asset_kind: ${op?.asset_kind}`);
     }
-    if ("install_surface" in op && !INSTALL_SURFACES.includes(op?.install_surface)) {
+    if ("install_surface" in op && !isOneOf(op?.install_surface, INSTALL_SURFACES)) {
       errors.push(`unsupported operations[].install_surface: ${op?.install_surface}`);
     }
     if ("ownership" in op && !["pairslash", "user", "unmanaged", "system"].includes(op?.ownership)) {
@@ -597,16 +598,16 @@ export function validatePreviewPlan(record) {
     if ("override_eligible" in op && typeof op?.override_eligible !== "boolean") {
       errors.push("operations[].override_eligible must be boolean");
     }
-    if ("reason_code" in op && !LIFECYCLE_REASON_CODES.includes(op?.reason_code)) {
+    if ("reason_code" in op && !isOneOf(op?.reason_code, LIFECYCLE_REASON_CODES)) {
       errors.push(`unsupported operations[].reason_code: ${op?.reason_code}`);
     }
     if ("reason_detail" in op && op?.reason_detail !== null && typeof op?.reason_detail !== "string") {
       errors.push("operations[].reason_detail must be string or null");
     }
-    if ("management_mode" in op && !MANAGEMENT_MODES.includes(op?.management_mode)) {
+    if ("management_mode" in op && !isOneOf(op?.management_mode, MANAGEMENT_MODES)) {
       errors.push(`unsupported operations[].management_mode: ${op?.management_mode}`);
     }
-    if ("reconcile_mode" in op && !RECONCILE_MODES.includes(op?.reconcile_mode)) {
+    if ("reconcile_mode" in op && !isOneOf(op?.reconcile_mode, RECONCILE_MODES)) {
       errors.push(`unsupported operations[].reconcile_mode: ${op?.reconcile_mode}`);
     }
     if ("remediation_actions" in op) {
@@ -637,7 +638,7 @@ export function validatePreviewPlan(record) {
     if (!isObject(record.policy_summary)) {
       errors.push("policy_summary must be an object");
     } else {
-      if (!POLICY_DECISIONS.includes(record.policy_summary.overall_verdict)) {
+      if (!isOneOf(record.policy_summary.overall_verdict, POLICY_DECISIONS)) {
         errors.push(`unsupported policy_summary.overall_verdict: ${record.policy_summary.overall_verdict}`);
       }
       if (typeof record.policy_summary.no_silent_fallback !== "boolean") {
@@ -715,18 +716,18 @@ export function validatePreviewPlan(record) {
   return errors;
 }
 
-export function validateInstallJournal(record) {
-  const errors = [];
+export function validateInstallJournal(record: any) {
+  const errors: string[] = [];
   if (record?.kind !== "install-journal") {
     errors.push("kind must be install-journal");
   }
   if (record?.schema_version !== INSTALL_JOURNAL_SCHEMA_VERSION) {
     errors.push(`schema_version must be ${INSTALL_JOURNAL_SCHEMA_VERSION}`);
   }
-  if (!SUPPORTED_RUNTIMES.includes(record?.runtime)) {
+  if (!isOneOf(record?.runtime, SUPPORTED_RUNTIMES)) {
     errors.push(`unsupported runtime: ${record?.runtime}`);
   }
-  if (!SUPPORTED_TARGETS.includes(record?.target)) {
+  if (!isOneOf(record?.target, SUPPORTED_TARGETS)) {
     errors.push(`unsupported target: ${record?.target}`);
   }
   if (!["install", "update", "uninstall"].includes(record?.action)) {

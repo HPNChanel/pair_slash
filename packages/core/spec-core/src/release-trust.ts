@@ -6,6 +6,7 @@ import YAML from "yaml";
 
 import {
   DETACHED_SIGNATURE_SCHEMA_VERSION,
+  isOneOf,
   PACK_METADATA_ENVELOPE_SCHEMA_VERSION,
   PACK_PUBLISHER_CLASSES,
   PACK_RUNTIME_SUPPORT_STATUSES,
@@ -61,12 +62,12 @@ const DEFAULT_VERSION_POLICY = Object.freeze({
 
 const PACK_TRUST_AUTHORITY_SCHEMA_VERSION = "1.0.0";
 const HIGH_RISK_CAPABILITIES = Object.freeze(
-  ["memory_write_global", "repo_write", "shell_exec", "test_exec", "mcp_client"].sort((left, right) =>
+  ["memory_write_global", "repo_write", "shell_exec", "test_exec", "mcp_client"].sort((left: any, right: any) =>
     left.localeCompare(right),
   ),
 );
 
-function clone(value) {
+function clone(value: unknown) {
   return JSON.parse(JSON.stringify(value));
 }
 
@@ -74,41 +75,41 @@ function uniqueSorted(values: any): any[] {
   return [...new Set(values.filter(Boolean))].sort((left: any, right: any) => left.localeCompare(right));
 }
 
-function normalizeAction(value, fallback) {
-  return TRUST_POLICY_ACTIONS.includes(value) ? value : fallback;
+function normalizeAction(value: unknown, fallback: any) {
+  return isOneOf(value, TRUST_POLICY_ACTIONS) ? value : fallback;
 }
 
-function normalizeSourceClass(value, fallback) {
-  return TRUST_SOURCE_CLASSES.includes(value) ? value : fallback;
+function normalizeSourceClass(value: unknown, fallback: any) {
+  return isOneOf(value, TRUST_SOURCE_CLASSES) ? value : fallback;
 }
 
-function normalizeTrustTier(value, fallback = "unverified-external") {
-  return PACK_TRUST_TIERS.includes(value) ? value : fallback;
+function normalizeTrustTier(value: unknown, fallback: any = "unverified-external") {
+  return isOneOf(value, PACK_TRUST_TIERS) ? value : fallback;
 }
 
-function normalizeSupportLevel(value, fallback = "unsupported") {
-  return PACK_SUPPORT_LEVELS.includes(value) ? value : fallback;
+function normalizeSupportLevel(value: unknown, fallback: any = "unsupported") {
+  return isOneOf(value, PACK_SUPPORT_LEVELS) ? value : fallback;
 }
 
-function normalizePublisherClass(value, fallback = "external") {
-  return PACK_PUBLISHER_CLASSES.includes(value) ? value : fallback;
+function normalizePublisherClass(value: unknown, fallback: any = "external") {
+  return isOneOf(value, PACK_PUBLISHER_CLASSES) ? value : fallback;
 }
 
-function normalizeRuntimeSupportStatus(value, fallback = "unverified") {
-  return PACK_RUNTIME_SUPPORT_STATUSES.includes(value) ? value : fallback;
+function normalizeRuntimeSupportStatus(value: unknown, fallback: any = "unverified") {
+  return isOneOf(value, PACK_RUNTIME_SUPPORT_STATUSES) ? value : fallback;
 }
 
-function normalizeSignatureStatus(value, fallback = "missing") {
-  return PACK_SIGNATURE_STATUSES.includes(value) ? value : fallback;
+function normalizeSignatureStatus(value: unknown, fallback: any = "missing") {
+  return isOneOf(value, PACK_SIGNATURE_STATUSES) ? value : fallback;
 }
 
-const ACTION_PRECEDENCE = Object.freeze({
+const ACTION_PRECEDENCE: Record<string, number> = Object.freeze({
   allow: 0,
   ask: 1,
   deny: 2,
 });
 
-function mergeAction(current, candidate) {
+function mergeAction(current: any, candidate: any) {
   const normalizedCurrent = normalizeAction(current, "allow");
   const normalizedCandidate = normalizeAction(candidate, normalizedCurrent);
   return ACTION_PRECEDENCE[normalizedCandidate] > ACTION_PRECEDENCE[normalizedCurrent]
@@ -116,14 +117,14 @@ function mergeAction(current, candidate) {
     : normalizedCurrent;
 }
 
-const SUPPORT_STATUS_RANK = Object.freeze({
+const SUPPORT_STATUS_RANK: Record<string, number> = Object.freeze({
   blocked: 0,
   unverified: 1,
   partial: 2,
   supported: 3,
 });
 
-function pickWeakerSupportStatus(left, right) {
+function pickWeakerSupportStatus(left: any, right: any) {
   const normalizedLeft = normalizeRuntimeSupportStatus(left, "unverified");
   const normalizedRight = normalizeRuntimeSupportStatus(right, "unverified");
   return SUPPORT_STATUS_RANK[normalizedLeft] <= SUPPORT_STATUS_RANK[normalizedRight]
@@ -131,7 +132,7 @@ function pickWeakerSupportStatus(left, right) {
     : normalizedRight;
 }
 
-function mergePolicy(base, override) {
+function mergePolicy(base: any, override: any) {
   const merged = clone(base);
   if (override?.defaults && typeof override.defaults === "object") {
     for (const sourceClass of TRUST_SOURCE_CLASSES) {
@@ -142,7 +143,7 @@ function mergePolicy(base, override) {
     }
   }
   if (Array.isArray(override?.publishers)) {
-    const byId = new Map(merged.publishers.map((publisher) => [publisher.id, publisher]));
+    const byId = new Map(merged.publishers.map((publisher: any) => [publisher.id, publisher]));
     for (const publisher of override.publishers) {
       if (!publisher?.id) {
         continue;
@@ -162,7 +163,7 @@ function mergePolicy(base, override) {
   return merged;
 }
 
-function normalizeVersionPolicy(policy) {
+function normalizeVersionPolicy(policy: any) {
   const merged = {
     ...clone(DEFAULT_VERSION_POLICY),
     ...(policy ?? {}),
@@ -174,7 +175,7 @@ function normalizeVersionPolicy(policy) {
   return merged;
 }
 
-function loadStructuredFile(filePath) {
+function loadStructuredFile(filePath: string) {
   const text = readFileSync(filePath, "utf8");
   if (filePath.endsWith(".json")) {
     return JSON.parse(text);
@@ -182,7 +183,7 @@ function loadStructuredFile(filePath) {
   return YAML.parse(text);
 }
 
-function normalizePackTrustAuthority(authority) {
+function normalizePackTrustAuthority(authority: any) {
   const candidate = isObject(authority) ? authority : {};
   return {
     kind: candidate.kind ?? "pack-trust-authority",
@@ -191,7 +192,7 @@ function normalizePackTrustAuthority(authority) {
       Array.isArray(candidate.core_maintained_packs) ? candidate.core_maintained_packs : [],
     ),
     high_risk_capabilities: Object.fromEntries(
-    HIGH_RISK_CAPABILITIES.map((capability) => [
+    HIGH_RISK_CAPABILITIES.map((capability: any) => [
       capability,
       {
         allowed_packs: uniqueSorted(
@@ -211,16 +212,16 @@ function createEmptyPackTrustAuthority() {
     schema_version: PACK_TRUST_AUTHORITY_SCHEMA_VERSION,
     core_maintained_packs: [],
     high_risk_capabilities: Object.fromEntries(
-      HIGH_RISK_CAPABILITIES.map((capability) => [capability, { allowed_packs: [] }]),
+      HIGH_RISK_CAPABILITIES.map((capability: any) => [capability, { allowed_packs: [] }]),
     ),
   };
 }
 
-function isObject(value) {
+function isObject(value: unknown) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
-function stripRefFragment(value) {
+function stripRefFragment(value: unknown) {
   if (typeof value !== "string") {
     return value;
   }
@@ -228,15 +229,15 @@ function stripRefFragment(value) {
   return pathPart;
 }
 
-function isLikelyRemoteRef(value) {
+function isLikelyRemoteRef(value: unknown) {
   return typeof value === "string" && /^[a-z]+:\/\//i.test(value);
 }
 
-function toPosixPath(value) {
+function toPosixPath(value: string) {
   return value.replace(/\\/g, "/");
 }
 
-function isSharedRuntimeMatrixRef(value) {
+function isSharedRuntimeMatrixRef(value: unknown) {
   if (typeof value !== "string" || value.trim() === "" || isLikelyRemoteRef(value)) {
     return false;
   }
@@ -244,7 +245,7 @@ function isSharedRuntimeMatrixRef(value) {
   return toPosixPath(pathPart) === SHARED_RUNTIME_SURFACE_MATRIX;
 }
 
-function buildManifestSupportDescriptor(manifest) {
+function buildManifestSupportDescriptor(manifest: any) {
   if (!manifest?.support) {
     return null;
   }
@@ -258,7 +259,7 @@ function buildManifestSupportDescriptor(manifest) {
     support_level_claim: manifest.support.support_level_claim ?? null,
     signature: clone(manifest.support.signature ?? {}),
     runtime_support: Object.fromEntries(
-      SUPPORTED_RUNTIMES.map((runtime) => [
+      SUPPORTED_RUNTIMES.map((runtime: string) => [
         runtime,
         clone(manifest.support.runtime_support?.[runtime] ?? {}),
       ]),
@@ -267,11 +268,11 @@ function buildManifestSupportDescriptor(manifest) {
   };
 }
 
-function compareDescriptorToManifestSupport(descriptor, manifestDescriptor) {
+function compareDescriptorToManifestSupport(descriptor: any, manifestDescriptor: any) {
   if (!descriptor || !manifestDescriptor) {
     return [];
   }
-  const mismatches = [];
+  const mismatches: any[] = [];
   for (const field of [
     "pack_name",
     "pack_version",
@@ -305,7 +306,7 @@ function compareDescriptorToManifestSupport(descriptor, manifestDescriptor) {
   return mismatches;
 }
 
-export function resolvePackTrustDescriptorPath(manifestPath, manifest) {
+export function resolvePackTrustDescriptorPath(manifestPath: string, manifest: any) {
   const manifestDir = dirname(resolve(manifestPath));
   if (typeof manifest?.trust_descriptor === "string" && manifest.trust_descriptor.trim() !== "") {
     return resolve(manifestDir, manifest.trust_descriptor);
@@ -314,7 +315,7 @@ export function resolvePackTrustDescriptorPath(manifestPath, manifest) {
   return exists(fallback) ? fallback : null;
 }
 
-export function loadPackTrustDescriptorRecord({ manifestPath, manifest }) {
+export function loadPackTrustDescriptorRecord({ manifestPath, manifest }: { manifestPath: string; manifest?: any }) {
   const manifestDescriptor = buildManifestSupportDescriptor(manifest);
   const descriptorPath = resolvePackTrustDescriptorPath(manifestPath, manifest);
   if (manifestDescriptor) {
@@ -363,7 +364,7 @@ export function loadPackTrustDescriptorRecord({ manifestPath, manifest }) {
         descriptorDigest: null,
         descriptor: manifestDescriptor,
         errors: [],
-        shimErrors: [`trust-descriptor:invalid:${error.message}`],
+        shimErrors: [`trust-descriptor:invalid:${error instanceof Error ? error.message : String(error)}`],
       };
     }
   }
@@ -408,13 +409,13 @@ export function loadPackTrustDescriptorRecord({ manifestPath, manifest }) {
       evidenceBasePath: descriptorPath,
       descriptorDigest: null,
       descriptor: null,
-      errors: [`trust-descriptor:invalid:${error.message}`],
+      errors: [`trust-descriptor:invalid:${error instanceof Error ? error.message : String(error)}`],
       shimErrors: [],
     };
   }
 }
 
-function isWithin(rootPath, maybeChildPath) {
+function isWithin(rootPath: any, maybeChildPath: any) {
   const resolvedRoot = resolve(rootPath);
   const resolvedChild = resolve(maybeChildPath);
   return (
@@ -424,7 +425,7 @@ function isWithin(rootPath, maybeChildPath) {
   );
 }
 
-function findTrustArtifactsRoot(startPath) {
+function findTrustArtifactsRoot(startPath: any) {
   let current = resolve(startPath);
   while (true) {
     const candidate = join(current, RELEASE_TRUST_DIR, "release-manifest.json");
@@ -442,11 +443,11 @@ function findTrustArtifactsRoot(startPath) {
   }
 }
 
-function relativeFromRoot(rootPath, filePath) {
+function relativeFromRoot(rootPath: any, filePath: string) {
   return relativeFrom(resolve(rootPath), resolve(filePath));
 }
 
-function parseSemver(version) {
+function parseSemver(version: string) {
   const match = /^(\d+)\.(\d+)\.(\d+)(?:[-+][0-9A-Za-z.-]+)?$/.exec(version ?? "");
   if (!match) {
     return null;
@@ -458,7 +459,7 @@ function parseSemver(version) {
   };
 }
 
-function compareSemver(left, right) {
+function compareSemver(left: any, right: any) {
   for (const field of ["major", "minor", "patch"]) {
     if (left[field] < right[field]) {
       return -1;
@@ -470,7 +471,7 @@ function compareSemver(left, right) {
   return 0;
 }
 
-export function deriveManifestRuntimeSupportStatus(manifest, runtime) {
+export function deriveManifestRuntimeSupportStatus(manifest: any, runtime: string) {
   const compatibility = manifest?.runtime_bindings?.[runtime]?.compatibility ?? {};
   const canonicalStatus = compatibility.canonical_picker ?? "unverified";
   const directStatus = compatibility.direct_invocation ?? "unverified";
@@ -486,20 +487,20 @@ export function deriveManifestRuntimeSupportStatus(manifest, runtime) {
   return "partial";
 }
 
-export function resolveRuntimeEvidencePresence({ repoRoot, descriptorPath, evidenceRef }) {
+export function resolveRuntimeEvidencePresence({ repoRoot, descriptorPath, evidenceRef }: { repoRoot?: string; descriptorPath?: any; evidenceRef?: string }) {
   if (typeof evidenceRef !== "string" || evidenceRef.trim() === "") {
     return false;
   }
   if (isLikelyRemoteRef(evidenceRef)) {
     return false;
   }
-  const relativeRef = stripRefFragment(evidenceRef);
+  const relativeRef = stripRefFragment(evidenceRef) as string;
   const resolvedRepoRoot = repoRoot ? resolve(repoRoot) : null;
   const candidatePaths = [
     descriptorPath ? resolve(dirname(descriptorPath), relativeRef) : null,
     resolvedRepoRoot ? resolve(resolvedRepoRoot, relativeRef) : null,
   ].filter(Boolean);
-  return candidatePaths.some((candidatePath) => {
+  return candidatePaths.some((candidatePath: any) => {
     if (!exists(candidatePath)) {
       return false;
     }
@@ -510,7 +511,7 @@ export function resolveRuntimeEvidencePresence({ repoRoot, descriptorPath, evide
   });
 }
 
-export function evaluateRuntimeSupportClaim({ repoRoot, manifest, runtime, descriptorRecord }) {
+export function evaluateRuntimeSupportClaim({ repoRoot, manifest, runtime, descriptorRecord }: { repoRoot?: string; manifest?: any; runtime: string; descriptorRecord?: any }) {
   const manifestStatus = deriveManifestRuntimeSupportStatus(manifest, runtime);
   const manifestRuntimeSupport = manifest?.support?.runtime_support?.[runtime] ?? {};
   const declaredStatus = normalizeRuntimeSupportStatus(
@@ -537,12 +538,12 @@ export function evaluateRuntimeSupportClaim({ repoRoot, manifest, runtime, descr
     evidenceKind === "pack-runtime-live" &&
     repoRoot
   ) {
-    const liveRuntimeRef = stripRefFragment(evidenceRef);
+    const liveRuntimeRef = stripRefFragment(evidenceRef) as string;
     const candidatePaths = [
       evidenceBasePath ? resolve(dirname(evidenceBasePath), liveRuntimeRef) : null,
       resolve(repoRoot, liveRuntimeRef),
     ].filter(Boolean);
-    const resolvedLaneRecordPath = candidatePaths.find((candidatePath) =>
+    const resolvedLaneRecordPath = candidatePaths.find((candidatePath: any) =>
       exists(candidatePath) && isWithin(resolve(repoRoot), candidatePath));
     if (!resolvedLaneRecordPath) {
       evidencePresent = false;
@@ -567,7 +568,7 @@ export function evaluateRuntimeSupportClaim({ repoRoot, manifest, runtime, descr
       }
     }
   }
-  const reasons = [];
+  const reasons: string[] = [];
   let policyAction = "allow";
   if (manifestStatus === "blocked" && declaredStatus !== "blocked") {
     reasons.push(`runtime-claim-blocked:${runtime}`);
@@ -606,7 +607,7 @@ function resolveTrustTier({
   descriptor,
   releaseVerification,
   authorityDecision,
-}) {
+}: { packId?: string; sourceClass?: any; descriptor?: any; releaseVerification?: any; authorityDecision?: any }) {
   const tierClaim = normalizeTrustTier(
     authorityDecision?.authorized_tier ?? descriptor?.tier_claim,
     sourceClass === "first-party-release"
@@ -638,7 +639,7 @@ function resolveSupportLevel({
   trustTier,
   supportLevelClaim,
   runtimeSupportStatus,
-}) {
+}: { trustTier?: any; supportLevelClaim?: any; runtimeSupportStatus?: any }) {
   if (trustTier === "unverified-external" || runtimeSupportStatus === "blocked") {
     return "unsupported";
   }
@@ -654,7 +655,7 @@ function resolveSupportLevel({
   return "official-preview";
 }
 
-function resolveSignatureStatus({ sourceClass, releaseVerification }) {
+function resolveSignatureStatus({ sourceClass, releaseVerification }: { sourceClass?: any; releaseVerification?: any }) {
   if (sourceClass === "local-source") {
     return "local-dev";
   }
@@ -662,7 +663,7 @@ function resolveSignatureStatus({ sourceClass, releaseVerification }) {
     return "verified";
   }
   if (
-    releaseVerification.reasons?.some((reason) =>
+    releaseVerification.reasons?.some((reason: any) =>
       reason.includes("signature:invalid") ||
       reason.includes("pack-signature-invalid") ||
       reason.includes("release-manifest-signature:invalid"),
@@ -673,7 +674,7 @@ function resolveSignatureStatus({ sourceClass, releaseVerification }) {
   return "missing";
 }
 
-function resolveBasePolicyAction({ trustTier, sourceClass, trustPolicy }) {
+function resolveBasePolicyAction({ trustTier, sourceClass, trustPolicy }: { trustTier?: any; sourceClass?: any; trustPolicy?: any }) {
   if (trustTier === "core-maintained") {
     return "allow";
   }
@@ -686,7 +687,7 @@ function resolveBasePolicyAction({ trustTier, sourceClass, trustPolicy }) {
   );
 }
 
-function buildMemoryAuthoritySummary(manifest) {
+function buildMemoryAuthoritySummary(manifest: any) {
   return {
     authority_mode: manifest.memory_permissions?.authority_mode ?? "read-only",
     global_project_memory: manifest.memory_permissions?.global_project_memory ?? "none",
@@ -696,10 +697,10 @@ function buildMemoryAuthoritySummary(manifest) {
 
 function hasCapabilityExpansion(currentCapabilities: any[] = [], candidateCapabilities: any[] = []) {
   const current = new Set(currentCapabilities);
-  return candidateCapabilities.filter((capability) => !current.has(capability));
+  return candidateCapabilities.filter((capability: any) => !current.has(capability));
 }
 
-function buildTrustDeltaSnapshot(receipt) {
+function buildTrustDeltaSnapshot(receipt: any) {
   if (!receipt) {
     return null;
   }
@@ -718,12 +719,12 @@ function buildTrustDeltaSnapshot(receipt) {
   };
 }
 
-function summarizeTrustReceipt(receipt) {
+function summarizeTrustReceipt(receipt: any) {
   const versionSummary = receipt.version_policy?.summary ? `; ${receipt.version_policy.summary}` : "";
   return `${receipt.trust_tier ?? receipt.source_class} (${receipt.signature_status ?? receipt.verification_status}; ${receipt.support_level ?? "unsupported"})${versionSummary}`;
 }
 
-export function loadTrustPolicy(repoRoot) {
+export function loadTrustPolicy(repoRoot: string) {
   let policy = clone(DEFAULT_TRUST_POLICY);
   for (const relativePath of ["trust/trust-policy.yaml", ".pairslash/trust/trust-policy.yaml"]) {
     const filePath = resolve(repoRoot, relativePath);
@@ -735,7 +736,7 @@ export function loadTrustPolicy(repoRoot) {
   return policy;
 }
 
-export function loadVersionPolicy(repoRoot) {
+export function loadVersionPolicy(repoRoot: string) {
   let policy = clone(DEFAULT_VERSION_POLICY);
   for (const relativePath of ["trust/version-policy.yaml", ".pairslash/trust/version-policy.yaml"]) {
     const filePath = resolve(repoRoot, relativePath);
@@ -747,7 +748,7 @@ export function loadVersionPolicy(repoRoot) {
   return normalizeVersionPolicy(policy);
 }
 
-export function loadPackTrustAuthority(repoRoot) {
+export function loadPackTrustAuthority(repoRoot: string) {
   for (const relativePath of ["trust/pack-authority.yaml", ".pairslash/trust/pack-authority.yaml"]) {
     const filePath = resolve(repoRoot, relativePath);
     if (!exists(filePath)) {
@@ -764,12 +765,12 @@ export function evaluatePackTrustAuthority({
   manifest,
   descriptor = null,
 }: any = {}) {
-  let authority = createEmptyPackTrustAuthority();
-  const errors = [];
+  let authority: any = createEmptyPackTrustAuthority();
+  const errors: string[] = [];
   try {
     authority = loadPackTrustAuthority(repoRoot);
   } catch (error) {
-    errors.push(`trust-authority:load-failed:${error.message}`);
+    errors.push(`trust-authority:load-failed:${error instanceof Error ? error.message : String(error)}`);
   }
   const memoryAuthority = buildMemoryAuthoritySummary(manifest);
   const capabilities = uniqueSorted(manifest?.capabilities ?? []);
@@ -803,7 +804,7 @@ export function evaluatePackTrustAuthority({
     errors.push(`trust-authority:memory-write-not-authorized:${packId}`);
   }
 
-  for (const capability of capabilities.filter((entry) => HIGH_RISK_CAPABILITIES.includes(entry))) {
+  for (const capability of capabilities.filter((entry: any) => HIGH_RISK_CAPABILITIES.includes(entry))) {
     const allowedPacks = authority.high_risk_capabilities[capability]?.allowed_packs ?? [];
     if (!allowedPacks.includes(packId)) {
       errors.push(`trust-authority:capability-not-authorized:${packId}:${capability}`);
@@ -818,7 +819,7 @@ export function evaluatePackTrustAuthority({
   };
 }
 
-export function loadTrustKeyring(repoRoot, keyringPath) {
+export function loadTrustKeyring(repoRoot: string, keyringPath: any) {
   const resolvedPath = resolve(repoRoot, keyringPath);
   if (!exists(resolvedPath)) {
     return {
@@ -835,8 +836,8 @@ export function loadTrustKeyring(repoRoot, keyringPath) {
     publisher: parsed?.publisher ?? null,
     keys: Array.isArray(parsed?.keys)
       ? parsed.keys
-          .filter((key) => key?.key_id && key?.public_key_pem)
-          .map((key) => ({
+          .filter((key: any) => key?.key_id && key?.public_key_pem)
+          .map((key: any) => ({
             key_id: key.key_id,
             public_key_pem: key.public_key_pem,
             status: key.status ?? "active",
@@ -847,8 +848,8 @@ export function loadTrustKeyring(repoRoot, keyringPath) {
   };
 }
 
-export function validateReleaseTrustBootstrap({ repoRoot, publisherId = "pairslash" }) {
-  const failures = [];
+export function validateReleaseTrustBootstrap({ repoRoot, publisherId = "pairslash" }: { repoRoot: string; publisherId?: any }) {
+  const failures: any[] = [];
   if (!exists(resolve(repoRoot, COMMITTED_TRUST_POLICY_PATH))) {
     failures.push(`trust-policy:missing:${COMMITTED_TRUST_POLICY_PATH}`);
   }
@@ -864,7 +865,7 @@ export function validateReleaseTrustBootstrap({ repoRoot, publisherId = "pairsla
       active_key_count: 0,
       authority_loaded: false,
       ok: false,
-      failures: [`trust-policy:invalid:${error.message}`],
+      failures: [`trust-policy:invalid:${error instanceof Error ? error.message : String(error)}`],
     };
   }
 
@@ -897,11 +898,11 @@ export function validateReleaseTrustBootstrap({ repoRoot, publisherId = "pairsla
         failures.push(`trust-keyring:publisher-mismatch:${keyringPath}:${keyring.publisher}`);
       }
     } catch (error) {
-      failures.push(`trust-keyring:invalid:${keyringPath}:${error.message}`);
+      failures.push(`trust-keyring:invalid:${keyringPath}:${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
-  const activeKeys = (keyring.keys ?? []).filter((key) => key.status !== "revoked");
+  const activeKeys = (keyring.keys ?? []).filter((key: any) => key.status !== "revoked");
   if (activeKeys.length === 0) {
     failures.push(`trust-keyring:no-active-keys:${publisherId}`);
   }
@@ -919,7 +920,7 @@ export function validateReleaseTrustBootstrap({ repoRoot, publisherId = "pairsla
       }
     }
   } catch (error) {
-    failures.push(`pack-authority:invalid:${error.message}`);
+    failures.push(`pack-authority:invalid:${error instanceof Error ? error.message : String(error)}`);
   }
 
   return {
@@ -933,7 +934,7 @@ export function validateReleaseTrustBootstrap({ repoRoot, publisherId = "pairsla
   };
 }
 
-export function evaluateVersionPolicy({ currentVersion = null, candidateVersion, policy }) {
+export function evaluateVersionPolicy({ currentVersion = null, candidateVersion, policy }: { currentVersion?: any; candidateVersion?: any; policy?: any }) {
   const effectivePolicy = normalizeVersionPolicy(policy);
   if (!currentVersion) {
     return {
@@ -995,23 +996,23 @@ export function buildPackMetadataEnvelope({
   manifest,
   compiledPacks,
   publisher = "pairslash",
-}) {
+}: { repoRoot: string; manifestPath: string; manifest?: any; compiledPacks?: any; publisher?: string }) {
   const packVersion = compiledPacks[0]?.version ?? manifest.pack_version ?? null;
   const packSourceRoot = resolve(repoRoot, manifest.runtime_assets?.source_root ?? manifest.assets?.pack_dir);
-  const sourceFiles = walkFiles(packSourceRoot).map((absolutePath) => ({
+  const sourceFiles = walkFiles(packSourceRoot).map((absolutePath: any) => ({
     relative_path: relativeFromRoot(packSourceRoot, absolutePath),
     sha256: sha256(readFileNormalized(absolutePath)),
     size_bytes: Buffer.byteLength(readFileNormalized(absolutePath)),
   }));
   const runtimeArtifacts = compiledPacks
     .slice()
-    .sort((left, right) => left.runtime.localeCompare(right.runtime))
-    .map((compiledPack) => ({
+    .sort((left: any, right: any) => left.runtime.localeCompare(right.runtime))
+    .map((compiledPack: any) => ({
       runtime: compiledPack.runtime,
       bundle_kind: compiledPack.bundle_kind,
       compiled_digest: compiledPack.digest,
       normalized_ir_digest: compiledPack.normalized_ir_digest,
-      files: compiledPack.files.map((file) => ({
+      files: compiledPack.files.map((file: any) => ({
         relative_path: file.relative_path,
         sha256: file.sha256,
         size_bytes: file.size,
@@ -1034,7 +1035,7 @@ export function buildPackMetadataEnvelope({
   };
 }
 
-export function createDetachedSignature({ payload, keyId, privateKeyPem }) {
+export function createDetachedSignature({ payload, keyId, privateKeyPem }: { payload?: any; keyId?: string; privateKeyPem?: any }) {
   const payloadText = stableJson(payload);
   const signature = signBuffer(null, Buffer.from(payloadText, "utf8"), privateKeyPem);
   return {
@@ -1047,7 +1048,7 @@ export function createDetachedSignature({ payload, keyId, privateKeyPem }) {
   };
 }
 
-export function verifyDetachedSignature({ payload, signatureEnvelope, publicKeyPem }) {
+export function verifyDetachedSignature({ payload, signatureEnvelope, publicKeyPem }: { payload?: any; signatureEnvelope?: any; publicKeyPem?: any }) {
   if (
     signatureEnvelope?.kind !== "detached-signature" ||
     signatureEnvelope?.schema_version !== DETACHED_SIGNATURE_SCHEMA_VERSION ||
@@ -1072,7 +1073,7 @@ function buildReleaseManifest({
   publisher,
   sourceCommit,
   packEntries,
-}) {
+}: { releaseId?: string; publisher?: string; sourceCommit?: any; packEntries?: any }) {
   return {
     kind: "release-manifest",
     schema_version: RELEASE_MANIFEST_SCHEMA_VERSION,
@@ -1085,14 +1086,14 @@ function buildReleaseManifest({
   };
 }
 
-function buildChecksums(trustDir) {
+function buildChecksums(trustDir: any) {
   const entries = walkFiles(trustDir)
-    .filter((filePath) => !filePath.endsWith("checksums.json"))
-    .map((filePath) => ({
+    .filter((filePath: string) => !filePath.endsWith("checksums.json"))
+    .map((filePath: string) => ({
       path: relativeFromRoot(trustDir, filePath),
       sha256: sha256(readFileNormalized(filePath)),
     }))
-    .sort((left, right) => left.path.localeCompare(right.path));
+    .sort((left: any, right: any) => left.path.localeCompare(right.path));
   return {
     kind: "checksum-set",
     schema_version: "1.0.0",
@@ -1101,7 +1102,7 @@ function buildChecksums(trustDir) {
   };
 }
 
-function isSafeChecksumPath(pathValue) {
+function isSafeChecksumPath(pathValue: any) {
   if (typeof pathValue !== "string" || pathValue.length === 0) {
     return false;
   }
@@ -1121,21 +1122,21 @@ function isSafeChecksumPath(pathValue) {
   return true;
 }
 
-function collectSignatureArtifacts(trustDir) {
+function collectSignatureArtifacts(trustDir: any) {
   return walkFiles(trustDir)
-    .filter((filePath) => filePath.endsWith(".sig.json"))
-    .map((filePath) => relativeFromRoot(trustDir, filePath))
-    .sort((left, right) => left.localeCompare(right));
+    .filter((filePath: string) => filePath.endsWith(".sig.json"))
+    .map((filePath: string) => relativeFromRoot(trustDir, filePath))
+    .sort((left: any, right: any) => left.localeCompare(right));
 }
 
-function clearReleaseTrustOutputDir(outDir) {
+function clearReleaseTrustOutputDir(outDir: any) {
   rmSync(join(outDir, "packs"), { recursive: true, force: true });
   rmSync(join(outDir, "release-manifest.json"), { force: true });
   rmSync(join(outDir, "release-manifest.sig.json"), { force: true });
   rmSync(join(outDir, "checksums.json"), { force: true });
 }
 
-function validateTrustBundleChecksums(trustDir) {
+function validateTrustBundleChecksums(trustDir: any) {
   const checksumsPath = join(trustDir, "checksums.json");
   if (!exists(checksumsPath)) {
     return ["missing checksum set"];
@@ -1149,7 +1150,7 @@ function validateTrustBundleChecksums(trustDir) {
   ) {
     return ["invalid checksum set"];
   }
-  const entryFailures = [];
+  const entryFailures: any[] = [];
   const seenPaths = new Set();
   const actualEntries: any[] = [];
   for (const entry of parsed.entries) {
@@ -1176,10 +1177,10 @@ function validateTrustBundleChecksums(trustDir) {
   }
 
   const expectedEntries = buildChecksums(trustDir).entries;
-  actualEntries.sort((left, right) => left.path.localeCompare(right.path));
-  const expectedByPath = new Map(expectedEntries.map((entry) => [entry.path, entry.sha256]));
-  const actualByPath = new Map(actualEntries.map((entry) => [entry.path, entry.sha256]));
-  const failures = [];
+  actualEntries.sort((left: any, right: any) => left.path.localeCompare(right.path));
+  const expectedByPath = new Map(expectedEntries.map((entry: any) => [entry.path, entry.sha256]));
+  const actualByPath = new Map(actualEntries.map((entry: any) => [entry.path, entry.sha256]));
+  const failures: any[] = [];
 
   for (const entry of expectedEntries) {
     if (!actualByPath.has(entry.path)) {
@@ -1207,10 +1208,10 @@ export function writeReleaseTrustBundle({
   keyId = null,
   outDir = resolve(repoRoot, RELEASE_TRUST_DIR),
   sourceCommit = null,
-}) {
+}: { repoRoot: string; releaseId?: string; packArtifacts?: any; publisher?: string; privateKeyPem?: any; keyId?: string | null; outDir?: any; sourceCommit?: any }) {
   clearReleaseTrustOutputDir(outDir);
   const packEntries: any[] = [];
-  for (const artifact of packArtifacts.slice().sort((left, right) => left.pack_id.localeCompare(right.pack_id))) {
+  for (const artifact of packArtifacts.slice().sort((left: any, right: any) => left.pack_id.localeCompare(right.pack_id))) {
     const packDir = join(outDir, "packs", artifact.pack_id);
     const metadataPath = join(packDir, "pack-metadata.json");
     writeTextFile(metadataPath, stableJson(artifact.metadata));
@@ -1231,7 +1232,7 @@ export function writeReleaseTrustBundle({
       metadata_path: relativeFromRoot(outDir, metadataPath),
       metadata_sha256: sha256(stableJson(artifact.metadata)),
       signature_path: signaturePath ? relativeFromRoot(outDir, signaturePath) : null,
-      runtimes: artifact.metadata.runtime_artifacts.map((runtimeArtifact) => ({
+      runtimes: artifact.metadata.runtime_artifacts.map((runtimeArtifact: any) => ({
         runtime: runtimeArtifact.runtime,
         compiled_digest: runtimeArtifact.compiled_digest,
         normalized_ir_digest: runtimeArtifact.normalized_ir_digest,
@@ -1264,9 +1265,9 @@ export function writeReleaseTrustBundle({
   };
 }
 
-function resolvePublisherEntry(trustPolicy, publisherId) {
+function resolvePublisherEntry(trustPolicy: any, publisherId: any) {
   return (
-    trustPolicy.publishers.find((publisher) => publisher.id === publisherId) ?? null
+    trustPolicy.publishers.find((publisher: any) => publisher.id === publisherId) ?? null
   );
 }
 
@@ -1275,7 +1276,7 @@ function verifyReleaseBundleForPack({
   manifestPath,
   compiledPack,
   trustPolicy,
-}) {
+}: { repoRoot: string; manifestPath: string; compiledPack?: any; trustPolicy?: any }) {
   const artifacts = findTrustArtifactsRoot(dirname(manifestPath));
   if (!artifacts) {
     return {
@@ -1296,7 +1297,7 @@ function verifyReleaseBundleForPack({
   if (checksumFailures.length > 0) {
     return {
       verified: false,
-      reasons: checksumFailures.map((failure) => `release-checksum-invalid:${failure}`),
+      reasons: checksumFailures.map((failure: any) => `release-checksum-invalid:${failure}`),
     };
   }
 
@@ -1311,7 +1312,7 @@ function verifyReleaseBundleForPack({
   }
   const keyring = loadTrustKeyring(repoRoot, publisherEntry.keyring_path);
   const matchingKey = keyring.keys.find(
-    (key) => key.key_id === signatureEnvelope.key_id && key.status !== "revoked",
+    (key: any) => key.key_id === signatureEnvelope.key_id && key.status !== "revoked",
   );
   if (!matchingKey) {
     return {
@@ -1332,7 +1333,7 @@ function verifyReleaseBundleForPack({
     };
   }
 
-  const packEntry = releaseManifest.packs.find((entry) => entry.pack_id === compiledPack.pack_id);
+  const packEntry = releaseManifest.packs.find((entry: any) => entry.pack_id === compiledPack.pack_id);
   if (!packEntry) {
     return {
       verified: false,
@@ -1362,7 +1363,7 @@ function verifyReleaseBundleForPack({
   }
   const packSignature = JSON.parse(readFileSync(packSignaturePath, "utf8"));
   const packKey = keyring.keys.find(
-    (key) => key.key_id === packSignature.key_id && key.status !== "revoked",
+    (key: any) => key.key_id === packSignature.key_id && key.status !== "revoked",
   );
   if (
     !packKey ||
@@ -1391,7 +1392,7 @@ function verifyReleaseBundleForPack({
     };
   }
   const runtimeArtifact = packMetadata.runtime_artifacts.find(
-    (entry) => entry.runtime === compiledPack.runtime,
+    (entry: any) => entry.runtime === compiledPack.runtime,
   );
   if (!runtimeArtifact) {
     return {
@@ -1432,7 +1433,7 @@ export function assessPackTrust({
   manifest,
   compiledPack,
   currentVersion = null,
-}) {
+}: { repoRoot: string; manifestPath: string; manifest?: any; compiledPack?: any; currentVersion?: any }) {
   const trustPolicy = loadTrustPolicy(repoRoot);
   const versionPolicy = loadVersionPolicy(repoRoot);
   const versionDecision = evaluateVersionPolicy({
@@ -1462,7 +1463,7 @@ export function assessPackTrust({
   let releaseId = null;
   let keyId = null;
   let trustBundleDir = null;
-  let reasons = [];
+  let reasons: string[] = [];
 
   if (releaseVerification.verified) {
     sourceClass = releaseVerification.source_class;
@@ -1563,7 +1564,7 @@ export function assessPackTrust({
     manifest_digest: compiledPack.manifest_digest,
     compiled_digest: compiledPack.digest,
     source_class: normalizeSourceClass(sourceClass, "external-unverified"),
-    verification_status: TRUST_VERIFICATION_STATUSES.includes(verificationStatus)
+    verification_status: isOneOf(verificationStatus, TRUST_VERIFICATION_STATUSES)
       ? verificationStatus
       : "unverified",
     trust_tier: normalizeTrustTier(trustTier, "unverified-external"),
@@ -1594,9 +1595,9 @@ export function assessPackTrust({
   return receipt;
 }
 
-export function buildTrustDelta({ state, candidateReceipts, selectedPackIds }) {
+export function buildTrustDelta({ state, candidateReceipts, selectedPackIds }: { state?: any; candidateReceipts?: any; selectedPackIds?: any }) {
   const currentById = new Map<string, any>(
-    (state?.packs ?? []).map((pack) => [
+    (state?.packs ?? []).map((pack: any) => [
       pack.id,
       pack.trust_receipt ?? {
         kind: "trust-receipt",
@@ -1650,7 +1651,7 @@ export function buildTrustDelta({ state, candidateReceipts, selectedPackIds }) {
   const packChanges = selectedPackIds
     .slice()
     .sort((left: any, right: any) => left.localeCompare(right))
-    .map((packId) => {
+    .map((packId: string) => {
       const current = currentById.get(packId) ?? null;
       const candidate = candidateReceipts.get(packId) ?? null;
       const capabilityExpansions = current && candidate
@@ -1668,7 +1669,7 @@ export function buildTrustDelta({ state, candidateReceipts, selectedPackIds }) {
         ["local-dev", "unverified-external"].includes(candidate.trust_tier);
       const blockingReasons = [
         ...(candidate?.reasons ?? []),
-        ...capabilityExpansions.map((capability) => `capability-expanded:${capability}`),
+        ...capabilityExpansions.map((capability: any) => `capability-expanded:${capability}`),
         ...(memoryEscalated ? ["memory-authority-escalated:global-project-memory"] : []),
         ...(trustDowngrade ? [`trust-tier-downgrade:${current.trust_tier}->${candidate?.trust_tier}`] : []),
       ];
@@ -1706,8 +1707,8 @@ export function buildTrustDelta({ state, candidateReceipts, selectedPackIds }) {
         trust_downgrade: trustDowngrade,
       };
     });
-  const blockingCount = packChanges.filter((change) => change.blocking).length;
-  const changedCount = packChanges.filter((change) => change.changed).length;
+  const blockingCount = packChanges.filter((change: any) => change.blocking).length;
+  const changedCount = packChanges.filter((change: any) => change.changed).length;
   return {
     machine_readable: true,
     overall_status: blockingCount > 0 ? "blocked" : changedCount > 0 ? "changed" : "stable",
@@ -1723,7 +1724,7 @@ export function buildTrustDelta({ state, candidateReceipts, selectedPackIds }) {
   };
 }
 
-export function verifyReleaseTrustBundle({ repoRoot, trustDir = resolve(repoRoot, RELEASE_TRUST_DIR) }) {
+export function verifyReleaseTrustBundle({ repoRoot, trustDir = resolve(repoRoot, RELEASE_TRUST_DIR) }: { repoRoot: string; trustDir?: any }) {
   const releaseManifestPath = join(trustDir, "release-manifest.json");
   const signaturePath = join(trustDir, "release-manifest.sig.json");
   if (!exists(releaseManifestPath)) {
@@ -1745,7 +1746,7 @@ export function verifyReleaseTrustBundle({ repoRoot, trustDir = resolve(repoRoot
   }
   const keyring = loadTrustKeyring(repoRoot, publisherEntry.keyring_path);
   const key = keyring.keys.find(
-    (entry) => entry.key_id === signatureEnvelope.key_id && entry.status !== "revoked",
+    (entry: any) => entry.key_id === signatureEnvelope.key_id && entry.status !== "revoked",
   );
   if (!key) {
     throw new Error(`missing public key ${signatureEnvelope.key_id}`);
@@ -1759,7 +1760,7 @@ export function verifyReleaseTrustBundle({ repoRoot, trustDir = resolve(repoRoot
   ) {
     throw new Error("release manifest signature is invalid");
   }
-  const failures = [];
+  const failures: any[] = [];
   for (const packEntry of releaseManifest.packs ?? []) {
     const metadataPath = join(trustDir, packEntry.metadata_path);
     if (!exists(metadataPath)) {
@@ -1781,7 +1782,7 @@ export function verifyReleaseTrustBundle({ repoRoot, trustDir = resolve(repoRoot
     }
     const packSignature = JSON.parse(readFileSync(packSignaturePath, "utf8"));
     const packKey = keyring.keys.find(
-      (entry) => entry.key_id === packSignature.key_id && entry.status !== "revoked",
+      (entry: any) => entry.key_id === packSignature.key_id && entry.status !== "revoked",
     );
     if (
       !packKey ||
@@ -1809,7 +1810,7 @@ export function verifyReleaseTrustBundle({ repoRoot, trustDir = resolve(repoRoot
 export function verifyReleaseTrustBundleStructure({
   repoRoot,
   trustDir = resolve(repoRoot, RELEASE_TRUST_DIR),
-}) {
+}: { repoRoot: string; trustDir?: any }) {
   const releaseManifestPath = join(trustDir, "release-manifest.json");
   if (!exists(releaseManifestPath)) {
     throw new Error(`missing release manifest at ${releaseManifestPath}`);
@@ -1819,11 +1820,11 @@ export function verifyReleaseTrustBundleStructure({
     throw new Error(checksumFailures.join("; "));
   }
   const releaseManifest = JSON.parse(readFileSync(releaseManifestPath, "utf8"));
-  const failures = [];
+  const failures: any[] = [];
   const releaseSignaturePath = join(trustDir, "release-manifest.sig.json");
   const packEntries = releaseManifest.packs ?? [];
-  const packSignatureStates = packEntries.map((entry) => Boolean(entry.signature_path));
-  if (packSignatureStates.some((state) => state !== packSignatureStates[0])) {
+  const packSignatureStates = packEntries.map((entry: any) => Boolean(entry.signature_path));
+  if (packSignatureStates.some((state: any) => state !== packSignatureStates[0])) {
     failures.push("pack signature state is inconsistent across release-manifest entries");
   }
   const signed = packSignatureStates.length === 0 ? exists(releaseSignaturePath) : packSignatureStates[0];
@@ -1833,7 +1834,7 @@ export function verifyReleaseTrustBundleStructure({
   if (!signed && exists(releaseSignaturePath)) {
     failures.push("unexpected release signature artifact release-manifest.sig.json");
   }
-  const expectedSignatureArtifacts = new Set();
+  const expectedSignatureArtifacts = new Set<any>();
   if (signed) {
     expectedSignatureArtifacts.add("release-manifest.sig.json");
   }

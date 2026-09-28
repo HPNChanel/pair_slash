@@ -301,11 +301,11 @@ export const READ_WORKFLOW_PROFILES = {
   },
 };
 
-function cloneProfile(profile) {
+function cloneProfile(profile: any) {
   return structuredClone(profile);
 }
 
-function normalizePackId(input) {
+function normalizePackId(input: any) {
   if (typeof input === "string") {
     return input;
   }
@@ -315,17 +315,17 @@ function normalizePackId(input) {
   return null;
 }
 
-function normalizeLayerId(layerId) {
-  return LAYER_ALIASES[layerId] ?? layerId;
+function normalizeLayerId(layerId: any) {
+  return LAYER_ALIASES[layerId as keyof typeof LAYER_ALIASES] ?? layerId;
 }
 
-function layerOrderIndex(layerId) {
+function layerOrderIndex(layerId: any) {
   const normalized = normalizeLayerId(layerId);
   const index = LAYER_PRECEDENCE.indexOf(normalized);
   return index === -1 ? Number.MAX_SAFE_INTEGER : index;
 }
 
-function normalizeLayerDefinition(layer) {
+function normalizeLayerDefinition(layer: any) {
   const normalizedLayer = normalizeLayerId(layer.layer);
   if (normalizedLayer === layer.layer) {
     return layer;
@@ -336,22 +336,22 @@ function normalizeLayerDefinition(layer) {
   };
 }
 
-function withCanonicalLayerOrder(profile) {
+function withCanonicalLayerOrder(profile: any) {
   return {
     ...profile,
     read_layers: profile.read_layers
       .map(normalizeLayerDefinition)
-      .sort((left, right) => layerOrderIndex(left.layer) - layerOrderIndex(right.layer)),
+      .sort((left: any, right: any) => layerOrderIndex(left.layer) - layerOrderIndex(right.layer)),
   };
 }
 
-function normalizeText(value) {
+function normalizeText(value: unknown) {
   return typeof value === "string" ? value.trim().toLowerCase() : "";
 }
 
-function uniqueValues(values) {
+function uniqueValues(values: unknown[]) {
   const seen = new Set();
-  const out = [];
+  const out: any[] = [];
   for (const value of values) {
     if (!seen.has(value)) {
       seen.add(value);
@@ -361,20 +361,20 @@ function uniqueValues(values) {
   return out;
 }
 
-function toRepoRelativePath(repoRoot, absolutePath) {
+function toRepoRelativePath(repoRoot: string, absolutePath: any) {
   const relativePath = relativeFrom(repoRoot, absolutePath);
   return relativePath.startsWith(".")
     ? relativePath
     : `.${relativePath.startsWith("/") ? "" : "/"}${relativePath}`;
 }
 
-function parseYamlDocuments(filePath) {
+function parseYamlDocuments(filePath: string) {
   return YAML.parseAllDocuments(readFileSync(filePath, "utf8"))
-    .map((document) => document.toJSON())
+    .map((document: any) => document.toJSON())
     .filter(Boolean);
 }
 
-function createLayerResult(layer, precedence) {
+function createLayerResult(layer: any, precedence: any) {
   return {
     layer: layer.layer,
     label: layer.label,
@@ -390,20 +390,20 @@ function createLayerResult(layer, precedence) {
   };
 }
 
-function addUnique(target, value) {
+function addUnique(target: any, value: unknown) {
   if (!target.includes(value)) {
     target.push(value);
   }
 }
 
-function addRecord(target, record) {
+function addRecord(target: any, record: any) {
   const key = `${record.file}::${record.kind ?? ""}::${record.title ?? ""}`;
-  if (!target.some((entry) => `${entry.file}::${entry.kind ?? ""}::${entry.title ?? ""}` === key)) {
+  if (!target.some((entry: any) => `${entry.file}::${entry.kind ?? ""}::${entry.title ?? ""}` === key)) {
     target.push(record);
   }
 }
 
-function updateLayerStatus(layer) {
+function updateLayerStatus(layer: any) {
   if (layer.resolved_paths.length === 0 && layer.missing_paths.length > 0) {
     layer.resolution_status = "missing";
     return;
@@ -415,7 +415,7 @@ function updateLayerStatus(layer) {
   layer.resolution_status = "resolved";
 }
 
-function resolveFilesystemPaths(repoRoot, configuredPath) {
+function resolveFilesystemPaths(repoRoot: string, configuredPath: any) {
   const absolutePath = resolve(repoRoot, configuredPath);
   if (!exists(absolutePath)) {
     return {
@@ -425,7 +425,7 @@ function resolveFilesystemPaths(repoRoot, configuredPath) {
   }
   if (configuredPath.endsWith("/")) {
     return {
-      resolved_paths: walkFiles(absolutePath).map((path) => toRepoRelativePath(repoRoot, path)),
+      resolved_paths: walkFiles(absolutePath).map((path: string) => toRepoRelativePath(repoRoot, path)),
       missing_paths: [],
     };
   }
@@ -435,7 +435,7 @@ function resolveFilesystemPaths(repoRoot, configuredPath) {
   };
 }
 
-function loadProjectMemoryIndex(repoRoot) {
+function loadProjectMemoryIndex(repoRoot: string) {
   const absolutePath = resolve(repoRoot, PROJECT_MEMORY_INDEX_PATH);
   if (!exists(absolutePath)) {
     return {
@@ -449,7 +449,7 @@ function loadProjectMemoryIndex(repoRoot) {
   try {
     const parsed = YAML.parse(readFileSync(absolutePath, "utf8")) ?? {};
     const sourceRecords = Array.isArray(parsed.records) ? parsed.records : [];
-    const activeRecords = [];
+    const activeRecords: any[] = [];
     const recordsByFile = new Map();
     for (const entry of sourceRecords) {
       if (!entry || typeof entry !== "object" || typeof entry.file !== "string" || entry.file.trim() === "") {
@@ -482,14 +482,14 @@ function loadProjectMemoryIndex(repoRoot) {
     return {
       path: PROJECT_MEMORY_INDEX_PATH,
       available: false,
-      warnings: [`unreadable:${PROJECT_MEMORY_INDEX_PATH}:${error.message}`],
+      warnings: [`unreadable:${PROJECT_MEMORY_INDEX_PATH}:${error instanceof Error ? error.message : String(error)}`],
       active_records: [],
       records_by_file: new Map(),
     };
   }
 }
 
-function resolveGlobalProjectMemoryLayer(repoRoot, layer, precedence, projectMemoryIndex) {
+function resolveGlobalProjectMemoryLayer(repoRoot: string, layer: any, precedence: any, projectMemoryIndex: any) {
   const result = createLayerResult(layer, precedence);
   for (const configuredPath of layer.paths) {
     if (configuredPath === PROJECT_MEMORY_INDEX_PATH) {
@@ -548,7 +548,7 @@ function resolveGlobalProjectMemoryLayer(repoRoot, layer, precedence, projectMem
   return result;
 }
 
-function resolveSupportingLayer(repoRoot, layer, precedence) {
+function resolveSupportingLayer(repoRoot: string, layer: any, precedence: any) {
   const result = createLayerResult(layer, precedence);
   for (const configuredPath of layer.paths) {
     const resolution = resolveFilesystemPaths(repoRoot, configuredPath);
@@ -563,14 +563,14 @@ function resolveSupportingLayer(repoRoot, layer, precedence) {
   return result;
 }
 
-function coerceProfile(input, options) {
+function coerceProfile(input: any, options: any) {
   if (input && typeof input === "object" && Array.isArray(input.read_layers)) {
     return withCanonicalLayerOrder(input);
   }
   return getReadWorkflowProfile(input, options);
 }
 
-function buildClaimKey(record) {
+function buildClaimKey(record: any) {
   return [
     normalizeText(record.kind),
     normalizeText(record.title),
@@ -579,7 +579,7 @@ function buildClaimKey(record) {
   ].join("|");
 }
 
-function coerceRecordForClaim(rawRecord, layerId) {
+function coerceRecordForClaim(rawRecord: any, layerId: any) {
   if (!rawRecord || typeof rawRecord !== "object") {
     return null;
   }
@@ -601,9 +601,9 @@ function coerceRecordForClaim(rawRecord, layerId) {
   return null;
 }
 
-function extractLayerClaimRecords({ repoRoot, layer }) {
-  const claims = [];
-  const warnings = [];
+function extractLayerClaimRecords({ repoRoot, layer }: { repoRoot: string; layer?: any }) {
+  const claims: any[] = [];
+  const warnings: string[] = [];
   for (const relativePath of layer.resolved_paths) {
     if (!RECORD_EXTENSIONS.has(extname(relativePath).toLowerCase())) {
       continue;
@@ -630,16 +630,16 @@ function extractLayerClaimRecords({ repoRoot, layer }) {
         });
       }
     } catch (error) {
-      warnings.push(`unreadable-claim-source:${relativePath}:${error.message}`);
+      warnings.push(`unreadable-claim-source:${relativePath}:${error instanceof Error ? error.message : String(error)}`);
     }
   }
   return { claims, warnings };
 }
 
-function buildRecordResolution({ layers, claimRecords }) {
+function buildRecordResolution({ layers, claimRecords }: { layers?: any; claimRecords?: any }) {
   const sortedClaims = claimRecords
     .slice()
-    .sort((left, right) => {
+    .sort((left: any, right: any) => {
       if (left.precedence !== right.precedence) {
         return left.precedence - right.precedence;
       }
@@ -654,12 +654,12 @@ function buildRecordResolution({ layers, claimRecords }) {
     bucket.push(claim);
     grouped.set(claim.claim_key, bucket);
   }
-  const resolvedClaims = [];
-  const conflicts = [];
-  const gapFills = [];
+  const resolvedClaims: any[] = [];
+  const conflicts: any[] = [];
+  const gapFills: any[] = [];
   for (const [claimKey, candidates] of grouped.entries()) {
     const selected = candidates[0];
-    const shadowed = candidates.slice(1).map((entry) => {
+    const shadowed = candidates.slice(1).map((entry: any) => {
       const selectedStatement = normalizeText(selected.statement);
       const shadowedStatement = normalizeText(entry.statement);
       const statementConflict =
@@ -717,9 +717,9 @@ function buildRecordResolution({ layers, claimRecords }) {
       });
     }
   }
-  resolvedClaims.sort((left, right) => left.claim_key.localeCompare(right.claim_key));
-  conflicts.sort((left, right) => left.claim_key.localeCompare(right.claim_key));
-  gapFills.sort((left, right) => left.claim_key.localeCompare(right.claim_key));
+  resolvedClaims.sort((left: any, right: any) => left.claim_key.localeCompare(right.claim_key));
+  conflicts.sort((left: any, right: any) => left.claim_key.localeCompare(right.claim_key));
+  gapFills.sort((left: any, right: any) => left.claim_key.localeCompare(right.claim_key));
 
   const byLayer = new Map();
   for (const claim of claimRecords) {
@@ -748,32 +748,32 @@ function buildRecordResolution({ layers, claimRecords }) {
   };
 }
 
-export function getReadWorkflowProfile(input, { includeFallback = false } = {}) {
+export function getReadWorkflowProfile(input: any, { includeFallback = false }: { includeFallback?: any } = {}) {
   const packId = normalizePackId(input);
-  const profile = packId ? READ_WORKFLOW_PROFILES[packId] : null;
+  const profile = packId ? READ_WORKFLOW_PROFILES[packId as keyof typeof READ_WORKFLOW_PROFILES] : null;
   if (profile) {
     return withCanonicalLayerOrder(cloneProfile(profile));
   }
   return includeFallback ? withCanonicalLayerOrder(cloneProfile(GENERIC_READ_WORKFLOW_PROFILE)) : null;
 }
 
-export function listReadWorkflowPaths(input, { includeFallback = false } = {}) {
+export function listReadWorkflowPaths(input: any, { includeFallback = false }: { includeFallback?: any } = {}) {
   const profile = coerceProfile(input, { includeFallback });
   if (!profile) {
     return [];
   }
-  return uniqueValues(profile.read_layers.flatMap((layer) => layer.paths));
+  return uniqueValues(profile.read_layers.flatMap((layer: any) => layer.paths));
 }
 
 export function resolveReadAuthority({ repoRoot, packId = null, manifest = null }: any = {}) {
   const profile = getReadWorkflowProfile(manifest ?? packId, { includeFallback: true });
   const projectMemoryIndex = loadProjectMemoryIndex(repoRoot);
-  const layers = profile.read_layers.map((layer, index) =>
+  const layers = profile.read_layers.map((layer: any, index: number) =>
     layer.layer === "global-project-memory"
       ? resolveGlobalProjectMemoryLayer(repoRoot, layer, index + 1, projectMemoryIndex)
       : resolveSupportingLayer(repoRoot, layer, index + 1),
   );
-  const claimRecords = [];
+  const claimRecords: any[] = [];
   for (const layer of layers) {
     const extracted = extractLayerClaimRecords({ repoRoot, layer });
     for (const claim of extracted.claims) {
@@ -786,11 +786,11 @@ export function resolveReadAuthority({ repoRoot, packId = null, manifest = null 
   }
   const authoritativeSources = uniqueValues(
     layers
-      .filter((layer) => layer.authority === "authoritative")
-      .flatMap((layer) => layer.resolved_paths),
+      .filter((layer: any) => layer.authority === "authoritative")
+      .flatMap((layer: any) => layer.resolved_paths),
   );
-  const warnings = uniqueValues(layers.flatMap((layer) => layer.warnings));
-  const missingPaths = uniqueValues(layers.flatMap((layer) => layer.missing_paths));
+  const warnings = uniqueValues(layers.flatMap((layer: any) => layer.warnings));
+  const missingPaths = uniqueValues(layers.flatMap((layer: any) => layer.missing_paths));
   const recordResolution = buildRecordResolution({ layers, claimRecords });
 
   return {

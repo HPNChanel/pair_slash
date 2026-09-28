@@ -19,6 +19,7 @@ import {
   MCP_SPEC_ERAS,
   OWNERSHIP_FILE,
   POLICY_VERDICT_SCHEMA_VERSION,
+  isOneOf,
   SUPPORTED_RUNTIMES,
   SUPPORTED_TARGETS,
   loadPackCatalogRecords,
@@ -94,7 +95,7 @@ function normalizeRuntimeScope(requestedRuntime) {
     return { runtimeScope: "all", runtimes: SUPPORTED_RUNTIMES.slice() };
   }
   const normalized = normalizeRuntime(requestedRuntime);
-  if (!SUPPORTED_RUNTIMES.includes(normalized)) {
+  if (!isOneOf(normalized, SUPPORTED_RUNTIMES)) {
     throw new Error(`unsupported runtime scope: ${requestedRuntime}`);
   }
   return { runtimeScope: normalized, runtimes: [normalized] };
@@ -1932,7 +1933,7 @@ export function runLintBridge({
   contractBuilder = buildContractEnvelope,
 }: any = {}) {
   const normalizedTarget = normalizeTarget(target);
-  if (!SUPPORTED_TARGETS.includes(normalizedTarget)) {
+  if (!isOneOf(normalizedTarget, SUPPORTED_TARGETS)) {
     throw new Error(`unsupported target: ${target}`);
   }
 

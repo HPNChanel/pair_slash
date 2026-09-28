@@ -1,15 +1,15 @@
 const SEMVER_PATTERN = /^(\d+)\.(\d+)\.(\d+)$/;
 const RANGE_PATTERN = /^(>=)?\s*(\d+\.\d+\.\d+)$/;
 
-function parseSemver(value) {
+function parseSemver(value: unknown) {
   const match = typeof value === "string" ? value.trim().match(SEMVER_PATTERN) : null;
   if (!match) {
     return null;
   }
-  return match.slice(1).map((item) => Number.parseInt(item, 10));
+  return match.slice(1).map((item: any) => Number.parseInt(item, 10));
 }
 
-export function compareSemver(left, right) {
+export function compareSemver(left: any, right: any) {
   for (let index = 0; index < 3; index += 1) {
     const delta = left[index] - right[index];
     if (delta !== 0) {
@@ -19,7 +19,7 @@ export function compareSemver(left, right) {
   return 0;
 }
 
-export function parseRuntimeRange(range) {
+export function parseRuntimeRange(range: string) {
   if (typeof range !== "string") {
     return null;
   }
@@ -38,11 +38,11 @@ export function parseRuntimeRange(range) {
   };
 }
 
-export function validateRuntimeRange(range) {
+export function validateRuntimeRange(range: string) {
   return Boolean(parseRuntimeRange(range));
 }
 
-export function satisfiesRuntimeRange(detectedVersion, range) {
+export function satisfiesRuntimeRange(detectedVersion: string, range: string) {
   const parsedRange = parseRuntimeRange(range);
   const parsedDetected = parseSemver(detectedVersion);
   if (!parsedRange) {
@@ -57,7 +57,7 @@ export function satisfiesRuntimeRange(detectedVersion, range) {
   return compareSemver(parsedDetected, parsedRange.version) === 0;
 }
 
-export function normalizeRuntimeRange(range) {
+export function normalizeRuntimeRange(range: string) {
   const parsed = parseRuntimeRange(range);
   return parsed?.normalized ?? null;
 }

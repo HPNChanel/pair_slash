@@ -1,5 +1,6 @@
 import {
   INSTALL_SURFACES,
+  isOneOf,
   LEGACY_PHASE4_SCHEMA_VERSION,
   LOGICAL_ASSET_KINDS,
   NORMALIZED_IR_SCHEMA_VERSION,
@@ -51,8 +52,8 @@ import {
   validateStringArray,
 } from "../primitives.ts";
 
-export function validatePackManifestV2(record) {
-  const errors = [];
+export function validatePackManifestV2(record: any) {
+  const errors: string[] = [];
   const shape = detectPackManifestShape(record);
   const hasCompatibilityAliases =
     shape === "canonical-v2.1.0" &&
@@ -74,7 +75,7 @@ export function validatePackManifestV2(record) {
     ...(Array.isArray(record?.supported_runtimes) ? record.supported_runtimes : []),
   ]);
   for (const runtime of rawRuntimeKeys) {
-    if (!SUPPORTED_RUNTIMES.includes(runtime)) {
+    if (!isOneOf(runtime, SUPPORTED_RUNTIMES)) {
       push(errors, "PSM010", `supported runtime declarations include unsupported runtime ${runtime}`);
       push(errors, "PSM012", `unsupported runtime ${runtime}`);
     }
@@ -100,7 +101,7 @@ export function validatePackManifestV2(record) {
   const sortedRuntimes = supportedRuntimes.slice().sort();
   if (
     sortedRuntimes.length !== expectedRuntimeSet.length ||
-    sortedRuntimes.some((runtime, index) => runtime !== expectedRuntimeSet[index])
+    sortedRuntimes.some((runtime: string, index: number) => runtime !== expectedRuntimeSet[index])
   ) {
     push(errors, "PSM010", `supported_runtimes must contain exactly ${expectedRuntimeSet.join(", ")}`);
   }
@@ -162,8 +163,8 @@ export function validatePackManifestV2(record) {
   return errors;
 }
 
-export function validateNormalizedIr(record) {
-  const errors = [];
+export function validateNormalizedIr(record: any) {
+  const errors: string[] = [];
   if (record?.kind !== "normalized-pack-ir") {
     errors.push("kind must be normalized-pack-ir");
   }
@@ -186,7 +187,7 @@ export function validateNormalizedIr(record) {
   const expectedRuntimeKeys = SUPPORTED_RUNTIMES.slice().sort();
   if (
     runtimeKeys.length !== expectedRuntimeKeys.length ||
-    runtimeKeys.some((key, index) => key !== expectedRuntimeKeys[index])
+    runtimeKeys.some((key: string, index: number) => key !== expectedRuntimeKeys[index])
   ) {
     errors.push(`runtime_support must contain exactly ${expectedRuntimeKeys.join(", ")}`);
   }

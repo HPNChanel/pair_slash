@@ -1,6 +1,7 @@
 import {
   AUDIT_LOG_LEVELS,
   CAPABILITY_FLAGS,
+  isOneOf,
   MCP_SPEC_ERAS,
   MEMORY_ACCESS_LEVELS,
   MEMORY_AUTHORITY_MODES,
@@ -18,13 +19,13 @@ import {
   validateStringArray,
 } from "./primitives.ts";
 
-export function validateRuntimeRanges(value, errors) {
+export function validateRuntimeRanges(value: unknown, errors: string[]) {
   if (!validateObject(value, "supported_runtime_ranges", errors, "PSM010")) {
     return;
   }
   const keys = Object.keys(value).sort();
   const expected = SUPPORTED_RUNTIMES.slice().sort();
-  if (keys.length !== expected.length || keys.some((key, index) => key !== expected[index])) {
+  if (keys.length !== expected.length || keys.some((key: string, index: number) => key !== expected[index])) {
     push(errors, "PSM010", `supported_runtime_ranges must contain exactly ${expected.join(", ")}`);
   }
   for (const runtime of SUPPORTED_RUNTIMES) {
@@ -32,23 +33,23 @@ export function validateRuntimeRanges(value, errors) {
   }
 }
 
-export function validateCapabilities(value, riskLevel, errors) {
+export function validateCapabilities(value: unknown, riskLevel: any, errors: string[]) {
   const capabilities = validateStringArray(value, "capabilities", errors, "PSM030");
   for (const capability of capabilities) {
-    if (!CAPABILITY_FLAGS.includes(capability)) {
+    if (!isOneOf(capability, CAPABILITY_FLAGS)) {
       push(errors, "PSM030", `unsupported capability flag ${capability}`);
     }
   }
   if (
     riskLevel === "low" &&
-    ["repo_write", "shell_exec"].some((capability) => capabilities.includes(capability))
+    ["repo_write", "shell_exec"].some((capability: any) => capabilities.includes(capability))
   ) {
     push(errors, "PSM031", "repo_write or shell_exec cannot use risk_level low");
   }
   return capabilities;
 }
 
-export function validateTools(value, errors) {
+export function validateTools(value: unknown, errors: string[]) {
   if (!Array.isArray(value)) {
     push(errors, "PSM032", "required_tools must be a list");
     return;
@@ -75,7 +76,7 @@ export function validateTools(value, errors) {
       "PSM032",
     );
     for (const phase of phases) {
-      if (!TOOL_PHASES.includes(phase)) {
+      if (!isOneOf(phase, TOOL_PHASES)) {
         push(errors, "PSM032", `required_tools.${tool.id}.required_for contains unsupported phase ${phase}`);
       }
     }
@@ -88,7 +89,7 @@ export function validateTools(value, errors) {
   }
 }
 
-export function validateMcpServers(value, capabilities, errors, declaredSchemaVersion = null) {
+export function validateMcpServers(value: unknown, capabilities: any, errors: string[], declaredSchemaVersion: any = null) {
   if (!Array.isArray(value)) {
     push(errors, "PSM033", "required_mcp_servers must be a list");
     return;
@@ -128,7 +129,7 @@ export function validateMcpServers(value, capabilities, errors, declaredSchemaVe
   }
 }
 
-export function validateMemoryPermissions(value, capabilities, riskLevel, errors) {
+export function validateMemoryPermissions(value: unknown, capabilities: any, riskLevel: any, errors: string[]) {
   if (!validateObject(value, "memory_permissions", errors, "PSM040")) {
     return;
   }
@@ -180,10 +181,10 @@ export function validateMemoryPermissions(value, capabilities, riskLevel, errors
   }
 }
 
-export function validateInstallTargets(value, errors) {
+export function validateInstallTargets(value: unknown, errors: string[]) {
   const targets = validateStringArray(value, "install_targets", errors, "PSM023");
   for (const target of targets) {
-    if (!SUPPORTED_TARGETS.includes(target)) {
+    if (!isOneOf(target, SUPPORTED_TARGETS)) {
       push(errors, "PSM023", `install_targets contains unsupported target ${target}`);
     }
   }

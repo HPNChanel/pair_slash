@@ -40,11 +40,11 @@ import {
   TOOL_KINDS,
 } from "./constants.ts";
 
-function isObject(value) {
+function isObject(value: unknown) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
-function validateNonEmptyString(value, field, errors) {
+function validateNonEmptyString(value: unknown, field: string, errors: string[]) {
   if (typeof value !== "string" || value.trim() === "") {
     errors.push(`${field} must be a non-empty string`);
     return false;
@@ -52,7 +52,7 @@ function validateNonEmptyString(value, field, errors) {
   return true;
 }
 
-function validateStringLength(value, field, errors, { min = null, max = null } = {}) {
+function validateStringLength(value: unknown, field: string, errors: string[], { min = null, max = null }: { min?: number | null; max?: number | null } = {}) {
   if (typeof value !== "string") {
     return;
   }
@@ -64,7 +64,7 @@ function validateStringLength(value, field, errors, { min = null, max = null } =
   }
 }
 
-function validateStringArray(value, field, errors, { allowEmpty = true } = {}) {
+function validateStringArray(value: unknown, field: string, errors: string[], { allowEmpty = true }: { allowEmpty?: any } = {}) {
   if (!Array.isArray(value) || (!allowEmpty && value.length === 0)) {
     errors.push(`${field} must be ${allowEmpty ? "a list" : "a non-empty list"}`);
     return [];
@@ -85,13 +85,13 @@ function validateStringArray(value, field, errors, { allowEmpty = true } = {}) {
   return entries;
 }
 
-function validateNonNegativeInteger(value, field, errors) {
-  if (!Number.isInteger(value) || value < 0) {
+function validateNonNegativeInteger(value: unknown, field: string, errors: string[]) {
+  if (!Number.isInteger(value) || (value as number) < 0) {
     errors.push(`${field} must be a non-negative integer`);
   }
 }
 
-function validateRecordShape(record, errors, field = "record") {
+function validateRecordShape(record: any, errors: string[], field: string = "record") {
   if (!isObject(record)) {
     errors.push(`${field} must be an object`);
     return;
@@ -129,7 +129,7 @@ function validateRecordShape(record, errors, field = "record") {
   validateNonEmptyString(record.timestamp, `${field}.timestamp`, errors);
 }
 
-function validatePipelineStage(record, errors, field = "pipeline_stages[]") {
+function validatePipelineStage(record: any, errors: string[], field: string = "pipeline_stages[]") {
   if (!isObject(record)) {
     errors.push(`${field} must be an object`);
     return;
@@ -142,7 +142,7 @@ function validatePipelineStage(record, errors, field = "pipeline_stages[]") {
   validateStringArray(record.notes ?? [], `${field}.notes`, errors);
 }
 
-function validateRelatedRecord(record, errors, field = "related_records[]") {
+function validateRelatedRecord(record: any, errors: string[], field: string = "related_records[]") {
   if (!isObject(record)) {
     errors.push(`${field} must be an object`);
     return;
@@ -166,7 +166,7 @@ function validateRelatedRecord(record, errors, field = "related_records[]") {
   }
 }
 
-function validateStagingArtifactRef(record, errors, field = "staging_artifact") {
+function validateStagingArtifactRef(record: any, errors: string[], field: string = "staging_artifact") {
   if (!isObject(record)) {
     errors.push(`${field} must be an object`);
     return;
@@ -178,7 +178,7 @@ function validateStagingArtifactRef(record, errors, field = "staging_artifact") 
   validateBoolean(record.exists, `${field}.exists`, errors);
 }
 
-function validateApproval(record, errors, field = "approval") {
+function validateApproval(record: any, errors: string[], field: string = "approval") {
   if (!isObject(record)) {
     errors.push(`${field} must be an object`);
     return;
@@ -192,7 +192,7 @@ function validateApproval(record, errors, field = "approval") {
   }
 }
 
-function validateNegotiationEntry(entry, errors, field = "capability_scope.negotiation[]") {
+function validateNegotiationEntry(entry: any, errors: string[], field: string = "capability_scope.negotiation[]") {
   if (!isObject(entry)) {
     errors.push(`${field} must be an object`);
     return;
@@ -208,7 +208,7 @@ function validateNegotiationEntry(entry, errors, field = "capability_scope.negot
   }
 }
 
-function validateRuntimeBoundary(boundary, errors, field = "runtime_boundary") {
+function validateRuntimeBoundary(boundary: any, errors: string[], field: string = "runtime_boundary") {
   if (!isObject(boundary)) {
     errors.push(`${field} must be an object`);
     return;
@@ -220,7 +220,7 @@ function validateRuntimeBoundary(boundary, errors, field = "runtime_boundary") {
   validateStringArray(boundary.differences ?? [], `${field}.differences`, errors);
 }
 
-function validateBoolean(value, field, errors) {
+function validateBoolean(value: unknown, field: string, errors: string[]) {
   if (typeof value !== "boolean") {
     errors.push(`${field} must be boolean`);
     return false;
@@ -228,7 +228,7 @@ function validateBoolean(value, field, errors) {
   return true;
 }
 
-function validateRiskEntry(entry, errors, field = "evaluated_risks[]") {
+function validateRiskEntry(entry: any, errors: string[], field: string = "evaluated_risks[]") {
   if (!isObject(entry)) {
     errors.push(`${field} must be an object`);
     return;
@@ -241,7 +241,7 @@ function validateRiskEntry(entry, errors, field = "evaluated_risks[]") {
   validateNonEmptyString(entry.rationale, `${field}.rationale`, errors);
 }
 
-function validatePolicyReason(reason, errors, field = "reasons[]") {
+function validatePolicyReason(reason: any, errors: string[], field: string = "reasons[]") {
   if (!isObject(reason)) {
     errors.push(`${field} must be an object`);
     return;
@@ -266,7 +266,7 @@ function validatePolicyReason(reason, errors, field = "reasons[]") {
   validateStringArray(reason.runtime_factors ?? [], `${field}.runtime_factors`, errors);
 }
 
-function validateEnforcementContext(record, errors, field = "enforcement_context") {
+function validateEnforcementContext(record: any, errors: string[], field: string = "enforcement_context") {
   if (!isObject(record)) {
     errors.push(`${field} must be an object`);
     return;
@@ -287,7 +287,7 @@ function validateEnforcementContext(record, errors, field = "enforcement_context
   validateBoolean(record.no_silent_fallback, `${field}.no_silent_fallback`, errors);
 }
 
-function validateExplanation(record, errors, field = "explanation") {
+function validateExplanation(record: any, errors: string[], field: string = "explanation") {
   if (!isObject(record)) {
     errors.push(`${field} must be an object`);
     return;
@@ -307,7 +307,7 @@ function validateExplanation(record, errors, field = "explanation") {
   validateBoolean(record.no_silent_fallback, `${field}.no_silent_fallback`, errors);
 }
 
-function validateInputContract(inputContract, errors) {
+function validateInputContract(inputContract: any, errors: string[]) {
   validateStringArray(inputContract.required_fields ?? [], "input_contract.required_fields", errors, {
     allowEmpty: false,
   });
@@ -369,7 +369,7 @@ function validateInputContract(inputContract, errors) {
   }
 }
 
-function validateOutputContract(outputContract, errors) {
+function validateOutputContract(outputContract: any, errors: string[]) {
   if (!CONTRACT_OUTPUT_SHAPES.includes(outputContract.output_shape)) {
     errors.push(`output_contract.output_shape must be one of ${CONTRACT_OUTPUT_SHAPES.join(", ")}`);
   }
@@ -452,7 +452,7 @@ function validateOutputContract(outputContract, errors) {
   }
 }
 
-function validateFailureContract(failureContract, errors) {
+function validateFailureContract(failureContract: any, errors: string[]) {
   if (typeof failureContract.no_silent_fallback !== "boolean") {
     errors.push("failure_contract.no_silent_fallback must be boolean");
   }
@@ -484,7 +484,7 @@ function validateFailureContract(failureContract, errors) {
     errors,
     { allowEmpty: false },
   );
-  const categoryCodes = new Set((failureContract.categories ?? []).map((entry) => entry?.code).filter(Boolean));
+  const categoryCodes = new Set((failureContract.categories ?? []).map((entry: any) => entry?.code).filter(Boolean));
   for (const code of failureCodes) {
     if (!categoryCodes.has(code)) {
       errors.push(`failure_contract.codes contains ${code} but no matching categories entry`);
@@ -492,7 +492,7 @@ function validateFailureContract(failureContract, errors) {
   }
 }
 
-function validateMemoryContract(memoryContract, workflowClass, errors) {
+function validateMemoryContract(memoryContract: any, workflowClass: any, errors: string[]) {
   if (!CONTRACT_MEMORY_MODES.includes(memoryContract.mode)) {
     errors.push(`memory_contract.mode must be one of ${CONTRACT_MEMORY_MODES.join(", ")}`);
   }
@@ -540,7 +540,7 @@ function validateMemoryContract(memoryContract, workflowClass, errors) {
   }
 }
 
-function validateToolShape(tool, field, errors) {
+function validateToolShape(tool: any, field: string, errors: string[]) {
   if (!isObject(tool)) {
     errors.push(`${field} must be an object`);
     return;
@@ -552,7 +552,7 @@ function validateToolShape(tool, field, errors) {
   validateNonEmptyString(tool.check_command, `${field}.check_command`, errors);
 }
 
-function validateToolContract(toolContract, errors) {
+function validateToolContract(toolContract: any, errors: string[]) {
   validateStringArray(toolContract.tools_allowed ?? [], "tool_contract.tools_allowed", errors);
   if (!Array.isArray(toolContract.tools_required)) {
     errors.push("tool_contract.tools_required must be a list");
@@ -576,7 +576,7 @@ function validateToolContract(toolContract, errors) {
   validateBoolean(toolContract.secret_touching_allowance, "tool_contract.secret_touching_allowance", errors);
 }
 
-function validateCapabilityScope(capabilityScope, errors) {
+function validateCapabilityScope(capabilityScope: any, errors: string[]) {
   if (!CONTRACT_RUNTIME_SCOPES.includes(capabilityScope.runtime_scope)) {
     errors.push(
       `capability_scope.runtime_scope must be one of ${CONTRACT_RUNTIME_SCOPES.join(", ")}`,
@@ -611,8 +611,8 @@ function validateCapabilityScope(capabilityScope, errors) {
   );
 }
 
-export function validateContractEnvelope(record) {
-  const errors = [];
+export function validateContractEnvelope(record: any) {
+  const errors: string[] = [];
   if (record?.kind !== "contract-envelope") {
     errors.push("kind must be contract-envelope");
   }
@@ -688,8 +688,8 @@ export function validateContractEnvelope(record) {
   return errors;
 }
 
-export function validatePolicyVerdict(record) {
-  const errors = [];
+export function validatePolicyVerdict(record: any) {
+  const errors: string[] = [];
   if (record?.kind !== "policy-verdict") {
     errors.push("kind must be policy-verdict");
   }
@@ -747,8 +747,8 @@ export function validatePolicyVerdict(record) {
   return errors;
 }
 
-export function validateMemoryWriteRequest(record) {
-  const errors = [];
+export function validateMemoryWriteRequest(record: any) {
+  const errors: string[] = [];
   if (record?.kind !== "memory-write-request") {
     errors.push("kind must be memory-write-request");
   }
@@ -768,8 +768,8 @@ export function validateMemoryWriteRequest(record) {
   return errors;
 }
 
-export function validateMemoryWritePreview(record) {
-  const errors = [];
+export function validateMemoryWritePreview(record: any) {
+  const errors: string[] = [];
   if (record?.kind !== "memory-write-preview") {
     errors.push("kind must be memory-write-preview");
   }
@@ -791,9 +791,9 @@ export function validateMemoryWritePreview(record) {
   if (!isObject(record?.request)) {
     errors.push("request must be an object");
   } else {
-    errors.push(...validateMemoryWriteRequest(record.request).map((message) => `request.${message}`));
+    errors.push(...validateMemoryWriteRequest(record.request).map((message: string) => `request.${message}`));
   }
-  errors.push(...validatePolicyVerdict(record?.policy_verdict).map((message) => `policy_verdict.${message}`));
+  errors.push(...validatePolicyVerdict(record?.policy_verdict).map((message: string) => `policy_verdict.${message}`));
   if (!isObject(record?.preview_patch)) {
     errors.push("preview_patch must be an object");
   } else {
@@ -849,8 +849,8 @@ export function validateMemoryWritePreview(record) {
   return errors;
 }
 
-export function validateMemoryWriteResult(record) {
-  const errors = [];
+export function validateMemoryWriteResult(record: any) {
+  const errors: string[] = [];
   if (record?.kind !== "memory-write-result") {
     errors.push("kind must be memory-write-result");
   }
@@ -872,9 +872,9 @@ export function validateMemoryWriteResult(record) {
   if (!isObject(record?.request)) {
     errors.push("request must be an object");
   } else {
-    errors.push(...validateMemoryWriteRequest(record.request).map((message) => `request.${message}`));
+    errors.push(...validateMemoryWriteRequest(record.request).map((message: string) => `request.${message}`));
   }
-  errors.push(...validatePolicyVerdict(record?.policy_verdict).map((message) => `policy_verdict.${message}`));
+  errors.push(...validatePolicyVerdict(record?.policy_verdict).map((message: string) => `policy_verdict.${message}`));
   if (record?.target_file !== null && typeof record?.target_file !== "string") {
     errors.push("target_file must be string or null");
   }
@@ -923,8 +923,8 @@ export function validateMemoryWriteResult(record) {
   return errors;
 }
 
-export function validateMemoryWriteStagingArtifact(record) {
-  const errors = [];
+export function validateMemoryWriteStagingArtifact(record: any) {
+  const errors: string[] = [];
   if (record?.kind !== "memory-write-staging-artifact") {
     errors.push("kind must be memory-write-staging-artifact");
   }
@@ -944,7 +944,7 @@ export function validateMemoryWriteStagingArtifact(record) {
   if (!isObject(record?.request)) {
     errors.push("request must be an object");
   } else {
-    errors.push(...validateMemoryWriteRequest(record.request).map((message) => `request.${message}`));
+    errors.push(...validateMemoryWriteRequest(record.request).map((message: string) => `request.${message}`));
   }
   if (!isObject(record?.preview_patch)) {
     errors.push("preview_patch must be an object");
@@ -982,7 +982,7 @@ export function validateMemoryWriteStagingArtifact(record) {
     errors.push(`record_disposition must be one of ${MEMORY_RECORD_ACTIONS.join(", ")}`);
   }
   validateApproval(record?.approval, errors);
-  errors.push(...validatePolicyVerdict(record?.policy_verdict).map((message) => `policy_verdict.${message}`));
+  errors.push(...validatePolicyVerdict(record?.policy_verdict).map((message: string) => `policy_verdict.${message}`));
   if (typeof record?.ready_for_apply !== "boolean") {
     errors.push("ready_for_apply must be boolean");
   }
@@ -991,8 +991,8 @@ export function validateMemoryWriteStagingArtifact(record) {
   return errors;
 }
 
-export function validateAuditLogEntry(record) {
-  const errors = [];
+export function validateAuditLogEntry(record: any) {
+  const errors: string[] = [];
   if (record?.schema_version !== AUDIT_LOG_ENTRY_SCHEMA_VERSION) {
     errors.push(`schema_version must be ${AUDIT_LOG_ENTRY_SCHEMA_VERSION}`);
   }
@@ -1039,8 +1039,8 @@ export function validateAuditLogEntry(record) {
   return errors;
 }
 
-export function validateCandidateReport(record) {
-  const errors = [];
+export function validateCandidateReport(record: any) {
+  const errors: string[] = [];
   if (record?.kind !== "memory-candidate-report") {
     errors.push("kind must be memory-candidate-report");
   }
@@ -1244,8 +1244,8 @@ export function validateCandidateReport(record) {
   return errors;
 }
 
-export function validateMemoryAuditReport(record) {
-  const errors = [];
+export function validateMemoryAuditReport(record: any) {
+  const errors: string[] = [];
   const validModes = ["report-only", "fix-proposal"];
   const validScopes = ["full", "project-memory-only", "index-only"];
   const validTypes = [

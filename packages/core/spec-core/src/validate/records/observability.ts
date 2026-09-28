@@ -1,4 +1,5 @@
 import {
+  isOneOf,
   SUPPORTED_RUNTIMES,
   SUPPORTED_TARGETS,
   SUPPORT_BUNDLE_SCHEMA_VERSION,
@@ -16,8 +17,8 @@ import {
   validateNonEmptyString,
 } from "../primitives.ts";
 
-export function validateTraceEvent(record) {
-  const errors = [];
+export function validateTraceEvent(record: any) {
+  const errors: string[] = [];
   if (record?.kind !== "pairslash-trace-event") {
     errors.push("kind must be pairslash-trace-event");
   }
@@ -96,7 +97,7 @@ export function validateTraceEvent(record) {
   return errors;
 }
 
-function validateRedactionReport(report, errors, prefix) {
+function validateRedactionReport(report: any, errors: string[], prefix: string) {
   if (!isObject(report)) {
     errors.push(`${prefix} must be an object`);
     return;
@@ -125,8 +126,8 @@ function validateRedactionReport(report, errors, prefix) {
   }
 }
 
-export function validateTraceExport(record) {
-  const errors = [];
+export function validateTraceExport(record: any) {
+  const errors: string[] = [];
   if (record?.kind !== "trace-export") {
     errors.push("kind must be trace-export");
   }
@@ -162,8 +163,8 @@ export function validateTraceExport(record) {
   return errors;
 }
 
-export function validateSupportBundle(record) {
-  const errors = [];
+export function validateSupportBundle(record: any) {
+  const errors: string[] = [];
   if (record?.kind !== "support-bundle") {
     errors.push("kind must be support-bundle");
   }
@@ -319,8 +320,8 @@ export function validateSupportBundle(record) {
   return errors;
 }
 
-export function validateTelemetrySummary(record) {
-  const errors = [];
+export function validateTelemetrySummary(record: any) {
+  const errors: string[] = [];
   if (record?.kind !== "telemetry-summary") {
     errors.push("kind must be telemetry-summary");
   }
@@ -375,10 +376,10 @@ export function validateTelemetrySummary(record) {
         continue;
       }
       validateNonEmptyString(workflow?.workflow_key, "workflows[].workflow_key", errors, "TEL001");
-      if (!SUPPORTED_RUNTIMES.includes(workflow?.runtime)) {
+      if (!isOneOf(workflow?.runtime, SUPPORTED_RUNTIMES)) {
         errors.push(`unsupported workflows[].runtime: ${workflow?.runtime}`);
       }
-      if (!SUPPORTED_TARGETS.includes(workflow?.target)) {
+      if (!isOneOf(workflow?.target, SUPPORTED_TARGETS)) {
         errors.push(`unsupported workflows[].target: ${workflow?.target}`);
       }
       for (const field of ["sessions", "successful_sessions", "failed_sessions", "weekly_reuse_days", "support_bundle_exports"]) {

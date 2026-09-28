@@ -432,7 +432,7 @@ export function readAdvancedManifestRecord(repoRoot, manifestPath) {
 export function loadPackCatalogRecords(
   repoRoot,
   { includeAdvanced = false } = {},
-) {
+): any[] {
   const publicSupport = loadPublicSupportSnapshot(repoRoot);
   const laneRecordIndex = buildLiveRuntimeLaneRecordIndex(repoRoot, publicSupport);
   const coreRecords = loadPackManifestRecords(repoRoot).map((record) =>

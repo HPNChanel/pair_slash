@@ -1,5 +1,6 @@
 import {
   COMPATIBILITY_STATUSES,
+  isOneOf,
   MANIFEST_MARKER_MODES,
   MANIFEST_SMOKE_ACTIONS,
   OVERRIDE_MARKER_FILE,
@@ -43,13 +44,13 @@ import {
   workflowMaturityRank,
 } from "./primitives.ts";
 
-export function validateCanonicalRuntimeBindings(canonical, errors) {
+export function validateCanonicalRuntimeBindings(canonical: any, errors: string[]) {
   if (!validateObject(canonical.runtime_bindings, "runtime_bindings", errors, "PSM011")) {
     return;
   }
   const keys = Object.keys(canonical.runtime_bindings).sort();
   const expected = SUPPORTED_RUNTIMES.slice().sort();
-  if (keys.length !== expected.length || keys.some((key, index) => key !== expected[index])) {
+  if (keys.length !== expected.length || keys.some((key: string, index: number) => key !== expected[index])) {
     push(errors, "PSM011", `runtime_bindings must contain exactly ${expected.join(", ")}`);
   }
   for (const runtime of SUPPORTED_RUNTIMES) {
@@ -96,7 +97,7 @@ export function validateCanonicalRuntimeBindings(canonical, errors) {
   }
 }
 
-export function validateCanonicalRuntimeAssets(canonical, errors, { strict = false } = {}) {
+export function validateCanonicalRuntimeAssets(canonical: any, errors: string[], { strict = false }: { strict?: boolean } = {}) {
   if (!validateObject(canonical.runtime_assets, "runtime_assets", errors, "PSM020")) {
     return new Map();
   }
@@ -196,15 +197,15 @@ export function validateCanonicalRuntimeAssets(canonical, errors, { strict = fal
 
   if (strict) {
     const derived = toSerializablePackManifestV2(canonical);
-    const expectedGenerated = new Map(
+    const expectedGenerated = new Map<string, any>(
       derived.runtime_assets.entries
-        .filter((entry) => entry.generated_path)
-        .map((entry) => [entry.asset_id, entry]),
+        .filter((entry: any) => entry.generated_path)
+        .map((entry: any) => [entry.asset_id, entry]),
     );
-    const actualGenerated = new Map(
+    const actualGenerated = new Map<string, any>(
       canonical.runtime_assets.entries
-        .filter((entry) => entry.generated_path)
-        .map((entry) => [entry.asset_id, entry]),
+        .filter((entry: any) => entry.generated_path)
+        .map((entry: any) => [entry.asset_id, entry]),
     );
     for (const [assetId, expected] of expectedGenerated) {
       const actual = actualGenerated.get(assetId);
@@ -223,7 +224,7 @@ export function validateCanonicalRuntimeAssets(canonical, errors, { strict = fal
   return assetIds;
 }
 
-export function validateCanonicalAssetOwnership(canonical, assetIds, errors) {
+export function validateCanonicalAssetOwnership(canonical: any, assetIds: any, errors: string[]) {
   if (!validateObject(canonical.asset_ownership, "asset_ownership", errors, "PSM050")) {
     return;
   }
@@ -272,7 +273,7 @@ export function validateCanonicalAssetOwnership(canonical, assetIds, errors) {
       push(errors, "PSM050", `asset_ownership.records is missing asset_id ${assetId}`);
     }
   }
-  const receiptRecord = canonical.asset_ownership.records.find((record) => record.asset_id === "ownership-receipt");
+  const receiptRecord = canonical.asset_ownership.records.find((record: any) => record.asset_id === "ownership-receipt");
   if (!receiptRecord) {
     push(errors, "PSM050", "asset_ownership.records must include ownership-receipt");
   } else {
@@ -285,7 +286,7 @@ export function validateCanonicalAssetOwnership(canonical, assetIds, errors) {
   }
 }
 
-export function validateCanonicalOverridePolicy(canonical, assetIds, errors) {
+export function validateCanonicalOverridePolicy(canonical: any, assetIds: any, errors: string[]) {
   if (!validateObject(canonical.local_override_policy, "local_override_policy", errors, "PSM051")) {
     return;
   }
@@ -316,7 +317,7 @@ export function validateCanonicalOverridePolicy(canonical, assetIds, errors) {
   }
 }
 
-export function validateCanonicalUpdateAndUninstall(canonical, errors) {
+export function validateCanonicalUpdateAndUninstall(canonical: any, errors: string[]) {
   if (!validateObject(canonical.update_strategy, "update_strategy", errors, "PSM051")) {
     return;
   }
@@ -349,7 +350,7 @@ export function validateCanonicalUpdateAndUninstall(canonical, errors) {
   }
 }
 
-export function validateCanonicalSmokeChecks(canonical, errors) {
+export function validateCanonicalSmokeChecks(canonical: any, errors: string[]) {
   if (!Array.isArray(canonical.smoke_checks) || canonical.smoke_checks.length === 0) {
     push(errors, "PSM062", "smoke_checks must be a non-empty list");
     return;
@@ -384,14 +385,14 @@ export function validateCanonicalSmokeChecks(canonical, errors) {
   }
 }
 
-export function validateCanonicalTrustDescriptor(canonical, errors) {
+export function validateCanonicalTrustDescriptor(canonical: any, errors: string[]) {
   if (!("trust_descriptor" in canonical) || canonical.trust_descriptor === undefined) {
     return;
   }
   validateNonEmptyString(canonical.trust_descriptor, "trust_descriptor", errors, "PSM063");
 }
 
-export function deriveCanonicalRuntimeSupportStatus(canonical, runtime) {
+export function deriveCanonicalRuntimeSupportStatus(canonical: any, runtime: string) {
   const compatibility = canonical?.runtime_bindings?.[runtime]?.compatibility ?? {};
   const canonicalStatus = compatibility.canonical_picker ?? "unverified";
   const directStatus = compatibility.direct_invocation ?? "unverified";
@@ -407,7 +408,7 @@ export function deriveCanonicalRuntimeSupportStatus(canonical, runtime) {
   return "partial";
 }
 
-export function validateCanonicalCatalog(canonical, errors) {
+export function validateCanonicalCatalog(canonical: any, errors: string[]) {
   if (!validateObject(canonical.catalog, "catalog", errors, "PSM064")) {
     return;
   }
@@ -458,7 +459,7 @@ export function validateCanonicalCatalog(canonical, errors) {
   }
 }
 
-export function validateCanonicalSupport(canonical, errors) {
+export function validateCanonicalSupport(canonical: any, errors: string[]) {
   if (!validateObject(canonical.support, "support", errors, "PSM065")) {
     return;
   }
@@ -602,7 +603,7 @@ export function validateCanonicalSupport(canonical, errors) {
     return;
   }
   const liveWorkflowRefs = Object.fromEntries(
-    SUPPORTED_RUNTIMES.map((runtime) => [
+    SUPPORTED_RUNTIMES.map((runtime: string) => [
       runtime,
       validateStringArray(
         canonical.support.workflow_evidence.live_workflow_refs?.[runtime],
@@ -738,7 +739,7 @@ export function validateCanonicalSupport(canonical, errors) {
     "PSM065",
   );
   for (const triggerCode of demotionTriggerCodes) {
-    if (!WORKFLOW_DEMOTION_TRIGGER_CODES.includes(triggerCode)) {
+    if (!isOneOf(triggerCode, WORKFLOW_DEMOTION_TRIGGER_CODES)) {
       push(
         errors,
         "PSM065",

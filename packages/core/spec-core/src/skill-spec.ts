@@ -21,7 +21,7 @@ export const SKILL_SPEC_DEFAULT_LICENSE = "Apache-2.0";
 // Returns the parsed SKILL.md frontmatter mapping, or null when the file has
 // no readable frontmatter block. Used by lint rules that need field values
 // (e.g. description) without re-running full spec validation.
-export function parseSkillFrontmatterFields(content) {
+export function parseSkillFrontmatterFields(content: any) {
   if (typeof content !== "string") {
     return null;
   }
@@ -45,9 +45,9 @@ export function parseSkillFrontmatterFields(content) {
 const SKILL_NAME_PATTERN = /^[a-z0-9-]+$/;
 const CONTROL_CHAR_PATTERN = new RegExp("[\\u0000-\\u001f\\u007f-\\u009f]");
 
-function listSkillSpecErrors(content, dirName) {
-  const errors = [];
-  const warnings = [];
+function listSkillSpecErrors(content: any, dirName: any) {
+  const errors: string[] = [];
+  const warnings: string[] = [];
 
   if (typeof content !== "string" || content.trim().length === 0) {
     errors.push("SKILL.md is empty or unreadable");
@@ -65,7 +65,7 @@ function listSkillSpecErrors(content, dirName) {
   try {
     fields = YAML.parse(frontmatterMatch[1], { uniqueKeys: true, strict: true });
   } catch (error) {
-    errors.push(`frontmatter YAML is invalid or contains duplicate keys: ${error.message}`);
+    errors.push(`frontmatter YAML is invalid or contains duplicate keys: ${error instanceof Error ? error.message : String(error)}`);
     return { errors, warnings, fields: null };
   }
 
@@ -175,7 +175,7 @@ function listSkillSpecErrors(content, dirName) {
   return { errors, warnings, fields };
 }
 
-export function validateSkillSpec({ content, dirName = null }) {
+export function validateSkillSpec({ content, dirName = null }: { content?: any; dirName?: any }) {
   const { errors, warnings, fields } = listSkillSpecErrors(content, dirName);
   return {
     ok: errors.length === 0,
@@ -186,14 +186,14 @@ export function validateSkillSpec({ content, dirName = null }) {
   };
 }
 
-function skillSpecCompatibilityLine(ir) {
+function skillSpecCompatibilityLine(ir: any) {
   const ranges = Object.entries<Record<string, { semver_range: string }>>(ir.runtime_support ?? {})
     .map(([runtime, support]) => `${runtime}${support.semver_range}`)
     .sort();
   return `requires ${ranges.join(", ")}`;
 }
 
-export function buildSkillFrontmatterAdditions(ir) {
+export function buildSkillFrontmatterAdditions(ir: any) {
   const compatibility = skillSpecCompatibilityLine(ir).slice(
     0,
     SKILL_SPEC_MAX_COMPATIBILITY_LENGTH,
@@ -213,7 +213,7 @@ export function buildSkillFrontmatterAdditions(ir) {
   };
 }
 
-export function enrichSkillFrontmatter({ content, ir }) {
+export function enrichSkillFrontmatter({ content, ir }: { content?: any; ir?: any }) {
   const normalized = String(content ?? "").replace(/\r\n/g, "\n");
   const match = normalized.match(/^---\n([\s\S]*?)\n---\n?/);
   if (!match) {
@@ -229,8 +229,8 @@ export function enrichSkillFrontmatter({ content, ir }) {
     return String(content ?? "");
   }
 
-  const additions = buildSkillFrontmatterAdditions(ir);
-  const injected = [];
+  const additions: Record<string, any> = buildSkillFrontmatterAdditions(ir);
+  const injected: any[] = [];
   for (const key of ["license", "compatibility"]) {
     if (fields[key] === undefined || fields[key] === null) {
       injected.push(`${key}: ${JSON.stringify(additions[key])}`);
@@ -244,7 +244,7 @@ export function enrichSkillFrontmatter({ content, ir }) {
       [
         "metadata:",
         ...metadataKeys.map(
-          (key) => `  ${key}: ${JSON.stringify(String(additions.metadata[key]))}`,
+          (key: string) => `  ${key}: ${JSON.stringify(String(additions.metadata[key]))}`,
         ),
       ].join("\n"),
     );

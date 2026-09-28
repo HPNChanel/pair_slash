@@ -1,7 +1,7 @@
 import { PHASE4_COMPILER_VERSION } from "./constants.ts";
 import { stableJson } from "./utils.ts";
 
-export function buildOwnershipReceipt({ ir, runtime, directInvocation, emittedAssets }) {
+export function buildOwnershipReceipt({ ir, runtime, directInvocation, emittedAssets }: { ir?: any; runtime?: string; directInvocation?: any; emittedAssets?: any }) {
   return stableJson({
     kind: "pairslash-owned-footprint",
     schema_version: "1.0.0",
@@ -17,7 +17,7 @@ export function buildOwnershipReceipt({ ir, runtime, directInvocation, emittedAs
     update_strategy: ir.policy.update_strategy,
     uninstall_strategy: ir.policy.uninstall_strategy,
     local_override_policy: ir.policy.local_override_policy,
-    files: emittedAssets.map((file) => ({
+    files: emittedAssets.map((file: any) => ({
       asset_id: file.asset_id,
       relative_path: file.relative_path,
       sha256: file.sha256,

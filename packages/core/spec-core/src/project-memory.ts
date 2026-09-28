@@ -59,27 +59,27 @@ const SCOPES = new Set(["whole-project", "subsystem", "path-prefix"]);
 const CONFIDENCE = new Set(["low", "medium", "high"]);
 const ACTIONS = new Set(["append", "supersede", "reject-candidate-if-conflict"]);
 
-function readYamlDocuments(path) {
+function readYamlDocuments(path: string) {
   return YAML.parseAllDocuments(readFileSync(path, "utf8"))
-    .map((document) => document.toJS())
-    .filter((document) => document && typeof document === "object" && !Array.isArray(document));
+    .map((document: any) => document.toJS())
+    .filter((document: any) => document && typeof document === "object" && !Array.isArray(document));
 }
 
-function listYamlFiles(path) {
+function listYamlFiles(path: string) {
   if (!exists(path)) {
     return [];
   }
   return readdirSync(path, { withFileTypes: true })
-    .filter((entry) => entry.isFile() && entry.name.endsWith(".yaml"))
-    .map((entry) => resolve(path, entry.name))
-    .sort((left, right) => left.localeCompare(right));
+    .filter((entry: any) => entry.isFile() && entry.name.endsWith(".yaml"))
+    .map((entry: any) => resolve(path, entry.name))
+    .sort((left: any, right: any) => left.localeCompare(right));
 }
 
-function projectMemoryRelativePath(projectMemoryRoot, absolutePath) {
+function projectMemoryRelativePath(projectMemoryRoot: any, absolutePath: any) {
   return toPosix(relative(projectMemoryRoot, absolutePath));
 }
 
-export function validateProjectMemoryScope(scope, scopeDetail) {
+export function validateProjectMemoryScope(scope: string, scopeDetail: any) {
   if (!SCOPES.has(scope)) {
     return [`invalid scope '${scope}'`];
   }
@@ -89,8 +89,8 @@ export function validateProjectMemoryScope(scope, scopeDetail) {
   return [];
 }
 
-export function validateSystemRecord(record) {
-  const errors = [];
+export function validateSystemRecord(record: any) {
+  const errors: string[] = [];
   for (const field of ["kind", "title", "version"]) {
     if (!(field in record)) {
       errors.push(`missing field: ${field}`);
@@ -100,7 +100,7 @@ export function validateSystemRecord(record) {
     errors.push(`invalid system kind: ${record.kind}`);
     return errors;
   }
-  for (const field of SYSTEM_RECORD_REQUIRED_FIELDS[record.kind] ?? []) {
+  for (const field of SYSTEM_RECORD_REQUIRED_FIELDS[record.kind as keyof typeof SYSTEM_RECORD_REQUIRED_FIELDS] ?? []) {
     if (!(field in record)) {
       errors.push(`missing field: ${field}`);
     }
@@ -137,8 +137,8 @@ export function validateSystemRecord(record) {
   return errors;
 }
 
-export function validateMutableProjectMemoryRecord(record) {
-  const errors = [];
+export function validateMutableProjectMemoryRecord(record: any) {
+  const errors: string[] = [];
   for (const field of [
     "kind",
     "title",
@@ -178,7 +178,7 @@ export function validateMutableProjectMemoryRecord(record) {
   return errors;
 }
 
-export function loadProjectMemoryRecords(repoRoot) {
+export function loadProjectMemoryRecords(repoRoot: string) {
   const projectMemoryRoot = resolve(repoRoot, PROJECT_MEMORY_ROOT);
   const systemFiles = [
     resolve(projectMemoryRoot, "00-project-charter.yaml"),
@@ -194,7 +194,7 @@ export function loadProjectMemoryRecords(repoRoot) {
     ...listYamlFiles(resolve(projectMemoryRoot, "80-incidents-and-lessons")),
   ];
 
-  const errors = [];
+  const errors: string[] = [];
   const systemEntries: any[] = [];
   const mutableEntries: any[] = [];
 
@@ -211,7 +211,7 @@ export function loadProjectMemoryRecords(repoRoot) {
         });
       }
     } catch (error) {
-      errors.push(`${toPosix(relative(repoRoot, filePath))} :: failed to parse YAML :: ${error.message}`);
+      errors.push(`${toPosix(relative(repoRoot, filePath))} :: failed to parse YAML :: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -231,15 +231,15 @@ export function loadProjectMemoryRecords(repoRoot) {
         });
       }
     } catch (error) {
-      errors.push(`${toPosix(relative(repoRoot, filePath))} :: failed to parse YAML :: ${error.message}`);
+      errors.push(`${toPosix(relative(repoRoot, filePath))} :: failed to parse YAML :: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
   return { systemEntries, mutableEntries, errors };
 }
 
-export function validateProjectMemoryStructure(repoRoot) {
-  const errors = [];
+export function validateProjectMemoryStructure(repoRoot: string) {
+  const errors: string[] = [];
   for (const relativePath of PROJECT_MEMORY_REQUIRED_DIRECTORIES) {
     const absolutePath = resolve(repoRoot, relativePath);
     if (!exists(absolutePath)) {
@@ -255,8 +255,8 @@ export function validateProjectMemoryStructure(repoRoot) {
   return errors;
 }
 
-export function validateProjectMemoryIndex(indexRecord, { systemEntries = [], mutableEntries = [] }: any = {}) {
-  const errors = [];
+export function validateProjectMemoryIndex(indexRecord: any, { systemEntries = [], mutableEntries = [] }: any = {}) {
+  const errors: string[] = [];
   for (const field of ["version", "last_updated", "updated_by", "records"]) {
     if (!(field in indexRecord)) {
       errors.push(`missing top-level field ${field}`);
@@ -295,7 +295,7 @@ export function validateProjectMemoryIndex(indexRecord, { systemEntries = [], mu
     indexLookup.add(`${item.file}::${item.kind}::${item.title}`);
   }
 
-  for (const entry of [...systemEntries, ...mutableEntries.filter(({ record }) => MUTABLE_RECORD_KINDS.includes(record.kind))]) {
+  for (const entry of [...systemEntries, ...mutableEntries.filter(({ record }: any) => MUTABLE_RECORD_KINDS.includes(record.kind))]) {
     const key = `${entry.relativePath}::${entry.record.kind}::${entry.record.title}`;
     if (!indexLookup.has(key)) {
       errors.push(`index missing coverage for ${entry.relativePath} :: ${entry.record.kind}/${entry.record.title}`);

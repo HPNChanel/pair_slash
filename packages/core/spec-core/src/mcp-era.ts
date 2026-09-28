@@ -46,7 +46,7 @@ export function buildMcpServerDescriptors(requiredMcpServers: unknown) {
       (entry): entry is { id: string; spec_era?: string } =>
         Boolean(entry) && typeof entry === "object" && typeof entry.id === "string",
     )
-    .map((entry) => {
+    .map((entry: any) => {
       const era = MCP_SPEC_ERAS.includes(entry.spec_era as McpSpecEra)
         ? (entry.spec_era as McpSpecEra)
         : "dual";
@@ -56,5 +56,5 @@ export function buildMcpServerDescriptors(requiredMcpServers: unknown) {
         expectations: describeMcpSpecEra(era),
       };
     });
-  return descriptors.sort((left, right) => left.id.localeCompare(right.id));
+  return descriptors.sort((left: any, right: any) => left.id.localeCompare(right.id));
 }

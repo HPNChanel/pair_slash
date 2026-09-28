@@ -13,7 +13,7 @@ export const PLUGIN_AGENTS_DIR = "agents";
 // not carry author identity, and emitting a fabricated value would violate the
 // provenance rules in plans/CONSTRAINTS.md (D-section). Bundle provenance lives
 // in the pairslash-plugin.json sidecar instead.
-export function buildPluginManifest({ manifest, runtime, hooks = null, agents = null }) {
+export function buildPluginManifest({ manifest, runtime, hooks = null, agents = null }: { manifest?: any; runtime?: string; hooks?: any; agents?: any }) {
   const base = {
     name: manifest.pack_name,
     description: String(manifest.summary ?? manifest.display_name ?? "").slice(0, 1024),
@@ -48,7 +48,7 @@ export function buildPluginManifest({ manifest, runtime, hooks = null, agents = 
   throw new Error(`unsupported runtime for plugin manifest: ${runtime}`);
 }
 
-export function buildPluginProvenance({ manifest, runtime, manifestDigest, hooks = null }) {
+export function buildPluginProvenance({ manifest, runtime, manifestDigest, hooks = null }: { manifest?: any; runtime?: string; manifestDigest?: any; hooks?: any }) {
   return {
     kind: "pairslash-plugin-provenance",
     format_version: PLUGIN_FORMAT_VERSION,
@@ -62,6 +62,6 @@ export function buildPluginProvenance({ manifest, runtime, manifestDigest, hooks
   };
 }
 
-export function manifestDigestForPlugin(manifest) {
+export function manifestDigestForPlugin(manifest: any) {
   return sha256(stableJson(manifest));
 }

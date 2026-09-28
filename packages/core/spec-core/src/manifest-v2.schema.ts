@@ -42,7 +42,7 @@ import {
   WORKFLOW_CLASSES,
 } from "./constants.ts";
 
-function nonEmptyString(message) {
+function nonEmptyString(message: string) {
   return v.pipe(v.string(message), v.trim(), v.minLength(1, message));
 }
 
@@ -307,10 +307,10 @@ export const packManifestV2Schema = v.object({
   ),
 });
 
-export function safeParsePackManifestV2(input) {
+export function safeParsePackManifestV2(input: any) {
   return v.safeParse(packManifestV2Schema, input);
 }
 
-export function parsePackManifestV2(input) {
+export function parsePackManifestV2(input: any) {
   return v.parse(packManifestV2Schema, input);
 }

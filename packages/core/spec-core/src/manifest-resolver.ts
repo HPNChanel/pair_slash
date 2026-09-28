@@ -1,8 +1,8 @@
-import { SUPPORTED_RUNTIMES, SUPPORTED_TARGETS } from "./constants.ts";
+import { isOneOf, SUPPORTED_RUNTIMES, SUPPORTED_TARGETS } from "./constants.ts";
 import { normalizePackManifestV2 } from "./manifest-v2.normalize.ts";
 import { normalizeRuntime, normalizeTarget } from "./utils.ts";
 
-function assertManifest(manifest) {
+function assertManifest(manifest: any) {
   const normalized = normalizePackManifestV2(manifest, { attachAliases: true });
   if (!normalized) {
     throw new Error("unsupported manifest shape");
@@ -10,10 +10,10 @@ function assertManifest(manifest) {
   return normalized;
 }
 
-export function resolveManifestRuntime(manifest, runtime) {
+export function resolveManifestRuntime(manifest: any, runtime: string) {
   const normalizedManifest = assertManifest(manifest);
   const normalizedRuntime = normalizeRuntime(runtime);
-  if (!SUPPORTED_RUNTIMES.includes(normalizedRuntime)) {
+  if (!isOneOf(normalizedRuntime, SUPPORTED_RUNTIMES)) {
     throw new Error(`unsupported runtime: ${runtime}`);
   }
   if (!normalizedManifest.supported_runtimes.includes(normalizedRuntime)) {
@@ -24,20 +24,20 @@ export function resolveManifestRuntime(manifest, runtime) {
     runtime_range: normalizedManifest.supported_runtime_ranges[normalizedRuntime],
     runtime_binding: normalizedManifest.runtime_bindings[normalizedRuntime],
     assets: normalizedManifest.runtime_assets.entries.filter(
-      (entry) => entry.runtime === "shared" || entry.runtime === normalizedRuntime,
+      (entry: any) => entry.runtime === "shared" || entry.runtime === normalizedRuntime,
     ),
-    ownership_records: normalizedManifest.asset_ownership.records.filter((record) =>
+    ownership_records: normalizedManifest.asset_ownership.records.filter((record: any) =>
       normalizedManifest.runtime_assets.entries
-        .filter((entry) => entry.runtime === "shared" || entry.runtime === normalizedRuntime)
-        .some((entry) => entry.asset_id === record.asset_id),
+        .filter((entry: any) => entry.runtime === "shared" || entry.runtime === normalizedRuntime)
+        .some((entry: any) => entry.asset_id === record.asset_id),
     ),
   };
 }
 
-export function resolveManifestTarget(manifest, target) {
+export function resolveManifestTarget(manifest: any, target: any) {
   const normalizedManifest = assertManifest(manifest);
   const normalizedTarget = normalizeTarget(target);
-  if (!SUPPORTED_TARGETS.includes(normalizedTarget)) {
+  if (!isOneOf(normalizedTarget, SUPPORTED_TARGETS)) {
     throw new Error(`unsupported target: ${target}`);
   }
   if (!normalizedManifest.install_targets.includes(normalizedTarget)) {
@@ -45,11 +45,11 @@ export function resolveManifestTarget(manifest, target) {
   }
   return {
     target: normalizedTarget,
-    smoke_checks: normalizedManifest.smoke_checks.filter((entry) => entry.target === normalizedTarget),
+    smoke_checks: normalizedManifest.smoke_checks.filter((entry: any) => entry.target === normalizedTarget),
   };
 }
 
-export function resolveManifestInstallSpec(manifest, { runtime, target }) {
+export function resolveManifestInstallSpec(manifest: any, { runtime, target }: { runtime: any; target: any }) {
   const normalizedManifest = assertManifest(manifest);
   const runtimeSpec = resolveManifestRuntime(normalizedManifest, runtime);
   const targetSpec = resolveManifestTarget(normalizedManifest, target);
@@ -64,7 +64,7 @@ export function resolveManifestInstallSpec(manifest, { runtime, target }) {
     assets: runtimeSpec.assets,
     ownership_records: runtimeSpec.ownership_records,
     docs_refs: normalizedManifest.docs_refs,
-    smoke_checks: targetSpec.smoke_checks.filter((entry) => entry.runtime === runtimeSpec.runtime),
+    smoke_checks: targetSpec.smoke_checks.filter((entry: any) => entry.runtime === runtimeSpec.runtime),
     update_strategy: normalizedManifest.update_strategy,
     uninstall_strategy: normalizedManifest.uninstall_strategy,
     local_override_policy: normalizedManifest.local_override_policy,

@@ -1,6 +1,7 @@
 import {
   POLICY_DECISIONS,
   POLICY_VERDICT_SCHEMA_VERSION,
+  isOneOf,
   SUPPORTED_RUNTIMES,
   SUPPORTED_TARGETS,
   normalizeRuntime,
@@ -90,7 +91,7 @@ function resolveRuntime(value) {
   }
   try {
     const normalized = normalizeRuntime(value);
-    return SUPPORTED_RUNTIMES.includes(normalized) ? normalized : null;
+    return isOneOf(normalized, SUPPORTED_RUNTIMES) ? normalized : null;
   } catch {
     return null;
   }
@@ -102,7 +103,7 @@ function resolveTarget(value) {
   }
   try {
     const normalized = normalizeTarget(value);
-    return SUPPORTED_TARGETS.includes(normalized) ? normalized : null;
+    return isOneOf(normalized, SUPPORTED_TARGETS) ? normalized : null;
   } catch {
     return null;
   }

@@ -1,35 +1,36 @@
 import {
+  isOneOf,
   LIFECYCLE_REASON_CODES,
   REMEDIATION_ACTION_KINDS,
   WORKFLOW_MATURITY_LEVELS,
   WORKFLOW_MATURITY_STRENGTH_ORDER,
 } from "../constants.ts";
 
-export function push(errors, code, message) {
+export function push(errors: string[], code: string, message: string): void {
   errors.push(`${code} ${message}`);
 }
 
-export function sortStable(values) {
+export function sortStable(values: string[]): string[] {
   return values
     .slice()
     .sort((left, right) => left.localeCompare(right, "en", { sensitivity: "base" }));
 }
 
-export function isObject(value) {
+export function isObject(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
-export function toPosixPath(value) {
+export function toPosixPath(value: string): string {
   return value.replace(/\\/g, "/");
 }
 
 export const SHARED_RUNTIME_SURFACE_MATRIX = "docs/compatibility/runtime-surface-matrix.yaml";
 
-export function isLikelyRemoteRef(value) {
+export function isLikelyRemoteRef(value: unknown): boolean {
   return typeof value === "string" && /^[a-z]+:\/\//i.test(value);
 }
 
-export function isSharedRuntimeMatrixRef(value) {
+export function isSharedRuntimeMatrixRef(value: unknown): boolean {
   if (typeof value !== "string" || value.trim() === "" || isLikelyRemoteRef(value)) {
     return false;
   }
@@ -37,7 +38,7 @@ export function isSharedRuntimeMatrixRef(value) {
   return toPosixPath(pathPart) === SHARED_RUNTIME_SURFACE_MATRIX;
 }
 
-export function isAuthoritativeLiveRuntimeRecordRef(value) {
+export function isAuthoritativeLiveRuntimeRecordRef(value: unknown): boolean {
   if (typeof value !== "string" || value.trim() === "" || isLikelyRemoteRef(value)) {
     return false;
   }
@@ -49,7 +50,13 @@ export function isAuthoritativeLiveRuntimeRecordRef(value) {
   return normalizedPath.startsWith("docs/evidence/live-runtime/") && normalizedPath.endsWith(".yaml");
 }
 
-export function validateEvidenceRefPolicy(values, field, errors, code, { requireAuthoritativeLiveRuntimeRecord = false } = {}) {
+export function validateEvidenceRefPolicy(
+  values: unknown[],
+  field: string,
+  errors: string[],
+  code: string,
+  { requireAuthoritativeLiveRuntimeRecord = false }: { requireAuthoritativeLiveRuntimeRecord?: boolean } = {},
+): void {
   for (const value of values) {
     if (isLikelyRemoteRef(value)) {
       push(errors, code, `${field} must use repo-local evidence references`);
@@ -69,21 +76,21 @@ export const WORKFLOW_TRANSITION_MAP = Object.freeze({
   deprecated: new Set(["deprecated"]),
 });
 
-export function workflowMaturityRank(level) {
-  if (!WORKFLOW_MATURITY_LEVELS.includes(level)) {
+export function workflowMaturityRank(level: unknown): number {
+  if (!isOneOf(level, WORKFLOW_MATURITY_LEVELS)) {
     return -1;
   }
   return WORKFLOW_MATURITY_STRENGTH_ORDER[level] ?? -1;
 }
 
-export function isLegalWorkflowTransition(from, to) {
-  if (!WORKFLOW_MATURITY_LEVELS.includes(from) || !WORKFLOW_MATURITY_LEVELS.includes(to)) {
+export function isLegalWorkflowTransition(from: unknown, to: unknown): boolean {
+  if (!isOneOf(from, WORKFLOW_MATURITY_LEVELS) || !isOneOf(to, WORKFLOW_MATURITY_LEVELS)) {
     return false;
   }
   return WORKFLOW_TRANSITION_MAP[from]?.has(to) ?? false;
 }
 
-export function validateObject(value, field, errors, code) {
+export function validateObject(value: unknown, field: string, errors: string[], code: string): value is Record<string, any> {
   if (!isObject(value)) {
     push(errors, code, `${field} must be an object`);
     return false;
@@ -91,7 +98,7 @@ export function validateObject(value, field, errors, code) {
   return true;
 }
 
-export function validateNonEmptyString(value, field, errors, code) {
+export function validateNonEmptyString(value: unknown, field: string, errors: string[], code: string): boolean {
   if (typeof value !== "string" || value.trim() === "") {
     push(errors, code, `${field} must be a non-empty string`);
     return false;
@@ -99,7 +106,7 @@ export function validateNonEmptyString(value, field, errors, code) {
   return true;
 }
 
-export function validateBoolean(value, field, errors, code) {
+export function validateBoolean(value: unknown, field: string, errors: string[], code: string): boolean {
   if (typeof value !== "boolean") {
     push(errors, code, `${field} must be boolean`);
     return false;
@@ -107,13 +114,19 @@ export function validateBoolean(value, field, errors, code) {
   return true;
 }
 
-export function validateStringArray(value, field, errors, code, { allowEmpty = false } = {}) {
+export function validateStringArray(
+  value: unknown,
+  field: string,
+  errors: string[],
+  code: string,
+  { allowEmpty = false }: { allowEmpty?: boolean } = {},
+): string[] {
   if (!Array.isArray(value) || (!allowEmpty && value.length === 0)) {
     push(errors, code, `${field} must be ${allowEmpty ? "a list" : "a non-empty list"}`);
     return [];
   }
-  const seen = new Set();
-  const out = [];
+  const seen = new Set<string>();
+  const out: string[] = [];
   for (const item of value) {
     if (typeof item !== "string" || item.trim() === "") {
       push(errors, code, `${field} entries must be non-empty strings`);
@@ -129,19 +142,19 @@ export function validateStringArray(value, field, errors, code, { allowEmpty = f
   return out;
 }
 
-export function validateLifecycleReasonCodes(value, field, errors, code) {
+export function validateLifecycleReasonCodes(value: unknown, field: string, errors: string[], code: string): void {
   if (!Array.isArray(value)) {
     push(errors, code, `${field} must be a list`);
     return;
   }
   for (const reasonCode of value) {
-    if (!LIFECYCLE_REASON_CODES.includes(reasonCode)) {
+    if (!isOneOf(reasonCode, LIFECYCLE_REASON_CODES)) {
       push(errors, code, `${field} contains unsupported reason code ${reasonCode}`);
     }
   }
 }
 
-export function validateRemediationActions(value, field, errors, code) {
+export function validateRemediationActions(value: unknown, field: string, errors: string[], code: string): void {
   if (!Array.isArray(value)) {
     push(errors, code, `${field} must be a list`);
     return;
@@ -152,7 +165,7 @@ export function validateRemediationActions(value, field, errors, code) {
       continue;
     }
     validateNonEmptyString(action?.action_id, `${field}[].action_id`, errors, code);
-    if (!REMEDIATION_ACTION_KINDS.includes(action?.action_kind)) {
+    if (!isOneOf(action?.action_kind, REMEDIATION_ACTION_KINDS)) {
       push(errors, code, `${field}[].action_kind must be one of ${REMEDIATION_ACTION_KINDS.join(", ")}`);
     }
     validateNonEmptyString(action?.summary, `${field}[].summary`, errors, code);
@@ -182,11 +195,11 @@ export function validateRemediationActions(value, field, errors, code) {
   }
 }
 
-export function cloneRecord(value) {
+export function cloneRecord<T>(value: T): T {
   return JSON.parse(JSON.stringify(value));
 }
 
-export function formatIssuePath(issue) {
+export function formatIssuePath(issue: { path?: unknown } | null | undefined): string {
   if (!Array.isArray(issue?.path) || issue.path.length === 0) {
     return "manifest";
   }

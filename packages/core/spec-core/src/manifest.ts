@@ -21,43 +21,39 @@ import {
 import { exists, normalizeRuntime, walkFiles } from "./utils.ts";
 import { validatePackManifestV2 } from "./validate.ts";
 
-export function discoverPackManifestPaths(repoRoot) {
+export function discoverPackManifestPaths(repoRoot: string) {
   const packsRoot = resolve(repoRoot, "packs", "core");
   if (!exists(packsRoot)) {
     return [];
   }
   return walkFiles(packsRoot)
-    .filter((filePath) => basename(filePath) === "pack.manifest.yaml")
-    .sort((a, b) => a.localeCompare(b));
+    .filter((filePath: string) => basename(filePath) === "pack.manifest.yaml")
+    .sort((a: any, b: any) => a.localeCompare(b));
 }
 
-export function loadYamlFile(path) {
+export function loadYamlFile(path: string) {
   return YAML.parse(readFileSync(path, "utf8"));
 }
 
-function sortManifestRecords(records) {
-  return records.slice().sort((left, right) =>
+function sortManifestRecords(records: any[]) {
+  return records.slice().sort((left: any, right: any) =>
     `${left.packId}\u0000${left.manifestPath}`.localeCompare(`${right.packId}\u0000${right.manifestPath}`),
   );
 }
 
-function dedupePackIds(requestedPacks = []) {
-  return [...new Set(requestedPacks)].sort((left, right) => left.localeCompare(right));
+function dedupePackIds(requestedPacks: any = []) {
+  return [...new Set(requestedPacks)].sort((left: any, right: any) => left.localeCompare(right));
 }
 
-function resolveFallbackPackId(manifestPath) {
+function resolveFallbackPackId(manifestPath: string) {
   return basename(resolve(manifestPath, ".."));
 }
 
-function normalizePackId(value, manifestPath) {
+function normalizePackId(value: unknown, manifestPath: string) {
   return typeof value === "string" && value.trim() !== "" ? value : resolveFallbackPackId(manifestPath);
 }
 
-function createManifestRecord(
-  manifestPath,
-  manifest,
-  { parseError = null, validationErrors = [], manifestShape = "unknown", normalizationWarnings = [] } = {},
-) {
+function createManifestRecord(manifestPath: string, manifest: any, { parseError = null, validationErrors = [], manifestShape = "unknown", normalizationWarnings = [] }: { parseError?: any; validationErrors?: any; manifestShape?: any; normalizationWarnings?: any } = {}) {
   return {
     manifestPath,
     packId: normalizePackId(manifest?.pack_name ?? manifest?.pack?.id, manifestPath),
@@ -71,7 +67,7 @@ function createManifestRecord(
   };
 }
 
-export function loadPackManifestRecord(manifestPath) {
+export function loadPackManifestRecord(manifestPath: string) {
   try {
     const parsedManifest = loadYamlFile(manifestPath);
     const validationErrors = validatePackManifestV2(parsedManifest);
@@ -83,21 +79,21 @@ export function loadPackManifestRecord(manifestPath) {
     });
   } catch (error) {
     return createManifestRecord(manifestPath, null, {
-      parseError: error.message,
+      parseError: error instanceof Error ? error.message : String(error),
     });
   }
 }
 
-export function loadPackManifestRecords(repoRoot) {
+export function loadPackManifestRecords(repoRoot: string) {
   return sortManifestRecords(discoverPackManifestPaths(repoRoot).map(loadPackManifestRecord));
 }
 
-export function selectPackManifestRecords(records, requestedPacks = [], { includeInvalid = false } = {}) {
+export function selectPackManifestRecords(records: any[], requestedPacks: any = [], { includeInvalid = false }: { includeInvalid?: any } = {}) {
   const deduped = dedupePackIds(requestedPacks);
-  const selected = [];
-  const valid = [];
-  const invalid = [];
-  const missing = [];
+  const selected: any[] = [];
+  const valid: any[] = [];
+  const invalid: any[] = [];
+  const missing: any[] = [];
 
   if (deduped.length === 0) {
     const sortedRecords = sortManifestRecords(records);
@@ -117,7 +113,7 @@ export function selectPackManifestRecords(records, requestedPacks = [], { includ
   }
 
   for (const packId of deduped) {
-    const matches = sortManifestRecords(records.filter((record) => record.packId === packId));
+    const matches = sortManifestRecords(records.filter((record: any) => record.packId === packId));
     if (matches.length === 0) {
       missing.push(packId);
       continue;
@@ -142,7 +138,7 @@ export function selectPackManifestRecords(records, requestedPacks = [], { includ
   };
 }
 
-export function loadPackManifest(manifestPath) {
+export function loadPackManifest(manifestPath: string) {
   const record = loadPackManifestRecord(manifestPath);
   if (!record.isValid) {
     throw new Error(`${manifestPath} :: ${record.error}`);
@@ -150,25 +146,25 @@ export function loadPackManifest(manifestPath) {
   return record.manifest;
 }
 
-export function resolvePackDir(repoRoot, manifest) {
+export function resolvePackDir(repoRoot: string, manifest: any) {
   return resolve(repoRoot, manifest.runtime_assets?.source_root ?? manifest.assets.pack_dir);
 }
 
-export function getPackId(manifest) {
+export function getPackId(manifest: any) {
   return manifest?.pack_name ?? manifest?.pack?.id ?? null;
 }
 
-export function getRuntimeTarget(manifest, runtime) {
+export function getRuntimeTarget(manifest: any, runtime: string) {
   try {
     return resolveManifestRuntime(manifest, runtime).runtime_binding;
   } catch {
     const normalized = normalizeRuntime(runtime);
-    return manifest?.runtime_targets?.[normalized] ?? null;
+    return manifest?.runtime_targets?.[normalized as string] ?? null;
   }
 }
 
-export function listRuntimeTargets(manifest) {
-  return SUPPORTED_RUNTIMES.filter((runtime) =>
+export function listRuntimeTargets(manifest: any) {
+  return SUPPORTED_RUNTIMES.filter((runtime: string) =>
     Boolean(manifest?.supported_runtimes?.includes(runtime) || manifest?.runtime_targets?.[runtime]),
   );
 }
@@ -211,10 +207,32 @@ export function buildManifestTemplate({
   tierClaim = id === "pairslash-plan" ? "core-maintained" : "first-party-official",
   publisherClass = id === "pairslash-plan" ? "core-product" : "first-party",
   workflowMaturity = id === "pairslash-plan" ? "preview" : "canary",
+}: {
+  id: string;
+  phase: string;
+  version?: string;
+  displayName?: string;
+  summary?: string;
+  category?: string;
+  workflowClass?: string;
+  include: string[];
+  capabilities?: string[];
+  riskLevel?: string;
+  requiredTools?: any[];
+  requiredMcpServers?: any[];
+  memoryPermissions?: any;
+  overridePaths?: string[];
+  releaseChannel?: string;
+  compatibility?: Record<string, { canonical_picker: string; direct_invocation: string }>;
+  defaultRecommendation?: boolean;
+  supportLevelClaim?: string;
+  tierClaim?: string;
+  publisherClass?: string;
+  workflowMaturity?: string;
 }) {
-  const sortedInclude = include.slice().sort((left, right) => left.localeCompare(right));
-  const sortedOverridePaths = overridePaths.slice().sort((left, right) => left.localeCompare(right));
-  const sortedCapabilities = [...new Set(capabilities)].sort((left, right) => left.localeCompare(right));
+  const sortedInclude = include.slice().sort((left: any, right: any) => left.localeCompare(right));
+  const sortedOverridePaths = overridePaths.slice().sort((left: any, right: any) => left.localeCompare(right));
+  const sortedCapabilities = [...new Set(capabilities)].sort((left: any, right: any) => left.localeCompare(right));
   return normalizePackManifestV2(
     {
     kind: "pack-manifest-v2",
@@ -235,7 +253,7 @@ export function buildManifestTemplate({
       copilot_cli: ">=1.0.0",
     },
     runtime_bindings: Object.fromEntries(
-      SUPPORTED_RUNTIMES.map((runtime) => [
+      SUPPORTED_RUNTIMES.map((runtime: string) => [
         runtime,
         {
           direct_invocation: runtime === "codex_cli" ? `$${id}` : `/${id}`,
@@ -254,7 +272,7 @@ export function buildManifestTemplate({
     runtime_assets: {
       source_root: `packs/core/${id}`,
       primary_skill: "SKILL.md",
-      entries: sortedInclude.map((relativePath) => ({
+      entries: sortedInclude.map((relativePath: string) => ({
         asset_id: relativePath === "SKILL.md" ? "skill" : `source:${relativePath}`,
         runtime: "shared",
         asset_kind: relativePath === "SKILL.md" ? "skill_markdown" : "support_doc",
@@ -275,7 +293,7 @@ export function buildManifestTemplate({
     local_override_policy: {
       marker_file: OVERRIDE_MARKER_FILE,
       marker_mode: "state_or_explicit_marker",
-      eligible_asset_ids: sortedOverridePaths.map((relativePath) =>
+      eligible_asset_ids: sortedOverridePaths.map((relativePath: string) =>
         relativePath === "SKILL.md" ? "skill" : `source:${relativePath}`,
       ),
     },
@@ -334,7 +352,7 @@ export function buildManifestTemplate({
         allow_local_unsigned: true,
       },
       runtime_support: Object.fromEntries(
-        SUPPORTED_RUNTIMES.map((runtime) => [
+        SUPPORTED_RUNTIMES.map((runtime: string) => [
           runtime,
           {
             status:

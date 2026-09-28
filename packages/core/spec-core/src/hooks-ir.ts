@@ -32,22 +32,22 @@ const HOOK_EVENT_BINDINGS = {
 export const PLUGIN_HOOKS_CONFIG_RELPATH = "hooks/hooks.json";
 export const PLUGIN_PREFLIGHT_SCRIPT_RELPATH = "scripts/pairslash-preflight.mjs";
 
-export function isPairslashHookEvent(value) {
-  return (PAIRSLASH_HOOK_EVENTS as readonly string[]).includes(value);
+export function isPairslashHookEvent(value: unknown) {
+  return typeof value === "string" && (PAIRSLASH_HOOK_EVENTS as readonly string[]).includes(value);
 }
 
-export function normalizeHookEvents(events) {
+export function normalizeHookEvents(events: any) {
   if (!Array.isArray(events)) {
     return [...DEFAULT_PREFLIGHT_EVENTS];
   }
-  const filtered = events.filter((entry) => isPairslashHookEvent(entry));
+  const filtered = events.filter((entry: any) => isPairslashHookEvent(entry));
   return filtered.length > 0 ? filtered : [...DEFAULT_PREFLIGHT_EVENTS];
 }
 
 // Resolution rules (plugin-emission-contract): `emit` defaults to true for
 // write-authority packs; a manifest may declare hooks.preflight.emit to
 // override. `events` defaults to DEFAULT_PREFLIGHT_EVENTS.
-export function resolvePreflightHooks(manifest) {
+export function resolvePreflightHooks(manifest: any) {
   const declared = manifest?.hooks?.preflight ?? null;
   const workflowClass = manifest?.workflow_class ?? manifest?.pack?.workflow_class ?? null;
   const emit =
@@ -56,10 +56,11 @@ export function resolvePreflightHooks(manifest) {
   return { emit, events, declared: declared != null };
 }
 
-export function listNativeHookBindings({ runtime, events }) {
-  const bindings = HOOK_EVENT_BINDINGS[runtime] ?? {};
+export function listNativeHookBindings({ runtime, events }: { runtime: string; events?: any }) {
+  const bindings: Record<string, { native: string; channel: string | null }> =
+    HOOK_EVENT_BINDINGS[runtime as keyof typeof HOOK_EVENT_BINDINGS] ?? {};
   const requested = new Set(normalizeHookEvents(events));
-  return PAIRSLASH_HOOK_EVENTS.filter((event) => requested.has(event)).map((event) => {
+  return PAIRSLASH_HOOK_EVENTS.filter((event: any) => requested.has(event)).map((event: any) => {
     const binding = bindings[event] ?? null;
     return {
       canonical: event,
@@ -70,11 +71,11 @@ export function listNativeHookBindings({ runtime, events }) {
   });
 }
 
-export function listAdvisoryHookBindings({ runtime, events }) {
-  return listNativeHookBindings({ runtime, events }).filter((binding) => binding.advisory);
+export function listAdvisoryHookBindings({ runtime, events }: { runtime: string; events?: any }) {
+  return listNativeHookBindings({ runtime, events }).filter((binding: any) => binding.advisory);
 }
 
-function buildReminderText(ir) {
+function buildReminderText(ir: any) {
   const memoryAccess = ir.policy?.memory_permissions?.global_project_memory ?? "read";
   return [
     `PairSlash preflight for ${ir.pack.id} (${ir.pack.workflow_class}):`,
@@ -84,7 +85,7 @@ function buildReminderText(ir) {
   ].join(" ");
 }
 
-function buildScriptOutputs({ runtime, bindings, reminder }) {
+function buildScriptOutputs({ runtime, bindings, reminder }: { runtime: string; bindings?: any; reminder?: any }) {
   const outputs: Record<string, unknown> = {};
   for (const binding of bindings) {
     if (binding.channel === "additionalContext") {
@@ -103,7 +104,7 @@ function buildScriptOutputs({ runtime, bindings, reminder }) {
 // canonical PairSlash event name and exactly one JSON object is written to
 // stdout. It never blocks, denies, reads stdin payloads for decisions, or
 // mutates files — hooks only inject PairSlash advisory context.
-export function renderPreflightScript({ ir, runtime }) {
+export function renderPreflightScript({ ir, runtime }: { ir: any; runtime: string }) {
   const bindings = listAdvisoryHookBindings({ runtime, events: ir.hooks?.preflight?.events });
   const reminder = buildReminderText(ir);
   const outputs = buildScriptOutputs({ runtime, bindings, reminder });
@@ -119,7 +120,7 @@ export function renderPreflightScript({ ir, runtime }) {
   ].join("\n");
 }
 
-function pluginScriptCommand(runtime, event) {
+function pluginScriptCommand(runtime: string, event: any) {
   if (runtime === "codex_cli") {
     return {
       command: `node "$PLUGIN_ROOT/${PLUGIN_PREFLIGHT_SCRIPT_RELPATH}" ${event}`,
@@ -137,12 +138,12 @@ function pluginScriptCommand(runtime, event) {
 // path through the plugin.json "hooks" pointer (legacy manifest format).
 // Returns null when the pack has no advisory-capable events on this runtime —
 // an empty hook config is emitted nowhere, never as a dead stub.
-export function renderPluginHooksConfig({ ir, runtime }) {
+export function renderPluginHooksConfig({ ir, runtime }: { ir: any; runtime: string }) {
   const bindings = listAdvisoryHookBindings({ runtime, events: ir.hooks?.preflight?.events });
   if (bindings.length === 0) {
     return null;
   }
-  const hooks = {};
+  const hooks: Record<string, any> = {};
   for (const binding of bindings) {
     const command = pluginScriptCommand(runtime, binding.canonical);
     hooks[binding.native] =
@@ -170,17 +171,17 @@ export function renderPluginHooksConfig({ ir, runtime }) {
 // Skill-mode advisory surface: a YAML declaration listing canonical events,
 // native bindings, skipped events, and wiring instructions. Runtimes do not
 // auto-load it — `--emit plugin` produces the wired artifacts.
-export function buildPreflightAdvisory({ ir, runtime }) {
+export function buildPreflightAdvisory({ ir, runtime }: { ir: any; runtime: string }) {
   const preflight = ir.hooks?.preflight ?? { emit: false, events: [], declared: false };
   const bindings = listNativeHookBindings({ runtime, events: preflight.events });
   return {
     enabled: preflight.emit === true,
     declared_in_manifest: preflight.declared === true,
     canonical_events: preflight.events,
-    native_events: bindings.filter((binding) => binding.advisory),
+    native_events: bindings.filter((binding: any) => binding.advisory),
     skipped_events: bindings
-      .filter((binding) => !binding.advisory)
-      .map((binding) => ({
+      .filter((binding: any) => !binding.advisory)
+      .map((binding: any) => ({
         canonical: binding.canonical,
         native: binding.native,
         reason: "no advisory output channel on this runtime",
