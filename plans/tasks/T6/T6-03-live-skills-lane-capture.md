@@ -1,0 +1,66 @@
+---
+id: T6-03
+track: T6
+title: R3 — live /skills evidence capture on ≥1 lane
+status: todo
+depends_on: []
+est_size: M
+claimed_by:
+claimed_at:
+completed_at:
+evidence:
+blocked_reason:
+---
+
+## Objective
+
+Capture canonical `/skills` live evidence on at least one runtime lane (recommend `codex-cli-repo-macos` — closest to ready) and promote it from `prep`/`degraded` to `preview` via a schema-valid lane record.
+
+## Context & sources
+
+- Runbook policy (runtime-surface-matrix.yaml): scripted-allowed steps (`host_profile_capture`, `runtime_version_capture`, `doctor`, `preview_install`, `install_apply`); manual-required steps (`canonical_skills_listing`, `workflow_selection_from_skills`, `workflow_prompt_and_response_capture`, `memory_write_preview_observation`).
+- **New wrinkle:** Copilot's `/skills` is now a dashboard (CP-05); Codex `/skills` is a picker with `$`-mention. The lane record schema may need a `surface_variant` field to honestly describe which interaction was captured — extend schema minimally if absent.
+- Windows promotion gate requires `install_apply`, `canonical_picker`, `workflow_execution` — extra requirements on Windows lanes.
+- This is human-in-loop: a real interactive runtime session on the target lane.
+
+## Files to touch
+
+- `docs/evidence/live-runtime/<lane>.{md,yaml}` — new/updated records per `schema.live-runtime-lane-record.yaml`
+- `docs/compatibility/runtime-surface-matrix.yaml` — `actual_evidence_class: live_verification`, `support_level: preview`, `last_verified_at`, `surface_verdicts.*` updates
+- `docs/compatibility/runtime-verification.md` — promotion note
+- Regenerated `compatibility-matrix.md`
+- Possibly lane-record schema file — only to add `surface_variant` if needed
+- Do NOT touch: other lanes (one lane at a time), workflow maturity labels (they derive via catalog — verify the demotion machinery computes honestly)
+
+## Work steps
+
+1. Choose lane (recommend codex-cli-repo-macos); read the lane's runbook_policy row.
+2. Perform scripted steps on the lane: host capture, `codex --version`, `pairslash doctor`, `preview install`, `install --apply`.
+3. Perform manual-required steps in the live session: open `/skills`, verify pack listed, select workflow (e.g., pairslash-plan), capture prompt+response, observe memory-write preview path.
+4. Write lane records (`.yaml` per schema + `.md` narrative) with artifact paths.
+5. Update matrix lane: `support_level: preview`, evidence class, timestamps, surface verdicts.
+6. Regenerate matrix docs; verify catalog maturity machinery reflects honestly (likely still `canary` — expected, don't overclaim).
+7. Gates incl. `sync:compat-lab -- --check`, test:release.
+
+## Constraints (STRICT)
+
+- MUST follow the scripted-vs-manual boundary exactly — scripted steps can't substitute manual ones (evidence policy).
+- MUST NOT claim `stable-tested` — that needs repeated verification across hosts; this task targets `preview` only.
+- MUST record the actual `/skills` surface variant observed (picker vs dashboard) — evidence must describe reality.
+- MUST NOT fabricate any capture — absence of runtime access → `blocked` with the exact capture protocol for a human.
+- Lane record MUST validate against the schema.
+
+## Acceptance gates
+
+- [ ] ≥1 lane at `preview` with schema-valid record, OR blocked with precise run-sheet
+- [ ] `sync:compat-lab -- --check` green; matrix regenerated
+- [ ] Catalog maturity labels computed correctly (no accidental promotion)
+- [ ] Gates green
+
+## Evidence to record
+
+- Lane record paths; captured artifacts list; matrix diff.
+
+## Rollback
+
+Revert matrix + lane record edits in one commit; evidence captures retained (negative/positive history is valuable).
