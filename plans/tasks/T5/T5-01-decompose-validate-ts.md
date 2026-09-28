@@ -2,13 +2,18 @@
 id: T5-01
 track: T5
 title: Decompose spec-core/validate.ts into validate/ modules + barrel
-status: todo
+status: done
 depends_on: []
 est_size: L
-claimed_by:
-claimed_at:
-completed_at:
+claimed_by: devin
+claimed_at: 2026-09-28
+completed_at: 2026-09-28
 evidence:
+  - "export-name diff pre/post: empty (16 exported functions identical — verified mechanically via git show + grep)"
+  - "module map: validate/primitives.ts (20 decls: push/isObject/string+reason-code validators), validate/manifest-fields.ts (6: runtime-ranges/capabilities/tools/mcp/memory/targets), validate/canonical.ts (10: validateCanonical*+derive), validate/records/{manifest,install,doctor,observability,explainability}.ts (16 public validators + 5 private helpers relocated with sole consumers)"
+  - "validate.ts barrel = re-exports only; helpers exported per-module for cross-module use but NOT re-exported (internal API unchanged)"
+  - "mechanical split script: .pairslash/tmp/split-validate.mjs (verbatim block relocation, computed exact imports — noUnusedLocals enforced)"
+  - "tests: spec-core 96/96 unmodified pass; gates: typecheck pass, lint pass, npm test all pass"
 ---
 
 ## Objective
@@ -45,10 +50,10 @@ Split `packages/core/spec-core/src/validate.ts` (~155KB, ~55 exported functions)
 
 ## Acceptance gates
 
-- [ ] Export-name diff empty (pre vs post)
-- [ ] spec-core tests green unmodified
-- [ ] `npm run lint`, `npm run test`, `npm run typecheck` green
-- [ ] Barrel file is re-exports only (no logic left)
+- [x] Export-name diff empty (pre vs post)
+- [x] spec-core tests green unmodified
+- [x] `npm run lint`, `npm run test`, `npm run typecheck` green
+- [x] Barrel file is re-exports only (no logic left)
 
 ## Evidence to record
 
