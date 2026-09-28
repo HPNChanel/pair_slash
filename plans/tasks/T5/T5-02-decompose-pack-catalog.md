@@ -2,13 +2,18 @@
 id: T5-02
 track: T5
 title: Decompose spec-core/pack-catalog.ts into catalog/ modules + barrel
-status: todo
+status: done
 depends_on: [T5-01]
 est_size: L
 claimed_by:
 claimed_at:
-completed_at:
+completed_at: 2026-09-28
 evidence:
+  - "Export list diff: empty — 14 public names identical pre/post (4 DEFAULT_PUBLIC_* consts + 10 functions), verified mechanically."
+  - "Module map: catalog/constants.ts (4 public frozen objects), catalog/helpers.ts (40 private consts+helpers), catalog/workflow-maturity.ts (18), catalog/lane-records.ts (3), catalog/builders.ts (15 incl. all public builders/loaders). pack-catalog.ts is a 21-line named-re-export barrel only."
+  - "Import graph is acyclic: helpers→(constants,utils); constants→helpers; workflow-maturity→helpers; lane-records→helpers+workflow-maturity; builders→helpers+lane-records+workflow-maturity. No catalog/*→validate/* edge."
+  - "Split tool: .pairslash/tmp/split-pack-catalog.mjs (depth-aware relative imports, default-import handling, comment/string-stripped usage scan)."
+  - "Gates: npm run typecheck clean; npm run lint clean; npm test all files green (spec-core 127/127 across 7 test files); npm run test:release passed (11/11 packs, gh publish dry-run verdict pass)."
 ---
 
 ## Objective
@@ -42,9 +47,9 @@ Split `packages/core/spec-core/src/pack-catalog.ts` (~86KB, ~66 functions) into 
 
 ## Acceptance gates
 
-- [ ] Export diff empty
-- [ ] Tests green unmodified
-- [ ] Gates green
+- [x] Export diff empty
+- [x] Tests green unmodified
+- [x] Gates green
 
 ## Evidence to record
 
