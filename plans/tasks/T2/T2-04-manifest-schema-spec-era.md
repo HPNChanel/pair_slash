@@ -20,7 +20,7 @@ evidence:
   back_compat: "2.1.0 fixture manifests validate clean; spec_era defaults to dual with recorded warning"
   tests: "4 new spec_era tests (positive, required-at-2.2.0, normalize-default, invalid era) — spec-core 54/54"
   gates: "lint OK; typecheck OK; test OK; test:compat OK; sync:compat-lab --check OK"
-  commit: pending
+  commit: afefdde
 ---
 
 ## Objective
