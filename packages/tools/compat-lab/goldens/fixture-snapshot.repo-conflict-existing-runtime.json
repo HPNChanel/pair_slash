@@ -846,7 +846,10 @@
         },
         "target": "repo",
         "warnings": [
-          "lint-warning:LINT-RUNTIME-004:pairslash-plan:shared: runtime support has degraded/unverified surfaces: copilot_cli.direct_invocation=unverified"
+          "lint-warning:LINT-RUNTIME-004:pairslash-plan:shared: runtime support has degraded/unverified surfaces: copilot_cli.direct_invocation=unverified",
+          "lint-warning:LINT-SKILLSPEC-003:pairslash-plan:shared: optional field \"compatibility\" is not set",
+          "lint-warning:LINT-SKILLSPEC-003:pairslash-plan:shared: optional field \"license\" is not set",
+          "lint-warning:LINT-SKILLSPEC-003:pairslash-plan:shared: optional field \"metadata\" is not set"
         ]
       }
     },
@@ -1556,7 +1559,10 @@
         },
         "target": "user",
         "warnings": [
-          "lint-warning:LINT-RUNTIME-004:pairslash-plan:shared: runtime support has degraded/unverified surfaces: copilot_cli.direct_invocation=unverified"
+          "lint-warning:LINT-RUNTIME-004:pairslash-plan:shared: runtime support has degraded/unverified surfaces: copilot_cli.direct_invocation=unverified",
+          "lint-warning:LINT-SKILLSPEC-003:pairslash-plan:shared: optional field \"compatibility\" is not set",
+          "lint-warning:LINT-SKILLSPEC-003:pairslash-plan:shared: optional field \"license\" is not set",
+          "lint-warning:LINT-SKILLSPEC-003:pairslash-plan:shared: optional field \"metadata\" is not set"
         ]
       }
     }

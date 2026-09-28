@@ -2,13 +2,17 @@
 id: T2-01
 track: T2
 title: Agent Skills spec validator in spec-core + lint-bridge wiring
-status: todo
+status: done
 depends_on: []
 est_size: M
-claimed_by:
-claimed_at:
-completed_at:
+claimed_by: devin-session
+claimed_at: 2026-09-28
+completed_at: 2026-09-28
 evidence:
+  - packages/core/spec-core/src/skill-spec.ts — full spec validator (name charset/length/edge-hyphens/dir-match, description cap, license/compatibility/metadata/allowed-tools types, control chars, wrong-casing, duplicate keys via uniqueKeys, unknown fields as warnings)
+  - lint rule LINT-SKILLSPEC-001/002/003 wired in lint-bridge; all 11 core packs pass, 33 informational warnings (missing optional fields — T2-02 populates)
+  - packages/core/spec-core/tests/skill-spec.test.js — 14 tests incl. all-packs conformance sweep; registered in run-compat-lab-tests.mjs
+  - gates: lint, typecheck, npm run test, sync:compat-lab --check green; no as any/ts-ignore added
 ---
 
 ## Objective

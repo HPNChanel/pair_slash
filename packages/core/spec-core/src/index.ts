@@ -11,6 +11,7 @@ export * from "./project-memory.ts";
 export * from "./read-authority.ts";
 export * from "./release-trust.ts";
 export * from "./runtime-support.ts";
+export * from "./skill-spec.ts";
 export * from "./runtime-range.ts";
 export * from "./utils.ts";
 export * from "./validate.ts";

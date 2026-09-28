@@ -26,6 +26,7 @@ import {
   selectPackManifestRecords,
   validateRuntimeRange,
   validateLintReport,
+  validateSkillSpec,
   WORKFLOW_MATURITY_LEVELS,
   WORKFLOW_MATURITY_STRENGTH_ORDER,
 } from "@pairslash/spec-core";
@@ -392,6 +393,69 @@ function applyRuntimeRangeRule(entry, checks, target) {
       message: "runtime ranges are parseable",
     }),
   );
+}
+
+function applySkillSpecRule(entry, checks, target) {
+  const skillPath = join(dirname(entry.manifestPath), "SKILL.md");
+  if (!existsSync(skillPath)) {
+    checks.push(
+      createCheck({
+        code: "LINT-SKILLSPEC-001",
+        result: "error",
+        packId: entry.packId,
+        target,
+        path: entry.manifestPath,
+        message: "SKILL.md is missing next to pack.manifest.yaml",
+        remediation: "Add a SKILL.md with spec-compliant frontmatter (agentskills.io).",
+      }),
+    );
+    return;
+  }
+
+  const verdict = validateSkillSpec({
+    content: readFileSync(skillPath, "utf8"),
+    dirName: dirname(entry.manifestPath),
+  });
+  if (!verdict.ok) {
+    for (const message of verdict.errors) {
+      checks.push(
+        createCheck({
+          code: "LINT-SKILLSPEC-002",
+          result: "error",
+          packId: entry.packId,
+          target,
+          path: skillPath,
+          message,
+          remediation: "Fix SKILL.md frontmatter to satisfy the Agent Skills specification.",
+        }),
+      );
+    }
+  }
+  for (const message of verdict.warnings) {
+    checks.push(
+      createCheck({
+        code: "LINT-SKILLSPEC-003",
+        result: "warning",
+        packId: entry.packId,
+        target,
+        path: skillPath,
+        message,
+        remediation: null,
+      }),
+    );
+  }
+  if (verdict.ok) {
+    checks.push(
+      createCheck({
+        code: "LINT-SKILLSPEC-001",
+        result: "pass",
+        packId: entry.packId,
+        target,
+        path: skillPath,
+        message: `SKILL.md satisfies the Agent Skills spec (${verdict.spec})`,
+      }),
+    );
+  }
 }
 
 function applyTriggerRule(entry, checks, target) {
@@ -1632,6 +1696,7 @@ export function runLintBridge({
       continue;
     }
     validEntries.push(entry);
+    applySkillSpecRule(entry, checks, normalizedTarget);
     applyTriggerRule(entry, checks, normalizedTarget);
     applyRuntimeRangeRule(entry, checks, normalizedTarget);
     applyRuntimeSupportRule(entry, checks, normalizedTarget);
