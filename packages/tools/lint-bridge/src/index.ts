@@ -15,6 +15,7 @@ import * as runtimeCopilotAdapter from "@pairslash/runtime-copilot-adapter";
 import {
   CONTRACT_ENVELOPE_SCHEMA_VERSION,
   LINT_REPORT_SCHEMA_VERSION,
+  MCP_SPEC_ERAS,
   OWNERSHIP_FILE,
   POLICY_VERDICT_SCHEMA_VERSION,
   SUPPORTED_RUNTIMES,
@@ -715,6 +716,67 @@ function applyMcpRule(entry, checks, target) {
       message: "MCP declaration is coherent",
     }),
   );
+}
+
+function applyMcpEraRule(entry, checks, target) {
+  const servers = entry.manifest?.required_mcp_servers ?? [];
+  if (servers.length === 0) {
+    return;
+  }
+  const invalidEras = unique(
+    servers
+      .filter((server) => server?.spec_era !== undefined && !MCP_SPEC_ERAS.includes(server.spec_era))
+      .map((server) => `${server?.id}:${server?.spec_era}`),
+  );
+  if (invalidEras.length > 0) {
+    checks.push(
+      createCheck({
+        code: "LINT-MCP-006",
+        result: "error",
+        packId: entry.packId,
+        target,
+        path: entry.manifestPath,
+        message: `unsupported MCP spec_era value(s): ${invalidEras.join(", ")}`,
+        remediation: `spec_era must be one of ${MCP_SPEC_ERAS.join(", ")}.`,
+      }),
+    );
+  }
+  const legacyServers = unique(
+    servers.filter((server) => server?.spec_era === "legacy").map((server) => server?.id),
+  );
+  if (legacyServers.length > 0) {
+    checks.push(
+      createCheck({
+        code: "LINT-MCP-004",
+        result: "warning",
+        packId: entry.packId,
+        target,
+        path: entry.manifestPath,
+        message: `deprecated-era MCP server declaration(s): ${legacyServers.join(", ")} rely on MCP 2025-11-25 semantics`,
+        remediation:
+          "Upgrade the dependency declaration to spec_era dual or modern after verifying the server supports the 2026-07-28 revision (stateless requests, Mcp-Method/Mcp-Name headers, server/discover).",
+      }),
+    );
+  }
+  const defaultedEras = unique(
+    (entry.normalizationWarnings ?? [])
+      .filter((warning) => typeof warning === "string" && warning.includes("spec_era"))
+      .map((warning) => warning),
+  );
+  if (defaultedEras.length > 0) {
+    checks.push(
+      createCheck({
+        code: "LINT-MCP-005",
+        result: "warning",
+        packId: entry.packId,
+        target,
+        path: entry.manifestPath,
+        message: `MCP server spec_era was not declared and defaulted to dual: ${defaultedEras.join("; ")}`,
+        remediation:
+          "Declare spec_era explicitly on each required_mcp_servers entry so era assumptions stay auditable.",
+      }),
+    );
+  }
 }
 
 function applyReferenceRule(repoRoot, entry, checks, target) {
@@ -1692,6 +1754,7 @@ export function runLintBridge({
   }
 
   for (const entry of selectedEntries) {
+    applyMcpEraRule(entry, checks, normalizedTarget);
     if (!applyManifestValidation(entry, checks, normalizedTarget)) {
       continue;
     }

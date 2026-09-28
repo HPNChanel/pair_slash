@@ -475,6 +475,152 @@ test("lint bridge fails on unknown MCP dependency", serial, () => {
   }
 });
 
+function enableMcpServers(manifest, servers) {
+  manifest.capabilities = [...new Set([...(manifest.capabilities ?? []), "mcp_client"])];
+  manifest.required_mcp_servers = servers;
+  return manifest;
+}
+
+function authorizeMcpClient(repoRoot) {
+  updatePackTrustAuthority({
+    repoRoot,
+    mutate(authority) {
+      authority.high_risk_capabilities.mcp_client.allowed_packs = [
+        ...new Set([
+          ...(authority.high_risk_capabilities?.mcp_client?.allowed_packs ?? []),
+          "pairslash-plan",
+        ]),
+      ].sort();
+      return authority;
+    },
+  });
+}
+
+test("lint bridge warns on legacy-era MCP declarations", serial, () => {
+  const fixture = createTempRepo({ packs: ["pairslash-plan"] });
+  try {
+    authorizeMcpClient(fixture.tempRoot);
+    updatePackManifest({
+      repoRoot: fixture.tempRoot,
+      packId: "pairslash-plan",
+      mutate(manifest) {
+        return enableMcpServers(manifest, [{ id: "filesystem", spec_era: "legacy" }]);
+      },
+    });
+    const report = runLintBridge({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex",
+      target: "repo",
+      packs: ["pairslash-plan"],
+    });
+    assert.equal(report.ok, true);
+    const issue = report.issues.find(
+      (entry) => entry.code === "LINT-MCP-004" && entry.result === "warning",
+    );
+    assert.ok(issue);
+    assert.match(issue.message, /deprecated-era/);
+    assert.match(issue.remediation, /dual or modern/);
+  } finally {
+    fixture.cleanup();
+  }
+});
+
+test("lint bridge warns when spec_era is defaulted on an older-schema manifest", serial, () => {
+  const fixture = createTempRepo({ packs: ["pairslash-plan"] });
+  try {
+    authorizeMcpClient(fixture.tempRoot);
+    updatePackManifest({
+      repoRoot: fixture.tempRoot,
+      packId: "pairslash-plan",
+      mutate(manifest) {
+        return enableMcpServers(manifest, [{ id: "filesystem" }]);
+      },
+    });
+    // updatePackManifest re-serializes with the era default; rewrite raw YAML to
+    // simulate a pre-2.2.0 manifest that never declared spec_era.
+    const manifestPath = join(
+      fixture.tempRoot,
+      "packs",
+      "core",
+      "pairslash-plan",
+      "pack.manifest.yaml",
+    );
+    const rawManifest = YAML.parse(readFileSync(manifestPath, "utf8"));
+    rawManifest.schema_version = "2.1.0";
+    for (const server of rawManifest.required_mcp_servers) {
+      delete server.spec_era;
+    }
+    writeFileSync(manifestPath, YAML.stringify(rawManifest, { lineWidth: 0, simpleKeys: true }));
+    const report = runLintBridge({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex",
+      target: "repo",
+      packs: ["pairslash-plan"],
+    });
+    assert.equal(report.ok, true);
+    assert.equal(hasIssue(report, "LINT-MCP-005", "warning"), true);
+  } finally {
+    fixture.cleanup();
+  }
+});
+
+test("lint bridge fails closed on unknown MCP spec_era values", serial, () => {
+  const fixture = createTempRepo({ packs: ["pairslash-plan"] });
+  try {
+    updatePackManifest({
+      repoRoot: fixture.tempRoot,
+      packId: "pairslash-plan",
+      mutate(manifest) {
+        return enableMcpServers(manifest, [{ id: "filesystem", spec_era: "experimental" }]);
+      },
+    });
+    const report = runLintBridge({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex",
+      target: "repo",
+      packs: ["pairslash-plan"],
+    });
+    assert.equal(report.ok, false);
+    assert.equal(hasIssue(report, "LINT-MCP-006"), true);
+  } finally {
+    fixture.cleanup();
+  }
+});
+
+test("lint bridge passes without MCP era issues for modern declarations", serial, () => {
+  const fixture = createTempRepo({ packs: ["pairslash-plan"] });
+  try {
+    authorizeMcpClient(fixture.tempRoot);
+    updatePackManifest({
+      repoRoot: fixture.tempRoot,
+      packId: "pairslash-plan",
+      mutate(manifest) {
+        return enableMcpServers(manifest, [
+          { id: "filesystem", spec_era: "modern" },
+          { id: "github", spec_era: "dual" },
+        ]);
+      },
+    });
+    const report = runLintBridge({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex",
+      target: "repo",
+      packs: ["pairslash-plan"],
+    });
+    assert.equal(report.ok, true);
+    assert.equal(hasIssue(report, "LINT-MCP-004", "warning"), false);
+    assert.equal(hasIssue(report, "LINT-MCP-005", "warning"), false);
+    assert.equal(hasIssue(report, "LINT-MCP-006"), false);
+    assert.ok(
+      report.checks.some(
+        (check) => check.code === "LINT-MCP-001" && check.result === "pass",
+      ),
+    );
+  } finally {
+    fixture.cleanup();
+  }
+});
+
 test("lint bridge fails when no-silent-fallback metadata is missing", serial, () => {
   const fixture = createTempRepo({ packs: ["pairslash-plan"] });
   try {

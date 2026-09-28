@@ -1658,6 +1658,8 @@ function runRequiredMcpServers(context) {
 
   const failures = [];
   const warnings = [];
+  const eraMap = [];
+  const legacyServers = [];
     const statePacks = new Map<string, any>((context.state?.packs ?? []).map((pack: any) => [pack.id, pack]));
 
   for (const record of context.selectedManifests) {
@@ -1665,11 +1667,21 @@ function runRequiredMcpServers(context) {
     if (servers.length === 0) {
       continue;
     }
+    const serverEras = servers.map((server: any) => ({
+      id: server.id,
+      spec_era: server.spec_era ?? "dual",
+    }));
+    eraMap.push({ pack_id: record.packId, servers: serverEras });
+    for (const server of serverEras) {
+      if (server.spec_era === "legacy") {
+        legacyServers.push(`${record.packId}:${server.id}`);
+      }
+    }
     const installedPack = statePacks.get(record.packId);
     if (!installedPack) {
       warnings.push({
         pack_id: record.packId,
-        servers: servers.map((server) => server.id),
+        servers: servers.map((server: any) => server.id),
         reason: "pack not installed; declaration-only verification",
       });
       continue;
@@ -1680,9 +1692,27 @@ function runRequiredMcpServers(context) {
       failures.push({
         pack_id: record.packId,
         path: mcpPath,
-        servers: servers.map((server) => server.id),
+        servers: servers.map((server: any) => server.id),
       });
     }
+  }
+
+  const eraEvidence =
+    eraMap.length > 0
+      ? {
+          spec_era_map: eraMap,
+          legacy_declarations: legacyServers,
+          era_guidance:
+            "modern-era servers (MCP 2026-07-28) are expected to be stateless, require Mcp-Method/Mcp-Name headers, and answer server/discover; legacy-era declarations may hit UnsupportedProtocolVersionError during negotiation",
+        }
+      : {};
+  if (legacyServers.length > 0) {
+    warnings.push({
+      pack_id: null,
+      servers: legacyServers,
+      reason:
+        "legacy-era MCP declarations rely on 2025-11-25 semantics; upgrade declarations to dual/modern after verifying server support",
+    });
   }
 
   if (failures.length > 0) {
@@ -1698,6 +1728,7 @@ function runRequiredMcpServers(context) {
       evidence: {
         failures,
         warnings,
+        ...eraEvidence,
       },
       blockingForInstall: true,
     });
@@ -1710,10 +1741,12 @@ function runRequiredMcpServers(context) {
       runtime: context.runtime,
       target: context.target,
       inputs: {},
-      summary: `${warnings.length} selected pack(s) declare MCP dependencies but are not installed`,
-      remediation: "Install those packs if you need doctor to validate emitted MCP config on disk.",
+      summary: `${warnings.length} MCP advisory note(s): packs not installed or legacy-era declarations`,
+      remediation:
+        "Install declared packs to validate emitted MCP config on disk; upgrade legacy-era spec_era declarations to dual or modern.",
       evidence: {
         warnings,
+        ...eraEvidence,
       },
     });
   }
@@ -1725,7 +1758,7 @@ function runRequiredMcpServers(context) {
     target: context.target,
     inputs: {},
     summary: "required MCP server config assets are present",
-    evidence: {},
+    evidence: { ...eraEvidence },
   });
 }
 

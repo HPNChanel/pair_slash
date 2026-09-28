@@ -2,13 +2,17 @@
 id: T2-06
 track: T2
 title: MCP deprecation / dual-era guardrails in lint + doctor
-status: todo
+status: done
 depends_on: [T2-05]
 est_size: S
-claimed_by:
-claimed_at:
-completed_at:
+claimed_by: devin
+claimed_at: 2026-09-28
+completed_at: 2026-09-28
 evidence:
+  rules: [LINT-MCP-004 (warn legacy), LINT-MCP-005 (warn defaulted era), LINT-MCP-006 (error unknown era, runs before manifest-validation gate)]
+  doctor: dependencies.required_mcp_servers now emits spec_era_map/legacy_declarations/era_guidance evidence; legacy era => warn advisory with server/discover + UnsupportedProtocolVersionError guidance; local-only, no probing
+  gates: lint=0, test=0, typecheck=0, test:compat=0, sync:compat-lab clean
+  tests: lint-bridge 23/23, doctor 28/28
 ---
 
 ## Objective
@@ -45,9 +49,9 @@ Add lint + doctor guardrails for the MCP era transition: warn on legacy-era decl
 
 ## Acceptance gates
 
-- [ ] Lint rules live with tests (positive/negative)
-- [ ] Doctor messages updated
-- [ ] `npm run lint`, `npm run test`, `npm run typecheck` green
+- [x] Lint rules live with tests (positive/negative)
+- [x] Doctor messages updated
+- [x] `npm run lint`, `npm run test`, `npm run typecheck` green
 
 ## Evidence to record
 

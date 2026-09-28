@@ -813,6 +813,89 @@ test("doctor fails missing MCP config for installed pack", () => {
   }
 });
 
+function enableMcpPack(repoRoot, specEra) {
+  updatePackTrustAuthority({
+    repoRoot,
+    mutate(authority) {
+      authority.high_risk_capabilities.mcp_client.allowed_packs = [
+        ...new Set([
+          ...(authority.high_risk_capabilities?.mcp_client?.allowed_packs ?? []),
+          "pairslash-plan",
+        ]),
+      ].sort();
+      return authority;
+    },
+  });
+  updatePackManifest({
+    repoRoot,
+    packId: "pairslash-plan",
+    mutate(manifest) {
+      manifest.capabilities = [...new Set([...manifest.capabilities, "mcp_client"])].sort();
+      manifest.required_mcp_servers = [{ id: "repo-memory", spec_era: specEra }];
+      return manifest;
+    },
+  });
+}
+
+test("doctor warns on legacy-era MCP declarations with negotiation guidance", () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
+  try {
+    enableMcpPack(fixture.tempRoot, "legacy");
+    applyInstall(planInstall({ repoRoot: fixture.tempRoot, runtime: "codex", target: "repo" }));
+
+    const report = runDoctor({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      target: "repo",
+      packs: ["pairslash-plan"],
+    });
+    const issue = report.issues.find(
+      (entry) => entry.check_id === "dependencies.required_mcp_servers",
+    );
+    assert.ok(issue);
+    assert.equal(issue.verdict, "warn");
+    assert.ok(issue.evidence.legacy_declarations.includes("pairslash-plan:repo-memory"));
+    assert.match(issue.evidence.era_guidance, /server\/discover/);
+    assert.match(issue.evidence.era_guidance, /UnsupportedProtocolVersionError/);
+    assert.match(issue.remediation, /dual or modern/);
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("doctor reports spec-era evidence for modern MCP declarations", () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ copilotVersion: "1.0.88" });
+  try {
+    enableMcpPack(fixture.tempRoot, "modern");
+    applyInstall(
+      planInstall({ repoRoot: fixture.tempRoot, runtime: "copilot", target: "repo" }),
+    );
+
+    const report = runDoctor({
+      repoRoot: fixture.tempRoot,
+      runtime: "copilot_cli",
+      target: "repo",
+      packs: ["pairslash-plan"],
+    });
+    const check = report.checks.find(
+      (entry) => entry.id === "dependencies.required_mcp_servers",
+    );
+    assert.ok(check);
+    assert.equal(check.status, "pass");
+    assert.equal(check.evidence.legacy_declarations.length, 0);
+    assert.deepEqual(check.evidence.spec_era_map, [
+      { pack_id: "pairslash-plan", servers: [{ id: "repo-memory", spec_era: "modern" }] },
+    ]);
+    assert.match(check.evidence.era_guidance, /stateless/);
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
 test("doctor fails when install state shows runtime-native asset placement drift", () => {
   const fixture = createTempRepo();
   const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
