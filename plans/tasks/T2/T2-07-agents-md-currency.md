@@ -2,13 +2,17 @@
 id: T2-07
 track: T2
 title: AGENTS.md currency verification + emission decision
-status: todo
+status: done
 depends_on: []
 est_size: S
-claimed_by:
-claimed_at:
-completed_at:
+claimed_by: devin
+claimed_at: 2026-09-28
+completed_at: 2026-09-28
 evidence:
+  adr: docs/architecture/adr-0002-agents-md-emission.md
+  decision: defer — managed-block merge (Option B) is the only ownership-safe emission design and needs region-level machinery the installer lacks; managed-file and nested-file variants rejected
+  agents_md_audit: all referenced npm scripts still exist; npm pin drift 11.7.0→11.14.1 synced; convention verified (freeform Markdown, ancestor jurisdiction, v1.1 proposal unratified)
+  gates: lint=0, test=0
 ---
 
 ## Objective
@@ -45,9 +49,9 @@ Verify the repo's `AGENTS.md` conforms to the current AGENTS.md convention, deci
 
 ## Acceptance gates
 
-- [ ] ADR written with explicit adopt/defer/reject + rationale
-- [ ] `AGENTS.md` verified current or minimally synced
-- [ ] `npm run lint`, `npm run test` green
+- [x] ADR written with explicit adopt/defer/reject + rationale
+- [x] `AGENTS.md` verified current or minimally synced
+- [x] `npm run lint`, `npm run test` green
 
 ## Evidence to record
 

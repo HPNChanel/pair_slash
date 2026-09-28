@@ -4,7 +4,7 @@
 PairSlash is a Node workspace monorepo with layered packages under `packages/`. Core logic lives in `packages/core/*`, runtime-specific packages live in `packages/runtimes/codex/*` and `packages/runtimes/copilot/*`, and operational surfaces live in `packages/tools/*`. Source packs live in `packs/`. Shared docs live in `docs/`. Root `tests/` contains JS regression checks, fixtures, and goldens; package-level tests live beside each package in `packages/*/*/tests`. Authoritative project memory and audit records live under `.pairslash/`.
 
 ## Build, Test, and Development Commands
-Use Node `>=24.0.0` and `npm@11.7.0`.
+Use Node `>=24.0.0` and `npm@11.14.1` (see `packageManager` in `package.json`).
 
 - `npm install` installs workspace dependencies.
 - `npm run pairslash -- doctor --runtime auto --target repo` runs the local CLI entrypoint.
