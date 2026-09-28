@@ -135,9 +135,9 @@ Interpretation rules:
 
 | Issue | Surface | Status | Affected lanes | Details |
 | --- | --- | --- | --- | --- |
-| K1 | Copilot direct invocation with -p/--prompt | blocked | GitHub Copilot CLI | Use /skills as the canonical entrypoint. Prompt-mode direct invocation remains blocked. |
+| K1 | Copilot direct invocation with -p/--prompt | blocked | GitHub Copilot CLI | Use /skills as the canonical entrypoint. Prompt-mode direct invocation remains blocked. Retest pending 2026-09-28 — Copilot CLI product absent on the verification host; protocol filed in copilot-cli-user-windows.md. |
 | K2 | Windows live install evidence | prep | Codex CLI repo, GitHub Copilot CLI user | Compat-lab covers doctor and preview; stable-tested claims require manual live install evidence. |
-| K3 | Codex read-only sandbox complex PowerShell | degraded | Codex CLI | Prefer simple single-statement PowerShell commands in verification and troubleshooting steps. |
+| K3 | Codex read-only sandbox complex PowerShell | degraded | Codex CLI | Prefer simple single-statement PowerShell commands in verification and troubleshooting steps. Retest pending 2026-09-28 — codex exec retest blocked by host usage quota; protocol filed in codex-cli-repo-windows.md. |
 
 ## Lane evidence records
 

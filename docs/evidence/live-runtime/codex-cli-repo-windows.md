@@ -26,6 +26,24 @@
 - `2026-09-28`: `codex --version` → `codex-cli 0.153.4` (runtime version capture only; not an install or `/skills` record)
 - Machine-readable sidecar: `docs/evidence/live-runtime/codex-cli-repo-windows.yaml`
 
+## Known-issue retest protocols (recorded 2026-09-28)
+
+### K3 — Codex read-only sandbox rejects complex PowerShell (status: degraded, retest pending)
+
+Codex CLI `0.153.4` is installed and authenticated on this host, but the retest
+run was rejected by host usage quota (`codex exec` reported "You've hit your
+usage limit"), so the sandbox behavior could not be exercised. When quota is
+available, run from a scratch directory:
+
+```bash
+codex exec --sandbox read-only --skip-git-repo-check \
+  "Run exactly one shell command: powershell -NoProfile -Command \"\$items = @('a','b'); foreach (\$i in \$items) { Write-Output \$i }\". Report whether the sandbox allowed or rejected it."
+```
+
+Resolution verdict requires: the multi-statement command (variables plus a
+`foreach`/`if` block) executes under `--sandbox read-only` on the real
+runtime — an allowed simple single-statement command alone does not resolve K3.
+
 ## Claim guard
 
 - Doctor and preview are useful here, but they are not install or `/skills`

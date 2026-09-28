@@ -104,4 +104,34 @@ live_records:
       - docs/evidence/live-runtime/codex-cli-repo-windows.md
     command_capture_refs:
       - docs/evidence/live-runtime/codex-cli-repo-windows.md
-negative_live_records: []
+negative_live_records:
+  - evidence_id: codex-windows-k3-retest-quota-20260928
+    failure_type: host_quota_limited
+    captured_at: "2026-09-28T06:54:15.000Z"
+    freshness_state: fresh
+    stale_at: "2026-10-05T06:54:15.000Z"
+    expire_at: "2026-10-12T06:54:15.000Z"
+    owner_id: runtime-truth
+    runtime_id: codex_cli
+    target: repo
+    os_lane: Windows
+    host_profile_id: codex-cli.repo.windows.cmd
+    pack_scope:
+      - pairslash-plan
+    workflow_scope:
+      - pairslash-plan
+    capability_scope:
+      - runtime_available
+    entrypoint_path_used: /skills
+    command: codex exec --sandbox read-only --skip-git-repo-check (K3 complex-PowerShell retest prompt)
+    verdict: fail
+    summary: >-
+      K3 retest attempted on codex-cli 0.153.4 (ChatGPT login present): the
+      `codex exec` run was rejected by host usage quota ("You've hit your
+      usage limit ... Oct 4th, 2026"), so the complex-PowerShell sandbox
+      behavior could not be exercised. This records the blocked attempt only;
+      K3 stays degraded until a real run observes the sandbox verdict.
+    artifact_paths:
+      - docs/evidence/live-runtime/codex-cli-repo-windows.md
+    refs:
+      - docs/evidence/live-runtime/codex-cli-repo-windows.md

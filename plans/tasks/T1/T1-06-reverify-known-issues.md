@@ -2,13 +2,17 @@
 id: T1-06
 track: T1
 title: Re-verify known issues K1 (Copilot -p) and K3 (Codex PowerShell sandbox)
-status: todo
+status: done
 depends_on: [T1-01]
 est_size: M
-claimed_by:
-claimed_at:
-completed_at:
+claimed_by: devin-session
+claimed_at: 2026-09-28
+completed_at: 2026-09-28
 evidence:
+  - K1 retest-protocol-filed: copilot binary absent on verification host (`gh copilot --version` → "! Copilot CLI not installed"); protocol + negative record in copilot-cli-user-windows.{md,yaml}; status stays blocked
+  - K3 retest-protocol-filed: codex 0.153.4 present and authenticated, but `codex exec --sandbox read-only` run rejected by host usage quota; attempt recorded as negative record (host_quota_limited); protocol in codex-cli-repo-windows.{md,yaml}; status stays degraded
+  - matrix known_issues details updated with dated retest-pending notes; no support_level or status changes
+  - npm run test (green), npm run lint (green), npm run sync:compat-lab -- --check (green)
 ---
 
 ## Objective

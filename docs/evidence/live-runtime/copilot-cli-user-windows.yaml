@@ -132,3 +132,34 @@ negative_live_records:
       - docs/evidence/live-runtime/copilot-cli-user-windows.md
     refs:
       - docs/evidence/live-runtime/copilot-cli-user-windows.md
+  - evidence_id: copilot-windows-product-absent-20260928
+    failure_type: runtime_unavailable
+    captured_at: "2026-09-28T06:48:00.000Z"
+    freshness_state: fresh
+    stale_at: "2026-10-05T06:48:00.000Z"
+    expire_at: "2026-10-12T06:48:00.000Z"
+    owner_id: runtime-truth
+    runtime_id: copilot_cli
+    target: user
+    os_lane: Windows
+    host_profile_id: copilot-cli.user.windows.cmd
+    pack_scope:
+      - pairslash-plan
+    workflow_scope:
+      - pairslash-plan
+    capability_scope:
+      - runtime_available
+      - direct_invocation
+    entrypoint_path_used: /skills
+    command: gh copilot --version
+    verdict: fail
+    summary: >-
+      `gh` 2.96.0 is present but the Copilot CLI product is absent on this
+      host (`gh copilot --version` reports "! Copilot CLI not installed";
+      `copilot` binary not on PATH). `gh copilot --help` still exits 0 via
+      the built-in wrapper, which is not product proof. K1 retest deferred
+      — see the retest protocol in the lane markdown.
+    artifact_paths:
+      - docs/evidence/live-runtime/copilot-cli-user-windows.md
+    refs:
+      - docs/evidence/live-runtime/copilot-cli-user-windows.md

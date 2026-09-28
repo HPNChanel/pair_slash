@@ -244,7 +244,7 @@ export const DEFAULT_PUBLIC_KNOWN_ISSUES = Object.freeze([
     surface: "Copilot direct invocation with -p/--prompt",
     status: "blocked",
     affected_lanes: "GitHub Copilot CLI",
-    details: "Use /skills as the canonical entrypoint. Prompt-mode direct invocation remains blocked.",
+    details: "Use /skills as the canonical entrypoint. Prompt-mode direct invocation remains blocked. Retest pending 2026-09-28 — Copilot CLI product absent on the verification host; protocol filed in copilot-cli-user-windows.md.",
   },
   {
     id: "K2",
@@ -258,7 +258,7 @@ export const DEFAULT_PUBLIC_KNOWN_ISSUES = Object.freeze([
     surface: "Codex read-only sandbox complex PowerShell",
     status: "degraded",
     affected_lanes: "Codex CLI",
-    details: "Prefer simple single-statement PowerShell commands in verification and troubleshooting steps.",
+    details: "Prefer simple single-statement PowerShell commands in verification and troubleshooting steps. Retest pending 2026-09-28 — codex exec retest blocked by host usage quota; protocol filed in codex-cli-repo-windows.md.",
   },
 ]);
 

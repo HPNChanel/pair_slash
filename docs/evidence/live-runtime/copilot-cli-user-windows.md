@@ -28,6 +28,23 @@
   Copilot CLI proof (negative observation, not a promotion record)
 - Machine-readable sidecar: `docs/evidence/live-runtime/copilot-cli-user-windows.yaml`
 
+## Known-issue retest protocols (recorded 2026-09-28)
+
+### K1 — Copilot direct invocation with `-p`/`--prompt` (status: blocked, retest pending)
+
+The `copilot` binary is absent on this host (`gh copilot --version` reports
+"! Copilot CLI not installed"), so no live retest was possible. On a host with
+Copilot CLI installed, run:
+
+1. `npm run pairslash -- install pairslash-plan --runtime copilot --target user --apply --yes`
+   (records an install into the user lane).
+2. `copilot -p "/pairslash-plan give me a one-line repo plan" --output-format json`
+   from the repo root; capture whether the plugin-installed skill is visible
+   and executes in prompt mode.
+3. Control: `copilot -p "what is 2+2"` to confirm `-p` itself works.
+4. Resolution verdict requires: the installed skill executes under `-p` on the
+   real runtime — changelog claims (CP-07/CP-17) alone do not resolve K1.
+
 ## Claim guard
 
 - The current negative evidence is host-specific and does not promote or
