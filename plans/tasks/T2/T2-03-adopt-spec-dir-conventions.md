@@ -21,7 +21,7 @@ evidence:
   layout_map: "contract.md|example-*.md|validation-checklist.md|pack.yaml|phase-boundary.md -> references/; scripts/* -> scripts/; SKILL.md -> root"
   gates: "lint OK; typecheck OK; test OK; test:release OK; test:compat OK; sync:compat-lab --check OK"
   golden_diff: "path moves only (root -> references/) + sha256 ordering; no content changes"
-  commit: pending
+  commit: ba9baee
 ---
 
 ## Objective
