@@ -1,6 +1,6 @@
 # Track T0 — Stabilize the repository
 
-**Status:** Approved | **Priority:** P0 — hard prerequisite for every other track
+**Status:** Done (2026-09-28) | **Priority:** P0 — hard prerequisite for every other track
 **Goal:** Return the working tree to a clean, all-gates-green baseline and remove accumulated drift artifacts so every later track starts from truth, not from a red repo.
 
 ## Context

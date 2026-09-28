@@ -2,13 +2,13 @@
 id: T0-04
 track: T0
 title: Full baseline gate run + record T0 completion
-status: todo
+status: done
 depends_on: [T0-01, T0-02, T0-03]
 est_size: S
-claimed_by:
-claimed_at:
-completed_at:
-evidence:
+claimed_by: devin
+claimed_at: 2026-09-28
+completed_at: 2026-09-28
+evidence: "all gates green in clean tree; typecheck:strict residual 3216; commits 9dd6b64 2651b6c b2502aa 5255c47"
 ---
 
 ## Objective
