@@ -149,6 +149,7 @@ export function compilePack({
   runtime,
   runtimeAdapter,
   emitBundle,
+  emitOptions,
   write = false,
   distRoot,
 }) {
@@ -156,7 +157,7 @@ export function compilePack({
     throw new Error("compilePack requires emitBundle");
   }
   const ir = buildNormalizedIr({ repoRoot, manifestPath });
-  const emittedAssets = emitBundle({ ir, runtimeAdapter });
+  const emittedAssets = emitBundle({ ir, runtimeAdapter, emitOptions });
   return finalizeCompiledPack({
     repoRoot,
     ir,

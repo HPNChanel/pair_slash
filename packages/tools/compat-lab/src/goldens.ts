@@ -38,6 +38,13 @@ export const DEFAULT_COMPAT_GOLDENS = [
     runtime: "copilot_cli",
   },
   {
+    id: "compiler-copilot-plugin.repo-python-service",
+    kind: "compiler",
+    fixture_id: "repo-python-service",
+    runtime: "copilot_cli",
+    emit_mode: "plugin",
+  },
+  {
     id: "generated-assets.repo-backend-mcp",
     kind: "generated-assets",
     fixture_id: "repo-backend-mcp",
@@ -58,10 +65,10 @@ function manifestPathsFor(tempRoot, packIds) {
     .map(({ manifestPath }) => manifestPath);
 }
 
-function compileForRuntime({ runtime, repoRoot, manifestPath }) {
+function compileForRuntime({ runtime, repoRoot, manifestPath, emitMode = undefined }) {
   return runtime === "codex_cli"
     ? compileCodexPack({ repoRoot, manifestPath })
-    : compileCopilotPack({ repoRoot, manifestPath });
+    : compileCopilotPack({ repoRoot, manifestPath, emitMode });
 }
 
 function summarizeImportantFiles(compiledPacks, markers) {
@@ -131,6 +138,7 @@ export function buildCompatGolden({ repoRoot, goldenId }) {
       repoRoot,
       fixtureId: golden.fixture_id,
       runtime: golden.runtime,
+      emitMode: golden.emit_mode,
     });
   }
   if (golden.kind === "generated-assets") {
@@ -149,7 +157,7 @@ export function buildCompatGolden({ repoRoot, goldenId }) {
   throw new Error(`unsupported compat golden kind: ${golden.kind}`);
 }
 
-export function buildCompilerGolden({ repoRoot, fixtureId, runtime }) {
+export function buildCompilerGolden({ repoRoot, fixtureId, runtime, emitMode }) {
   const materialized = materializeCompatFixture({
     repoRoot,
     fixtureId,
@@ -165,6 +173,7 @@ export function buildCompilerGolden({ repoRoot, fixtureId, runtime }) {
         runtime,
         repoRoot: materialized.tempRoot,
         manifestPath,
+        emitMode,
       })
     );
     return {

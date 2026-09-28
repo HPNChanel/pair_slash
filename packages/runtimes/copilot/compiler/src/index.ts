@@ -1,9 +1,15 @@
 import * as runtimeAdapter from "@pairslash/runtime-copilot-adapter";
 import {
   buildNormalizedIr,
+  buildPluginManifest,
+  buildPluginProvenance,
   compilePack,
+  COPILOT_PLUGIN_MANIFEST_NAME,
   enrichSkillFrontmatter,
   materializeCompiledFile,
+  PLUGIN_PROVENANCE_FILENAME,
+  PLUGIN_SKILLS_DIR,
+  stableJson,
 } from "@pairslash/spec-core";
 
 import { copilotGenerators } from "./generators.ts";
@@ -62,13 +68,68 @@ function emitCopilotBundle({ ir }: { ir: NormalizedIr }) {
     });
 }
 
-export function compileCopilotPack(options: CompileOptions) {
+const PLUGIN_WRAPPER_ASSET_BASE = {
+  generator: "copilot_plugin_manifest",
+  required: true,
+  owner: "pairslash",
+  uninstall_behavior: "remove_if_unmodified",
+  generated: true,
+  override_eligible: false,
+  write_authority_guarded: false,
+  asset_kind: "runtime_manifest",
+  install_surface: "metadata",
+  runtime_selector: "copilot_cli",
+} as const;
+
+function emitCopilotPluginBundle({ ir }: { ir: NormalizedIr }) {
+  const skillRoot = `${PLUGIN_SKILLS_DIR}/${ir.pack.id}`;
+  const skillFiles = emitCopilotBundle({ ir }).map((file) => ({
+    ...file,
+    relative_path: `${skillRoot}/${file.relative_path}`,
+  }));
+  const manifestShape = {
+    pack_name: ir.pack.id,
+    pack_version: ir.pack.version,
+    summary: ir.pack.summary,
+    category: ir.pack.category,
+    display_name: ir.pack.display_name,
+  };
+  const manifestFile = materializeCompiledFile({
+    logicalAsset: { ...PLUGIN_WRAPPER_ASSET_BASE, asset_id: "plugin-manifest" },
+    relativePath: COPILOT_PLUGIN_MANIFEST_NAME,
+    content: stableJson(
+      buildPluginManifest({ manifest: manifestShape, runtime: "copilot_cli" }),
+    ),
+  });
+  const provenanceFile = materializeCompiledFile({
+    logicalAsset: {
+      ...PLUGIN_WRAPPER_ASSET_BASE,
+      generator: "pairslash_plugin_provenance",
+      asset_id: "plugin-provenance",
+    },
+    relativePath: PLUGIN_PROVENANCE_FILENAME,
+    content: stableJson(
+      buildPluginProvenance({
+        manifest: manifestShape,
+        runtime: "copilot_cli",
+        manifestDigest: ir.manifest_digest,
+      }),
+    ),
+  });
+  return [...skillFiles, manifestFile, provenanceFile];
+}
+
+export function compileCopilotPack(options: CompileOptions & { emitMode?: string }) {
+  const { emitMode = "skill", ...rest } = options;
+  if (!["skill", "plugin"].includes(emitMode)) {
+    throw new Error(`unsupported emit mode: ${emitMode}`);
+  }
   return compilePack({
-    ...options,
+    ...rest,
     runtime: "copilot_cli",
     runtimeAdapter,
-    emitBundle: emitCopilotBundle,
+    emitBundle: emitMode === "plugin" ? emitCopilotPluginBundle : emitCopilotBundle,
   } as Parameters<typeof compilePack>[0]);
 }
 
-export { emitCopilotBundle, runtimeAdapter };
+export { emitCopilotBundle, emitCopilotPluginBundle, runtimeAdapter };

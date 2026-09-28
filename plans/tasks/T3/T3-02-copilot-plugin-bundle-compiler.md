@@ -2,13 +2,19 @@
 id: T3-02
 track: T3
 title: Copilot plugin bundle compiler output
-status: todo
+status: done
 depends_on: [T3-01]
 est_size: M
-claimed_by:
-claimed_at:
-completed_at:
-evidence:
+claimed_by: devin
+claimed_at: 2026-09-28
+completed_at: 2026-09-28
+evidence: >
+  compileCopilotPack({emitMode:"plugin"}) emits plugin.json (contract v1.0.0
+  shape via buildPluginManifest) + pairslash-plugin.json provenance sidecar +
+  skills/<pack-id>/ wrapped skill tree; default emit unchanged. Fails closed
+  on unknown emitMode. Tests: 4 new compiler tests (layout/fields/
+  determinism/no .agent.md/all core packs/invalid mode/default unchanged).
+  New golden: compiler-copilot-plugin.repo-python-service.json.
 ---
 
 ## Objective

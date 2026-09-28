@@ -160,3 +160,81 @@ test("compileCopilotPack emits a spec-compliant SKILL.md for every core pack", (
     assert.ok(compatibility.length > 0 && compatibility.length <= 500, `${packId} compatibility length`);
   }
 });
+
+test("compileCopilotPack emitMode=plugin wraps the skill under skills/ with plugin.json", () => {
+  const manifestPath = join(repoRoot, "packs", "core", "pairslash-plan", "pack.manifest.yaml");
+  const compiled = compileCopilotPack({ repoRoot, manifestPath, emitMode: "plugin" });
+  const compiledAgain = compileCopilotPack({ repoRoot, manifestPath, emitMode: "plugin" });
+  assert.equal(compiled.digest, compiledAgain.digest, "plugin emit must be deterministic");
+
+  const paths = compiled.files.map((file) => file.relative_path);
+  assert.ok(paths.includes("plugin.json"));
+  assert.ok(paths.includes("pairslash-plugin.json"));
+  assert.ok(paths.includes("pairslash.install.json"));
+  assert.ok(paths.includes("skills/pairslash-plan/SKILL.md"));
+  assert.ok(
+    paths.every(
+      (path) =>
+        path === "plugin.json" ||
+        path === "pairslash-plugin.json" ||
+        path === "pairslash.install.json" ||
+        path.startsWith("skills/pairslash-plan/"),
+    ),
+    `unexpected bundle paths: ${paths.join(",")}`,
+  );
+  assert.ok(!paths.some((path) => path.endsWith(".agent.md")), "plugin bundles never emit agent files");
+
+  const plugin = JSON.parse(compiled.files.find((file) => file.relative_path === "plugin.json").content);
+  assert.equal(plugin.name, "pairslash-plan");
+  assert.equal(plugin.skills, "skills/");
+  assert.equal(plugin.license, "Apache-2.0");
+  assert.ok(plugin.keywords.includes("pairslash"));
+  assert.ok(!("agents" in plugin));
+  assert.ok(!("mcpServers" in plugin));
+
+  const provenance = JSON.parse(
+    compiled.files.find((file) => file.relative_path === "pairslash-plugin.json").content,
+  );
+  assert.equal(provenance.kind, "pairslash-plugin-provenance");
+  assert.equal(provenance.pack_id, "pairslash-plan");
+  assert.equal(provenance.manifest_digest, compiled.manifest_digest);
+  assert.equal(provenance.invocation_surface, "/skills");
+
+  const skillFile = compiled.files.find((file) => file.relative_path === "skills/pairslash-plan/SKILL.md");
+  const verdict = validateSkillSpec({ content: skillFile.content, dirName: "pairslash-plan" });
+  assert.equal(verdict.ok, true, verdict.errors.join("; "));
+});
+
+test("compileCopilotPack emitMode=plugin works for every core pack", () => {
+  const coreDir = join(repoRoot, "packs", "core");
+  for (const packId of readdirSync(coreDir).sort()) {
+    const manifestPath = join(coreDir, packId, "pack.manifest.yaml");
+    if (!existsSync(manifestPath)) continue;
+    const compiled = compileCopilotPack({ repoRoot, manifestPath, emitMode: "plugin" });
+    const plugin = JSON.parse(compiled.files.find((file) => file.relative_path === "plugin.json").content);
+    assert.equal(plugin.name, packId);
+    assert.ok(
+      compiled.files.some((file) => file.relative_path === `skills/${packId}/SKILL.md`),
+      `${packId} missing skill payload`,
+    );
+    assert.ok(
+      !compiled.files.some((file) => file.relative_path.endsWith(".agent.md")),
+      `${packId} emitted an agent file`,
+    );
+  }
+});
+
+test("compileCopilotPack fails closed on unknown emit modes", () => {
+  const manifestPath = join(repoRoot, "packs", "core", "pairslash-plan", "pack.manifest.yaml");
+  assert.throws(
+    () => compileCopilotPack({ repoRoot, manifestPath, emitMode: "bogus" }),
+    /unsupported emit mode/,
+  );
+});
+
+test("compileCopilotPack default emit is unchanged by plugin mode", () => {
+  const manifestPath = join(repoRoot, "packs", "core", "pairslash-plan", "pack.manifest.yaml");
+  const compiled = compileCopilotPack({ repoRoot, manifestPath });
+  assert.ok(compiled.files.some((file) => file.relative_path === "SKILL.md"));
+  assert.ok(!compiled.files.some((file) => file.relative_path === "plugin.json"));
+});
