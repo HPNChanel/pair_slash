@@ -2,13 +2,13 @@
 id: T0-02
 track: T0
 title: Remove stray artifacts and harden ignores
-status: todo
+status: done
 depends_on: [T0-01]
 est_size: S
-claimed_by:
-claimed_at:
-completed_at:
-evidence:
+claimed_by: devin
+claimed_at: 2026-09-28
+completed_at: 2026-09-28
+evidence: "strays verified untracked via git ls-files and deleted; .gitignore already covered *.log/.git_commit_msg/dist (no rule changes needed); lint+typecheck+test green"
 ---
 
 ## Objective
