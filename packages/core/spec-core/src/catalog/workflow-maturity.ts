@@ -1,4 +1,5 @@
 import {
+  isOneOf,
   WORKFLOW_MATURITY_LEVELS,
   WORKFLOW_MATURITY_STRENGTH_ORDER,
 } from "../constants.ts";
@@ -21,22 +22,22 @@ import {
   workflowSmokeCoverageRuntimes,
 } from "./helpers.ts";
 
-export function normalizeWorkflowMaturity(level) {
-  return WORKFLOW_MATURITY_LEVELS.includes(level) ? level : "canary";
+export function normalizeWorkflowMaturity(level: any) {
+  return isOneOf(level, WORKFLOW_MATURITY_LEVELS) ? level : "canary";
 }
 
-export function workflowMaturityRank(level) {
+export function workflowMaturityRank(level: any) {
   return WORKFLOW_MATURITY_STRENGTH_ORDER[normalizeWorkflowMaturity(level)] ?? 0;
 }
 
-export function pickWeakerWorkflowMaturity(left, right) {
+export function pickWeakerWorkflowMaturity(left: any, right: any) {
   return workflowMaturityRank(left) <= workflowMaturityRank(right)
     ? normalizeWorkflowMaturity(left)
     : normalizeWorkflowMaturity(right);
 }
 
-export function collectCanaryWorkflowMaturityBlockers(manifest) {
-  const blockers = [];
+export function collectCanaryWorkflowMaturityBlockers(manifest: any) {
+  const blockers: any[] = [];
   if (manifest?.canonical_entrypoint !== "/skills") {
     blockers.push("workflow-maturity-canonical-entrypoint-missing:/skills");
   }
@@ -50,43 +51,43 @@ export function collectCanaryWorkflowMaturityBlockers(manifest) {
   if (!Array.isArray(deterministicRefs) || deterministicRefs.length === 0) {
     blockers.push("workflow-maturity-deterministic-evidence-missing");
   }
-  return blockers.sort((left, right) => left.localeCompare(right));
+  return blockers.sort((left: any, right: any) => left.localeCompare(right));
 }
 
-export function findDefaultPromotionLanes(publicSupport, runtime) {
+export function findDefaultPromotionLanes(publicSupport: any, runtime: string) {
   const defaultTarget =
     publicSupport?.evidence_policy?.runbook_policy?.runtime_runbooks?.[runtime]?.default_target ?? null;
   return (publicSupport?.runtime_lanes ?? [])
-    .filter((lane) =>
+    .filter((lane: any) =>
       lane.runtime_id === runtime &&
       lane.target === defaultTarget &&
       lane.release_gate === "required")
     .slice()
-    .sort((left, right) => left.lane_id.localeCompare(right.lane_id));
+    .sort((left: any, right: any) => left.lane_id.localeCompare(right.lane_id));
 }
 
-export function findClaimedOrDefaultLanes(manifest, publicSupport, runtime) {
+export function findClaimedOrDefaultLanes(manifest: any, publicSupport: any, runtime: string) {
   const claimedLaneIds = Array.isArray(manifest?.support?.promotion_checklist?.claimed_lanes?.[runtime])
     ? manifest.support.promotion_checklist.claimed_lanes[runtime]
     : [];
-  const runtimeLanes = (publicSupport?.runtime_lanes ?? []).filter((lane) => lane.runtime_id === runtime);
+  const runtimeLanes = (publicSupport?.runtime_lanes ?? []).filter((lane: any) => lane.runtime_id === runtime);
   if (claimedLaneIds.length > 0) {
     return claimedLaneIds
-      .map((laneId) => runtimeLanes.find((lane) => lane.lane_id === laneId) ?? null)
+      .map((laneId: any) => runtimeLanes.find((lane: any) => lane.lane_id === laneId) ?? null)
       .filter(Boolean)
-      .sort((left, right) => left.lane_id.localeCompare(right.lane_id));
+      .sort((left: any, right: any) => left.lane_id.localeCompare(right.lane_id));
   }
   return findDefaultPromotionLanes(publicSupport, runtime);
 }
 
-export function resolveWorkflowEvidenceAnalysis({ manifest, runtime, publicSupport, laneRecordIndex }) {
+export function resolveWorkflowEvidenceAnalysis({ manifest, runtime, publicSupport, laneRecordIndex }: { manifest?: any; runtime: string; publicSupport?: any; laneRecordIndex?: any }) {
   const packId = normalizePackId(manifest);
   const lanes = findClaimedOrDefaultLanes(manifest, publicSupport, runtime);
-  const laneIds = new Set(lanes.map((lane) => lane.lane_id));
+  const laneIds = new Set(lanes.map((lane: any) => lane.lane_id));
   const refs = Array.isArray(manifest?.support?.workflow_evidence?.live_workflow_refs?.[runtime])
     ? manifest.support.workflow_evidence.live_workflow_refs[runtime]
     : [];
-  const invalidBlockers = [];
+  const invalidBlockers: any[] = [];
   const evidenceByLaneId = new Map();
 
   for (const evidenceRef of refs) {
@@ -136,12 +137,12 @@ export function resolveWorkflowEvidenceAnalysis({ manifest, runtime, publicSuppo
     invalidBlockers,
     evidenceByLaneId,
     totalVerificationRuns: [...evidenceByLaneId.values()]
-      .reduce((sum, entry) => sum + entry.verification_run_count, 0),
+      .reduce((sum: any, entry: any) => sum + entry.verification_run_count, 0),
   };
 }
 
-export function collectPreviewWorkflowMaturityBlockers(manifest, runtimeSupport, publicSupport, laneRecordIndex) {
-  const blockers = [];
+export function collectPreviewWorkflowMaturityBlockers(manifest: any, runtimeSupport: any, publicSupport: any, laneRecordIndex: any) {
+  const blockers: any[] = [];
   const runtimes = supportedWorkflowRuntimes(manifest);
   const smokeCoverage = workflowSmokeCoverageRuntimes(manifest);
   const isWriteAuthorityWorkflow =
@@ -214,7 +215,7 @@ export function collectPreviewWorkflowMaturityBlockers(manifest, runtimeSupport,
   }
   if (isWriteAuthorityWorkflow) {
     const operationalSafetyRefs = manifest?.support?.workflow_evidence?.operational_safety_refs ?? [];
-    const validOperationalSafetyRefs = operationalSafetyRefs.filter((evidenceRef) => {
+    const validOperationalSafetyRefs = operationalSafetyRefs.filter((evidenceRef: string) => {
       const { path, remote, fragment } = normalizeEvidenceRefDescriptor(evidenceRef);
       const indexedRecord =
         !remote && !fragment && typeof path === "string"
@@ -229,11 +230,11 @@ export function collectPreviewWorkflowMaturityBlockers(manifest, runtimeSupport,
   if (manifest?.support?.promotion_checklist?.canonical_entrypoint_verified !== true) {
     blockers.push("workflow-maturity-preview-checklist-canonical-entrypoint-unverified");
   }
-  return blockers.sort((left, right) => left.localeCompare(right));
+  return blockers.sort((left: any, right: any) => left.localeCompare(right));
 }
 
-export function collectBetaWorkflowMaturityBlockers(manifest, publicSupport, laneRecordIndex) {
-  const blockers = [];
+export function collectBetaWorkflowMaturityBlockers(manifest: any, publicSupport: any, laneRecordIndex: any) {
+  const blockers: any[] = [];
   for (const runtime of supportedWorkflowRuntimes(manifest)) {
     const analysis = resolveWorkflowEvidenceAnalysis({
       manifest,
@@ -249,11 +250,11 @@ export function collectBetaWorkflowMaturityBlockers(manifest, publicSupport, lan
   if (manifest?.support?.promotion_checklist?.docs_synced !== true) {
     blockers.push("workflow-maturity-beta-checklist-docs-unsynced");
   }
-  return [...new Set(blockers)].sort((left, right) => left.localeCompare(right));
+  return [...new Set(blockers)].sort((left: any, right: any) => left.localeCompare(right));
 }
 
-export function collectStableWorkflowMaturityBlockers(manifest, runtimeSupport, publicSupport, releaseGateStatus, laneRecordIndex) {
-  const blockers = [];
+export function collectStableWorkflowMaturityBlockers(manifest: any, runtimeSupport: any, publicSupport: any, releaseGateStatus: any, laneRecordIndex: any) {
+  const blockers: any[] = [];
   const isWriteAuthorityWorkflow =
     manifest?.workflow_class === "write-authority" ||
     manifest?.memory_permissions?.global_project_memory === "write" ||
@@ -313,7 +314,7 @@ export function collectStableWorkflowMaturityBlockers(manifest, runtimeSupport, 
   }
   if (isWriteAuthorityWorkflow) {
     const operationalSafetyRefs = manifest?.support?.workflow_evidence?.operational_safety_refs ?? [];
-    const operationalSafetyVerificationRuns = operationalSafetyRefs.reduce((sum, evidenceRef) => {
+    const operationalSafetyVerificationRuns = operationalSafetyRefs.reduce((sum: any, evidenceRef: string) => {
       const { path, remote, fragment } = normalizeEvidenceRefDescriptor(evidenceRef);
       if (remote || fragment || typeof path !== "string") {
         return sum;
@@ -328,11 +329,11 @@ export function collectStableWorkflowMaturityBlockers(manifest, runtimeSupport, 
       blockers.push("workflow-maturity-write-authority-operational-safety-repeated-verification-required");
     }
   }
-  return blockers.sort((left, right) => left.localeCompare(right));
+  return blockers.sort((left: any, right: any) => left.localeCompare(right));
 }
 
-export function collectDeprecatedWorkflowMaturityBlockers(manifest) {
-  const blockers = [];
+export function collectDeprecatedWorkflowMaturityBlockers(manifest: any) {
+  const blockers: any[] = [];
   if (manifest?.status !== "deprecated") {
     blockers.push(`workflow-maturity-deprecated-status-required:${manifest?.status ?? "unknown"}`);
   }
@@ -348,10 +349,10 @@ export function collectDeprecatedWorkflowMaturityBlockers(manifest) {
   if (!hasReplacement && (!Array.isArray(migrationRefs) || migrationRefs.length === 0)) {
     blockers.push("workflow-maturity-deprecated-migration-guidance-missing");
   }
-  return blockers.sort((left, right) => left.localeCompare(right));
+  return blockers.sort((left: any, right: any) => left.localeCompare(right));
 }
 
-export function deriveDemotionTriggersFromBlockers(blockers) {
+export function deriveDemotionTriggersFromBlockers(blockers: any[]) {
   const triggerCodes = new Set();
   for (const blocker of blockers) {
     if (blocker.startsWith("workflow-maturity-release-gate:")) {
@@ -402,19 +403,19 @@ export function deriveDemotionTriggersFromBlockers(blockers) {
   return [...triggerCodes].sort((left: any, right: any) => left.localeCompare(right));
 }
 
-export function normalizeWorkflowTransitionFrom(manifest, assigned) {
+export function normalizeWorkflowTransitionFrom(manifest: any, assigned: any) {
   const transitionFrom = manifest?.support?.workflow_transition?.from;
   return WORKFLOW_MATURITY_LEVELS.includes(transitionFrom) ? transitionFrom : assigned;
 }
 
-export function isWorkflowTransitionLegal(transitionFrom, assigned) {
-  if (!WORKFLOW_MATURITY_LEVELS.includes(transitionFrom) || !WORKFLOW_MATURITY_LEVELS.includes(assigned)) {
+export function isWorkflowTransitionLegal(transitionFrom: any, assigned: any) {
+  if (!isOneOf(transitionFrom, WORKFLOW_MATURITY_LEVELS) || !isOneOf(assigned, WORKFLOW_MATURITY_LEVELS)) {
     return false;
   }
   return WORKFLOW_TRANSITION_MAP[transitionFrom]?.has(assigned) ?? false;
 }
 
-export function promotionChecklistReady(manifest) {
+export function promotionChecklistReady(manifest: any) {
   const checklist = manifest?.support?.promotion_checklist;
   if (!isObject(checklist)) {
     return false;
@@ -425,7 +426,7 @@ export function promotionChecklistReady(manifest) {
   );
 }
 
-export function resolveWorkflowMaturity({ repoRoot, manifest, runtimeSupport, publicSupport, laneRecordIndex }) {
+export function resolveWorkflowMaturity({ repoRoot, manifest, runtimeSupport, publicSupport, laneRecordIndex }: { repoRoot: string; manifest?: any; runtimeSupport?: any; publicSupport?: any; laneRecordIndex?: any }) {
   const assigned = normalizeWorkflowMaturity(manifest?.support?.workflow_maturity);
   const transitionFrom = normalizeWorkflowTransitionFrom(manifest, assigned);
   const transitionLegal = isWorkflowTransitionLegal(transitionFrom, assigned);
@@ -486,7 +487,7 @@ export function resolveWorkflowMaturity({ repoRoot, manifest, runtimeSupport, pu
   const effective = assigned === "deprecated"
     ? "deprecated"
     : pickWeakerWorkflowMaturity(assigned, maxSupported);
-  const dedupedBlockers = [...new Set(blockers)].sort((left, right) => left.localeCompare(right));
+  const dedupedBlockers = [...new Set(blockers)].sort((left: any, right: any) => left.localeCompare(right));
   return {
     assigned,
     effective,
@@ -503,7 +504,7 @@ export function resolveWorkflowMaturity({ repoRoot, manifest, runtimeSupport, pu
   };
 }
 
-export function validateEvidenceRefCollectionsMatch(laneRefs, recordRefs, errorKey) {
+export function validateEvidenceRefCollectionsMatch(laneRefs: any, recordRefs: any, errorKey: any) {
   const left = normalizeEvidenceRefCollectionForCompare(laneRefs);
   const right = normalizeEvidenceRefCollectionForCompare(recordRefs);
   if (stableYaml(left) !== stableYaml(right)) {
@@ -511,7 +512,7 @@ export function validateEvidenceRefCollectionsMatch(laneRefs, recordRefs, errorK
   }
 }
 
-export function isPromotionEvidenceReady(claim) {
+export function isPromotionEvidenceReady(claim: any) {
   return Boolean(
     claim?.evidence_present &&
       (claim?.required_for_promotion === false || claim?.evidence_kind === "pack-runtime-live"),

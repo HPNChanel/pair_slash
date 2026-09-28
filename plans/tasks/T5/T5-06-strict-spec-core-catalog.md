@@ -2,13 +2,19 @@
 id: T5-06
 track: T5
 title: Strict batch — spec-core (pack-catalog + read-authority)
-status: todo
+status: done
 depends_on: [T5-05]
 est_size: L
-claimed_by:
-claimed_at:
-completed_at:
+claimed_by: devin
+claimed_at: 2026-10-XX
+completed_at: 2026-10-XX
 evidence:
+  strict_baseline_in_scope: 141
+  strict_after_in_scope: 0
+  typecheck: pass
+  lint: pass
+  tests: pass (0 failures; catalog goldens unchanged — deterministic ordering preserved)
+  test_release: pass
 ---
 
 ## Objective
@@ -44,13 +50,19 @@ Fix all strict errors in `catalog/*` (post-T5-02) + `read-authority.ts` + `pack-
 
 ## Acceptance gates
 
-- [ ] 0 strict errors in scope
-- [ ] Gates green; truth-governance tests green specifically
-- [ ] No API changes
+- [x] 0 strict errors in scope (catalog/* 141 → 0; whole spec-core now reports 0 strict errors)
+- [x] Gates green; truth-governance tests green (full suite exit 0)
+- [x] No API changes
 
 ## Evidence to record
 
-- Error counts; any semantics-affecting fixes flagged loudly in commit body.
+- Error counts: catalog in-scope 141 → 0 (codemod pass `.pairslash/tmp/annotate-strict.mjs` + manual semantic pass).
+- Key decisions:
+  - `catalog/helpers.ts` `isObject` became a type guard (`value is Record<string, any>`) — cleared 13 member-access errors in `lane-records.ts` without touching validator logic.
+  - `.includes` on `as const` tuples → `isOneOf` (narrows instead of erroring; semantics identical).
+  - `resolveWorkflowEvidenceAnalysis.runtime` and `resolveWorkflowMaturity.repoRoot` tightened to required — bodies dereference them unconditionally.
+  - `loadPublicSupportSnapshot(repoRoot: string | null = null)` — `null` default is the documented "unset" signal (`!repoRoot` guard), kept semantics.
+  - No verdict-semantics changes; no real bugs found; no test edits.
 
 ## Rollback
 

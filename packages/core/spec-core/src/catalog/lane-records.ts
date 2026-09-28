@@ -24,7 +24,7 @@ import {
   validateEvidenceRefCollectionsMatch,
 } from "./workflow-maturity.ts";
 
-export function validateRunbookPolicy(value, errorKey) {
+export function validateRunbookPolicy(value: unknown, errorKey: any) {
   if (!isObject(value)) {
     throw new Error(`public-support-snapshot-invalid:${errorKey}`);
   }
@@ -112,7 +112,7 @@ export function validateRunbookPolicy(value, errorKey) {
   }
 }
 
-export function validateLiveLaneRecordCollection(repoRoot, value, errorKey, lane = null) {
+export function validateLiveLaneRecordCollection(repoRoot: string, value: unknown, errorKey: any, lane: any = null) {
   if (!Array.isArray(value)) {
     throw new Error(`public-support-snapshot-invalid:${errorKey}`);
   }
@@ -191,7 +191,7 @@ export function validateLiveLaneRecordCollection(repoRoot, value, errorKey, lane
   }
 }
 
-export function validateLiveRuntimeLaneRecord(repoRoot, lane, index) {
+export function validateLiveRuntimeLaneRecord(repoRoot: string, lane: any, index: number) {
   const evidenceDataRef = laneEvidenceDataRef(lane);
   if (typeof evidenceDataRef !== "string" || evidenceDataRef.trim() === "") {
     throw new Error(`public-support-snapshot-invalid:runtime_lanes[${index}].evidence_data_ref`);

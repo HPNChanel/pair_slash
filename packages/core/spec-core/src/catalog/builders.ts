@@ -49,9 +49,9 @@ export function buildCatalogRuntimeSupport({
   repoRoot,
   manifest,
   descriptorRecord,
-}) {
+}: { repoRoot?: string; manifest?: any; descriptorRecord?: any }) {
   return Object.fromEntries(
-    SUPPORTED_RUNTIMES.map((runtime) => {
+    SUPPORTED_RUNTIMES.map((runtime: string) => {
       const claim = evaluateRuntimeSupportClaim({
         repoRoot,
         manifest,
@@ -74,8 +74,8 @@ export function buildCatalogRuntimeSupport({
   );
 }
 
-export function buildPromotionBlockers(runtimeSupport) {
-  return SUPPORTED_RUNTIMES.flatMap((runtime) => {
+export function buildPromotionBlockers(runtimeSupport: any) {
+  return SUPPORTED_RUNTIMES.flatMap((runtime: string) => {
     const claim = runtimeSupport[runtime];
     if (claim?.declared_status === "blocked") {
       return [`runtime-promotion-blocked-surface:${runtime}`];
@@ -92,10 +92,10 @@ export function buildPromotionBlockers(runtimeSupport) {
     return [
       `runtime-promotion-evidence-missing:${runtime}:${claim.evidence_scope}`,
     ];
-  }).sort((left, right) => left.localeCompare(right));
+  }).sort((left: any, right: any) => left.localeCompare(right));
 }
 
-export function buildCoreCatalogRecord(repoRoot, record, { publicSupport, laneRecordIndex }) {
+export function buildCoreCatalogRecord(repoRoot: string, record: any, { publicSupport, laneRecordIndex }: { publicSupport?: any; laneRecordIndex?: any }) {
   const descriptorRecord = loadPackTrustDescriptorRecord({
     manifestPath: record.manifestPath,
     manifest: record.manifest,
@@ -191,12 +191,12 @@ export function buildCoreCatalogRecord(repoRoot, record, { publicSupport, laneRe
     promotion_ready: buildPromotionBlockers(runtimeSupport).length === 0,
     promotion_blockers: buildPromotionBlockers(runtimeSupport),
     descriptor_errors: [...(descriptorRecord.errors ?? []), ...(authorityDecision.errors ?? [])]
-      .sort((left, right) => left.localeCompare(right)),
-    descriptor_shim_errors: [...(descriptorRecord.shimErrors ?? [])].sort((left, right) => left.localeCompare(right)),
+      .sort((left: any, right: any) => left.localeCompare(right)),
+    descriptor_shim_errors: [...(descriptorRecord.shimErrors ?? [])].sort((left: any, right: any) => left.localeCompare(right)),
   };
 }
 
-export function buildInvalidCoreCatalogRecord(repoRoot, record) {
+export function buildInvalidCoreCatalogRecord(repoRoot: string, record: any) {
   const manifest = record.manifest ?? {};
   const sourceRoot = toPosixPath(manifest.runtime_assets?.source_root ?? `packs/core/${record.packId}`);
   const descriptorPath = resolve(record.manifestPath, "..", "pack.trust.yaml");
@@ -206,9 +206,9 @@ export function buildInvalidCoreCatalogRecord(repoRoot, record) {
   const workflowMaturity = manifest.support?.workflow_maturity ?? null;
   const descriptorErrors = [
     ...(record.parseError ? [`manifest-parse:${record.parseError}`] : []),
-    ...(record.validationErrors ?? []).map((error) => `manifest-validate:${error}`),
-    ...(record.normalizationWarnings ?? []).map((warning) => `manifest-normalize:${warning}`),
-  ].sort((left, right) => left.localeCompare(right));
+    ...(record.validationErrors ?? []).map((error: any) => `manifest-validate:${error}`),
+    ...(record.normalizationWarnings ?? []).map((warning: any) => `manifest-normalize:${warning}`),
+  ].sort((left: any, right: any) => left.localeCompare(right));
   return {
     id: record.packId,
     catalog_scope: "core",
@@ -261,7 +261,7 @@ export function buildInvalidCoreCatalogRecord(repoRoot, record) {
     maintainer_owner: manifest.support?.maintainers?.owner ?? null,
     maintainer_contact: manifest.support?.maintainers?.contact ?? null,
     runtime_support: Object.fromEntries(
-      SUPPORTED_RUNTIMES.map((runtime) => [
+      SUPPORTED_RUNTIMES.map((runtime: string) => [
         runtime,
         {
           manifest_status: "unverified",
@@ -288,7 +288,7 @@ export function buildInvalidCoreCatalogRecord(repoRoot, record) {
   };
 }
 
-export function readAdvancedManifestRecord(repoRoot, manifestPath) {
+export function readAdvancedManifestRecord(repoRoot: string, manifestPath: string) {
   try {
     const manifest = readYamlFile(manifestPath);
     const packId =
@@ -341,7 +341,7 @@ export function readAdvancedManifestRecord(repoRoot, manifestPath) {
       publisher_id: null,
       publisher_class: null,
       runtime_support: Object.fromEntries(
-        SUPPORTED_RUNTIMES.map((runtime) => [
+        SUPPORTED_RUNTIMES.map((runtime: string) => [
           runtime,
           {
             manifest_status: "unverified",
@@ -384,7 +384,7 @@ export function readAdvancedManifestRecord(repoRoot, manifestPath) {
       workflow_transition_reason: null,
       workflow_transition_legal: false,
       workflow_maturity_blocked: false,
-      workflow_maturity_blockers: [`advanced-pack:parse-error:${error.message}`],
+      workflow_maturity_blockers: [`advanced-pack:parse-error:${error instanceof Error ? error.message : String(error)}`],
       workflow_promotion_ready: false,
       workflow_promotion_checklist_ready: false,
       workflow_demotion_triggers_active: [],
@@ -406,7 +406,7 @@ export function readAdvancedManifestRecord(repoRoot, manifestPath) {
       publisher_id: null,
       publisher_class: null,
       runtime_support: Object.fromEntries(
-        SUPPORTED_RUNTIMES.map((runtime) => [
+        SUPPORTED_RUNTIMES.map((runtime: string) => [
           runtime,
           {
             manifest_status: "unverified",
@@ -417,38 +417,35 @@ export function readAdvancedManifestRecord(repoRoot, manifestPath) {
             evidence_scope: "missing",
             promotion_evidence_ready: false,
             policy_action: "ask",
-            reasons: [`advanced-pack:parse-error:${error.message}`],
+            reasons: [`advanced-pack:parse-error:${error instanceof Error ? error.message : String(error)}`],
           },
         ]),
       ),
       promotion_ready: false,
-      promotion_blockers: [`advanced-pack:parse-error:${error.message}`],
+      promotion_blockers: [`advanced-pack:parse-error:${error instanceof Error ? error.message : String(error)}`],
       descriptor_errors: [],
       notes: ["Advanced manifest could not be parsed."],
     };
   }
 }
 
-export function loadPackCatalogRecords(
-  repoRoot,
-  { includeAdvanced = false } = {},
-): any[] {
+export function loadPackCatalogRecords(repoRoot: string, { includeAdvanced = false }: { includeAdvanced?: boolean } = {}): any[] {
   const publicSupport = loadPublicSupportSnapshot(repoRoot);
   const laneRecordIndex = buildLiveRuntimeLaneRecordIndex(repoRoot, publicSupport);
-  const coreRecords = loadPackManifestRecords(repoRoot).map((record) =>
+  const coreRecords = loadPackManifestRecords(repoRoot).map((record: any) =>
     record.isValid
       ? buildCoreCatalogRecord(repoRoot, record, { publicSupport, laneRecordIndex })
       : buildInvalidCoreCatalogRecord(repoRoot, record));
   const advancedRecords = includeAdvanced
-    ? discoverAdvancedManifestPaths(repoRoot).map((manifestPath) =>
+    ? discoverAdvancedManifestPaths(repoRoot).map((manifestPath: string) =>
         readAdvancedManifestRecord(repoRoot, manifestPath))
     : [];
-  return [...coreRecords, ...advancedRecords].sort((left, right) =>
+  return [...coreRecords, ...advancedRecords].sort((left: any, right: any) =>
     `${left.catalog_scope}\u0000${left.id}`.localeCompare(`${right.catalog_scope}\u0000${right.id}`),
   );
 }
 
-export function loadPublicSupportSnapshot(repoRoot = null, { version = null } = {}) {
+export function loadPublicSupportSnapshot(repoRoot: string | null = null, { version = null }: { version?: string | null } = {}) {
   if (!repoRoot) {
     throw new Error("public-support-snapshot-requires-repo-root");
   }
@@ -537,8 +534,8 @@ export function loadPublicSupportSnapshot(repoRoot = null, { version = null } = 
   };
 }
 
-export function normalizePublicOsLane(os) {
-  return PLATFORM_TO_OS_LANE[os] ?? null;
+export function normalizePublicOsLane(os: any) {
+  return PLATFORM_TO_OS_LANE[os as keyof typeof PLATFORM_TO_OS_LANE] ?? null;
 }
 
 export function findPublicCompatibilityLane({
@@ -547,7 +544,7 @@ export function findPublicCompatibilityLane({
   target,
   os,
   snapshot = null,
-}) {
+}: { repoRoot?: string | null; runtime?: string; target?: any; os?: any; snapshot?: any }) {
   const osLane = normalizePublicOsLane(os);
   if (!osLane) {
     return null;
@@ -555,16 +552,16 @@ export function findPublicCompatibilityLane({
   const publicSupport = snapshot ?? loadPublicSupportSnapshot(repoRoot);
   return (
     publicSupport.runtime_lanes.find(
-      (lane) => lane.runtime_id === runtime && lane.target === target && lane.os_lane === osLane,
+      (lane: any) => lane.runtime_id === runtime && lane.target === target && lane.os_lane === osLane,
     ) ?? null
   );
 }
 
-export function hasRecordedLiveTestedRange(lane) {
+export function hasRecordedLiveTestedRange(lane: any) {
   return Boolean(lane?.live_tested_range && lane.live_tested_range !== "none recorded");
 }
 
-export function publicSupportLevelToDoctorLaneStatus(supportLevel) {
+export function publicSupportLevelToDoctorLaneStatus(supportLevel: any) {
   if (supportLevel === "prep") {
     return "prep";
   }
@@ -584,8 +581,8 @@ export function loadAuthoritativeCatalog({ repoRoot, version = null }: any = {})
     repo_root: repoRoot ? resolve(repoRoot) : null,
     summary: {
       pack_count: packRecords.length,
-      core_operational_count: packRecords.filter((record) => record.catalog_scope === "core").length,
-      excluded_count: packRecords.filter((record) => record.catalog_status === "excluded").length,
+      core_operational_count: packRecords.filter((record: any) => record.catalog_scope === "core").length,
+      excluded_count: packRecords.filter((record: any) => record.catalog_status === "excluded").length,
       public_support_lane_count: publicSupport.runtime_lanes.length,
     },
     pack_records: packRecords,
@@ -593,9 +590,9 @@ export function loadAuthoritativeCatalog({ repoRoot, version = null }: any = {})
   };
 }
 
-export function selectDefaultCatalogPack(records) {
+export function selectDefaultCatalogPack(records: any[]) {
   const coreRecords = records
-    .filter((record) =>
+    .filter((record: any) =>
       record.catalog_scope === "core" &&
       record.catalog_status === "operational" &&
       record.default_discovery !== false &&
@@ -604,7 +601,7 @@ export function selectDefaultCatalogPack(records) {
       !["deprecated", "archived"].includes(record.deprecation_status ?? "active"),
     )
     .slice()
-    .sort((left, right) => {
+    .sort((left: any, right: any) => {
       const leftMaturityRank = workflowMaturityRank(left.effective_workflow_maturity);
       const rightMaturityRank = workflowMaturityRank(right.effective_workflow_maturity);
       if (leftMaturityRank !== rightMaturityRank) {
@@ -626,17 +623,14 @@ export function selectDefaultCatalogPack(records) {
   return coreRecords[0] ?? null;
 }
 
-export function buildPackCatalogIndex(
-  repoRoot,
-  {
+export function buildPackCatalogIndex(repoRoot: string, {
     version = "0.4.0",
     lastUpdated = new Date().toISOString().slice(0, 10),
-  } = {},
-) {
+  }: { version?: string; lastUpdated?: any } = {}) {
   const records = loadPackCatalogRecords(repoRoot, { includeAdvanced: true });
-  const coreRecords = records.filter((record) =>
+  const coreRecords = records.filter((record: any) =>
     record.catalog_scope === "core" && record.catalog_status === "operational");
-  const excludedRecords = records.filter((record) =>
+  const excludedRecords = records.filter((record: any) =>
     !(record.catalog_scope === "core" && record.catalog_status === "operational"));
   return {
     version,
@@ -646,7 +640,7 @@ export function buildPackCatalogIndex(
       compatibility_matrix: SHARED_RUNTIME_SURFACE_MATRIX,
     },
     last_updated: lastUpdated,
-    packs: coreRecords.map((record) => ({
+    packs: coreRecords.map((record: any) => ({
       id: record.id,
       version: record.version,
       phase: record.phase,
@@ -683,7 +677,7 @@ export function buildPackCatalogIndex(
       compatibility_matrix: record.compatibility_matrix,
       validation_checklist: record.validation_checklist,
       runtime_support: Object.fromEntries(
-        SUPPORTED_RUNTIMES.map((runtime) => [
+        SUPPORTED_RUNTIMES.map((runtime: string) => [
           runtime,
           {
             manifest_status: record.runtime_support[runtime].manifest_status,
@@ -701,7 +695,7 @@ export function buildPackCatalogIndex(
       promotion_ready: record.promotion_ready,
       promotion_blockers: record.promotion_blockers,
     })),
-    excluded_repo_manifests: excludedRecords.map((record) => ({
+    excluded_repo_manifests: excludedRecords.map((record: any) => ({
       id: record.id,
       catalog_scope: record.catalog_scope,
       catalog_status: record.catalog_status,
@@ -713,7 +707,7 @@ export function buildPackCatalogIndex(
   };
 }
 
-export function renderPackCatalogIndexYaml(repoRoot, options = {}) {
+export function renderPackCatalogIndexYaml(repoRoot: string, options: any = {}) {
   return [
     "# Derived index of canonical core pack manifests.",
     "# Canonical pack semantics live in packs/core/*/pack.manifest.yaml.",

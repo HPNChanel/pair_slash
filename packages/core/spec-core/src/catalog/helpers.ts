@@ -1,4 +1,5 @@
 import {
+  isOneOf,
   SUPPORTED_RUNTIMES,
 } from "../constants.ts";
 import {
@@ -61,55 +62,55 @@ export const STABLE_WORKFLOW_LANE_SUPPORT_LEVELS = new Set(["stable-tested"]);
 
 export const PREVIEW_WORKFLOW_LANE_SUPPORT_LEVELS = new Set(["preview", "stable-tested"]);
 
-export function clone(value) {
+export function clone(value: unknown) {
   return JSON.parse(JSON.stringify(value));
 }
 
-export function isObject(value) {
+export function isObject(value: unknown): value is Record<string, any> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
-export function toPosixPath(value) {
+export function toPosixPath(value: string) {
   return value.replace(/\\/g, "/");
 }
 
-export function relativePosix(repoRoot, filePath) {
+export function relativePosix(repoRoot: string, filePath: string) {
   return toPosixPath(relativeFrom(resolve(repoRoot), resolve(filePath)));
 }
 
-export function readYamlFile(filePath) {
+export function readYamlFile(filePath: string) {
   return YAML.parse(readFileSync(filePath, "utf8"));
 }
 
-export function isLikelyRemoteRef(value) {
+export function isLikelyRemoteRef(value: unknown) {
   return typeof value === "string" && /^[a-z]+:\/\//i.test(value);
 }
 
-export function discoverAdvancedManifestPaths(repoRoot) {
+export function discoverAdvancedManifestPaths(repoRoot: string) {
   const advancedRoot = resolve(repoRoot, "packs", "advanced");
   if (!exists(advancedRoot)) {
     return [];
   }
   return walkFiles(advancedRoot)
-    .filter((filePath) => basename(filePath) === "pack.manifest.yaml")
-    .sort((left, right) => left.localeCompare(right));
+    .filter((filePath: string) => basename(filePath) === "pack.manifest.yaml")
+    .sort((left: any, right: any) => left.localeCompare(right));
 }
 
-export function normalizeSnapshotCollection(value) {
+export function normalizeSnapshotCollection(value: unknown) {
   return Array.isArray(value) ? clone(value) : [];
 }
 
-export function splitEvidenceRefs(value) {
+export function splitEvidenceRefs(value: unknown) {
   if (typeof value !== "string") {
     return [];
   }
   return value
     .split(";")
-    .map((entry) => entry.trim())
+    .map((entry: any) => entry.trim())
     .filter(Boolean);
 }
 
-export function normalizeEvidenceScope(evidenceRef) {
+export function normalizeEvidenceScope(evidenceRef: string) {
   if (typeof evidenceRef !== "string" || evidenceRef.trim() === "") {
     return "missing";
   }
@@ -124,7 +125,7 @@ export function normalizeEvidenceScope(evidenceRef) {
   return "local-file";
 }
 
-export function laneEvidenceDataRef(lane) {
+export function laneEvidenceDataRef(lane: any) {
   if (typeof lane?.evidence_data_ref === "string" && lane.evidence_data_ref.trim() !== "") {
     return lane.evidence_data_ref;
   }
@@ -136,7 +137,7 @@ export function laneEvidenceDataRef(lane) {
     : null;
 }
 
-export function validateEvidenceRefExists(repoRoot, evidenceRef, errorKey) {
+export function validateEvidenceRefExists(repoRoot: string, evidenceRef: string, errorKey: any) {
   if (typeof evidenceRef !== "string" || evidenceRef.trim() === "") {
     throw new Error(`public-support-snapshot-invalid:${errorKey}`);
   }
@@ -149,7 +150,7 @@ export function validateEvidenceRefExists(repoRoot, evidenceRef, errorKey) {
   }
 }
 
-export function validateEvidenceRefCollection(repoRoot, value, errorKey) {
+export function validateEvidenceRefCollection(repoRoot: string, value: unknown, errorKey: any) {
   if (value == null) {
     return;
   }
@@ -164,28 +165,28 @@ export function validateEvidenceRefCollection(repoRoot, value, errorKey) {
   }
 }
 
-export function validateRequiredEvidenceRefCollection(repoRoot, value, errorKey) {
+export function validateRequiredEvidenceRefCollection(repoRoot: string, value: unknown, errorKey: any) {
   if (!Array.isArray(value) || value.length === 0) {
     throw new Error(`public-support-snapshot-invalid:${errorKey}`);
   }
   validateEvidenceRefCollection(repoRoot, value, errorKey);
 }
 
-export function normalizeEvidenceRefCollectionForCompare(value) {
+export function normalizeEvidenceRefCollectionForCompare(value: unknown) {
   if (!Array.isArray(value)) {
     return [];
   }
   return value
-    .filter((entry) => typeof entry === "string" && entry.trim() !== "")
-    .map((entry) => entry.trim())
-    .sort((left, right) => left.localeCompare(right));
+    .filter((entry: any) => typeof entry === "string" && entry.trim() !== "")
+    .map((entry: any) => entry.trim())
+    .sort((left: any, right: any) => left.localeCompare(right));
 }
 
-export function normalizePackId(manifest) {
+export function normalizePackId(manifest: any) {
   return manifest?.pack_name ?? manifest?.pack?.id ?? null;
 }
 
-export function normalizeEvidenceRefDescriptor(value) {
+export function normalizeEvidenceRefDescriptor(value: unknown) {
   if (typeof value !== "string" || value.trim() === "") {
     return { path: null, remote: false, fragment: null };
   }
@@ -197,7 +198,7 @@ export function normalizeEvidenceRefDescriptor(value) {
   };
 }
 
-export function buildLiveRuntimeLaneRecordIndex(repoRoot, publicSupport) {
+export function buildLiveRuntimeLaneRecordIndex(repoRoot: string, publicSupport: any) {
   const byEvidenceRef = new Map();
   const byLaneId = new Map();
   for (const lane of publicSupport?.runtime_lanes ?? []) {
@@ -213,14 +214,14 @@ export function buildLiveRuntimeLaneRecordIndex(repoRoot, publicSupport) {
   return { byEvidenceRef, byLaneId };
 }
 
-export function workflowEvidenceScopeMatches(record, packId) {
+export function workflowEvidenceScopeMatches(record: any, packId: string) {
   const packScope = Array.isArray(record?.pack_scope) ? record.pack_scope : [];
   const workflowScope = Array.isArray(record?.workflow_scope) ? record.workflow_scope : [];
   return !packId || packScope.includes(packId) || workflowScope.includes(packId);
 }
 
-export function countMatchingWorkflowVerificationRuns(record, packId) {
-  return (record?.live_records ?? []).filter((liveRecord) =>
+export function countMatchingWorkflowVerificationRuns(record: any, packId: string) {
+  return (record?.live_records ?? []).filter((liveRecord: any) =>
     liveRecord?.verdict === "pass" &&
     liveRecord?.freshness_state === "fresh" &&
     liveRecord?.entrypoint_path_used === "/skills" &&
@@ -229,7 +230,7 @@ export function countMatchingWorkflowVerificationRuns(record, packId) {
   ).length;
 }
 
-export function readScopedReleaseGateStatus(repoRoot) {
+export function readScopedReleaseGateStatus(repoRoot: string) {
   const verdictPath = resolve(repoRoot, SCOPED_RELEASE_VERDICT_PATH);
   if (!exists(verdictPath)) {
     return "UNKNOWN";
@@ -238,24 +239,24 @@ export function readScopedReleaseGateStatus(repoRoot) {
   return match?.[1]?.toUpperCase() ?? "UNKNOWN";
 }
 
-export function supportedWorkflowRuntimes(manifest) {
+export function supportedWorkflowRuntimes(manifest: any) {
   const runtimes = Array.isArray(manifest?.supported_runtimes)
-    ? manifest.supported_runtimes.filter((runtime) => SUPPORTED_RUNTIMES.includes(runtime))
+    ? manifest.supported_runtimes.filter((runtime: string) => isOneOf(runtime, SUPPORTED_RUNTIMES))
     : [];
   return runtimes.length > 0 ? runtimes : SUPPORTED_RUNTIMES.slice();
 }
 
-export function workflowSmokeCoverageRuntimes(manifest) {
+export function workflowSmokeCoverageRuntimes(manifest: any) {
   return new Set(
     Array.isArray(manifest?.smoke_checks)
       ? manifest.smoke_checks
-        .map((check) => check?.runtime)
-        .filter((runtime) => SUPPORTED_RUNTIMES.includes(runtime))
+        .map((check: any) => check?.runtime)
+        .filter((runtime: string) => isOneOf(runtime, SUPPORTED_RUNTIMES))
       : [],
   );
 }
 
-export function validateStringArray(value, errorKey) {
+export function validateStringArray(value: unknown, errorKey: any) {
   if (!Array.isArray(value) || value.length === 0) {
     throw new Error(`public-support-snapshot-invalid:${errorKey}`);
   }
@@ -266,7 +267,7 @@ export function validateStringArray(value, errorKey) {
   }
 }
 
-export function validateIsoTimestamp(value, errorKey) {
+export function validateIsoTimestamp(value: unknown, errorKey: any) {
   if (typeof value !== "string" || value.trim() === "") {
     throw new Error(`public-support-snapshot-invalid:${errorKey}`);
   }
@@ -275,7 +276,7 @@ export function validateIsoTimestamp(value, errorKey) {
   }
 }
 
-export function resolvePackDocPath(sourceRoot, relativePath) {
+export function resolvePackDocPath(sourceRoot: any, relativePath: string) {
   return typeof relativePath === "string" && relativePath.trim() !== ""
     ? toPosixPath(join(sourceRoot, relativePath))
     : null;
