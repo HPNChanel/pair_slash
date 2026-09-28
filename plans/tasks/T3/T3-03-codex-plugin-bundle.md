@@ -2,13 +2,23 @@
 id: T3-03
 track: T3
 title: Codex plugin bundle format + marketplace manifest emission
-status: todo
+status: done
 depends_on: [T3-01]
 est_size: M
-claimed_by:
-claimed_at:
-completed_at:
-evidence:
+claimed_by: devin
+claimed_at: 2026-09-28
+completed_at: 2026-09-28
+evidence: >
+  compileCodexPack({emitMode:"plugin"}) emits .codex-plugin/plugin.json
+  (interface block incl. displayName/developerName) + pairslash-plugin.json
+  sidecar + skills/<pack-id>/ payload; deterministic, fails closed on unknown
+  emitMode. buildCodexMarketplaceManifest emits the verified
+  {name, interface.displayName, plugins[]} shape with local-source entries
+  (policy.installation=AVAILABLE, authentication=ON_INSTALL) — emission only,
+  no publishing. Verified vs inferred: plugin manifest + marketplace shapes
+  from openai/codex plugin-json-spec sample + Codex plugin docs (2026-09-28);
+  category "developer-tools" is a PairSlash choice, marked in code comment.
+  New golden: compiler-codex-plugin.repo-node-service.json.
 ---
 
 ## Objective

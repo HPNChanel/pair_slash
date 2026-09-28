@@ -45,6 +45,13 @@ export const DEFAULT_COMPAT_GOLDENS = [
     emit_mode: "plugin",
   },
   {
+    id: "compiler-codex-plugin.repo-node-service",
+    kind: "compiler",
+    fixture_id: "repo-node-service",
+    runtime: "codex_cli",
+    emit_mode: "plugin",
+  },
+  {
     id: "generated-assets.repo-backend-mcp",
     kind: "generated-assets",
     fixture_id: "repo-backend-mcp",
@@ -67,7 +74,7 @@ function manifestPathsFor(tempRoot, packIds) {
 
 function compileForRuntime({ runtime, repoRoot, manifestPath, emitMode = undefined }) {
   return runtime === "codex_cli"
-    ? compileCodexPack({ repoRoot, manifestPath })
+    ? compileCodexPack({ repoRoot, manifestPath, emitMode })
     : compileCopilotPack({ repoRoot, manifestPath, emitMode });
 }
 

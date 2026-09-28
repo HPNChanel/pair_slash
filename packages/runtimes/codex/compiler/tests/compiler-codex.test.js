@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
-import { compileCodexPack, runtimeAdapter } from "@pairslash/compiler-codex";
+import { buildCodexMarketplaceManifest, compileCodexPack, runtimeAdapter } from "@pairslash/compiler-codex";
 import { validateSkillSpec } from "@pairslash/spec-core";
 
 import { createTempRepo, repoRoot, updatePackManifest } from "../../../../../tests/phase4-helpers.js";
@@ -178,5 +178,93 @@ test("compileCodexPack emits a spec-compliant SKILL.md for every core pack", () 
     assert.equal(skillFile.content.includes("allowed-tools"), false, `${packId} leaked allowed-tools`);
     const compatibility = skillFile.content.match(/^compatibility: "(.*)"$/m)?.[1] ?? "";
     assert.ok(compatibility.length > 0 && compatibility.length <= 500, `${packId} compatibility length`);
+  }
+});
+
+test("compileCodexPack emitMode=plugin emits .codex-plugin/plugin.json layout", () => {
+  const manifestPath = join(repoRoot, "packs", "core", "pairslash-plan", "pack.manifest.yaml");
+  const compiled = compileCodexPack({ repoRoot, manifestPath, emitMode: "plugin" });
+  const compiledAgain = compileCodexPack({ repoRoot, manifestPath, emitMode: "plugin" });
+  assert.equal(compiled.digest, compiledAgain.digest, "plugin emit must be deterministic");
+
+  const paths = compiled.files.map((file) => file.relative_path);
+  assert.ok(paths.includes(".codex-plugin/plugin.json"));
+  assert.ok(paths.includes("pairslash-plugin.json"));
+  assert.ok(paths.includes("pairslash.install.json"));
+  assert.ok(paths.includes("skills/pairslash-plan/SKILL.md"));
+  assert.ok(
+    paths.every(
+      (path) =>
+        path === ".codex-plugin/plugin.json" ||
+        path === "pairslash-plugin.json" ||
+        path === "pairslash.install.json" ||
+        path.startsWith("skills/pairslash-plan/"),
+    ),
+    `unexpected bundle paths: ${paths.join(",")}`,
+  );
+  assert.ok(!paths.some((path) => path.endsWith(".agent.md")));
+
+  const plugin = JSON.parse(
+    compiled.files.find((file) => file.relative_path === ".codex-plugin/plugin.json").content,
+  );
+  assert.equal(plugin.name, "pairslash-plan");
+  assert.equal(plugin.skills, "skills/");
+  assert.equal(plugin.license, "Apache-2.0");
+  assert.equal(plugin.interface.developerName, "PairSlash");
+  assert.equal(plugin.interface.displayName.length > 0, true);
+
+  const provenance = JSON.parse(
+    compiled.files.find((file) => file.relative_path === "pairslash-plugin.json").content,
+  );
+  assert.equal(provenance.pack_id, "pairslash-plan");
+  assert.equal(provenance.manifest_digest, compiled.manifest_digest);
+});
+
+test("compileCodexPack emitMode=plugin works for every core pack", () => {
+  const coreDir = join(repoRoot, "packs", "core");
+  for (const packId of readdirSync(coreDir).sort()) {
+    const manifestPath = join(coreDir, packId, "pack.manifest.yaml");
+    if (!existsSync(manifestPath)) continue;
+    const compiled = compileCodexPack({ repoRoot, manifestPath, emitMode: "plugin" });
+    assert.ok(
+      compiled.files.some((file) => file.relative_path === ".codex-plugin/plugin.json"),
+      `${packId} missing .codex-plugin/plugin.json`,
+    );
+    assert.ok(
+      compiled.files.some((file) => file.relative_path === `skills/${packId}/SKILL.md`),
+      `${packId} missing skill payload`,
+    );
+    assert.ok(
+      !compiled.files.some((file) => file.relative_path.endsWith(".agent.md")),
+      `${packId} emitted an agent file`,
+    );
+  }
+});
+
+test("compileCodexPack fails closed on unknown emit modes", () => {
+  const manifestPath = join(repoRoot, "packs", "core", "pairslash-plan", "pack.manifest.yaml");
+  assert.throws(
+    () => compileCodexPack({ repoRoot, manifestPath, emitMode: "bogus" }),
+    /unsupported emit mode/,
+  );
+});
+
+test("buildCodexMarketplaceManifest emits the verified local-source shape", () => {
+  const manifest = buildCodexMarketplaceManifest({
+    name: "pairslash",
+    displayName: "PairSlash workflows",
+    packIds: ["pairslash-plan", "pairslash-review"],
+  });
+  assert.equal(manifest.name, "pairslash");
+  assert.equal(manifest.interface.displayName, "PairSlash workflows");
+  assert.deepEqual(
+    manifest.plugins.map((plugin) => plugin.name),
+    ["pairslash-plan", "pairslash-review"],
+  );
+  for (const plugin of manifest.plugins) {
+    assert.equal(plugin.source.source, "local");
+    assert.match(plugin.source.path, /^\.\/plugins\/pairslash-/);
+    assert.equal(plugin.policy.installation, "AVAILABLE");
+    assert.equal(plugin.policy.authentication, "ON_INSTALL");
   }
 });

@@ -1,9 +1,15 @@
 import * as runtimeAdapter from "@pairslash/runtime-codex-adapter";
 import {
   buildNormalizedIr,
+  buildPluginManifest,
+  buildPluginProvenance,
   compilePack,
+  CODEX_PLUGIN_MANIFEST_RELPATH,
   enrichSkillFrontmatter,
   materializeCompiledFile,
+  PLUGIN_PROVENANCE_FILENAME,
+  PLUGIN_SKILLS_DIR,
+  stableJson,
 } from "@pairslash/spec-core";
 
 import { codexGenerators } from "./generators.ts";
@@ -62,13 +68,95 @@ function emitCodexBundle({ ir }: { ir: NormalizedIr }) {
     });
 }
 
-export function compileCodexPack(options: CompileOptions) {
+const PLUGIN_WRAPPER_ASSET_BASE = {
+  generator: "codex_plugin_manifest",
+  required: true,
+  owner: "pairslash",
+  uninstall_behavior: "remove_if_unmodified",
+  generated: true,
+  override_eligible: false,
+  write_authority_guarded: false,
+  asset_kind: "runtime_manifest",
+  install_surface: "metadata",
+  runtime_selector: "codex_cli",
+} as const;
+
+function emitCodexPluginBundle({ ir }: { ir: NormalizedIr }) {
+  const skillRoot = `${PLUGIN_SKILLS_DIR}/${ir.pack.id}`;
+  const skillFiles = emitCodexBundle({ ir }).map((file) => ({
+    ...file,
+    relative_path: `${skillRoot}/${file.relative_path}`,
+  }));
+  const manifestShape = {
+    pack_name: ir.pack.id,
+    pack_version: ir.pack.version,
+    summary: ir.pack.summary,
+    category: ir.pack.category,
+    display_name: ir.pack.display_name,
+  };
+  const manifestFile = materializeCompiledFile({
+    logicalAsset: { ...PLUGIN_WRAPPER_ASSET_BASE, asset_id: "plugin-manifest" },
+    relativePath: CODEX_PLUGIN_MANIFEST_RELPATH,
+    content: stableJson(
+      buildPluginManifest({ manifest: manifestShape, runtime: "codex_cli" }),
+    ),
+  });
+  const provenanceFile = materializeCompiledFile({
+    logicalAsset: {
+      ...PLUGIN_WRAPPER_ASSET_BASE,
+      generator: "pairslash_plugin_provenance",
+      asset_id: "plugin-provenance",
+    },
+    relativePath: PLUGIN_PROVENANCE_FILENAME,
+    content: stableJson(
+      buildPluginProvenance({
+        manifest: manifestShape,
+        runtime: "codex_cli",
+        manifestDigest: ir.manifest_digest,
+      }),
+    ),
+  });
+  return [...skillFiles, manifestFile, provenanceFile];
+}
+
+export function compileCodexPack(options: CompileOptions & { emitMode?: string }) {
+  const { emitMode = "skill", ...rest } = options;
+  if (!["skill", "plugin"].includes(emitMode)) {
+    throw new Error(`unsupported emit mode: ${emitMode}`);
+  }
   return compilePack({
-    ...options,
+    ...rest,
     runtime: "codex_cli",
     runtimeAdapter,
-    emitBundle: emitCodexBundle,
+    emitBundle: emitMode === "plugin" ? emitCodexPluginBundle : emitCodexBundle,
   } as Parameters<typeof compilePack>[0]);
 }
 
-export { emitCodexBundle, runtimeAdapter };
+// Codex marketplace manifest shape verified against the plugin-creator sample
+// and Codex plugin docs (2026-09-28): {name, interface.displayName, plugins[]}
+// with plugins[].source {source:"local", path:"./plugins/<name>"} | "url" |
+// "git-subdir". policy.installation/authentication values: AVAILABLE,
+// INSTALLED_BY_DEFAULT / ON_INSTALL, ON_USE. Emission only — publishing is a
+// T3-05/T7 decision.
+export function buildCodexMarketplaceManifest({ name, displayName, packIds, pluginsBase = "./plugins" }) {
+  return {
+    name,
+    interface: {
+      displayName,
+    },
+    plugins: [...packIds].sort().map((packId) => ({
+      name: packId,
+      source: {
+        source: "local",
+        path: `${pluginsBase}/${packId}`,
+      },
+      policy: {
+        installation: "AVAILABLE",
+        authentication: "ON_INSTALL",
+      },
+      category: "developer-tools",
+    })),
+  };
+}
+
+export { emitCodexBundle, emitCodexPluginBundle, runtimeAdapter };
