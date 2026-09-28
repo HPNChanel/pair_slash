@@ -60,7 +60,15 @@ These are runtime capabilities, not PairSlash support claims (see claim policy):
   write-authority packs in plugin emit mode (track T4-01); canonical events
   without an advisory channel on Copilot (`turn-stop` → `agentStop`,
   `pre-tool-use`, `session-end`, `pre-compact`) are skipped rather than wired
-  dead.
+  dead. Hook enable/disable is all-or-nothing: `disableAllHooks` in
+  `~/.copilot/settings.json` or `.github/copilot/settings*.json` stops hook
+  execution; per-hook toggles are temporarily unavailable in current releases
+  (they lived in the removed `/plugins` dashboard — CP-19). Doctor reports the
+  effective state via `runtime.hooks_state`.
+- Skill provenance beyond installed roots: `--add-dir <path>` loads a
+  directory's `.github/skills` and `.github/agents` as trusted configuration,
+  so `/skills` entries may come from add-dir sources or plugin bundles, not
+  only PairSlash installs. Use `/skills info` to see a skill's origin.
 - Custom-agent shims: `runtime_bindings.copilot_cli.agent.emit: true` emits
   `agents/<pack-id>.agent.md` — verified frontmatter `name`, `description`,
   `tools`, `disable-model-invocation`, `metadata` (docs.github.com

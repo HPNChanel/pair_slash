@@ -121,6 +121,50 @@ pasting raw logs.
   runs.
 - `platform.os_shell_support`
   Use PowerShell, cmd, bash, zsh, or sh on a supported OS before filing a runtime bug.
+- `runtime.daemon_state` (Codex, informational)
+  Reports whether Codex's shared app-server/exec-server daemon artifacts
+  exist under `CODEX_HOME`. Since Codex v0.157 the daemon auto-starts per
+  `[daemon] auto_start` in `config.toml`. PairSlash never spawns, connects
+  to, or manages it — `absent` on older versions or fresh installs is
+  expected and harmless.
+- `runtime.hooks_state` (informational)
+  Reports whether runtime hook execution is enabled for the lane:
+  - Codex `enabled`: hooks are on by default, but unmanaged hooks (including
+    PairSlash-emitted `hooks/hooks.json` in plugin bundles, track T4-01) are
+    hash-pinned and **skipped until you review and trust them in `/hooks`**.
+    Review the generated hook definitions first — do not trust blindly.
+    `disabled`: `[features] hooks = false` in `config.toml` (or the
+    deprecated `codex_hooks` key) turns hooks off; PairSlash advisory
+    preflight hooks will not run — this is safe, advisory output is a
+    convenience, not an enforcement layer.
+    `managed-restricted`: admin `requirements.toml` disables hooks or sets
+    `allow_managed_hooks_only = true`; unmanaged hooks are skipped. PairSlash
+    never modifies these files — contact your admin if hooks are required.
+  - Copilot `disabled`: `disableAllHooks` is set in `~/.copilot/settings.json`
+    or `.github/copilot/settings*.json`. `unknown`: a settings file could not
+    be parsed. Otherwise `enabled` — note that current Copilot CLI has **no
+    per-hook toggles** (the old `/plugins` dashboard was removed); disabling
+    a single PairSlash hook means removing it from the plugin or turning all
+    hooks off.
+
+### Hooks and skill provenance FAQ
+
+- *Why does my write-authority pack not print the preflight advisory?*
+  Check `runtime.hooks_state`: on Codex the emitted hook needs a one-time
+  `/hooks` trust review (hash-pinned — edits re-trigger review), on Copilot
+  check `disableAllHooks`. Neither failure blocks the workflow; the advisory
+  is a reminder layer only.
+- *A skill I never installed shows up in `/skills`.* Copilot also discovers
+  skills and agents from directories passed via `--add-dir` (their
+  `.github/skills` and `.github/agents` load as trusted configuration) and
+  from plugin bundles. Use `pairslash doctor` + the Copilot `/skills info`
+  command to see which plugin or directory contributed a skill before
+  assuming a PairSlash install placed it.
+- *Should I trust the PairSlash hook definitions?* Review them first —
+  `cat` the emitted `hooks/hooks.json` and the script it references in the
+  plugin bundle, confirm they only print advisory JSON and never write,
+  then approve in `/hooks`. PairSlash hooks are designed to fail safe: if
+  never trusted, they simply never run.
 
 ## Suggested operator flow
 

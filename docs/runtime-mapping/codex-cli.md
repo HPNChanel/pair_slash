@@ -50,6 +50,14 @@ These are runtime capabilities, not PairSlash support claims (see claim policy):
   authoritative. Codex skips untrusted hook configs until the user reviews them
   (`/hooks` trust flow); PairSlash never pre-trusts its own emitted hooks — the
   emitted `description` field and this note are the trust-review surface.
+  Trust is hash-pinned: edited hooks are re-flagged for review. `[features]
+  hooks = false` in `config.toml` (or deprecated `codex_hooks`) disables all
+  hooks; admin `requirements.toml` can force hooks off or set
+  `allow_managed_hooks_only = true`, which skips unmanaged hooks including
+  plugin hooks. PairSlash never writes runtime config; doctor reports the
+  effective state via `runtime.hooks_state`. Managed hooks (system/MDM/
+  `requirements.toml`) bypass the trust flow and cannot be disabled in
+  `/hooks`; PairSlash emits only unmanaged hooks.
 - Daemon: a shared local app-server daemon backs `codex agents`,
   `codex app-server`, and `codex remote-control` (experimental surfaces).
   Since Codex v0.157 the daemon auto-starts per `[daemon] auto_start` in

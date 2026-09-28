@@ -1257,3 +1257,140 @@ test("doctor skips codex daemon check on copilot runtime", () => {
     fixture.cleanup();
   }
 });
+
+function withEnv(overrides, fn) {
+  const previous = {};
+  for (const [key, value] of Object.entries(overrides)) {
+    previous[key] = process.env[key];
+    if (value === null) {
+      delete process.env[key];
+    } else {
+      process.env[key] = value;
+    }
+  }
+  try {
+    return fn();
+  } finally {
+    for (const [key, value] of Object.entries(previous)) {
+      if (value === undefined) {
+        delete process.env[key];
+      } else {
+        process.env[key] = value;
+      }
+    }
+  }
+}
+
+test("doctor reports codex hooks disabled when [features] hooks=false", () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
+  const codexHome = join(fixture.tempRoot, "codex-home");
+  mkdirSync(codexHome, { recursive: true });
+  writeFileSync(join(codexHome, "config.toml"), "[features]\nhooks = false\n");
+  try {
+    const report = withEnv(
+      { CODEX_HOME: codexHome, PAIRSLASH_DOCTOR_CODEX_REQUIREMENTS: join(fixture.tempRoot, "none.toml") },
+      () => runDoctor({ repoRoot: fixture.tempRoot, runtime: "codex_cli", target: "repo" }),
+    );
+    const check = report.checks.find((entry) => entry.id === "runtime.hooks_state");
+    assert.equal(check.status, "pass");
+    assert.equal(check.evidence.hooks_state, "disabled");
+    assert.equal(check.evidence.feature_flag, "disabled");
+    assert.equal(check.evidence.feature_flag_key, "hooks");
+    assert.match(check.evidence.interpretation, /hooks = false|hooks=false/);
+    assert.equal(check.evidence.affects_verdict, false);
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("doctor honors deprecated codex_hooks alias and reports managed restrictions", () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
+  const codexHome = join(fixture.tempRoot, "codex-home");
+  mkdirSync(codexHome, { recursive: true });
+  writeFileSync(join(codexHome, "config.toml"), "[features]\ncodex_hooks = true\n");
+  const requirementsPath = join(fixture.tempRoot, "requirements.toml");
+  writeFileSync(requirementsPath, "allow_managed_hooks_only = true\n");
+  try {
+    const report = withEnv(
+      { CODEX_HOME: codexHome, PAIRSLASH_DOCTOR_CODEX_REQUIREMENTS: requirementsPath },
+      () => runDoctor({ repoRoot: fixture.tempRoot, runtime: "codex_cli", target: "repo" }),
+    );
+    const check = report.checks.find((entry) => entry.id === "runtime.hooks_state");
+    assert.equal(check.evidence.hooks_state, "managed-restricted");
+    assert.equal(check.evidence.feature_flag, "enabled");
+    assert.equal(check.evidence.feature_flag_deprecated_alias, true);
+    assert.ok(
+      check.evidence.managed_requirements.some(
+        (entry) => entry.path === requirementsPath && entry.allow_managed_hooks_only === true,
+      ),
+    );
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("doctor reports codex hooks enabled by default and trust-review guidance", () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
+  const codexHome = join(fixture.tempRoot, "codex-home");
+  mkdirSync(codexHome, { recursive: true });
+  try {
+    const report = withEnv(
+      { CODEX_HOME: codexHome, PAIRSLASH_DOCTOR_CODEX_REQUIREMENTS: join(fixture.tempRoot, "none.toml") },
+      () => runDoctor({ repoRoot: fixture.tempRoot, runtime: "codex_cli", target: "repo" }),
+    );
+    const check = report.checks.find((entry) => entry.id === "runtime.hooks_state");
+    assert.equal(check.status, "pass");
+    assert.equal(check.evidence.hooks_state, "enabled");
+    assert.equal(check.evidence.feature_flag, "unset");
+    assert.match(check.evidence.interpretation, /\/hooks/);
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("doctor reports copilot hooks disabled via disableAllHooks and toggle gap", () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ copilotVersion: "1.0.88" });
+  const copilotHome = join(fixture.tempRoot, "copilot-home");
+  mkdirSync(copilotHome, { recursive: true });
+  writeFileSync(join(copilotHome, "settings.json"), JSON.stringify({ disableAllHooks: true }));
+  try {
+    const report = withEnv({ COPILOT_HOME: copilotHome }, () =>
+      runDoctor({ repoRoot: fixture.tempRoot, runtime: "copilot_cli", target: "repo" }),
+    );
+    const check = report.checks.find((entry) => entry.id === "runtime.hooks_state");
+    assert.equal(check.status, "pass");
+    assert.equal(check.evidence.hooks_state, "disabled");
+    assert.equal(check.evidence.per_hook_toggles, "unavailable");
+    assert.equal(check.evidence.disable_all_hooks.user_settings, true);
+    assert.equal(check.evidence.affects_verdict, false);
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("doctor reports copilot hooks enabled with toggle-gap guidance by default", () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ copilotVersion: "1.0.88" });
+  const copilotHome = join(fixture.tempRoot, "copilot-home");
+  mkdirSync(copilotHome, { recursive: true });
+  try {
+    const report = withEnv({ COPILOT_HOME: copilotHome }, () =>
+      runDoctor({ repoRoot: fixture.tempRoot, runtime: "copilot_cli", target: "repo" }),
+    );
+    const check = report.checks.find((entry) => entry.id === "runtime.hooks_state");
+    assert.equal(check.status, "pass");
+    assert.equal(check.evidence.hooks_state, "enabled");
+    assert.match(check.evidence.interpretation, /temporarily unavailable/);
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});

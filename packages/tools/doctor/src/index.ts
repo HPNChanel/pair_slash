@@ -816,6 +816,182 @@ function runCodexDaemonState(context) {
   });
 }
 
+function readTomlSectionFlag(text, section, keys) {
+  const match = text.match(new RegExp(`\\[${section}\\]([\\s\\S]*?)(?:\\r?\\n\\s*\\[|$)`));
+  if (!match) {
+    return { value: null, key: null };
+  }
+  for (const key of keys) {
+    const flag = match[1].match(new RegExp(`(?:^|\\r?\\n)\\s*${key}\\s*=\\s*(true|false)`));
+    if (flag) {
+      return { value: flag[1] === "true", key };
+    }
+  }
+  return { value: null, key: null };
+}
+
+function readJsonFlag(path, key) {
+  if (codexDaemonPathKind(path).kind !== "file") {
+    return { value: null, readable: true };
+  }
+  try {
+    const parsed = JSON.parse(readFileSync(path, "utf8"));
+    return { value: parsed?.[key] === true ? true : parsed?.[key] === false ? false : null, readable: true };
+  } catch {
+    return { value: null, readable: false };
+  }
+}
+
+function codexHooksFeatureFlag(configPaths) {
+  let decision = { value: null, key: null, source_path: null };
+  for (const configPath of configPaths) {
+    if (codexDaemonPathKind(configPath).kind !== "file") {
+      continue;
+    }
+    try {
+      const flag = readTomlSectionFlag(readFileSync(configPath, "utf8"), "features", [
+        "hooks",
+        "codex_hooks",
+      ]);
+      if (flag.value !== null) {
+        decision = { ...flag, source_path: configPath };
+      }
+    } catch {
+      // Unreadable config layer: skip; state reported as unknown via evidence.
+    }
+  }
+  return decision;
+}
+
+function codexHooksRequirements(requirementsPaths) {
+  return requirementsPaths.map((requirementsPath) => {
+    if (codexDaemonPathKind(requirementsPath).kind !== "file") {
+      return { path: requirementsPath, present: false };
+    }
+    try {
+      const text = readFileSync(requirementsPath, "utf8");
+      const features = readTomlSectionFlag(text, "features", ["hooks"]);
+      const managedOnly = /(?:^|\r?\n)\s*allow_managed_hooks_only\s*=\s*true/.test(text);
+      return {
+        path: requirementsPath,
+        present: true,
+        hooks_disabled: features.value === false,
+        allow_managed_hooks_only: managedOnly,
+      };
+    } catch {
+      return { path: requirementsPath, present: true, unreadable: true };
+    }
+  });
+}
+
+function runHooksState(context) {
+  const home = homedir();
+  const repoRoot = context.repoRoot;
+  if (context.runtime === "codex_cli") {
+    const codexHome = process.env.CODEX_HOME || join(home, ".codex");
+    const flag = codexHooksFeatureFlag([
+      join(codexHome, "config.toml"),
+      join(repoRoot, ".codex", "config.toml"),
+    ]);
+    const requirementsPaths = process.env.PAIRSLASH_DOCTOR_CODEX_REQUIREMENTS
+      ? process.env.PAIRSLASH_DOCTOR_CODEX_REQUIREMENTS.split(";").filter(Boolean)
+      : process.platform === "win32"
+        ? [
+            join(
+              process.env.ProgramData || "C:\\ProgramData",
+              "OpenAI",
+              "Codex",
+              "requirements.toml",
+            ),
+          ]
+        : ["/etc/codex/requirements.toml"];
+    const requirements = codexHooksRequirements(requirementsPaths);
+    const managedDisabled = requirements.some((entry) => entry.hooks_disabled === true);
+    const managedOnly = requirements.some((entry) => entry.allow_managed_hooks_only === true);
+    const hooksState =
+      managedOnly || managedDisabled
+        ? "managed-restricted"
+        : flag.value === false
+          ? "disabled"
+          : "enabled";
+    const interpretation =
+      hooksState === "managed-restricted"
+        ? "admin requirements restrict hooks (managed-only or hooks=false); unmanaged hooks incl. PairSlash plugin preflight hooks are skipped"
+        : hooksState === "disabled"
+          ? "lifecycle hooks disabled via [features] hooks=false; PairSlash advisory preflight hooks will not run"
+          : "hooks enabled; unmanaged hooks (incl. PairSlash plugin hooks) are hash-pinned and skipped until reviewed in /hooks";
+    return createCheckResult({
+      id: "runtime.hooks_state",
+      group: "runtime",
+      status: "pass",
+      runtime: context.runtime,
+      target: context.target,
+      inputs: {
+        codex_home: codexHome,
+      },
+      summary: `codex hooks state: ${hooksState} (informational, config read-only)`,
+      evidence: {
+        informational_only: true,
+        affects_verdict: false,
+        applicable: true,
+        detection_method: "passive-config-artifacts",
+        hooks_state: hooksState,
+        feature_flag: flag.value === null ? "unset" : flag.value === true ? "enabled" : "disabled",
+        feature_flag_key: flag.key,
+        feature_flag_deprecated_alias: flag.key === "codex_hooks",
+        feature_flag_source: flag.source_path,
+        managed_requirements: requirements.filter((entry) => entry.present),
+        interpretation,
+      },
+    });
+  }
+  const copilotHome = process.env.COPILOT_HOME || join(home, ".copilot");
+  const userSetting = readJsonFlag(join(copilotHome, "settings.json"), "disableAllHooks");
+  const repoSettings = [
+    join(repoRoot, ".github", "copilot", "settings.json"),
+    join(repoRoot, ".github", "copilot", "settings.local.json"),
+  ].map((settingsPath) => ({
+    path: settingsPath,
+    ...readJsonFlag(settingsPath, "disableAllHooks"),
+  }));
+  const anyDisabled = userSetting.value === true || repoSettings.some((entry) => entry.value === true);
+  const hooksState = anyDisabled
+    ? "disabled"
+    : userSetting.readable === false || repoSettings.some((entry) => entry.readable === false)
+      ? "unknown"
+      : "enabled";
+  const interpretation =
+    hooksState === "disabled"
+      ? "disableAllHooks set; PairSlash plugin hooks will not run"
+      : hooksState === "unknown"
+        ? "a Copilot settings file could not be parsed; hooks state could not be determined"
+        : "hooks apply as configured; per-hook enable/disable toggles are temporarily unavailable in current Copilot CLI (removed with the /plugins dashboard)";
+  return createCheckResult({
+    id: "runtime.hooks_state",
+    group: "runtime",
+    status: "pass",
+    runtime: context.runtime,
+    target: context.target,
+    inputs: {
+      copilot_home: copilotHome,
+    },
+    summary: `copilot hooks state: ${hooksState} (informational, config read-only)`,
+    evidence: {
+      informational_only: true,
+      affects_verdict: false,
+      applicable: true,
+      detection_method: "passive-config-artifacts",
+      hooks_state: hooksState,
+      per_hook_toggles: "unavailable",
+      disable_all_hooks: {
+        user_settings: userSetting.value,
+        repo_settings: repoSettings,
+      },
+      interpretation,
+    },
+  });
+}
+
 function runRuntimePresenceMatrix(context) {
   const presence = Object.fromEntries(
     SUPPORTED_RUNTIMES.map((runtime) => [
@@ -2853,6 +3029,7 @@ const CHECKS = [
   runRuntimeDetect,
   runRuntimeSurfaceProbe,
   runCodexDaemonState,
+  runHooksState,
   runRuntimeVersionRange,
   runRuntimeTestedRange,
   runSupportLane,

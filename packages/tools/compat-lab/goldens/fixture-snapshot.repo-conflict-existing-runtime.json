@@ -303,6 +303,28 @@
           {
             "blocking_for_install": false,
             "evidence": {
+              "affects_verdict": false,
+              "applicable": true,
+              "detection_method": "passive-config-artifacts",
+              "feature_flag": "unset",
+              "feature_flag_deprecated_alias": false,
+              "feature_flag_key": null,
+              "feature_flag_source": null,
+              "hooks_state": "enabled",
+              "informational_only": true,
+              "interpretation": "hooks enabled; unmanaged hooks (incl. PairSlash plugin hooks) are hash-pinned and skipped until reviewed in /hooks",
+              "managed_requirements": []
+            },
+            "group": "runtime",
+            "id": "runtime.hooks_state",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "codex hooks state: enabled (informational, config read-only)"
+          },
+          {
+            "blocking_for_install": false,
+            "evidence": {
               "version": "0.153.4"
             },
             "group": "runtime",
@@ -1150,6 +1172,39 @@
             "severity": "info",
             "status": "skip",
             "summary": "codex daemon state check is not applicable to this runtime"
+          },
+          {
+            "blocking_for_install": false,
+            "evidence": {
+              "affects_verdict": false,
+              "applicable": true,
+              "detection_method": "passive-config-artifacts",
+              "disable_all_hooks": {
+                "repo_settings": [
+                  {
+                    "path": "<repo>\\.github\\copilot\\settings.json",
+                    "readable": true,
+                    "value": null
+                  },
+                  {
+                    "path": "<repo>\\.github\\copilot\\settings.local.json",
+                    "readable": true,
+                    "value": null
+                  }
+                ],
+                "user_settings": null
+              },
+              "hooks_state": "enabled",
+              "informational_only": true,
+              "interpretation": "hooks apply as configured; per-hook enable/disable toggles are temporarily unavailable in current Copilot CLI (removed with the /plugins dashboard)",
+              "per_hook_toggles": "unavailable"
+            },
+            "group": "runtime",
+            "id": "runtime.hooks_state",
+            "remediation": null,
+            "severity": "info",
+            "status": "pass",
+            "summary": "copilot hooks state: enabled (informational, config read-only)"
           },
           {
             "blocking_for_install": false,
