@@ -73,3 +73,12 @@ The compilers surface the declared value as metadata only:
 
 None of these fields configure the runtime; they record intent for review,
 doctor, and audit surfaces.
+
+## Agent shims (T4-03)
+
+Packs that opt into Copilot `.agent.md` emission
+(`runtime_bindings.copilot_cli.agent.emit: true`) map this policy onto the
+agent's real runtime knob: `explicit-only` emits `disable-model-invocation:
+true` (manual selection only), while `implicit-allowed` omits the flag and
+leaves auto-selection to the runtime. Agent emission itself stays opt-in and
+is lint-forbidden on write-authority packs (`LINT-AGENT-001`).

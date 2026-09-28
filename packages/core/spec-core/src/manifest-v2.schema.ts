@@ -58,6 +58,18 @@ const runtimeBindingSchema = v.object({
   compatibility: runtimeCompatibilitySchema,
 });
 
+// Copilot-only optional agent emission declaration (T4-03). The agent profile
+// is a persona shim that defers to the canonical skill contract; lint
+// hard-errors on write-authority packs.
+const copilotAgentEmissionSchema = v.object({
+  emit: v.boolean(),
+});
+
+const copilotRuntimeBindingSchema = v.object({
+  ...runtimeBindingSchema.entries,
+  agent: v.optional(copilotAgentEmissionSchema),
+});
+
 const requiredToolSchema = v.object({
   id: nonEmptyString("required_tools[].id must be a non-empty string"),
   kind: v.picklist(TOOL_KINDS),
@@ -268,7 +280,7 @@ export const packManifestV2Schema = v.object({
   }),
   runtime_bindings: v.object({
     codex_cli: runtimeBindingSchema,
-    copilot_cli: runtimeBindingSchema,
+    copilot_cli: copilotRuntimeBindingSchema,
   }),
   install_targets: v.pipe(v.array(v.picklist(SUPPORTED_TARGETS)), v.nonEmpty()),
   capabilities: v.pipe(v.array(v.picklist(CAPABILITY_FLAGS)), v.nonEmpty()),

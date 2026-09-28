@@ -120,6 +120,12 @@ function normalizeRuntimeBindings(record, packName, { preferCanonical = false }:
         runtime,
       ),
     };
+    // Copilot-only optional agent emission (T4-03): carried through only when
+    // the canonical binding declares it; legacy runtime_targets have no agent
+    // surface, so the field stays absent there.
+    if (runtime === "copilot_cli" && isObject(canonicalBinding.agent)) {
+      bindings[runtime].agent = { emit: canonicalBinding.agent.emit === true };
+    }
   }
   return bindings;
 }
@@ -405,6 +411,8 @@ function buildSourceEntries(record, primarySkill, { preferCanonical = false }: a
 function defaultGeneratedEntries(record) {
   const workflowClass = pickFirstString(record.workflow_class, record.pack?.workflow_class) ?? "read-oriented";
   const mcpEnabled = Array.isArray(record.required_mcp_servers) && record.required_mcp_servers.length > 0;
+  const packId = pickFirstString(record.pack_name, record.pack?.id);
+  const copilotAgentEmit = record.runtime_bindings?.copilot_cli?.agent?.emit === true;
   const generated = [
     {
       asset_id: "ownership-receipt",
@@ -513,6 +521,20 @@ function defaultGeneratedEntries(record) {
         override_eligible: false,
       },
     );
+  }
+
+  if (copilotAgentEmit && packId) {
+    generated.push({
+      asset_id: "copilot-agent-profile",
+      runtime: "copilot_cli",
+      asset_kind: "agent_fragment",
+      install_surface: "agent",
+      source_path: null,
+      generated_path: `agents/${packId}.agent.md`,
+      generator: "copilot_agent_profile",
+      required: true,
+      override_eligible: false,
+    });
   }
 
   if (mcpEnabled) {

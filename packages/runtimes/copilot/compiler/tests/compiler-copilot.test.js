@@ -217,9 +217,13 @@ test("compileCopilotPack emitMode=plugin works for every core pack", () => {
       compiled.files.some((file) => file.relative_path === `skills/${packId}/SKILL.md`),
       `${packId} missing skill payload`,
     );
+    // Agent profiles are opt-in per pack and must land at plugin-root agents/
+    // for native discovery — never dormant inside the wrapped skill payload.
     assert.ok(
-      !compiled.files.some((file) => file.relative_path.endsWith(".agent.md")),
-      `${packId} emitted an agent file`,
+      !compiled.files.some(
+        (file) => file.relative_path.startsWith(`skills/${packId}/`) && file.relative_path.endsWith(".agent.md"),
+      ),
+      `${packId} left an agent file inside the skill payload`,
     );
   }
 });
@@ -286,4 +290,73 @@ test("compileCopilotPack emitMode=plugin emits no hook files for read-oriented p
     compiled.files.find((file) => file.relative_path === "plugin.json").content,
   );
   assert.ok(!("hooks" in plugin));
+});
+
+test("compileCopilotPack emits .agent.md shim for opted-in packs only", () => {
+  const reviewManifest = join(repoRoot, "packs", "core", "pairslash-review", "pack.manifest.yaml");
+  const compiled = compileCopilotPack({ repoRoot, manifestPath: reviewManifest });
+  const agent = compiled.files.find((file) => file.asset_id === "copilot-agent-profile");
+  assert.ok(agent);
+  assert.equal(agent.relative_path, "agents/pairslash-review.agent.md");
+  assert.equal(agent.install_surface, "agent");
+  assert.ok(agent.content.includes('name: "pairslash-review"'));
+  // pairslash-review is implicit_invocation: explicit-only -> manual selection.
+  assert.ok(agent.content.includes("disable-model-invocation: true"));
+  assert.ok(agent.content.includes('tools: ["read", "search"]'));
+  assert.ok(agent.content.includes("/skills"));
+
+  const planManifest = join(repoRoot, "packs", "core", "pairslash-plan", "pack.manifest.yaml");
+  const plan = compileCopilotPack({ repoRoot, manifestPath: planManifest });
+  assert.ok(!plan.files.some((file) => file.relative_path.endsWith(".agent.md")));
+});
+
+test("compileCopilotPack emitMode=plugin hoists agent profile to plugin-root agents/", () => {
+  const manifestPath = join(repoRoot, "packs", "core", "pairslash-review", "pack.manifest.yaml");
+  const compiled = compileCopilotPack({ repoRoot, manifestPath, emitMode: "plugin" });
+  const paths = compiled.files.map((file) => file.relative_path);
+  assert.ok(paths.includes("agents/pairslash-review.agent.md"));
+  assert.ok(!paths.includes("skills/pairslash-review/agents/pairslash-review.agent.md"));
+  // The runtime-context sidecar is a bundle doc, not an agent profile.
+  assert.ok(paths.includes("skills/pairslash-review/agents/runtime-context.md"));
+  const plugin = JSON.parse(
+    compiled.files.find((file) => file.relative_path === "plugin.json").content,
+  );
+  assert.equal(plugin.agents, "agents/");
+});
+
+test("compileCopilotPack emitMode=plugin omits agents pointer for non-opted packs", () => {
+  const manifestPath = join(repoRoot, "packs", "core", "pairslash-plan", "pack.manifest.yaml");
+  const compiled = compileCopilotPack({ repoRoot, manifestPath, emitMode: "plugin" });
+  const plugin = JSON.parse(
+    compiled.files.find((file) => file.relative_path === "plugin.json").content,
+  );
+  assert.ok(!("agents" in plugin));
+  assert.ok(!compiled.files.some((file) => file.relative_path.endsWith(".agent.md")));
+});
+
+test("compileCopilotPack agent shim honors implicit-allowed (manual-selection flag omitted)", () => {
+  const fixture = createTempRepo({ packs: ["pairslash-review"] });
+  try {
+    updatePackManifest({
+      repoRoot: fixture.tempRoot,
+      packId: "pairslash-review",
+      mutate(manifest) {
+        manifest.implicit_invocation = "implicit-allowed";
+        return manifest;
+      },
+    });
+    const manifestPath = join(
+      fixture.tempRoot,
+      "packs",
+      "core",
+      "pairslash-review",
+      "pack.manifest.yaml",
+    );
+    const compiled = compileCopilotPack({ repoRoot: fixture.tempRoot, manifestPath });
+    const agent = compiled.files.find((file) => file.asset_id === "copilot-agent-profile");
+    assert.ok(agent);
+    assert.ok(!agent.content.includes("disable-model-invocation"));
+  } finally {
+    fixture.cleanup();
+  }
 });

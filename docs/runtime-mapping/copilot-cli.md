@@ -61,8 +61,16 @@ These are runtime capabilities, not PairSlash support claims (see claim policy):
   without an advisory channel on Copilot (`turn-stop` → `agentStop`,
   `pre-tool-use`, `session-end`, `pre-compact`) are skipped rather than wired
   dead.
-- Other runtime surfaces observed upstream: `enabledPlugins` settings and
-  `.agent.md` agent files; PairSlash emission is unverified/deferred.
+- Custom-agent shims: `runtime_bindings.copilot_cli.agent.emit: true` emits
+  `agents/<pack-id>.agent.md` — verified frontmatter `name`, `description`,
+  `tools`, `disable-model-invocation`, `metadata` (docs.github.com
+  custom-agents reference). Opt-in only for read-oriented packs; write-authority
+  packs are lint-forbidden. In plugin mode the file hoists to plugin-root
+  `agents/` (native discovery, `agents` pointer in `plugin.json`); in skill
+  mode it stays inside the pack dir as a dormant, reviewable shim — PairSlash
+  never auto-places files into `.github/agents/` or `~/.copilot/agents/`.
+- Other runtime surfaces observed upstream: `enabledPlugins` settings remain
+  unverified/deferred; PairSlash never edits them.
 - Direct invocation (`-p`/prompt mode): remains `blocked` per known issue K1
   pending live re-verification (T1-06).
 

@@ -74,6 +74,49 @@ function renderCopilotPreflight(ir: NormalizedIr) {
   });
 }
 
+// Emits the Copilot custom-agent shim (agents/<pack>.agent.md). The agent is a
+// persona entry point only — the canonical SKILL.md workflow contract remains
+// the single semantic authority (charter §13.3, C.18.1).
+// Schema source: docs.github.com custom-agents reference — frontmatter fields
+// name/description/tools/model/target/disable-model-invocation/user-invocable/
+// mcp-servers/metadata; description is required; body <= 30,000 chars.
+function renderCopilotAgentProfile(ir: NormalizedIr) {
+  const implicitAllowed = ir.pack.implicit_invocation === "implicit-allowed";
+  const description = String(ir.pack.summary ?? "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 1024);
+  const frontmatter = [
+    "---",
+    `name: ${JSON.stringify(String(ir.pack.id))}`,
+    `description: ${JSON.stringify(description)}`,
+    `tools: ["read", "search"]`,
+    // disable-model-invocation maps the declared implicit_invocation intent to
+    // the agent's real runtime knob: explicit-only packs must be manually
+    // selected; implicit-allowed packs leave auto-selection to the runtime.
+    ...(implicitAllowed ? [] : ["disable-model-invocation: true"]),
+    "metadata:",
+    `  pairslash_pack: ${JSON.stringify(String(ir.pack.id))}`,
+    '  pairslash_canonical_entrypoint: "/skills"',
+    "---",
+  ];
+  const body = [
+    "",
+    `# ${ir.pack.display_name}`,
+    "",
+    `You are a persona shim for the PairSlash workflow \`${ir.pack.id}\`.`,
+    "",
+    `- Canonical entrypoint: \`/skills\` → select \`${ir.pack.id}\`.`,
+    "- The pack's `SKILL.md` workflow contract is the single semantic authority",
+    "  for inputs, outputs, failure behavior, and memory permissions.",
+    "- Do not re-implement or extend the workflow here; follow the contract and",
+    "  defer to it when instructions could diverge.",
+    "- This agent performs no writes beyond what the workflow contract declares.",
+    "",
+  ];
+  return `${frontmatter.join("\n")}${body.join("\n")}`;
+}
+
 function renderMcpServers(ir: NormalizedIr) {
   return stableYaml({
     kind: "pairslash-mcp-config",
@@ -89,6 +132,7 @@ function renderMcpServers(ir: NormalizedIr) {
 export const copilotGenerators = {
   copilot_package: renderCopilotPackage,
   copilot_agent: renderCopilotAgentContext,
+  copilot_agent_profile: renderCopilotAgentProfile,
   copilot_preflight: renderCopilotPreflight,
   copilot_mcp: renderMcpServers,
 };

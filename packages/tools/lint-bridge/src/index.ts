@@ -601,6 +601,108 @@ function applyImplicitInvocationRule(entry, checks, target) {
   }
 }
 
+// Copilot .agent.md emission (T4-03): persona shims defer to the canonical
+// SKILL.md contract. Hard rule: write-authority packs can never emit agents
+// (charter §13.3 — write logic stays skill-disciplined).
+function applyAgentEmissionRule(entry, checks, target) {
+  const packId = entry.packId;
+  const emit = entry.manifest.runtime_bindings?.copilot_cli?.agent?.emit === true;
+  const workflowClass = entry.manifest.pack?.workflow_class ?? entry.manifest.workflow_class;
+
+  if (!emit) {
+    checks.push(
+      createCheck({
+        code: "LINT-AGENT-001",
+        result: "pass",
+        packId,
+        target,
+        path: entry.manifestPath,
+        message: "no copilot agent emission declared",
+      }),
+    );
+    return;
+  }
+
+  if (workflowClass === "write-authority") {
+    checks.push(
+      createCheck({
+        code: "LINT-AGENT-001",
+        result: "error",
+        packId,
+        target,
+        path: entry.manifestPath,
+        message: "agent emission is forbidden for write-authority packs",
+        remediation:
+          "Remove runtime_bindings.copilot_cli.agent — write-authority workflows must remain skill-disciplined (charter §13.3).",
+      }),
+    );
+    return;
+  }
+  checks.push(
+    createCheck({
+      code: "LINT-AGENT-001",
+      result: "pass",
+      packId,
+      target,
+      path: entry.manifestPath,
+      message: `agent emission is permitted on workflow_class '${workflowClass}'`,
+    }),
+  );
+
+  if (workflowClass !== "read-oriented") {
+    checks.push(
+      createCheck({
+        code: "LINT-AGENT-002",
+        result: "warning",
+        packId,
+        target,
+        path: entry.manifestPath,
+        message: `agent emission on workflow_class '${workflowClass}' — persona agents on mutating packs need manual review`,
+        remediation:
+          "Emit agent shims for read-oriented packs, or document why a persona front for a mutating workflow is safe.",
+      }),
+    );
+  } else {
+    checks.push(
+      createCheck({
+        code: "LINT-AGENT-002",
+        result: "pass",
+        packId,
+        target,
+        path: entry.manifestPath,
+        message: "agent emission is on a read-oriented workflow",
+      }),
+    );
+  }
+
+  const skillPath = join(dirname(entry.manifestPath), "SKILL.md");
+  if (!existsSync(skillPath)) {
+    checks.push(
+      createCheck({
+        code: "LINT-AGENT-003",
+        result: "warning",
+        packId,
+        target,
+        path: skillPath,
+        message: "agent shim emitted without a canonical SKILL.md sibling",
+        remediation:
+          "Agents reference skills — keep the canonical SKILL.md next to the manifest.",
+      }),
+    );
+  } else {
+    checks.push(
+      createCheck({
+        code: "LINT-AGENT-003",
+        result: "pass",
+        packId,
+        target,
+        path: skillPath,
+        message: "agent shim defers to an existing canonical SKILL.md",
+      }),
+    );
+  }
+}
+
 function applyNamingRule(entry, checks, target) {
   const packId = entry.packId;
   const codexDir = entry.manifest.runtime_targets?.codex_cli?.skill_directory_name;
@@ -1864,6 +1966,7 @@ export function runLintBridge({
     applySkillSpecRule(entry, checks, normalizedTarget);
     applyTriggerRule(entry, checks, normalizedTarget);
     applyImplicitInvocationRule(entry, checks, normalizedTarget);
+    applyAgentEmissionRule(entry, checks, normalizedTarget);
     applyRuntimeRangeRule(entry, checks, normalizedTarget);
     applyRuntimeSupportRule(entry, checks, normalizedTarget);
     applyNamingRule(entry, checks, normalizedTarget);

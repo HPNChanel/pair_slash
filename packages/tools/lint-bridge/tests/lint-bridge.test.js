@@ -863,3 +863,95 @@ test("lint bridge treats a missing implicit_invocation field as explicit-only", 
     fixture.cleanup();
   }
 });
+
+test("lint bridge hard-errors when a write-authority pack emits a copilot agent", serial, () => {
+  const fixture = createTempRepo({ packs: ["pairslash-memory-write-global"] });
+  try {
+    updatePackManifest({
+      repoRoot: fixture.tempRoot,
+      packId: "pairslash-memory-write-global",
+      mutate(manifest) {
+        manifest.runtime_bindings.copilot_cli.agent = { emit: true };
+        return manifest;
+      },
+    });
+    const report = runLintBridge({
+      repoRoot: fixture.tempRoot,
+      runtime: "all",
+      target: "repo",
+      packs: ["pairslash-memory-write-global"],
+    });
+    assert.equal(report.ok, false);
+    assert.ok(hasIssue(report, "LINT-AGENT-001", "error"));
+  } finally {
+    fixture.cleanup();
+  }
+});
+
+test("lint bridge warns when a dual-mode pack emits a copilot agent", serial, () => {
+  const fixture = createTempRepo({ packs: ["pairslash-backend"] });
+  try {
+    updatePackManifest({
+      repoRoot: fixture.tempRoot,
+      packId: "pairslash-backend",
+      mutate(manifest) {
+        manifest.runtime_bindings.copilot_cli.agent = { emit: true };
+        return manifest;
+      },
+    });
+    const report = runLintBridge({
+      repoRoot: fixture.tempRoot,
+      runtime: "all",
+      target: "repo",
+      packs: ["pairslash-backend"],
+    });
+    assert.ok(hasIssue(report, "LINT-AGENT-002", "warning"));
+  } finally {
+    fixture.cleanup();
+  }
+});
+
+test("lint bridge warns when an agent-emitting pack lacks a SKILL.md sibling", serial, () => {
+  const fixture = createTempRepo({ packs: ["pairslash-review"] });
+  try {
+    const skillPath = join(
+      fixture.tempRoot,
+      "packs",
+      "core",
+      "pairslash-review",
+      "SKILL.md",
+    );
+    unlinkSync(skillPath);
+    const report = runLintBridge({
+      repoRoot: fixture.tempRoot,
+      runtime: "all",
+      target: "repo",
+      packs: ["pairslash-review"],
+    });
+    assert.ok(hasIssue(report, "LINT-AGENT-003", "warning"));
+  } finally {
+    fixture.cleanup();
+  }
+});
+
+test("lint bridge accepts agent emission on the opted-in read-oriented pack", serial, () => {
+  const fixture = createTempRepo({ packs: ["pairslash-review"] });
+  try {
+    const report = runLintBridge({
+      repoRoot: fixture.tempRoot,
+      runtime: "all",
+      target: "repo",
+      packs: ["pairslash-review"],
+    });
+    assert.equal(report.summary.error_count, 0);
+    const agentChecks = report.checks.filter(
+      (check) => check.code.startsWith("LINT-AGENT-") && check.result === "pass",
+    );
+    assert.deepEqual(
+      agentChecks.map((check) => check.code).sort(),
+      ["LINT-AGENT-001", "LINT-AGENT-002", "LINT-AGENT-003"],
+    );
+  } finally {
+    fixture.cleanup();
+  }
+});

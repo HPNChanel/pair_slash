@@ -7,6 +7,7 @@ import {
   COPILOT_PLUGIN_MANIFEST_NAME,
   enrichSkillFrontmatter,
   materializeCompiledFile,
+  PLUGIN_AGENTS_DIR,
   PLUGIN_HOOKS_CONFIG_RELPATH,
   PLUGIN_PREFLIGHT_SCRIPT_RELPATH,
   PLUGIN_PROVENANCE_FILENAME,
@@ -87,10 +88,22 @@ const PLUGIN_WRAPPER_ASSET_BASE = {
 
 function emitCopilotPluginBundle({ ir }: { ir: NormalizedIr }) {
   const skillRoot = `${PLUGIN_SKILLS_DIR}/${ir.pack.id}`;
-  const skillFiles = emitCopilotBundle({ ir }).map((file) => ({
-    ...file,
-    relative_path: `${skillRoot}/${file.relative_path}`,
-  }));
+  // Agent profiles (T4-03) hoist to the plugin-root agents/ component dir —
+  // Copilot discovers *.agent.md there natively. Inside skills/<pack>/ they
+  // would be dormant.
+  const emitted = emitCopilotBundle({ ir });
+  const agentFiles = emitted
+    .filter((file) => file.asset_id === "copilot-agent-profile")
+    .map((file) => ({
+      ...file,
+      relative_path: `${PLUGIN_AGENTS_DIR}/${file.relative_path.split("/").pop()}`,
+    }));
+  const skillFiles = emitted
+    .filter((file) => file.asset_id !== "copilot-agent-profile")
+    .map((file) => ({
+      ...file,
+      relative_path: `${skillRoot}/${file.relative_path}`,
+    }));
   const manifestShape = {
     pack_name: ir.pack.id,
     pack_version: ir.pack.version,
@@ -114,6 +127,7 @@ function emitCopilotPluginBundle({ ir }: { ir: NormalizedIr }) {
         manifest: manifestShape,
         runtime: "copilot_cli",
         hooks: hooksConfig ? PLUGIN_HOOKS_CONFIG_RELPATH : null,
+        agents: agentFiles.length > 0 ? `${PLUGIN_AGENTS_DIR}/` : null,
       }),
     ),
   });
@@ -163,7 +177,7 @@ function emitCopilotPluginBundle({ ir }: { ir: NormalizedIr }) {
       }),
     ),
   });
-  return [...skillFiles, manifestFile, ...hookFiles, provenanceFile];
+  return [...skillFiles, manifestFile, ...hookFiles, ...agentFiles, provenanceFile];
 }
 
 export function compileCopilotPack(options: CompileOptions & { emitMode?: string }) {

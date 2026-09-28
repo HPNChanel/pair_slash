@@ -100,6 +100,7 @@ export const RUNTIME_ASSET_GENERATORS = [
   "codex_preflight",
   "copilot_package",
   "copilot_agent",
+  "copilot_agent_profile",
   "copilot_preflight",
   "copilot_mcp",
   "pairslash_ownership_receipt",

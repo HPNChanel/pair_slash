@@ -5,12 +5,15 @@ export const COPILOT_PLUGIN_MANIFEST_NAME = "plugin.json";
 export const CODEX_PLUGIN_MANIFEST_RELPATH = ".codex-plugin/plugin.json";
 export const PLUGIN_PROVENANCE_FILENAME = "pairslash-plugin.json";
 export const PLUGIN_SKILLS_DIR = "skills";
+// Plugin-root agents/ dir is the default Copilot plugin component convention —
+// emitted only for packs that opt into agent shims (T4-03).
+export const PLUGIN_AGENTS_DIR = "agents";
 
 // Author metadata is intentionally omitted from plugin.json: pack manifests do
 // not carry author identity, and emitting a fabricated value would violate the
 // provenance rules in plans/CONSTRAINTS.md (D-section). Bundle provenance lives
 // in the pairslash-plugin.json sidecar instead.
-export function buildPluginManifest({ manifest, runtime, hooks = null }) {
+export function buildPluginManifest({ manifest, runtime, hooks = null, agents = null }) {
   const base = {
     name: manifest.pack_name,
     description: String(manifest.summary ?? manifest.display_name ?? "").slice(0, 1024),
@@ -25,6 +28,9 @@ export function buildPluginManifest({ manifest, runtime, hooks = null }) {
       // Legacy-format hook pointer; hooks/ is auto-discovered on Codex plugins
       // so the Codex manifest intentionally carries no hooks field.
       ...(typeof hooks === "string" ? { hooks } : {}),
+      // Explicit component pointer; agents/ is the default convention but the
+      // field documents intent when agent shims are emitted (T4-03).
+      ...(typeof agents === "string" ? { agents } : {}),
       category: manifest.category,
     };
   }

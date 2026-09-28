@@ -117,7 +117,23 @@ properties:
       codex_cli:
         $ref: "#/$defs/runtimeBinding"
       copilot_cli:
-        $ref: "#/$defs/runtimeBinding"
+        allOf:
+          - $ref: "#/$defs/runtimeBinding"
+          - type: object
+            additionalProperties: false
+            properties:
+              agent:
+                type: object
+                additionalProperties: false
+                required:
+                  - emit
+                properties:
+                  emit:
+                    type: boolean
+                description: >-
+                  Opt-in Copilot custom-agent shim emission (T4-03). The agent
+                  is a persona entry point that defers to the canonical SKILL.md
+                  contract; forbidden on write-authority packs (lint error).
   install_targets:
     type: array
     minItems: 1

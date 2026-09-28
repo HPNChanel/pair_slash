@@ -34,6 +34,8 @@ export interface RuntimeBinding {
   metadata_mode: "openai_yaml_optional" | "none";
   install_dir_name: string;
   compatibility: RuntimeCompatibility;
+  /** Copilot-only: opt-in .agent.md persona shim emission (T4-03). */
+  agent?: { emit: boolean };
 }
 
 export interface RuntimeAssetEntry {

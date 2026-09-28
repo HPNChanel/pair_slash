@@ -690,6 +690,51 @@ test("implicit_invocation rejects values outside the supported enum", () => {
   assert.ok(errors.some((error) => error.includes("implicit_invocation")));
 });
 
+test("copilot agent.emit declaration derives the agent-profile generated asset", () => {
+  const manifest = loadManifestFixture("pack.manifest.v2.core.sample.yaml");
+  manifest.runtime_bindings.copilot_cli.agent = { emit: true };
+  // Generated entries must be declared explicitly in runtime_assets.entries
+  // (PSM021) — mirror the enableMcpServers fixture pattern.
+  manifest.runtime_assets.entries.push({
+    asset_id: "copilot-agent-profile",
+    runtime: "copilot_cli",
+    asset_kind: "agent_fragment",
+    install_surface: "agent",
+    source_path: null,
+    generated_path: `agents/${manifest.pack_name}.agent.md`,
+    generator: "copilot_agent_profile",
+    required: true,
+    override_eligible: false,
+  });
+  manifest.asset_ownership.records.push({
+    asset_id: "copilot-agent-profile",
+    owner: "pairslash",
+    uninstall_behavior: "detach_if_modified",
+  });
+  assert.deepEqual(validatePackManifestV2(manifest), []);
+  const normalized = normalizePackManifestV2(manifest);
+  assert.equal(normalized.runtime_bindings.copilot_cli.agent.emit, true);
+  const profile = normalized.runtime_assets.entries.find(
+    (entry) => entry.asset_id === "copilot-agent-profile",
+  );
+  assert.ok(profile);
+  assert.equal(profile.generated_path, `agents/${normalized.pack_name}.agent.md`);
+  assert.equal(profile.generator, "copilot_agent_profile");
+  assert.equal(profile.install_surface, "agent");
+  assert.equal(profile.runtime, "copilot_cli");
+});
+
+test("absent agent declaration derives no copilot-agent-profile asset", () => {
+  const manifest = loadManifestFixture("pack.manifest.v2.core.sample.yaml");
+  const normalized = normalizePackManifestV2(manifest);
+  assert.equal(normalized.runtime_bindings.copilot_cli.agent, undefined);
+  assert.ok(
+    !normalized.runtime_assets.entries.some(
+      (entry) => entry.asset_id === "copilot-agent-profile",
+    ),
+  );
+});
+
 test("validator rejects invalid runtime range formats", () => {
   const manifest = loadManifestFixture("pack.manifest.v2.core.sample.yaml");
   manifest.supported_runtime_ranges.codex_cli = "latest";

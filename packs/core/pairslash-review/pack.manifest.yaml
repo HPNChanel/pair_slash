@@ -32,6 +32,8 @@ runtime_bindings:
     compatibility:
       canonical_picker: supported
       direct_invocation: unverified
+    agent:
+      emit: true
 install_targets:
   - repo
   - user
@@ -87,6 +89,15 @@ runtime_assets:
       source_path: null
       generated_path: agents/runtime-context.md
       generator: copilot_agent
+      required: true
+      override_eligible: false
+    - asset_id: copilot-agent-profile
+      runtime: copilot_cli
+      asset_kind: agent_fragment
+      install_surface: agent
+      source_path: null
+      generated_path: agents/pairslash-review.agent.md
+      generator: copilot_agent_profile
       required: true
       override_eligible: false
     - asset_id: copilot-package
@@ -167,6 +178,9 @@ asset_ownership:
       owner: pairslash
       uninstall_behavior: detach_if_modified
     - asset_id: copilot-agent-context
+      owner: pairslash
+      uninstall_behavior: detach_if_modified
+    - asset_id: copilot-agent-profile
       owner: pairslash
       uninstall_behavior: detach_if_modified
     - asset_id: copilot-package

@@ -22,7 +22,7 @@ reference; openai/codex `plugin-json-spec.md`, verified 2026-09-28)
 <plugin-name>/
   plugin.json            # required manifest at plugin root
   skills/<skill-name>/   # SKILL.md + support files
-  agents/                # *.agent.md (PairSlash: never emitted, see decisions)
+  agents/                # *.agent.md (opt-in only, see decision 4a)
   hooks.json             # optional hooks config
   .mcp.json              # optional MCP server config
   lsp.json               # optional LSP config (not emitted)
@@ -69,7 +69,7 @@ screenshots[]}`. Repo/team marketplace entries live at
 | `author` | *omitted — manifest has no author field* | *omitted* |
 | `required_mcp_servers` | *not emitted* | *not emitted* |
 | `hooks.preflight` (resolved) | `hooks: "hooks/hooks.json"` + `hooks/hooks.json` + `scripts/pairslash-preflight.mjs` | `hooks/hooks.json` + `scripts/pairslash-preflight.mjs` (dir convention) |
-| `agent` assets | *never emitted* | *never emitted* |
+| `runtime_bindings.copilot_cli.agent.emit` | `agents/<pack-id>.agent.md` at plugin root + `agents: "agents/"` pointer | *not emitted* (Copilot-only surface) |
 | trust/policy material | provenance sidecar only | provenance sidecar only |
 
 ## Decisions
@@ -85,9 +85,18 @@ screenshots[]}`. Repo/team marketplace entries live at
 3. **`format_version` pin.** `PLUGIN_FORMAT_VERSION = "1.0.0"` in
    `spec-core/plugin-ir.ts`; bump when either runtime's verified plugin schema
    changes. Emitters fail closed on unknown runtime.
-4. **No `agents/` emission.** Agent files are never emitted from workflow
-   packs (write-authority stays skill-disciplined; agent emission is T4-03's
-   restricted domain).
+4. **`agents/` emission is opt-in and restricted (T4-03).** A pack may declare
+   `runtime_bindings.copilot_cli.agent.emit: true` to emit a
+   `agents/<pack-id>.agent.md` persona shim. Hard rules: write-authority packs
+   can never emit agents (lint `LINT-AGENT-001` error, charter §13.3);
+   dual-mode packs emit a `LINT-AGENT-002` review warning; an emitting pack
+   without a `SKILL.md` sibling warns (`LINT-AGENT-003`). The agent body defers
+   to the canonical skill contract — no divergent logic. In plugin mode the
+   file lands at plugin-root `agents/` (native discovery) with an explicit
+   `agents` pointer in `plugin.json`; in skill mode it stays inside the pack
+   dir as a reviewable shim that is dormant until a user promotes it to
+   `.github/agents/` or `~/.copilot/agents/` themselves. Codex emits no agent
+   file (its subagent surface differs — separate evaluation).
 5. **`mcpServers` still not emitted.** `required_mcp_servers` entries are
    `{id, spec_era}` requirement declarations, not endpoint configs — a plugin
    `.mcp.json` cannot be synthesized from them.
