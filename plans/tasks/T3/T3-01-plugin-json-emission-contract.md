@@ -2,13 +2,21 @@
 id: T3-01
 track: T3
 title: Design plugin.json emission contract (schema + pack-manifest mapping)
-status: todo
+status: done
 depends_on: []
 est_size: M
-claimed_by:
-claimed_at:
-completed_at:
-evidence:
+claimed_by: devin
+claimed_at: 2026-09-28
+completed_at: 2026-09-28
+evidence: >
+  Contract doc: docs/architecture/plugin-emission-contract.md with verified
+  field inventory (Copilot plugin.json reference + openai/codex
+  plugin-json-spec), full manifest->plugin.json mapping table for both
+  runtimes, and recorded decisions (per-pack unit, pairslash-plugin.json
+  provenance sidecar, format_version 1.0.0 pin, no agents/hooks/mcpServers
+  emission in v1). IR module: packages/core/spec-core/src/plugin-ir.ts
+  (buildPluginManifest, buildPluginProvenance, manifestDigestForPlugin) with
+  5 unit tests in spec-core/tests/plugin-ir.test.js.
 ---
 
 ## Objective

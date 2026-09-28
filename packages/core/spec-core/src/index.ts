@@ -4,6 +4,7 @@ export * from "./constants.ts";
 export * from "./ir.ts";
 export * from "./manifest.ts";
 export * from "./mcp-era.ts";
+export * from "./plugin-ir.ts";
 export * from "./manifest-resolver.ts";
 export * from "./manifest-v2.normalize.ts";
 export * from "./manifest-v2.schema.ts";
