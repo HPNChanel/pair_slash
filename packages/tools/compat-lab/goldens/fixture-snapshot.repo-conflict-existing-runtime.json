@@ -38,7 +38,7 @@
         {
           "bundle_kind": "codex-skill-bundle",
           "canonical_entrypoint": "/skills",
-          "digest": "b4c2bfcb414cd6f7efecd677c80ab88bb93bbe3a63758441543ece4a487dc772",
+          "digest": "fc3ea0370241ecf4397e5003df05c552d052f3df03f55e4cd4af2bccc780da3e",
           "direct_invocation": "$pairslash-plan",
           "files": [
             {
@@ -52,7 +52,7 @@
               "relative_path": "agents/openai.yaml",
               "required": true,
               "runtime_selector": "codex_cli",
-              "sha256": "2c677fd25484fcc0fcd2bc9161dbcb27c274f87765bad405b8004c0d25af0cb7",
+              "sha256": "53e5480f01618e84f9b7e2d7265e1404821ebf32bce35d467871b26181e88906",
               "uninstall_behavior": "detach_if_modified",
               "write_authority_guarded": false
             },
@@ -97,7 +97,7 @@
               "relative_path": "pairslash.install.json",
               "required": true,
               "runtime_selector": "shared",
-              "sha256": "3adf194d15ed3a3a3885d849aef441ea2d8a64d030c0276d278dac32d53d8159",
+              "sha256": "5730f8dd891de9c729d7f6a659c5194df85c4da79475f0ca7a7c052a81ad4c41",
               "uninstall_behavior": "remove_if_unmodified",
               "write_authority_guarded": false
             },
@@ -187,12 +187,12 @@
               "relative_path": "SKILL.md",
               "required": true,
               "runtime_selector": "shared",
-              "sha256": "090a4cd639662a55bf568018483f346e92b5f61c3511f99fe36140f2cb0cc2e9",
+              "sha256": "f846c5c9cec9a0badfd17d4dfae1e2f587fcf752b047a35581b20be46e88758e",
               "uninstall_behavior": "detach_if_modified",
               "write_authority_guarded": false
             }
           ],
-          "normalized_ir_digest": "0f671f9024f7a2a6a6becb416846fda749cf4cd674ea4bcfe144f56af0f3cce1",
+          "normalized_ir_digest": "729465af41367c7d9742784b6af4eceb1fd00515a20a31e6dfa8075f27afd72f",
           "output_dir": "<repo>\\dist\\compiled\\codex\\pairslash-plan",
           "pack_id": "pairslash-plan",
           "runtime": "codex_cli",
@@ -889,7 +889,7 @@
         {
           "bundle_kind": "copilot-package-bundle",
           "canonical_entrypoint": "/skills",
-          "digest": "ddcd1a7d28af261b7688ff430d223e06444cad0863d7f3bf44a88a257adf17b1",
+          "digest": "d62cf9a41cbb82678e5af70198d619a079ce2832c2bf6c1b252fde8cda1ae071",
           "direct_invocation": "/pairslash-plan",
           "files": [
             {
@@ -918,7 +918,7 @@
               "relative_path": "package/pairslash-bundle.json",
               "required": true,
               "runtime_selector": "copilot_cli",
-              "sha256": "74a71973996fbe768e7392cf370150428aefbd5892f697850e788abded9ad894",
+              "sha256": "e04f0731a0e272f0000b1ce9e13b20117567584213aedce8ae8d7af97be6d434",
               "uninstall_behavior": "detach_if_modified",
               "write_authority_guarded": false
             },
@@ -933,7 +933,7 @@
               "relative_path": "pairslash.install.json",
               "required": true,
               "runtime_selector": "shared",
-              "sha256": "9a1547e0fa5f62f4ac87ca5cc01aebb7a3b5f4cce4679557f5d08d20ab6cc5f9",
+              "sha256": "4593e3a6fb9b68a904c27fd778914c0db80d80bf82434101d10de36a5777892b",
               "uninstall_behavior": "remove_if_unmodified",
               "write_authority_guarded": false
             },
@@ -1023,12 +1023,12 @@
               "relative_path": "SKILL.md",
               "required": true,
               "runtime_selector": "shared",
-              "sha256": "090a4cd639662a55bf568018483f346e92b5f61c3511f99fe36140f2cb0cc2e9",
+              "sha256": "f846c5c9cec9a0badfd17d4dfae1e2f587fcf752b047a35581b20be46e88758e",
               "uninstall_behavior": "detach_if_modified",
               "write_authority_guarded": false
             }
           ],
-          "normalized_ir_digest": "0f671f9024f7a2a6a6becb416846fda749cf4cd674ea4bcfe144f56af0f3cce1",
+          "normalized_ir_digest": "729465af41367c7d9742784b6af4eceb1fd00515a20a31e6dfa8075f27afd72f",
           "output_dir": "<repo>\\dist\\compiled\\copilot\\pairslash-plan",
           "pack_id": "pairslash-plan",
           "runtime": "copilot_cli",

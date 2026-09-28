@@ -72,6 +72,11 @@ export const CAPABILITY_FLAGS = [
 ] as const;
 export const RISK_LEVELS = ["low", "medium", "high", "critical"] as const;
 export const MEMORY_AUTHORITY_MODES = ["read-only", "write-authority"] as const;
+// Implicit invocation = runtime may auto-select the skill from its
+// description. Opt-in only; write-authority packs are hard-forbidden (lint).
+export const IMPLICIT_INVOCATION_MODES = ["explicit-only", "implicit-allowed"] as const;
+export const DEFAULT_IMPLICIT_INVOCATION = "explicit-only" as const;
+export const IMPLICIT_INVOCATION_MIN_DESCRIPTION_LENGTH = 60;
 export const MEMORY_ACCESS_LEVELS = ["none", "read", "write"] as const;
 export const SESSION_ARTIFACT_LEVELS = ["none", "implicit-read", "read", "write"] as const;
 export const AUDIT_LOG_LEVELS = ["none", "append"] as const;

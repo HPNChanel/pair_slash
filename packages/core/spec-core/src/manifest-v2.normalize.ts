@@ -781,6 +781,8 @@ function toCanonicalManifest(record, { preferCanonicalOverride }: any = {}) {
     phase,
     status: isOneOf(status, PACK_STATUSES) ? status : "active",
     canonical_entrypoint: canonicalEntrypoint,
+    implicit_invocation:
+      pickFirstString(record.implicit_invocation) ?? "explicit-only",
     release_channel: isOneOf(releaseChannel, RELEASE_CHANNELS) ? releaseChannel : "stable",
     supported_runtimes: supportedRuntimes,
     supported_runtime_ranges: supportedRuntimeRanges,

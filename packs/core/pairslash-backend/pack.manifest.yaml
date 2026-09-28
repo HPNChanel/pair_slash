@@ -9,6 +9,7 @@ workflow_class: dual-mode
 phase: 3
 status: active
 canonical_entrypoint: /skills
+implicit_invocation: explicit-only
 release_channel: stable
 supported_runtimes:
   - codex_cli

@@ -3,7 +3,7 @@
     {
       "bundle_kind": "copilot-package-bundle",
       "canonical_entrypoint": "/skills",
-      "digest": "5462990216fd3399175812d67468c95a1766a3c762fd197d55329c44fae8256a",
+      "digest": "fa61fe2645d64a095749459784ec52f62033d58007bae7659895c95f0830361e",
       "direct_invocation": "/pairslash-backend",
       "files": [
         {
@@ -32,7 +32,7 @@
           "relative_path": "package/pairslash-bundle.json",
           "required": true,
           "runtime_selector": "copilot_cli",
-          "sha256": "429c9a536b477b67676f83a23f605e430a490b68974676f4baa01a962c06fa21",
+          "sha256": "5449b0cc093d8ab65ffdcffbb8d713d046c4d2d9e5b5bb5887de34218146fc68",
           "uninstall_behavior": "detach_if_modified",
           "write_authority_guarded": false
         },
@@ -47,7 +47,7 @@
           "relative_path": "pairslash.install.json",
           "required": true,
           "runtime_selector": "shared",
-          "sha256": "8a9e714b2715b63ae47318f9e46c4d35fa3556bd3e70f0cf24ab028521362c7b",
+          "sha256": "0f72cd2865faee0c7cf46346b1c6ba2286f40fcdd5aa7b74dc10ba2ea02b7463",
           "uninstall_behavior": "remove_if_unmodified",
           "write_authority_guarded": false
         },
@@ -137,12 +137,12 @@
           "relative_path": "SKILL.md",
           "required": true,
           "runtime_selector": "shared",
-          "sha256": "0d985d1161b39de55af38afcb6f1bb23903bd8b19384a1de636e48f26484b146",
+          "sha256": "1b28d98d215bf30abc61bad899ee62c298d715ff74ad7700360a9f46f988fb2f",
           "uninstall_behavior": "detach_if_modified",
           "write_authority_guarded": false
         }
       ],
-      "normalized_ir_digest": "7755608257bf1397f904d3bb3f0dcbb1e6360f127e695d28f4f59e08a968b682",
+      "normalized_ir_digest": "a077d45301bd190ea387c75feceda57cd274e25e8f1c72e0a5fd83c118164c3f",
       "output_dir": "<repo>\\dist\\compiled\\copilot\\pairslash-backend",
       "pack_id": "pairslash-backend",
       "runtime": "copilot_cli",
@@ -151,7 +151,7 @@
     {
       "bundle_kind": "copilot-package-bundle",
       "canonical_entrypoint": "/skills",
-      "digest": "1ddc6b62de024cfc1acfee023950d2208a168d4efcd06515380075d3e9c22bb6",
+      "digest": "3ca698613d70582f8b492c0ec873c953d9afc52c4d403458610191b3bc9a689c",
       "direct_invocation": "/pairslash-devops",
       "files": [
         {
@@ -180,7 +180,7 @@
           "relative_path": "package/pairslash-bundle.json",
           "required": true,
           "runtime_selector": "copilot_cli",
-          "sha256": "4d7bd21f78f4023dde6470d9ecc5d827de725d05c7e4c2e177662a4f5ea8d2c4",
+          "sha256": "427008db5922b8c25bdcc292e0464f5acaf1f2779be09835d11b1d69452b35d9",
           "uninstall_behavior": "detach_if_modified",
           "write_authority_guarded": false
         },
@@ -195,7 +195,7 @@
           "relative_path": "pairslash.install.json",
           "required": true,
           "runtime_selector": "shared",
-          "sha256": "8ff35f2ebc14e20e3d2782cfced412ceef3eee8adc0c3270f60abcf6079dcbfa",
+          "sha256": "5b29bebb3c3cc7872fa9c7b9e07fd16af43f3c671684d121f8a26b86d7a13c26",
           "uninstall_behavior": "remove_if_unmodified",
           "write_authority_guarded": false
         },
@@ -285,12 +285,12 @@
           "relative_path": "SKILL.md",
           "required": true,
           "runtime_selector": "shared",
-          "sha256": "f1772b9c9712a8974fea63ac8e442ce8a5fa16a13efef3d2fe6e41ec81aa2853",
+          "sha256": "3e8b75e268411d513527c0ce10688030ee79c7aea06b9e57b8ff8ef5a2d83685",
           "uninstall_behavior": "detach_if_modified",
           "write_authority_guarded": false
         }
       ],
-      "normalized_ir_digest": "8b0177f1f7af37b36d942c4ecb52e71cd0159684a50bba7c65a5bc30ba53fe25",
+      "normalized_ir_digest": "f77ac4d69791f42322f2664c6e05d32a74def6c23db317901b01d62bb7fa4089",
       "output_dir": "<repo>\\dist\\compiled\\copilot\\pairslash-devops",
       "pack_id": "pairslash-devops",
       "runtime": "copilot_cli",

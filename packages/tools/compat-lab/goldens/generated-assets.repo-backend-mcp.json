@@ -17,7 +17,7 @@
             "relative_path": "agents/openai.yaml",
             "required": true,
             "runtime_selector": "codex_cli",
-            "sha256": "d2c34746fbd6fcf8abd94c0cd6cb478353925932d206fcd89b968ba0b4aa5ad8",
+            "sha256": "5ea2f0759724f35d0adbf087357ab964df5472f8045519711712563d93413dd3",
             "uninstall_behavior": "detach_if_modified",
             "write_authority_guarded": false
           },
@@ -92,7 +92,7 @@
             "relative_path": "pairslash.install.json",
             "required": true,
             "runtime_selector": "shared",
-            "sha256": "c4237339db74d5e638b72a2f782f8e1a816f87b80dfbe033881b3f5defeeecd2",
+            "sha256": "afc71499187002f800b5ed13856904091c91c376d0a8385ce9d0a34dcefd7c9e",
             "uninstall_behavior": "remove_if_unmodified",
             "write_authority_guarded": false
           }
@@ -162,7 +162,7 @@
             "relative_path": "package/pairslash-bundle.json",
             "required": true,
             "runtime_selector": "copilot_cli",
-            "sha256": "96f375f7173cb42a659cb80ce64331b581148cd77eed7d3048a5d7bdbb5b01ef",
+            "sha256": "64f69fcd39a2d0004ecc5309803334306c75b47d5bb4cf81b1429b55031b4f88",
             "uninstall_behavior": "detach_if_modified",
             "write_authority_guarded": false
           },
@@ -177,7 +177,7 @@
             "relative_path": "pairslash.install.json",
             "required": true,
             "runtime_selector": "shared",
-            "sha256": "ed0e060603e316a5a6f01cf43f388db2999939f7390873dab9dea2b4a3c8de9d",
+            "sha256": "d9c0816f269f3490ff7902813678a980f88cf567245995da96dab61ea5aa6c5f",
             "uninstall_behavior": "remove_if_unmodified",
             "write_authority_guarded": false
           }

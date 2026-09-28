@@ -14,6 +14,7 @@ import * as runtimeCodexAdapter from "@pairslash/runtime-codex-adapter";
 import * as runtimeCopilotAdapter from "@pairslash/runtime-copilot-adapter";
 import {
   CONTRACT_ENVELOPE_SCHEMA_VERSION,
+  IMPLICIT_INVOCATION_MIN_DESCRIPTION_LENGTH,
   LINT_REPORT_SCHEMA_VERSION,
   MCP_SPEC_ERAS,
   OWNERSHIP_FILE,
@@ -24,6 +25,7 @@ import {
   loadPackManifestRecords,
   normalizeRuntime,
   normalizeTarget,
+  parseSkillFrontmatterFields,
   selectPackManifestRecords,
   validateRuntimeRange,
   validateLintReport,
@@ -497,6 +499,106 @@ function applyTriggerRule(entry, checks, target) {
       message: "trigger naming is valid for codex and copilot lanes",
     }),
   );
+}
+
+// implicit_invocation declares activation intent only — the runtime makes the
+// actual routing call. These rules guard the declaration: write-authority can
+// never opt in, and opt-in packs face stricter description hygiene.
+function applyImplicitInvocationRule(entry, checks, target) {
+  const packId = entry.packId;
+  const mode = entry.manifest.implicit_invocation ?? "explicit-only";
+  const workflowClass = entry.manifest.pack?.workflow_class ?? entry.manifest.workflow_class;
+
+  if (workflowClass === "write-authority" && mode !== "explicit-only") {
+    checks.push(
+      createCheck({
+        code: "LINT-INVOKE-001",
+        result: "error",
+        packId,
+        target,
+        path: entry.manifestPath,
+        message: `implicit_invocation '${mode}' is forbidden for write-authority packs`,
+        remediation:
+          "Set implicit_invocation: explicit-only. Runtime auto-selection must never trigger a write-authority workflow.",
+      }),
+    );
+    return;
+  }
+  checks.push(
+    createCheck({
+      code: "LINT-INVOKE-001",
+      result: "pass",
+      packId,
+      target,
+      path: entry.manifestPath,
+      message: `implicit_invocation policy '${mode}' is within bounds for workflow_class '${workflowClass}'`,
+    }),
+  );
+
+  if (mode !== "implicit-allowed") {
+    return;
+  }
+
+  if (workflowClass !== "read-oriented") {
+    checks.push(
+      createCheck({
+        code: "LINT-INVOKE-002",
+        result: "warning",
+        packId,
+        target,
+        path: entry.manifestPath,
+        message: `implicit-allowed on workflow_class '${workflowClass}' — candidate-producing or mutating packs need manual review for ambient activation`,
+        remediation:
+          "Prefer implicit opt-in only for read-oriented packs, or document why ambient activation is safe here.",
+      }),
+    );
+  } else {
+    checks.push(
+      createCheck({
+        code: "LINT-INVOKE-002",
+        result: "pass",
+        packId,
+        target,
+        path: entry.manifestPath,
+        message: "implicit opt-in is on a read-oriented workflow",
+      }),
+    );
+  }
+
+  const skillPath = join(dirname(entry.manifestPath), "SKILL.md");
+  const fields = existsSync(skillPath)
+    ? parseSkillFrontmatterFields(readFileSync(skillPath, "utf8"))
+    : null;
+  const description =
+    typeof fields?.description === "string" ? fields.description.trim() : "";
+  if (description.length < IMPLICIT_INVOCATION_MIN_DESCRIPTION_LENGTH) {
+    checks.push(
+      createCheck({
+        code: "LINT-INVOKE-003",
+        result: "warning",
+        packId,
+        target,
+        path: skillPath,
+        message:
+          description.length === 0
+            ? "implicit-allowed pack is missing a usable SKILL.md description"
+            : `implicit-allowed pack has a weak routing description (${description.length} chars; minimum ${IMPLICIT_INVOCATION_MIN_DESCRIPTION_LENGTH})`,
+        remediation:
+          "Strengthen the SKILL.md description so runtime routing knows precisely when this skill applies.",
+      }),
+    );
+  } else {
+    checks.push(
+      createCheck({
+        code: "LINT-INVOKE-003",
+        result: "pass",
+        packId,
+        target,
+        path: skillPath,
+        message: `routing description meets implicit opt-in hygiene (${description.length} chars)`,
+      }),
+    );
+  }
 }
 
 function applyNamingRule(entry, checks, target) {
@@ -1761,6 +1863,7 @@ export function runLintBridge({
     validEntries.push(entry);
     applySkillSpecRule(entry, checks, normalizedTarget);
     applyTriggerRule(entry, checks, normalizedTarget);
+    applyImplicitInvocationRule(entry, checks, normalizedTarget);
     applyRuntimeRangeRule(entry, checks, normalizedTarget);
     applyRuntimeSupportRule(entry, checks, normalizedTarget);
     applyNamingRule(entry, checks, normalizedTarget);

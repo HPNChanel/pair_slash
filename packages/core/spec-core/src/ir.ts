@@ -59,6 +59,7 @@ export function buildNormalizedIr({ repoRoot, manifestPath }) {
       phase: manifest.pack.phase,
       status: manifest.pack.status,
       canonical_entrypoint: manifest.pack.canonical_entrypoint,
+      implicit_invocation: manifest.implicit_invocation,
       release_channel: manifest.release_channel,
       risk_level: manifest.risk_level,
     },

@@ -9,6 +9,7 @@ workflow_class: write-authority
 phase: 2
 status: active
 canonical_entrypoint: /skills
+implicit_invocation: explicit-only
 release_channel: preview
 supported_runtimes:
   - codex_cli

@@ -2,13 +2,20 @@
 id: T4-02
 track: T4
 title: implicit_invocation manifest field + opt-in policy + description-safety lint
-status: todo
+status: done
 depends_on: []
 est_size: M
-claimed_by:
-claimed_at:
-completed_at:
+claimed_by: devin
+claimed_at: 2026-09-28
+completed_at: 2026-09-28
 evidence:
+  - "spec-core: implicit_invocation enum (explicit-only | implicit-allowed) in manifest-v2.schema.ts, normalize default to explicit-only, types, yaml schema; ir.pack.implicit_invocation; constants IMPLICIT_INVOCATION_MODES/DEFAULT_IMPLICIT_INVOCATION/IMPLICIT_INVOCATION_MIN_DESCRIPTION_LENGTH=60"
+  - "lint-bridge: LINT-INVOKE-001 (error: write-authority + implicit), LINT-INVOKE-002 (warning: implicit-allowed on non-read-oriented), LINT-INVOKE-003 (warning: implicit-allowed + missing/weak description <60 chars); parseSkillFrontmatterFields helper added to skill-spec.ts"
+  - "emitters: implicit_invocation surfaced as metadata only — codex codex-metadata.yaml, copilot package.json, emitted SKILL.md metadata map"
+  - "all 11 core manifests carry implicit_invocation: explicit-only (per-pack decisions recorded in commit body); no pack opts in today"
+  - "no schema version bump — additive optional field with safe default, same discipline as T4-01 hooks"
+  - "docs: docs/workflows/implicit-invocation-policy.md + pack-manifest-v2-practical-spec.md field/enum/validation entries"
+  - "tests: spec-core 57/57, lint-bridge 28/28 (5 new), npm test all suites pass, npm run lint pass, typecheck pass, npm run test:release pass (gh skill publish --dry-run 11/11)"
 ---
 
 ## Objective
@@ -50,10 +57,10 @@ Model implicit invocation (runtime auto-selecting a skill by description match) 
 
 ## Acceptance gates
 
-- [ ] Schema field + normalization + lint rules live with tests
-- [ ] All core manifests carry explicit field values
-- [ ] Write-authority+implicit combo test fails closed
-- [ ] Gates green
+- [x] Schema field + normalization + lint rules live with tests
+- [x] All core manifests carry explicit field values
+- [x] Write-authority+implicit combo test fails closed
+- [x] Gates green
 
 ## Evidence to record
 

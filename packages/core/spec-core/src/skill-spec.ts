@@ -18,6 +18,30 @@ export const SKILL_SPEC_RECOGNIZED_FIELDS = Object.freeze([
 
 export const SKILL_SPEC_DEFAULT_LICENSE = "Apache-2.0";
 
+// Returns the parsed SKILL.md frontmatter mapping, or null when the file has
+// no readable frontmatter block. Used by lint rules that need field values
+// (e.g. description) without re-running full spec validation.
+export function parseSkillFrontmatterFields(content) {
+  if (typeof content !== "string") {
+    return null;
+  }
+  const normalized = content.replace(/\r\n/g, "\n");
+  const match = normalized.match(/^---\n([\s\S]*?)\n---\n?/);
+  if (!match) {
+    return null;
+  }
+  let fields;
+  try {
+    fields = YAML.parse(match[1], { uniqueKeys: true, strict: true });
+  } catch {
+    return null;
+  }
+  if (fields === null || typeof fields !== "object" || Array.isArray(fields)) {
+    return null;
+  }
+  return fields;
+}
+
 const SKILL_NAME_PATTERN = /^[a-z0-9-]+$/;
 const CONTROL_CHAR_PATTERN = new RegExp("[\\u0000-\\u001f\\u007f-\\u009f]");
 
@@ -182,6 +206,7 @@ export function buildSkillFrontmatterAdditions(ir) {
       pack_version: String(ir.pack.version),
       workflow_class: String(ir.pack.workflow_class),
       canonical_entrypoint: String(ir.pack.canonical_entrypoint),
+      implicit_invocation: String(ir.pack.implicit_invocation),
       release_channel: String(ir.pack.release_channel),
       provenance: `pairslash-compiler@${ir.compiler_version}`,
     },

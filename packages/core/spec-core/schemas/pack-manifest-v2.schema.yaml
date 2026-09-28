@@ -72,6 +72,15 @@ properties:
       - deprecated
   canonical_entrypoint:
     const: /skills
+  implicit_invocation:
+    type: string
+    enum:
+      - explicit-only
+      - implicit-allowed
+    description: >-
+      Activation intent declaration for runtime auto-selection by skill
+      description. Defaults to explicit-only when absent. Does not control
+      runtime behavior — runtimes make the routing call.
   release_channel:
     type: string
     enum:

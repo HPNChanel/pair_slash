@@ -85,6 +85,7 @@ export interface PackManifestV2 {
   phase: number;
   status: "active" | "draft" | "deprecated";
   canonical_entrypoint: "/skills";
+  implicit_invocation?: "explicit-only" | "implicit-allowed";
   release_channel: PairSlashReleaseChannel;
   supported_runtimes: PairSlashRuntime[];
   supported_runtime_ranges: Record<PairSlashRuntime, string>;

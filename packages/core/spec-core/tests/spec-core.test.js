@@ -451,6 +451,7 @@ test("buildNormalizedIr produces deterministic canonical asset graph", () => {
   assert.equal(ir.kind, "normalized-pack-ir");
   assert.equal(ir.pack.id, "pairslash-plan");
   assert.equal(ir.pack.canonical_entrypoint, "/skills");
+  assert.equal(ir.pack.implicit_invocation, "explicit-only");
   assert.ok(ir.logical_assets.some((asset) => asset.asset_id === "skill"));
   assert.ok(ir.logical_assets.some((asset) => asset.asset_id === "codex-config"));
   assert.ok(ir.logical_assets.some((asset) => asset.asset_id === "copilot-package"));
@@ -663,6 +664,30 @@ test("required_mcp_servers rejects unknown spec_era values", () => {
   assert.ok(
     errors.some((error) => error.includes("spec_era")),
   );
+});
+
+test("implicit_invocation defaults to explicit-only when absent", () => {
+  const manifest = loadManifestFixture("pack.manifest.v2.core.sample.yaml");
+  delete manifest.implicit_invocation;
+  assert.deepEqual(validatePackManifestV2(manifest), []);
+  const normalized = normalizePackManifestV2(manifest);
+  assert.equal(normalized.implicit_invocation, "explicit-only");
+});
+
+test("implicit_invocation preserves an explicit opt-in value", () => {
+  const manifest = loadManifestFixture("pack.manifest.v2.core.sample.yaml");
+  manifest.implicit_invocation = "implicit-allowed";
+  assert.deepEqual(validatePackManifestV2(manifest), []);
+  const normalized = normalizePackManifestV2(manifest);
+  assert.equal(normalized.implicit_invocation, "implicit-allowed");
+});
+
+test("implicit_invocation rejects values outside the supported enum", () => {
+  const manifest = loadManifestFixture("pack.manifest.v2.core.sample.yaml");
+  manifest.implicit_invocation = "implicit-preferred";
+  const errors = validatePackManifestV2(manifest);
+  assert.ok(errors.length > 0);
+  assert.ok(errors.some((error) => error.includes("implicit_invocation")));
 });
 
 test("validator rejects invalid runtime range formats", () => {

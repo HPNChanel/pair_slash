@@ -15,6 +15,7 @@ function renderCodexMetadata(ir: NormalizedIr) {
     version: ir.pack.version,
     display_name: ir.pack.display_name,
     canonical_entrypoint: ir.pack.canonical_entrypoint,
+    implicit_invocation: ir.pack.implicit_invocation,
     direct_invocation: ir.runtime_support.codex_cli.direct_invocation,
     workflow_class: ir.pack.workflow_class,
     risk_level: ir.pack.risk_level,

@@ -26,6 +26,7 @@ workflow_class: read-oriented
 phase: 2
 status: active
 canonical_entrypoint: /skills
+implicit_invocation: explicit-only
 release_channel: stable
 
 supported_runtimes:
@@ -152,6 +153,7 @@ docs_refs:
 - `supported_runtimes`: exact runtime set. Phase 4 only allows `codex_cli` and `copilot_cli`.
 - `supported_runtime_ranges`: semver-like runtime floors; accepted format is exact `x.y.z` or `>=x.y.z`.
 - `runtime_bindings`: runtime-specific invocation and metadata mode. No absolute install path is allowed here.
+- `implicit_invocation`: activation-intent declaration for runtime auto-selection by skill description. Defaults to `explicit-only` when absent. It declares intent only — it does not control runtime routing; runtimes make the final call. See `docs/workflows/implicit-invocation-policy.md`.
 - `runtime_assets`: bundle contract. `source_path` means copied source asset; `generated_path` means compiler-emitted runtime artifact relative to pack root.
 - `asset_ownership`: uninstall/update ownership contract. Every asset id in `runtime_assets.entries` must have exactly one ownership record.
 - `local_override_policy`: declares which asset ids may diverge locally.
@@ -163,6 +165,7 @@ docs_refs:
 ## Enums
 
 - `workflow_class`: `read-oriented | dual-mode | write-authority`
+- `implicit_invocation`: `explicit-only | implicit-allowed` (default: `explicit-only`)
 - `risk_level`: `low | medium | high | critical`
 - `memory_permissions.authority_mode`: `read-only | write-authority`
 - `memory_permissions.global_project_memory`: `none | read | write`
@@ -184,6 +187,7 @@ docs_refs:
 - `ownership-receipt` is mandatory, non-override, PairSlash-owned, and must use `remove_if_unmodified`.
 - `local_override_policy.eligible_asset_ids` must reference real assets and must never include `ownership-receipt`.
 - `uninstall_strategy.mode` must remain `pairslash_owned_only`.
+- `workflow_class: write-authority` requires `implicit_invocation: explicit-only` — lint hard-errors on any implicit opt-in for write-authority packs.
 
 ## Migration from legacy `2.0.0`
 

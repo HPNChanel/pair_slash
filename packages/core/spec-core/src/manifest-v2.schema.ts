@@ -4,6 +4,7 @@ import {
   AUDIT_LOG_LEVELS,
   CAPABILITY_FLAGS,
   COMPATIBILITY_STATUSES,
+  IMPLICIT_INVOCATION_MODES,
   MANIFEST_MARKER_MODES,
   MANIFEST_SMOKE_ACTIONS,
   MEMORY_ACCESS_LEVELS,
@@ -258,6 +259,7 @@ export const packManifestV2Schema = v.object({
   phase: v.pipe(v.number(), v.integer()),
   status: v.picklist(PACK_STATUSES),
   canonical_entrypoint: v.literal("/skills"),
+  implicit_invocation: v.optional(v.picklist(IMPLICIT_INVOCATION_MODES)),
   release_channel: v.picklist(RELEASE_CHANNELS),
   supported_runtimes: v.pipe(v.array(v.picklist(SUPPORTED_RUNTIMES)), v.nonEmpty()),
   supported_runtime_ranges: v.object({

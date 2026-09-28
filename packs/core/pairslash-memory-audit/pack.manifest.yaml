@@ -9,6 +9,7 @@ workflow_class: read-oriented
 phase: 2
 status: active
 canonical_entrypoint: /skills
+implicit_invocation: explicit-only
 release_channel: stable
 supported_runtimes:
   - codex_cli

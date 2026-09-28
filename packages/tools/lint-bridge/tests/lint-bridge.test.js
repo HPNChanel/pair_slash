@@ -714,3 +714,152 @@ test("lint bridge blocks hidden cross-package relative imports", serial, () => {
     fixture.cleanup();
   }
 });
+
+test("lint bridge hard-errors when a write-authority pack opts into implicit invocation", serial, () => {
+  const fixture = createTempRepo({ packs: ["pairslash-memory-write-global"] });
+  try {
+    updatePackManifest({
+      repoRoot: fixture.tempRoot,
+      packId: "pairslash-memory-write-global",
+      mutate(manifest) {
+        manifest.implicit_invocation = "implicit-allowed";
+        return manifest;
+      },
+    });
+    const report = runLintBridge({
+      repoRoot: fixture.tempRoot,
+      runtime: "all",
+      target: "repo",
+      packs: ["pairslash-memory-write-global"],
+    });
+    assert.equal(report.ok, false);
+    assert.ok(hasIssue(report, "LINT-INVOKE-001", "error"));
+  } finally {
+    fixture.cleanup();
+  }
+});
+
+test("lint bridge accepts implicit-allowed on a read-oriented pack with a strong description", serial, () => {
+  const fixture = createTempRepo({ packs: ["pairslash-plan"] });
+  try {
+    updatePackManifest({
+      repoRoot: fixture.tempRoot,
+      packId: "pairslash-plan",
+      mutate(manifest) {
+        manifest.implicit_invocation = "implicit-allowed";
+        return manifest;
+      },
+    });
+    const report = runLintBridge({
+      repoRoot: fixture.tempRoot,
+      runtime: "all",
+      target: "repo",
+      packs: ["pairslash-plan"],
+    });
+    assert.equal(report.summary.error_count, 0);
+    const passes = report.checks.filter(
+      (check) => check.result === "pass" && check.code.startsWith("LINT-INVOKE-"),
+    );
+    assert.deepEqual(
+      passes.map((check) => check.code).sort(),
+      ["LINT-INVOKE-001", "LINT-INVOKE-002", "LINT-INVOKE-003"],
+    );
+  } finally {
+    fixture.cleanup();
+  }
+});
+
+test("lint bridge warns when implicit-allowed is set on a dual-mode pack", serial, () => {
+  const fixture = createTempRepo({ packs: ["pairslash-backend"] });
+  try {
+    updatePackManifest({
+      repoRoot: fixture.tempRoot,
+      packId: "pairslash-backend",
+      mutate(manifest) {
+        manifest.implicit_invocation = "implicit-allowed";
+        return manifest;
+      },
+    });
+    const report = runLintBridge({
+      repoRoot: fixture.tempRoot,
+      runtime: "all",
+      target: "repo",
+      packs: ["pairslash-backend"],
+    });
+    assert.equal(report.summary.error_count, 0);
+    assert.ok(hasIssue(report, "LINT-INVOKE-002", "warning"));
+  } finally {
+    fixture.cleanup();
+  }
+});
+
+test("lint bridge warns when an implicit-allowed pack has a weak description", serial, () => {
+  const fixture = createTempRepo({ packs: ["pairslash-plan"] });
+  try {
+    updatePackManifest({
+      repoRoot: fixture.tempRoot,
+      packId: "pairslash-plan",
+      mutate(manifest) {
+        manifest.implicit_invocation = "implicit-allowed";
+        return manifest;
+      },
+    });
+    const skillPath = join(
+      fixture.tempRoot,
+      "packs",
+      "core",
+      "pairslash-plan",
+      "SKILL.md",
+    );
+    const skillContent = readFileSync(skillPath, "utf8").replace(
+      /^description: >-\n(?:  .*\n)+/m,
+      "description: Short plan helper\n",
+    );
+    writeFileSync(skillPath, skillContent);
+    const report = runLintBridge({
+      repoRoot: fixture.tempRoot,
+      runtime: "all",
+      target: "repo",
+      packs: ["pairslash-plan"],
+    });
+    assert.equal(report.summary.error_count, 0);
+    assert.ok(hasIssue(report, "LINT-INVOKE-003", "warning"));
+  } finally {
+    fixture.cleanup();
+  }
+});
+
+test("lint bridge treats a missing implicit_invocation field as explicit-only", serial, () => {
+  const fixture = createTempRepo({ packs: ["pairslash-plan"] });
+  try {
+    const manifestPath = join(
+      fixture.tempRoot,
+      "packs",
+      "core",
+      "pairslash-plan",
+      "pack.manifest.yaml",
+    );
+    // Raw YAML write: updatePackManifest re-serializes and would restore the
+    // default field, so remove it directly to cover the normalization path.
+    const rawManifest = YAML.parse(readFileSync(manifestPath, "utf8"));
+    delete rawManifest.implicit_invocation;
+    writeFileSync(manifestPath, YAML.stringify(rawManifest, { lineWidth: 0, simpleKeys: true }));
+    const report = runLintBridge({
+      repoRoot: fixture.tempRoot,
+      runtime: "all",
+      target: "repo",
+      packs: ["pairslash-plan"],
+    });
+    assert.equal(report.summary.error_count, 0);
+    assert.ok(
+      report.checks.some(
+        (check) =>
+          check.code === "LINT-INVOKE-001" &&
+          check.result === "pass" &&
+          check.message.includes("explicit-only"),
+      ),
+    );
+  } finally {
+    fixture.cleanup();
+  }
+});

@@ -3,7 +3,7 @@
     {
       "bundle_kind": "codex-skill-bundle",
       "canonical_entrypoint": "/skills",
-      "digest": "294b2f6f7933a658e7a81724e1c41717eb5a0d66c4451fc05b540af0261b173f",
+      "digest": "f3376698b732b6cc8bb2243973f64646290f34723d6aa0db82931cb0e9f2eacb",
       "direct_invocation": "$pairslash-backend",
       "files": [
         {
@@ -32,7 +32,7 @@
           "relative_path": "pairslash-plugin.json",
           "required": true,
           "runtime_selector": "codex_cli",
-          "sha256": "a48ba8a354534497157b66a90d8a6e3bfbabebe09781dd93bb71cbb880539a67",
+          "sha256": "372dacb3e29d451e6dd323d6514ef4d709c6052afa0f26b4f70fc0753a51c016",
           "uninstall_behavior": "remove_if_unmodified",
           "write_authority_guarded": false
         },
@@ -47,7 +47,7 @@
           "relative_path": "pairslash.install.json",
           "required": true,
           "runtime_selector": "shared",
-          "sha256": "01e7c6dbefc7187235a871c65e4b11b08375f5b71f0070cf4be2e8aed7caa395",
+          "sha256": "68dc1b93b6fb88e94f38588bd44c6424325ddd5e6aaf420bb8d33b95dcfde551",
           "uninstall_behavior": "remove_if_unmodified",
           "write_authority_guarded": false
         },
@@ -62,7 +62,7 @@
           "relative_path": "skills/pairslash-backend/agents/openai.yaml",
           "required": true,
           "runtime_selector": "codex_cli",
-          "sha256": "33b136be5b2fba9d86b879462de154f34b9c28468d748ffb6860e80fc746c939",
+          "sha256": "9e0c3c0837e17f36e457b160a5680b1e3aa43f5bf34542ec4f9c3f7bd2f3d2eb",
           "uninstall_behavior": "detach_if_modified",
           "write_authority_guarded": false
         },
@@ -182,12 +182,12 @@
           "relative_path": "skills/pairslash-backend/SKILL.md",
           "required": true,
           "runtime_selector": "shared",
-          "sha256": "0d985d1161b39de55af38afcb6f1bb23903bd8b19384a1de636e48f26484b146",
+          "sha256": "1b28d98d215bf30abc61bad899ee62c298d715ff74ad7700360a9f46f988fb2f",
           "uninstall_behavior": "detach_if_modified",
           "write_authority_guarded": false
         }
       ],
-      "normalized_ir_digest": "7755608257bf1397f904d3bb3f0dcbb1e6360f127e695d28f4f59e08a968b682",
+      "normalized_ir_digest": "a077d45301bd190ea387c75feceda57cd274e25e8f1c72e0a5fd83c118164c3f",
       "output_dir": "<repo>\\dist\\compiled\\codex\\pairslash-backend",
       "pack_id": "pairslash-backend",
       "runtime": "codex_cli",
@@ -196,7 +196,7 @@
     {
       "bundle_kind": "codex-skill-bundle",
       "canonical_entrypoint": "/skills",
-      "digest": "97de8bc035e91a5aae6c66a692a99f0eb2362e0093ce935561416f1ec3ea4c18",
+      "digest": "b4f77f7f7895cfcbb9f0d353884035d1166f1ce6d3e3151a70f9d5d474ea6239",
       "direct_invocation": "$pairslash-devops",
       "files": [
         {
@@ -225,7 +225,7 @@
           "relative_path": "pairslash-plugin.json",
           "required": true,
           "runtime_selector": "codex_cli",
-          "sha256": "9c6a91f0e1f1955563b60d1f8caadc6c288cfaa3e2fb7c3d578d047ed5b194df",
+          "sha256": "64882f6fff7d0f1bda0a4e94ba1b740841169cb1c77d17a796df66c2a4b102d3",
           "uninstall_behavior": "remove_if_unmodified",
           "write_authority_guarded": false
         },
@@ -240,7 +240,7 @@
           "relative_path": "pairslash.install.json",
           "required": true,
           "runtime_selector": "shared",
-          "sha256": "7f10b6668b02cf6cfaea159b23413a51b2409f591865f12c2163f98afc00340e",
+          "sha256": "9c0fbe145727123a460911de1db2e69c1719995474a34dba0c0666f30d677fe8",
           "uninstall_behavior": "remove_if_unmodified",
           "write_authority_guarded": false
         },
@@ -255,7 +255,7 @@
           "relative_path": "skills/pairslash-devops/agents/openai.yaml",
           "required": true,
           "runtime_selector": "codex_cli",
-          "sha256": "d0f34813211dcbd859d13b6a980073a620b5113c7f4008448fe40f8cc7d05f39",
+          "sha256": "2307c362d7d56411810be7bd80e18f580d328698838e851db0b14338442af7f3",
           "uninstall_behavior": "detach_if_modified",
           "write_authority_guarded": false
         },
@@ -375,12 +375,12 @@
           "relative_path": "skills/pairslash-devops/SKILL.md",
           "required": true,
           "runtime_selector": "shared",
-          "sha256": "f1772b9c9712a8974fea63ac8e442ce8a5fa16a13efef3d2fe6e41ec81aa2853",
+          "sha256": "3e8b75e268411d513527c0ce10688030ee79c7aea06b9e57b8ff8ef5a2d83685",
           "uninstall_behavior": "detach_if_modified",
           "write_authority_guarded": false
         }
       ],
-      "normalized_ir_digest": "8b0177f1f7af37b36d942c4ecb52e71cd0159684a50bba7c65a5bc30ba53fe25",
+      "normalized_ir_digest": "f77ac4d69791f42322f2664c6e05d32a74def6c23db317901b01d62bb7fa4089",
       "output_dir": "<repo>\\dist\\compiled\\codex\\pairslash-devops",
       "pack_id": "pairslash-devops",
       "runtime": "codex_cli",
