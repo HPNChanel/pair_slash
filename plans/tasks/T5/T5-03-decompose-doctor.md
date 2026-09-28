@@ -2,13 +2,18 @@
 id: T5-03
 track: T5
 title: Decompose doctor/index.ts into checks/ + report.ts + barrel
-status: todo
+status: done
 depends_on: []
 est_size: L
 claimed_by:
 claimed_at:
-completed_at:
+completed_at: 2026-09-28
 evidence:
+  - "Export diff: empty — sole public export `runDoctor` preserved via named re-export barrel."
+  - "Module map: doctor/helpers.ts (41 decls: consts, verdict/issue helpers, scope probes, resolveDoctorRuntime+buildBaseContext), doctor/checks/{runtime-detect,platform,scope,install-root,manifest,required-tools,owned-files,trust-posture,preview-risk,asset-placement,workflow-maturity}.ts (28 run* checks + domain helpers), doctor/checks/index.ts (CHECKS registry, order identical to pre-split), doctor/report.ts (19 build*/aggregate/sort fns), doctor/run-doctor.ts (runDoctor entrypoint)."
+  - "T1-05/T4-04/T4-06 additions (runSharedSkillRootSupport, runCodexDaemonState, runHooksState + helpers) grouped into install-root and runtime-detect per domain rule — none orphaned in barrel."
+  - "Split tool: .pairslash/tmp/split-doctor.mjs (handles named/default/namespace/`as`-alias imports, depth-aware relative paths)."
+  - "Gates: doctor tests 44/44 unmodified; npm run typecheck clean; npm run lint clean; npm test all files green."
 ---
 
 ## Objective
@@ -43,9 +48,9 @@ Split `packages/tools/doctor/src/index.ts` (~97KB, ~69 functions) into `doctor/c
 
 ## Acceptance gates
 
-- [ ] Export diff empty
-- [ ] Doctor tests green unmodified
-- [ ] Gates green
+- [x] Export diff empty
+- [x] Doctor tests green unmodified
+- [x] Gates green
 
 ## Evidence to record
 
