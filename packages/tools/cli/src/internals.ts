@@ -198,6 +198,7 @@ export function buildLifecycleEnvelope(action, repoRoot, options) {
         target: options.target,
         packs,
         skillRoot: options.skillRoot,
+        emit: options.emit,
       })
     : action === "update"
       ? planUpdate({
@@ -208,6 +209,7 @@ export function buildLifecycleEnvelope(action, repoRoot, options) {
           from: options.from,
           to: options.to,
           skillRoot: options.skillRoot,
+          emit: options.emit,
         })
       : planUninstall({
           repoRoot,
@@ -215,5 +217,6 @@ export function buildLifecycleEnvelope(action, repoRoot, options) {
           target: options.target,
           packs,
           skillRoot: options.skillRoot,
+          emit: options.emit,
         });
 }

@@ -27,6 +27,7 @@ import {
   exists,
   loadPackCatalogRecords,
   loadPackManifestRecords,
+  normalizeEmitMode,
   normalizeRuntime,
   normalizeSkillRoot,
   normalizeTarget,
@@ -288,13 +289,32 @@ function pickScopeVerdict(current, candidate) {
   return order.indexOf(candidate) > order.indexOf(current) ? candidate : current;
 }
 
-function buildScopeProbe({ repoRoot, runtime, target, adapter, selectedTarget, skillRoot = "runtime-default" }) {
+function buildScopeProbe({ repoRoot, runtime, target, adapter, selectedTarget, skillRoot = "runtime-default", emit = "skill" }) {
+  const pluginLane = emit === "plugin";
   const configHome = adapter.resolveConfigHome({ repoRoot, target, skillRoot });
-  const installRoot = adapter.resolveInstallRoot({ repoRoot, target, skillRoot });
-  const statePath = resolveStatePath({ repoRoot, runtime, target, skillRoot });
+  // Plugin emit mode has repo-scope file placement only; user scope is owned
+  // by the runtime's plugin commands (PairSlash never writes plugin caches).
+  const installRoot = pluginLane
+    ? target === "repo"
+      ? adapter.resolvePluginRoot({ repoRoot, target })
+      : null
+    : adapter.resolveInstallRoot({ repoRoot, target, skillRoot });
+  const statePath = resolveStatePath({ repoRoot, runtime, target, skillRoot, emit });
   const selected = target === selectedTarget;
   let verdict = "pass";
   const issues = [];
+
+  if (pluginLane && target !== "repo") {
+    verdict = pickScopeVerdict(verdict, selected ? "unsupported" : "warn");
+    issues.push(
+      summarizeScopeProbeIssue(
+        `scope.${target}.plugin_scope`,
+        "Plugin emit mode places files only at repo scope; user-scope plugin install goes through the runtime's plugin commands.",
+        "Use --emit plugin --target repo, or the runtime's plugin surface for user scope.",
+        selected,
+      ),
+    );
+  }
 
   const configHomeStat = safeStat(configHome);
   if (exists(configHome) && (!configHomeStat.ok || !configHomeStat.stat.isDirectory())) {
@@ -310,8 +330,8 @@ function buildScopeProbe({ repoRoot, runtime, target, adapter, selectedTarget, s
     );
   }
 
-  const installRootStat = safeStat(installRoot);
-  if (exists(installRoot) && (!installRootStat.ok || !installRootStat.stat.isDirectory())) {
+  const installRootStat = installRoot ? safeStat(installRoot) : null;
+  if (installRoot && exists(installRoot) && (!installRootStat.ok || !installRootStat.stat.isDirectory())) {
     const issueVerdict = selected ? "fail" : "warn";
     verdict = pickScopeVerdict(verdict, issueVerdict);
     issues.push(
@@ -326,9 +346,9 @@ function buildScopeProbe({ repoRoot, runtime, target, adapter, selectedTarget, s
 
   const writableTargets = [...new Set([
     findExistingParentPath(configHome),
-    findExistingParentPath(installRoot),
+    installRoot ? findExistingParentPath(installRoot) : null,
     findExistingParentPath(dirname(statePath)),
-  ])];
+  ].filter(Boolean))];
   const writeFailures = writableTargets
     .map((path) => ({ path, result: adapter.checkWritablePath(path) }))
     .filter((entry) => !entry.result.writable);
@@ -362,7 +382,7 @@ function buildScopeProbe({ repoRoot, runtime, target, adapter, selectedTarget, s
   };
 }
 
-function resolveDoctorRuntime(requestedRuntime, repoRoot, target, runtimeSelectionOverride = null, skillRoot = "runtime-default") {
+function resolveDoctorRuntime(requestedRuntime, repoRoot, target, runtimeSelectionOverride = null, skillRoot = "runtime-default", emit = "skill") {
   if (runtimeSelectionOverride) {
     return normalizeRuntime(runtimeSelectionOverride);
   }
@@ -372,7 +392,7 @@ function resolveDoctorRuntime(requestedRuntime, repoRoot, target, runtimeSelecti
   }
 
   const stateCandidates = SUPPORTED_RUNTIMES.filter((runtime) =>
-    exists(resolveStatePath({ repoRoot, runtime, target, skillRoot })),
+    exists(resolveStatePath({ repoRoot, runtime, target, skillRoot, emit })),
   );
   if (stateCandidates.length === 1) {
     return stateCandidates[0];
@@ -401,6 +421,7 @@ function buildBaseContext({
   target = "repo",
   packs = [],
   skillRoot = "runtime-default",
+  emit = "skill",
   adapterOverride = null,
   runtimeSelectionOverride = null,
   osOverride = null,
@@ -408,13 +429,16 @@ function buildBaseContext({
   cwdOverride = null,
 }) {
   const normalizedTarget = normalizeTarget(target);
-  const normalizedSkillRoot = normalizeSkillRoot(skillRoot);
+  const normalizedEmit = normalizeEmitMode(emit);
+  const normalizedSkillRoot =
+    normalizedEmit === "plugin" ? "runtime-default" : normalizeSkillRoot(skillRoot);
   const normalizedRuntime = resolveDoctorRuntime(
     runtime,
     repoRoot,
     normalizedTarget,
     runtimeSelectionOverride,
     normalizedSkillRoot,
+    normalizedEmit,
   );
   const adapter = adapterOverride ?? getAdapter(normalizedRuntime);
   const catalogRecords = loadPackCatalogRecords(repoRoot, { includeAdvanced: false });
@@ -442,6 +466,7 @@ function buildBaseContext({
     runtime: normalizedRuntime,
     target: normalizedTarget,
     skillRoot: normalizedSkillRoot,
+    emit: normalizedEmit,
   });
 
   let state = null;
@@ -453,6 +478,7 @@ function buildBaseContext({
       runtime: normalizedRuntime,
       target: normalizedTarget,
       skillRoot: normalizedSkillRoot,
+      emit: normalizedEmit,
     }).state;
   } catch (error) {
     stateError = error.message;
@@ -481,8 +507,14 @@ function buildBaseContext({
     detection,
     supportLane,
     skillRoot: normalizedSkillRoot,
+    emit: normalizedEmit,
     configHome: adapter.resolveConfigHome({ repoRoot, target: normalizedTarget, skillRoot: normalizedSkillRoot }),
-    installRoot: adapter.resolveInstallRoot({ repoRoot, target: normalizedTarget, skillRoot: normalizedSkillRoot }),
+    installRoot:
+      normalizedEmit === "plugin"
+        ? normalizedTarget === "repo"
+          ? adapter.resolvePluginRoot({ repoRoot, target: normalizedTarget })
+          : null
+        : adapter.resolveInstallRoot({ repoRoot, target: normalizedTarget, skillRoot: normalizedSkillRoot }),
     statePath,
     stateFileExists,
     state,
@@ -504,6 +536,7 @@ function buildBaseContext({
           adapter,
           selectedTarget: normalizedTarget,
           skillRoot: normalizedSkillRoot,
+          emit: normalizedEmit,
         }),
       ]),
     ),
@@ -1121,6 +1154,23 @@ function runConfigHomeCheck(context) {
 }
 
 function runInstallRootCheck(context) {
+  if (context.installRoot === null || context.installRoot === undefined) {
+    return createCheckResult({
+      id: "filesystem.install_root",
+      group: "filesystem",
+      status: "unsupported",
+      runtime: context.runtime,
+      target: context.target,
+      inputs: {
+        install_root: null,
+        emit: context.emit,
+      },
+      summary: "plugin emit mode has no install root at this scope; plugin bundles are repo-scope only",
+      remediation: "Use --emit plugin --target repo; user-scope plugin activation stays with the runtime's own plugin commands.",
+      evidence: {},
+      blockingForInstall: true,
+    });
+  }
   if (!exists(context.installRoot)) {
     return createCheckResult({
       id: "filesystem.install_root",
@@ -1176,7 +1226,9 @@ function runWritePermissionCheck(context) {
     context.installRoot,
     dirname(context.statePath),
     context.configHome,
-  ].map((path) => findExistingParentPath(path));
+  ]
+    .filter(Boolean)
+    .map((path) => findExistingParentPath(path));
   const failures = [];
   for (const path of [...new Set(targets)]) {
     const permission = context.adapter.checkWritablePath(path);
@@ -2084,6 +2136,18 @@ function runInstalledTrustPosture(context) {
 }
 
 function runUnmanagedInstallRoot(context) {
+  if (context.installRoot === null || context.installRoot === undefined) {
+    return createCheckResult({
+      id: "conflict.unmanaged_install_root",
+      group: "conflict",
+      status: "pass",
+      runtime: context.runtime,
+      target: context.target,
+      inputs: {},
+      summary: "no install root at this scope for the selected emit mode; nothing to scan",
+      evidence: {},
+    });
+  }
   const entries = listInstallRootEntries(context.installRoot);
   const trackedNames = new Set((context.state?.packs ?? []).map((pack) => relativeFrom(context.installRoot, pack.install_dir)));
   const installIntentPacks = context.installIntentPacks.length > 0
@@ -3108,6 +3172,7 @@ export function runDoctor({
   target = "repo",
   packs = [],
   skillRoot = "runtime-default",
+  emit = "skill",
   _adapter_override = null,
   _runtime_selection_override = null,
   _os_override = null,
@@ -3120,6 +3185,7 @@ export function runDoctor({
     target,
     packs,
     skillRoot,
+    emit,
     adapterOverride: _adapter_override,
     runtimeSelectionOverride: _runtime_selection_override,
     osOverride: _os_override,

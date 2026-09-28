@@ -2381,3 +2381,60 @@ test("pairslash install rejects unsupported --skill-root values", serial, async 
     fixture.cleanup();
   }
 });
+
+test("pairslash preview install --emit plugin resolves plugin dir and reports emit", serial, async () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
+  let output = "";
+  try {
+    const exitCode = await runCli({
+      argv: [
+        "preview",
+        "install",
+        "pairslash-plan",
+        "--runtime",
+        "codex",
+        "--target",
+        "repo",
+        "--emit",
+        "plugin",
+        "--format",
+        "json",
+      ],
+      cwd: fixture.tempRoot,
+      stdout: {
+        write(chunk) {
+          output += chunk;
+        },
+      },
+    });
+    assert.equal(exitCode, 0);
+    const payload = JSON.parse(output);
+    assert.equal(payload.action, "install");
+    assert.equal(payload.emit, "plugin");
+    assert.ok(payload.state_path.endsWith("repo-codex_cli-plugin.json"));
+    const fileOps = payload.operations.filter((operation) => operation.install_surface);
+    assert.ok(fileOps.length > 0);
+    assert.ok(fileOps.every((operation) => operation.absolute_path.includes("plugins")));
+    assert.ok(payload.warnings.some((warning) => warning.includes("emit-plugin-manual-activation")));
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("pairslash install rejects unsupported --emit values", serial, async () => {
+  const fixture = createTempRepo();
+  try {
+    await assert.rejects(
+      runCli({
+        argv: ["preview", "install", "pairslash-plan", "--runtime", "codex", "--emit", "bogus"],
+        cwd: fixture.tempRoot,
+        stdout: { write() {} },
+      }),
+      /unsupported emit mode/,
+    );
+  } finally {
+    fixture.cleanup();
+  }
+});

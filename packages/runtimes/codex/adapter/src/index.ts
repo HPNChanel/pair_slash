@@ -269,6 +269,21 @@ export function resolvePackInstallDir(options, packId) {
   return join(resolveInstallRoot(options), packId);
 }
 
+// Plugin bundles are file-placed only at repo scope: <repo>/plugins/<id> is
+// the documented Codex repo-scope plugin root (openai/codex plugin-creator
+// sample). User-scope plugin install goes through `codex plugin add` /
+// marketplace commands — PairSlash never writes plugin caches or settings.
+export function resolvePluginRoot({ repoRoot, target }) {
+  if (target !== "repo") {
+    throw new Error(`unsupported plugin install target: ${target}`);
+  }
+  return join(repoRoot, "plugins");
+}
+
+export function resolvePluginInstallDir(options, packId) {
+  return join(resolvePluginRoot(options), packId);
+}
+
 const SPEC_CONVENTIONAL_DIRS = ["scripts", "references", "assets"];
 
 function specConventionalSupportPath(sourcePath) {

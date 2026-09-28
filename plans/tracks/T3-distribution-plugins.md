@@ -1,6 +1,6 @@
 # Track T3 — Distribution: plugins & marketplaces
 
-**Status:** Approved | **Priority:** P2 | **Depends on:** T2
+**Status:** Done (2026-09-28) | **Priority:** P2 | **Depends on:** T2
 **Goal:** Give PairSlash packs a second distribution form — runtime-native plugin bundles and marketplace manifests — while preserving `/skills` as the canonical *invocation* path and the existing direct skill install as the default.
 
 ## Context

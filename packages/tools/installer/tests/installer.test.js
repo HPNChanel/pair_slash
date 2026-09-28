@@ -1539,3 +1539,190 @@ test("shared-agents install preserves foreign files under .agents/skills", seria
     fixture.cleanup();
   }
 });
+
+test("plugin emit installs bundle under copilot repo plugin dir without touching settings", serial, () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ copilotVersion: "1.0.88" });
+  try {
+    const envelope = planInstall({
+      repoRoot: fixture.tempRoot,
+      runtime: "copilot_cli",
+      target: "repo",
+      packs: ["pairslash-plan"],
+      emit: "plugin",
+    });
+    assert.equal(envelope.plan.emit, "plugin");
+    assert.equal(
+      envelope.statePath,
+      join(fixture.tempRoot, ".pairslash", "install-state", "repo-copilot_cli-plugin.json"),
+    );
+    assert.equal(envelope.plan.can_apply, true);
+    assert.ok(
+      envelope.plan.warnings.some((warning) => warning.includes("emit-plugin-manual-activation")),
+    );
+    const fileOps = envelope.plan.operations.filter((operation) => operation.install_surface);
+    assert.ok(fileOps.length > 0);
+    const pluginRoot = join(fixture.tempRoot, ".github", "plugins", "pairslash-plan");
+    assert.ok(fileOps.every((operation) => operation.absolute_path.startsWith(pluginRoot)));
+
+    const result = applyInstall(envelope);
+    assert.equal(result.action, "install");
+    assert.equal(result.state.packs[0].install_mode, "plugin");
+    assert.ok(existsSync(join(pluginRoot, "plugin.json")));
+    assert.ok(existsSync(join(pluginRoot, "pairslash-plugin.json")));
+    assert.ok(existsSync(join(pluginRoot, "skills", "pairslash-plan", "SKILL.md")));
+    // Settings files are never written by plugin placement.
+    assert.ok(!existsSync(join(fixture.tempRoot, ".github", "copilot", "settings.json")));
+    assert.ok(!existsSync(join(fixture.tempRoot, ".github", "skills", "pairslash-plan")));
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("plugin emit installs codex bundle under repo plugins dir", serial, () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
+  try {
+    const envelope = planInstall({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      target: "repo",
+      packs: ["pairslash-plan"],
+      emit: "plugin",
+    });
+    assert.equal(envelope.plan.emit, "plugin");
+    const pluginRoot = join(fixture.tempRoot, "plugins", "pairslash-plan");
+    assert.equal(envelope.plan.install_root, join(fixture.tempRoot, "plugins"));
+    applyInstall(envelope);
+    assert.ok(existsSync(join(pluginRoot, ".codex-plugin", "plugin.json")));
+    assert.ok(existsSync(join(pluginRoot, "skills", "pairslash-plan", "SKILL.md")));
+    const state = JSON.parse(readFileSync(envelope.statePath, "utf8"));
+    assert.equal(state.emit, "plugin");
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("plugin emit fails closed for user scope", serial, () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
+  try {
+    const envelope = planInstall({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      target: "user",
+      packs: ["pairslash-plan"],
+      emit: "plugin",
+    });
+    assert.equal(envelope.plan.can_apply, false);
+    assert.ok(envelope.plan.errors.some((error) => error.includes("emit-plugin-user-scope")));
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("plugin emit uninstall removes bundle and plugin state independently", serial, () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
+  try {
+    const pluginEnv = planInstall({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      target: "repo",
+      packs: ["pairslash-plan"],
+      emit: "plugin",
+    });
+    applyInstall(pluginEnv);
+    const pluginStatePath = join(fixture.tempRoot, ".pairslash", "install-state", "repo-codex_cli-plugin.json");
+    assert.ok(existsSync(pluginStatePath));
+
+    // A skill-mode install of the same pack is a separate state lane.
+    const skillEnv = planInstall({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      target: "repo",
+      packs: ["pairslash-plan"],
+    });
+    assert.equal(skillEnv.plan.can_apply, true);
+    applyInstall(skillEnv);
+    assert.ok(existsSync(join(fixture.tempRoot, ".pairslash", "install-state", "repo-codex_cli.json")));
+
+    const uninstallEnv = planUninstall({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      target: "repo",
+      packs: ["pairslash-plan"],
+      emit: "plugin",
+    });
+    const result = applyUninstall(uninstallEnv);
+    assert.equal(result.state.packs.length, 0);
+    assert.ok(!existsSync(join(fixture.tempRoot, "plugins", "pairslash-plan", "SKILL.md")));
+    assert.ok(!existsSync(join(fixture.tempRoot, "plugins", "pairslash-plan", ".codex-plugin", "plugin.json")));
+    assert.ok(!existsSync(pluginStatePath));
+    // Skill lane untouched by the plugin uninstall.
+    assert.ok(existsSync(join(fixture.tempRoot, ".agents", "skills", "pairslash-plan", "SKILL.md")));
+    assert.ok(existsSync(join(fixture.tempRoot, ".pairslash", "install-state", "repo-codex_cli.json")));
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("plugin emit preserves foreign content in the plugin dir", serial, () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
+  try {
+    const foreignDir = join(fixture.tempRoot, "plugins", "pairslash-plan");
+    mkdirSync(foreignDir, { recursive: true });
+    writeFileSync(join(foreignDir, "keep.txt"), "not pairslash\n");
+    const envelope = planInstall({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      target: "repo",
+      packs: ["pairslash-plan"],
+      emit: "plugin",
+    });
+    // Foreign files coexist with managed files; nothing is clobbered.
+    const foreignOp = envelope.plan.operations.find(
+      (operation) => operation.relative_path === "keep.txt",
+    );
+    assert.ok(!foreignOp || foreignOp.ownership !== "pairslash");
+    applyInstall(envelope);
+    assert.equal(readFileSync(join(foreignDir, "keep.txt"), "utf8"), "not pairslash\n");
+
+    const uninstallEnv = planUninstall({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      target: "repo",
+      packs: ["pairslash-plan"],
+      emit: "plugin",
+    });
+    applyUninstall(uninstallEnv);
+    assert.equal(readFileSync(join(foreignDir, "keep.txt"), "utf8"), "not pairslash\n");
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("unsupported emit values fail closed in planInstall", serial, () => {
+  const fixture = createTempRepo();
+  try {
+    assert.throws(
+      () =>
+        planInstall({
+          repoRoot: fixture.tempRoot,
+          runtime: "codex_cli",
+          target: "repo",
+          packs: ["pairslash-plan"],
+          emit: "bogus-emit",
+        }),
+      /unsupported emit mode/,
+    );
+  } finally {
+    fixture.cleanup();
+  }
+});

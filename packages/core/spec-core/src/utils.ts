@@ -43,6 +43,16 @@ export function normalizeSkillRoot(value) {
   throw new Error(`unsupported skill_root: ${value}; expected one of runtime-default, shared-agents`);
 }
 
+export function normalizeEmitMode(value) {
+  if (value === undefined || value === null || value === "" || value === "skill") {
+    return "skill";
+  }
+  if (value === "plugin") {
+    return value;
+  }
+  throw new Error(`unsupported emit mode: ${value}; expected one of skill, plugin`);
+}
+
 export function ensureDir(path) {
   mkdirSync(path, { recursive: true });
 }

@@ -299,6 +299,21 @@ export function resolvePackInstallDir(options, packId) {
   return join(resolveInstallRoot(options), packId);
 }
 
+// Plugin bundles are file-placed only at repo scope under
+// .github/plugins/<id> — a local plugin directory the user enables via
+// `copilot plugin install <path>` / `--plugin-dir`. PairSlash never writes
+// ~/.copilot/installed-plugins (runtime-managed) or settings.json.
+export function resolvePluginRoot({ repoRoot, target }) {
+  if (target !== "repo") {
+    throw new Error(`unsupported plugin install target: ${target}`);
+  }
+  return join(repoRoot, ".github", "plugins");
+}
+
+export function resolvePluginInstallDir(options, packId) {
+  return join(resolvePluginRoot(options), packId);
+}
+
 const SPEC_CONVENTIONAL_DIRS = ["scripts", "references", "assets"];
 
 function specConventionalSupportPath(sourcePath) {

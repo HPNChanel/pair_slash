@@ -70,11 +70,11 @@ function printUsage(stdout) {
   stdout.write(
     [
       "Usage:",
-      "  pairslash preview <install|update|uninstall|memory-write-global> [pack-id...] [--runtime <codex|copilot|auto>] [--target repo|user] [--skill-root runtime-default|shared-agents] [--packs a,b] [--pack-set bootstrap|core] [--all] [--format text|json] [--plan-out path]",
-      "  pairslash install [pack-id...] [--runtime <codex|copilot|auto>] [--target repo|user] [--skill-root runtime-default|shared-agents] [--packs a,b] [--pack-set bootstrap|core] [--all] [--format text|json] [--apply] [--dry-run] [--yes] [--non-interactive] [--plan-out path]",
-      "  pairslash update [pack-id...] [--runtime <codex|copilot|auto>] [--target repo|user] [--skill-root runtime-default|shared-agents] [--packs a,b] [--from <version|manifest-digest>] [--to <pack.manifest.yaml>] [--format text|json] [--apply] [--dry-run] [--yes] [--non-interactive] [--plan-out path]",
-      "  pairslash uninstall [pack-id...] [--runtime <codex|copilot|auto>] [--target repo|user] [--skill-root runtime-default|shared-agents] [--packs a,b] [--format text|json] [--apply] [--dry-run] [--yes] [--non-interactive] [--plan-out path]",
-      "  pairslash doctor [--runtime <codex|copilot|auto>] [--target repo|user] [--skill-root runtime-default|shared-agents] [--packs a,b] [--format text|json] [--strict]",
+      "  pairslash preview <install|update|uninstall|memory-write-global> [pack-id...] [--runtime <codex|copilot|auto>] [--target repo|user] [--skill-root runtime-default|shared-agents] [--emit skill|plugin] [--packs a,b] [--pack-set bootstrap|core] [--all] [--format text|json] [--plan-out path]",
+      "  pairslash install [pack-id...] [--runtime <codex|copilot|auto>] [--target repo|user] [--skill-root runtime-default|shared-agents] [--emit skill|plugin] [--packs a,b] [--pack-set bootstrap|core] [--all] [--format text|json] [--apply] [--dry-run] [--yes] [--non-interactive] [--plan-out path]",
+      "  pairslash update [pack-id...] [--runtime <codex|copilot|auto>] [--target repo|user] [--skill-root runtime-default|shared-agents] [--emit skill|plugin] [--packs a,b] [--from <version|manifest-digest>] [--to <pack.manifest.yaml>] [--format text|json] [--apply] [--dry-run] [--yes] [--non-interactive] [--plan-out path]",
+      "  pairslash uninstall [pack-id...] [--runtime <codex|copilot|auto>] [--target repo|user] [--skill-root runtime-default|shared-agents] [--emit skill|plugin] [--packs a,b] [--format text|json] [--apply] [--dry-run] [--yes] [--non-interactive] [--plan-out path]",
+      "  pairslash doctor [--runtime <codex|copilot|auto>] [--target repo|user] [--skill-root runtime-default|shared-agents] [--emit skill|plugin] [--packs a,b] [--format text|json] [--strict]",
       "  pairslash lint [pack-id...] [--runtime <codex|copilot|auto|all>] [--target repo|user] [--packs a,b] [--format text|json] [--strict]",
       "  pairslash memory write-global [--request path] [--kind <kind>] [--title text] [--statement text] [--evidence text] [--scope <whole-project|subsystem|path-prefix>] [--scope-detail text] [--confidence <low|medium|high>] [--action <append|supersede|reject-candidate-if-conflict>] [--tags a,b] [--source-refs a,b] [--supersedes kind/title] [--updated-by text] [--format text|json] [--apply] [--yes]",
       "  pairslash memory candidate --task-scope <text> [--runtime <codex|copilot|auto>] [--target repo|user] [--evidence-sources a,b] [--strictness <strict-gate-fail-fast|balanced|lenient>] [--max-candidates <n>] [--format text|json]",
@@ -152,6 +152,7 @@ export async function runCli({
         target: options.target,
         packs: options.packs,
         skillRoot: options.skillRoot,
+        emit: options.emit,
       });
       emit(stdout, report, {
         format: options.format,
@@ -295,6 +296,7 @@ export async function runCli({
           target: contextExplanation.target,
           packs: options.packs,
           skillRoot: options.skillRoot,
+          emit: options.emit,
         });
         const policyExplanationRecord = tryBuildPolicyExplanationArtifact({ repoRoot, options });
         const supportBundle = createSupportBundle({
@@ -393,6 +395,7 @@ export async function runCli({
               target: contextExplanation.target,
               packs: options.packs,
               skillRoot: options.skillRoot,
+              emit: options.emit,
             })
           : null;
         const policyExplanationRecord = tryBuildPolicyExplanationArtifact({ repoRoot, options });

@@ -57,6 +57,39 @@ Today that means:
 - Use `--pack-set core` or `--all` to install all valid manifests under `packs/core/`.
 - `update` and `uninstall` with no pack id select all managed packs in the chosen lane.
 
+## Emit modes (`--emit skill|plugin`)
+
+`--emit` selects what the installer produces:
+
+- `skill` (default): per-pack skill payload placed under the runtime's skill
+  root (`--skill-root` picks `runtime-default` or `shared-agents` where
+  supported).
+- `plugin`: a runtime-native plugin bundle per pack (manifest, `skills/`
+  payload, provenance sidecar), placed under the repo's runtime plugin
+  directory, e.g. `plugins/<pack-id>/`.
+
+Plugin mode boundaries:
+
+- Repo scope only. `--emit plugin --target user` fails closed; user-scope
+  plugin activation stays with the runtime's own plugin commands
+  (`codex plugin add`, Copilot plugin install flows).
+- The installer performs file placement only. It never executes runtime
+  plugin commands and never edits runtime settings such as Copilot
+  `settings.json` / `enabledPlugins`.
+- Plugin installs are tracked in a separate state lane
+  (`.pairslash/install-state/*-plugin.json`), so skill and plugin installs of
+  the same pack do not interfere.
+- Emission is not publication: plugin bundles are distribution-capable
+  artifacts; marketplace/registration activation stays gated per
+  `docs/architecture/adr-0003-marketplace-distribution.md` and
+  `docs/releases/public-claim-policy.md`.
+
+```bash
+node packages/tools/cli/src/bin/pairslash.js preview install pairslash-plan --runtime codex --target repo --emit plugin
+node packages/tools/cli/src/bin/pairslash.js install pairslash-plan --runtime codex --target repo --emit plugin --apply --yes
+node packages/tools/cli/src/bin/pairslash.js doctor --runtime codex --target repo --emit plugin
+```
+
 ## Examples
 
 ### Codex repo-scope bootstrap install

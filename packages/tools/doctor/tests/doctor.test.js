@@ -1063,3 +1063,81 @@ test("doctor reads shared-root install state separately from default-root state"
     fixture.cleanup();
   }
 });
+
+test("doctor emit=plugin reads the plugin state lane and plugin install root", () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
+  try {
+    applyInstall(
+      planInstall({
+        repoRoot: fixture.tempRoot,
+        runtime: "codex_cli",
+        target: "repo",
+        packs: ["pairslash-plan"],
+        emit: "plugin",
+      }),
+    );
+    const report = runDoctor({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      target: "repo",
+      emit: "plugin",
+    });
+    assert.ok(report.environment_summary.install_root.includes("plugins"));
+    const userProbe = report.scope_probes?.user;
+    assert.ok(userProbe.issue_codes.includes("scope.user.plugin_scope"));
+    assert.equal(userProbe.install_root, null);
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("doctor default emit keeps skill lane probes unchanged with plugin state present", () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
+  try {
+    applyInstall(
+      planInstall({
+        repoRoot: fixture.tempRoot,
+        runtime: "codex_cli",
+        target: "repo",
+        packs: ["pairslash-plan"],
+        emit: "plugin",
+      }),
+    );
+    const report = runDoctor({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      target: "repo",
+    });
+    assert.ok(report.environment_summary.install_root.includes(".agents"));
+    assert.ok(!report.environment_summary.state_path.includes("plugin"));
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("doctor emit=plugin at user scope reports unsupported instead of crashing", () => {
+  const fixture = createTempRepo();
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
+  try {
+    const report = runDoctor({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      target: "user",
+      emit: "plugin",
+    });
+    assert.equal(report.environment_summary.install_root, null);
+    assert.equal(report.scope_probes.user.verdict, "unsupported");
+    assert.equal(report.scope_probes.user.blocking_for_install, true);
+    assert.ok(report.scope_probes.user.issue_codes.includes("scope.user.plugin_scope"));
+    assert.equal(report.install_blocked, true);
+    const installRootCheck = report.checks.find((check) => check.id === "filesystem.install_root");
+    assert.equal(installRootCheck.status, "unsupported");
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});

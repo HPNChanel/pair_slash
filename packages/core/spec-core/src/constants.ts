@@ -36,6 +36,10 @@ export const TELEMETRY_SUMMARY_SCHEMA_VERSION = "1.0.0";
 export const SUPPORTED_RUNTIMES = ["codex_cli", "copilot_cli"] as const;
 export const SUPPORTED_TARGETS = ["repo", "user"] as const;
 export const SUPPORTED_SKILL_ROOTS = ["runtime-default", "shared-agents"] as const;
+// Emit modes: "skill" installs the skill tree into the runtime skill root;
+// "plugin" installs the wrapped plugin bundle into the runtime plugin dir.
+export const SUPPORTED_EMIT_MODES = ["skill", "plugin"] as const;
+export const DEFAULT_EMIT_MODE = "skill" as const;
 export const SHARED_AGENTS_SKILL_ROOT_MIN_VERSIONS = {
   codex_cli: "0.0.0",
   copilot_cli: "1.0.11",

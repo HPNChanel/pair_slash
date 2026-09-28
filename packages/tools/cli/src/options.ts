@@ -3,7 +3,7 @@
 // Phase M1 (modernization foundation): extracted from bin/pairslash.js.
 // No behavioral change — the existing cli.test.js suite is the contract.
 
-import { normalizeRuntime, normalizeSkillRoot, normalizeTarget } from "@pairslash/spec-core";
+import { normalizeEmitMode, normalizeRuntime, normalizeSkillRoot, normalizeTarget } from "@pairslash/spec-core";
 
 import { INSTALL_PACK_SET_VALUES } from "./internals.ts";
 
@@ -12,6 +12,7 @@ export function defaultOptions() {
     runtime: "auto",
     target: "repo",
     skillRoot: "runtime-default",
+    emit: "skill",
     packs: [],
     format: "text",
     apply: false,
@@ -81,6 +82,11 @@ export function parseOptions(argv) {
     }
     if (token === "--skill-root") {
       options.skillRoot = normalizeSkillRoot(argv[index + 1]);
+      index += 1;
+      continue;
+    }
+    if (token === "--emit") {
+      options.emit = normalizeEmitMode(argv[index + 1]);
       index += 1;
       continue;
     }

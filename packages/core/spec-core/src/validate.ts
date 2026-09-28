@@ -57,6 +57,7 @@ import {
   SUPPORT_BUNDLE_SCHEMA_VERSION,
   SUPPORT_VERDICTS,
   SUPPORTED_RUNTIMES,
+  SUPPORTED_EMIT_MODES,
   SUPPORTED_SKILL_ROOTS,
   SUPPORTED_TARGETS,
   TELEMETRY_MODES,
@@ -1910,6 +1911,9 @@ export function validateInstallState(record) {
   if ("skill_root" in (record ?? {}) && !SUPPORTED_SKILL_ROOTS.includes(record?.skill_root)) {
     errors.push(`unsupported skill_root: ${record?.skill_root}`);
   }
+  if ("emit" in (record ?? {}) && !SUPPORTED_EMIT_MODES.includes(record?.emit)) {
+    errors.push(`unsupported emit mode: ${record?.emit}`);
+  }
   if ("updated_at" in (record ?? {}) && typeof record?.updated_at !== "string" && record?.updated_at !== null) {
     errors.push("updated_at must be string or null");
   }
@@ -2298,10 +2302,14 @@ export function validateDoctorReport(record) {
       "cwd",
       "repo_root",
       "config_home",
-      "install_root",
       "state_path",
     ]) {
       validateNonEmptyString(summary?.[field], `environment_summary.${field}`, errors, "DCR001");
+    }
+    // install_root is null when the emit mode has no placement root at this
+    // scope (plugin emit is repo-scope only at user target).
+    if (summary?.install_root !== null && typeof summary?.install_root !== "string") {
+      errors.push("environment_summary.install_root must be string or null");
     }
     if (summary?.runtime_executable !== null && typeof summary?.runtime_executable !== "string") {
       errors.push("environment_summary.runtime_executable must be string or null");
@@ -2337,8 +2345,11 @@ export function validateDoctorReport(record) {
       if (typeof probe?.selected !== "boolean") {
         errors.push(`scope_probes.${target}.selected must be boolean`);
       }
-      for (const field of ["config_home", "install_root", "state_path"]) {
+      for (const field of ["config_home", "state_path"]) {
         validateNonEmptyString(probe?.[field], `scope_probes.${target}.${field}`, errors, "DCR001");
+      }
+      if (probe?.install_root !== null && typeof probe?.install_root !== "string") {
+        errors.push(`scope_probes.${target}.install_root must be string or null`);
       }
       for (const field of ["config_home_exists", "install_root_exists", "writable", "blocking_for_install"]) {
         if (typeof probe?.[field] !== "boolean") {
