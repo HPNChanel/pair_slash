@@ -2,6 +2,7 @@ import * as runtimeAdapter from "@pairslash/runtime-codex-adapter";
 import {
   buildNormalizedIr,
   compilePack,
+  enrichSkillFrontmatter,
   materializeCompiledFile,
 } from "@pairslash/spec-core";
 
@@ -18,6 +19,7 @@ type LogicalAsset = {
   runtime_selector: string;
   generator: string;
   install_surface: string;
+  source_relpath?: string | null;
   content?: string;
 };
 
@@ -37,10 +39,14 @@ function emitCodexBundle({ ir }: { ir: NormalizedIr }) {
 
       const relativePath = runtimeAdapter.resolveRuntimeAssetPath(asset);
       if (asset.generator === "source_copy") {
+        const content =
+          asset.source_relpath === "SKILL.md"
+            ? enrichSkillFrontmatter({ content: asset.content, ir })
+            : asset.content;
         return materializeCompiledFile({
           logicalAsset: asset,
           relativePath,
-          content: asset.content,
+          content,
         });
       }
 

@@ -1,8 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 import { compileCopilotPack, runtimeAdapter } from "@pairslash/compiler-copilot";
+import { validateSkillSpec } from "@pairslash/spec-core";
 
 import { createTempRepo, repoRoot, updatePackManifest } from "../../../../../tests/phase4-helpers.js";
 
@@ -94,4 +96,32 @@ test("compileCopilotPack rejects runtime path drift from official install surfac
       ),
     /does not match install surface/,
   );
+});
+
+test("compileCopilotPack emits a spec-compliant enriched SKILL.md", () => {
+  const manifestPath = join(repoRoot, "packs", "core", "pairslash-plan", "pack.manifest.yaml");
+  const compiled = compileCopilotPack({ repoRoot, manifestPath });
+  const skillFile = compiled.files.find((file) => file.file_name === "SKILL.md" || file.relative_path?.endsWith("SKILL.md"));
+  assert.ok(skillFile, "expected a SKILL.md file in the compiled bundle");
+  const verdict = validateSkillSpec({ content: skillFile.content, dirName: "pairslash-plan" });
+  assert.equal(verdict.ok, true, verdict.errors.join("; "));
+  assert.ok(skillFile.content.includes("license: \"Apache-2.0\""));
+  assert.ok(skillFile.content.includes("copilot_cli>=1.0.0"));
+  assert.equal(skillFile.content.includes("allowed-tools"), false);
+});
+
+test("compileCopilotPack emits a spec-compliant SKILL.md for every core pack", () => {
+  const coreDir = join(repoRoot, "packs", "core");
+  for (const packId of readdirSync(coreDir).sort()) {
+    const manifestPath = join(coreDir, packId, "pack.manifest.yaml");
+    if (!existsSync(manifestPath)) continue;
+    const compiled = compileCopilotPack({ repoRoot, manifestPath });
+    const skillFile = compiled.files.find((file) => file.file_name === "SKILL.md" || file.relative_path?.endsWith("SKILL.md"));
+    assert.ok(skillFile, `expected a SKILL.md file in the compiled bundle for ${packId}`);
+    const verdict = validateSkillSpec({ content: skillFile.content, dirName: packId });
+    assert.equal(verdict.ok, true, `${packId}: ${verdict.errors.join("; ")}`);
+    assert.equal(skillFile.content.includes("allowed-tools"), false, `${packId} leaked allowed-tools`);
+    const compatibility = skillFile.content.match(/^compatibility: "(.*)"$/m)?.[1] ?? "";
+    assert.ok(compatibility.length > 0 && compatibility.length <= 500, `${packId} compatibility length`);
+  }
 });

@@ -3,7 +3,7 @@
     {
       "bundle_kind": "copilot-package-bundle",
       "canonical_entrypoint": "/skills",
-      "digest": "f36b761c97643c1435f1b000900db5d2d92cfa1a45ba5f16320c2ae2d990d218",
+      "digest": "57d6c51e935dab4f0d438f540c1d03427618c8cae5f6c66b5ddb0259c007c00d",
       "direct_invocation": "/pairslash-backend",
       "files": [
         {
@@ -107,7 +107,7 @@
           "relative_path": "pairslash.install.json",
           "required": true,
           "runtime_selector": "shared",
-          "sha256": "fd909433e4f8282daa72dd42f60be67b1555ddd03b1526e46dcd60f330700056",
+          "sha256": "d66c9ecae89c92208b92ccb8f491a3db20195ff7bda9d70fb907d05ba0e91d38",
           "uninstall_behavior": "remove_if_unmodified",
           "write_authority_guarded": false
         },
@@ -122,7 +122,7 @@
           "relative_path": "SKILL.md",
           "required": true,
           "runtime_selector": "shared",
-          "sha256": "b86f544647a219fa6a859156c7b9a434153fafa465583952c9e5d0a1ed28afa0",
+          "sha256": "0d985d1161b39de55af38afcb6f1bb23903bd8b19384a1de636e48f26484b146",
           "uninstall_behavior": "detach_if_modified",
           "write_authority_guarded": false
         },
@@ -151,7 +151,7 @@
     {
       "bundle_kind": "copilot-package-bundle",
       "canonical_entrypoint": "/skills",
-      "digest": "e2b02cf21e15f9ea0bcf8be67349c8c9c3a1aab01adc0e62cd46edc125e66716",
+      "digest": "8c5e6ad56e0cef124137584de824a247738d7c3d94e14b53b6c100d6c30ecfb7",
       "direct_invocation": "/pairslash-devops",
       "files": [
         {
@@ -255,7 +255,7 @@
           "relative_path": "pairslash.install.json",
           "required": true,
           "runtime_selector": "shared",
-          "sha256": "0d878807562c0845057f9d44c5e640bbd60cb6998a58c29ad921f14ca33b3d68",
+          "sha256": "d1b87dd69302846bc46de37f18f6f737344559a9cdeb115c0db3f29279c084b2",
           "uninstall_behavior": "remove_if_unmodified",
           "write_authority_guarded": false
         },
@@ -270,7 +270,7 @@
           "relative_path": "SKILL.md",
           "required": true,
           "runtime_selector": "shared",
-          "sha256": "421413e5b04ab23891627760497a8430471e61e879e652f42d0d548b6ceaf132",
+          "sha256": "f1772b9c9712a8974fea63ac8e442ce8a5fa16a13efef3d2fe6e41ec81aa2853",
           "uninstall_behavior": "detach_if_modified",
           "write_authority_guarded": false
         },

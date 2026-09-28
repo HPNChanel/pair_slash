@@ -16,6 +16,8 @@ export const SKILL_SPEC_RECOGNIZED_FIELDS = Object.freeze([
   "name",
 ]);
 
+export const SKILL_SPEC_DEFAULT_LICENSE = "Apache-2.0";
+
 const SKILL_NAME_PATTERN = /^[a-z0-9-]+$/;
 const CONTROL_CHAR_PATTERN = new RegExp("[\\u0000-\\u001f\\u007f-\\u009f]");
 
@@ -158,4 +160,74 @@ export function validateSkillSpec({ content, dirName = null }) {
     warnings: [...warnings].sort(),
     recognized_fields: fields === null ? [] : Object.keys(fields).sort(),
   };
+}
+
+function skillSpecCompatibilityLine(ir) {
+  const ranges = Object.entries<Record<string, { semver_range: string }>>(ir.runtime_support ?? {})
+    .map(([runtime, support]) => `${runtime}${support.semver_range}`)
+    .sort();
+  return `requires ${ranges.join(", ")}`;
+}
+
+export function buildSkillFrontmatterAdditions(ir) {
+  const compatibility = skillSpecCompatibilityLine(ir).slice(
+    0,
+    SKILL_SPEC_MAX_COMPATIBILITY_LENGTH,
+  );
+  return {
+    license: SKILL_SPEC_DEFAULT_LICENSE,
+    compatibility,
+    metadata: {
+      pack_id: ir.pack.id,
+      pack_version: String(ir.pack.version),
+      workflow_class: String(ir.pack.workflow_class),
+      canonical_entrypoint: String(ir.pack.canonical_entrypoint),
+      release_channel: String(ir.pack.release_channel),
+      provenance: `pairslash-compiler@${ir.compiler_version}`,
+    },
+  };
+}
+
+export function enrichSkillFrontmatter({ content, ir }) {
+  const normalized = String(content ?? "").replace(/\r\n/g, "\n");
+  const match = normalized.match(/^---\n([\s\S]*?)\n---\n?/);
+  if (!match) {
+    return String(content ?? "");
+  }
+  let fields;
+  try {
+    fields = YAML.parse(match[1], { uniqueKeys: true, strict: true });
+  } catch {
+    return String(content ?? "");
+  }
+  if (fields === null || typeof fields !== "object" || Array.isArray(fields)) {
+    return String(content ?? "");
+  }
+
+  const additions = buildSkillFrontmatterAdditions(ir);
+  const injected = [];
+  for (const key of ["license", "compatibility"]) {
+    if (fields[key] === undefined || fields[key] === null) {
+      injected.push(`${key}: ${JSON.stringify(additions[key])}`);
+    }
+  }
+  // A second `metadata:` key would duplicate an existing one (invalid YAML),
+  // so injection only happens when the field is entirely absent.
+  if (fields.metadata === undefined || fields.metadata === null) {
+    const metadataKeys = Object.keys(additions.metadata).sort();
+    injected.push(
+      [
+        "metadata:",
+        ...metadataKeys.map(
+          (key) => `  ${key}: ${JSON.stringify(String(additions.metadata[key]))}`,
+        ),
+      ].join("\n"),
+    );
+  }
+
+  if (injected.length === 0) {
+    return String(content ?? "");
+  }
+  const frontmatter = `${match[1]}\n${injected.join("\n")}`;
+  return `---\n${frontmatter}\n---\n${normalized.slice(match[0].length)}`;
 }

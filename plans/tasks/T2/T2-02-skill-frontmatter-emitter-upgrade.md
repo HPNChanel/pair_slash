@@ -2,13 +2,23 @@
 id: T2-02
 track: T2
 title: SKILL.md frontmatter emitter upgrade (license, compatibility, metadata)
-status: todo
+status: done
 depends_on: [T2-01]
 est_size: M
-claimed_by:
-claimed_at:
-completed_at:
+claimed_by: devin
+claimed_at: 2026-09-28
+completed_at: 2026-09-28
 evidence:
+  summary: >
+    spec-core gained enrichSkillFrontmatter (license=Apache-2.0, compatibility
+    derived from runtime_support semver ranges <=500 chars, metadata map of
+    strings incl. pack_id/pack_version/workflow_class/provenance). Both
+    compilers enrich only source_copy assets with source_relpath == "SKILL.md".
+    Per-lane tests assert emitted SKILL.md validates and all 12 core packs pass.
+  validator_pass: 12/12 core packs emitted SKILL.md pass Agent Skills validator
+  gates: "lint OK; typecheck OK; test OK (all suites); sync:compat-lab --check OK"
+  golden_diff: "sha256/digest-only changes in compiler-*.json and fixture-snapshot.* goldens; body unchanged"
+  commit: pending
 ---
 
 ## Objective
