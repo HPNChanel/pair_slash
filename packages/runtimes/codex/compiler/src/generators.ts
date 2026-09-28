@@ -1,4 +1,4 @@
-import { buildNormalizedIr, stableYaml } from "@pairslash/spec-core";
+import { buildMcpServerDescriptors, buildNormalizedIr, stableYaml } from "@pairslash/spec-core";
 
 type NormalizedIr = ReturnType<typeof buildNormalizedIr>;
 
@@ -65,10 +65,12 @@ function renderWriteAuthorityGuard(ir: NormalizedIr) {
 function renderMcpServers(ir: NormalizedIr) {
   return stableYaml({
     kind: "pairslash-mcp-config",
-    schema_version: "1.0.0",
+    schema_version: "1.1.0",
     runtime: "codex_cli",
     pack_id: ir.pack.id,
-    servers: ir.policy.required_mcp_servers,
+    declarative_only: true,
+    note: "PairSlash declares expected MCP dependencies; the runtime owns connection management and negotiation.",
+    servers: buildMcpServerDescriptors(ir.policy.required_mcp_servers),
   });
 }
 

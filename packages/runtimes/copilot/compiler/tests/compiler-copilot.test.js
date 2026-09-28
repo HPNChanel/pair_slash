@@ -98,6 +98,41 @@ test("compileCopilotPack rejects runtime path drift from official install surfac
   );
 });
 
+test("compileCopilotPack emits era-aware MCP config per declared spec_era", () => {
+  const fixture = createTempRepo();
+  try {
+    const manifestPath = updatePackManifest({
+      repoRoot: fixture.tempRoot,
+      packId: "pairslash-plan",
+      mutate(manifest) {
+        manifest.capabilities.push("mcp_client");
+        manifest.required_mcp_servers = [
+          { id: "modern-server", spec_era: "modern" },
+          { id: "legacy-server", spec_era: "legacy" },
+          { id: "unknown-server" },
+        ];
+        return manifest;
+      },
+    });
+    const compiled = compileCopilotPack({ repoRoot: fixture.tempRoot, manifestPath });
+    const mcpFile = compiled.files.find((file) => file.relative_path === "mcp/servers.yaml");
+    assert.ok(mcpFile, "expected an MCP sidecar file");
+    assert.ok(mcpFile.content.includes("schema_version: 1.1.0"));
+    assert.ok(mcpFile.content.includes("declarative_only: true"));
+    assert.match(mcpFile.content, /modern-server[\s\S]*?spec_era: modern/);
+    assert.ok(mcpFile.content.includes("Mcp-Method"));
+    assert.ok(mcpFile.content.includes("server/discover"));
+    assert.ok(mcpFile.content.includes("spec_era: legacy"));
+    assert.match(mcpFile.content, /unknown-server[\s\S]*?spec_era: dual/);
+    const order = ["legacy-server", "modern-server", "unknown-server"].map((id) =>
+      mcpFile.content.indexOf(`id: ${id}`),
+    );
+    assert.ok(order[0] > -1 && order[0] < order[1] && order[1] < order[2]);
+  } finally {
+    fixture.cleanup();
+  }
+});
+
 test("compileCopilotPack emits a spec-compliant enriched SKILL.md", () => {
   const manifestPath = join(repoRoot, "packs", "core", "pairslash-plan", "pack.manifest.yaml");
   const compiled = compileCopilotPack({ repoRoot, manifestPath });
