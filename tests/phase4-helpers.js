@@ -173,6 +173,21 @@ export function updatePackTrustAuthority({ repoRoot: tempRoot, mutate }) {
   return authorityPath;
 }
 
+function dirContainsExecutable(dir, executable) {
+  const candidates =
+    process.platform === "win32"
+      ? [executable, `${executable}.exe`, `${executable}.cmd`, `${executable}.bat`]
+      : [executable];
+  return candidates.some((name) => existsSync(join(dir, name)));
+}
+
+function dropPathDirsWithExecutable(pathValue, executable) {
+  return pathValue
+    .split(delimiter)
+    .filter((dir) => dir === "" || !dirContainsExecutable(dir, executable))
+    .join(delimiter);
+}
+
 export function installFakeRuntime({ codexVersion = null, copilotVersion = null } = {}) {
   const binDir = mkdtempSync(join(tmpdir(), "pairslash-runtime-"));
   const previousPath = process.env.PATH ?? "";
@@ -191,7 +206,18 @@ export function installFakeRuntime({ codexVersion = null, copilotVersion = null 
     process.env.PAIRSLASH_FAKE_COPILOT_VERSION = copilotVersion;
   }
 
-  process.env.PATH = `${binDir}${delimiter}${previousPath}`;
+  // Real runtime executables on PATH would leak into auto-detection when only
+  // one runtime is faked (the fake env var only covers the provided runtime).
+  // Drop PATH entries that contain the unfaked runtime's executable so
+  // detection sees exactly the runtimes this helper installed.
+  let nextPath = `${binDir}${delimiter}${previousPath}`;
+  if (!codexVersion) {
+    nextPath = dropPathDirsWithExecutable(nextPath, "codex");
+  }
+  if (!copilotVersion) {
+    nextPath = dropPathDirsWithExecutable(nextPath, "gh");
+  }
+  process.env.PATH = nextPath;
 
   return {
     binDir,
