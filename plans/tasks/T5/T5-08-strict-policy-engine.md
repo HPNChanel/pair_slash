@@ -2,13 +2,18 @@
 id: T5-08
 track: T5
 title: Strict batch — policy-engine
-status: todo
+status: done
 depends_on: [T5-05]
 est_size: M
-claimed_by:
-claimed_at:
-completed_at:
+claimed_by: devin
+claimed_at: 2026-10-XX
+completed_at: 2026-10-XX
 evidence:
+  strict_baseline_in_scope: 134
+  strict_after_in_scope: 0
+  typecheck: pass
+  lint: pass
+  tests: pass
 ---
 
 ## Objective
@@ -42,7 +47,7 @@ Fix all strict errors in `packages/core/policy-engine/` — risk taxonomy, verdi
 
 ## Acceptance gates
 
-- [ ] 0 strict errors in scope; policy fixture tests green unmodified; gates green
+- [x] 0 strict errors in scope; policy fixture tests green unmodified; gates green
 
 ## Evidence to record
 

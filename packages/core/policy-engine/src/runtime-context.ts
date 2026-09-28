@@ -43,8 +43,8 @@ const RUNTIME_POLICY_ENFORCEMENT = {
   },
 };
 
-export function buildRuntimeEnforcementContext(contract) {
-  const descriptor = RUNTIME_POLICY_ENFORCEMENT[contract.runtime];
+export function buildRuntimeEnforcementContext(contract: any) {
+  const descriptor = RUNTIME_POLICY_ENFORCEMENT[contract.runtime as keyof typeof RUNTIME_POLICY_ENFORCEMENT];
   return {
     runtime: descriptor.runtime,
     primary_enforcement: descriptor.primary_enforcement,

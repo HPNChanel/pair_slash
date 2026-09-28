@@ -2,7 +2,7 @@ function uniqueSorted(values: any): any[] {
   return [...new Set(values.filter(Boolean))].sort((left: any, right: any) => left.localeCompare(right));
 }
 
-function addRisk(risks, category, sources, rationale) {
+function addRisk(risks: any, category: any, sources: any, rationale: any) {
   const existing = risks.get(category);
   if (existing) {
     existing.sources = uniqueSorted([...existing.sources, ...sources]);
@@ -16,7 +16,7 @@ function addRisk(risks, category, sources, rationale) {
   });
 }
 
-function hasGrantedCapability(contract, capability) {
+function hasGrantedCapability(contract: any, capability: any) {
   return contract.capability_scope?.granted?.includes(capability) || false;
 }
 
@@ -135,10 +135,10 @@ export function deriveRiskProfile(contract: any, request: any = {}) {
     "networked",
     "secret-touching",
   ]
-    .map((category) => risks.get(category))
+    .map((category: any) => risks.get(category))
     .filter(Boolean);
 }
 
-export function hasRisk(evaluatedRisks, category) {
-  return evaluatedRisks.some((entry) => entry.category === category);
+export function hasRisk(evaluatedRisks: any, category: any) {
+  return evaluatedRisks.some((entry: any) => entry.category === category);
 }

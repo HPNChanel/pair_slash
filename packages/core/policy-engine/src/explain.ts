@@ -2,16 +2,16 @@ function uniqueSorted(values: any): any[] {
   return [...new Set(values.filter(Boolean))].sort((left: any, right: any) => left.localeCompare(right));
 }
 
-export function buildPolicyExplanation(verdict) {
-  const decisiveReasons = verdict.reasons.filter((reason) => reason.verdict === verdict.overall_verdict);
+export function buildPolicyExplanation(verdict: any) {
+  const decisiveReasons = verdict.reasons.filter((reason: any) => reason.verdict === verdict.overall_verdict);
   const sources = decisiveReasons.length > 0 ? decisiveReasons : verdict.reasons;
   const decisiveContractFields = uniqueSorted(
-    sources.flatMap((reason) => reason.contract_fields ?? []),
+    sources.flatMap((reason: any) => reason.contract_fields ?? []),
   );
   const decisiveRuntimeFactors = uniqueSorted(
-    sources.flatMap((reason) => reason.runtime_factors ?? []),
+    sources.flatMap((reason: any) => reason.runtime_factors ?? []),
   );
-  const decisiveReasonCodes = uniqueSorted(sources.map((reason) => reason.code));
+  const decisiveReasonCodes = uniqueSorted(sources.map((reason: any) => reason.code));
   const summary =
     verdict.overall_verdict === "allow"
       ? "Policy allows the requested operation within the declared contract and runtime boundary."
@@ -29,7 +29,7 @@ export function buildPolicyExplanation(verdict) {
   };
 }
 
-export function explainPolicyVerdict(verdict) {
+export function explainPolicyVerdict(verdict: any) {
   const lines = [
     `Verdict: ${verdict.overall_verdict}`,
     verdict.explanation?.summary ?? "No explanation available.",

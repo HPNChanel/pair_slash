@@ -26,9 +26,7 @@ function uniqueSorted(values: any): any[] {
   return [...new Set(values.filter(Boolean))].sort((left: any, right: any) => left.localeCompare(right));
 }
 
-function addReason(
-  reasons,
-  {
+function addReason(reasons: any, {
     code,
     verdict,
     policyArea,
@@ -36,8 +34,7 @@ function addReason(
     message,
     contractFields = [],
     runtimeFactors = [],
-  },
-) {
+  }: { code?: string; verdict?: any; policyArea?: any; relatedRisks?: any; message?: string; contractFields?: any; runtimeFactors?: any }) {
   reasons.push({
     code,
     verdict,
@@ -49,43 +46,43 @@ function addReason(
   });
 }
 
-function pickOverallVerdict(reasons) {
+function pickOverallVerdict(reasons: any) {
   if (reasons.length === 0) {
     return "allow";
   }
   return reasons.reduce(
-    (current, entry) => (PRECEDENCE[entry.verdict] > PRECEDENCE[current] ? entry.verdict : current),
+    (current: any, entry: any) => (PRECEDENCE[entry.verdict as keyof typeof PRECEDENCE] > PRECEDENCE[current as keyof typeof PRECEDENCE] ? entry.verdict : current),
     "allow",
   );
 }
 
-function hasGrantedCapability(contract, capability) {
+function hasGrantedCapability(contract: any, capability: any) {
   return contract.capability_scope?.granted?.includes(capability) || false;
 }
 
-function getCapabilityNegotiation(contract, capability) {
-  return contract.capability_scope?.negotiation?.find((entry) => entry.capability === capability) ?? null;
+function getCapabilityNegotiation(contract: any, capability: any) {
+  return contract.capability_scope?.negotiation?.find((entry: any) => entry.capability === capability) ?? null;
 }
 
-function getCapabilityStatus(contract, capability) {
+function getCapabilityStatus(contract: any, capability: any) {
   if (hasGrantedCapability(contract, capability)) {
     return "granted";
   }
   return getCapabilityNegotiation(contract, capability)?.status ?? "denied";
 }
 
-function getRequiredTools(contract) {
+function getRequiredTools(contract: any) {
   if (Array.isArray(contract.tool_contract?.tools_required)) {
     return contract.tool_contract.tools_required;
   }
   return contract.tool_contract?.required_tools ?? [];
 }
 
-function getRiskCategories(evaluatedRisks) {
-  return uniqueSorted(evaluatedRisks.map((entry) => entry.category));
+function getRiskCategories(evaluatedRisks: any) {
+  return uniqueSorted(evaluatedRisks.map((entry: any) => entry.category));
 }
 
-function resolveRuntime(value) {
+function resolveRuntime(value: unknown) {
   if (typeof value !== "string" || value.trim() === "") {
     return null;
   }
@@ -97,7 +94,7 @@ function resolveRuntime(value) {
   }
 }
 
-function resolveTarget(value) {
+function resolveTarget(value: unknown) {
   if (typeof value !== "string" || value.trim() === "") {
     return null;
   }
@@ -109,7 +106,7 @@ function resolveTarget(value) {
   }
 }
 
-function resolveVerdictContext(contract, request) {
+function resolveVerdictContext(contract: any, request: any) {
   return {
     runtime: resolveRuntime(contract?.runtime) ?? resolveRuntime(request?.requested_runtime),
     target: resolveTarget(contract?.target) ?? resolveTarget(request?.requested_target),
@@ -117,14 +114,14 @@ function resolveVerdictContext(contract, request) {
   };
 }
 
-function buildCapabilityNegotiation(contract, capabilityRequest) {
-  const negotiation = [...(contract.capability_scope?.negotiation ?? [])].map((entry) => ({
+function buildCapabilityNegotiation(contract: any, capabilityRequest: any) {
+  const negotiation = [...(contract.capability_scope?.negotiation ?? [])].map((entry: any) => ({
     capability: entry.capability,
     status: entry.status,
     reason: entry.reason ?? null,
   }));
   for (const capability of capabilityRequest ?? []) {
-    if (negotiation.some((entry) => entry.capability === capability)) {
+    if (negotiation.some((entry: any) => entry.capability === capability)) {
       continue;
     }
     negotiation.push({
@@ -133,11 +130,11 @@ function buildCapabilityNegotiation(contract, capabilityRequest) {
       reason: "outside contract scope",
     });
   }
-  return negotiation.sort((left, right) => left.capability.localeCompare(right.capability));
+  return negotiation.sort((left: any, right: any) => left.capability.localeCompare(right.capability));
 }
 
-function evaluateTools(contract, request, reasons, evaluatedRisks) {
-  const availability = new Map((request.available_tools ?? []).map((tool) => [tool.id, Boolean(tool.available)]));
+function evaluateTools(contract: any, request: any, reasons: any, evaluatedRisks: any) {
+  const availability = new Map((request.available_tools ?? []).map((tool: any) => [tool.id, Boolean(tool.available)]));
   for (const tool of getRequiredTools(contract)) {
     if (availability.get(tool.id) !== false) {
       continue;
@@ -187,7 +184,7 @@ function buildFailClosedVerdict({ contract, request = {}, errors }: any) {
           surface_notes: ["PairSlash wrapper/runtime adapter remains authoritative; hooks are assistive only."],
           no_silent_fallback: true,
         };
-  const reasons = [];
+  const reasons: string[] = [];
   addReason(reasons, {
     code: "POLICY-CONTRACT-INCOMPLETE",
     verdict: "deny",
@@ -244,7 +241,7 @@ export function evaluatePolicy({ contract, request = {} }: any = {}) {
 
   const evaluatedRisks = deriveRiskProfile(contract, request);
   const riskCategories = getRiskCategories(evaluatedRisks);
-  const reasons = [];
+  const reasons: string[] = [];
   const capabilityRequest = Array.isArray(request.capability_request) ? request.capability_request : [];
   const capabilityNegotiation = buildCapabilityNegotiation(contract, capabilityRequest);
   const enforcementContext = buildRuntimeEnforcementContext(contract);
@@ -458,7 +455,7 @@ export function evaluatePolicy({ contract, request = {} }: any = {}) {
       policyArea: "risk",
       relatedRisks: riskCategories,
       message: "requested operation remains within the declared contract and runtime boundary",
-      contractFields: uniqueSorted(evaluatedRisks.flatMap((entry) => entry.sources)),
+      contractFields: uniqueSorted(evaluatedRisks.flatMap((entry: any) => entry.sources)),
       runtimeFactors: [
         `primary_enforcement:${enforcementContext.primary_enforcement}`,
         `hook_support:${enforcementContext.hook_support}`,
@@ -476,9 +473,9 @@ export function evaluatePolicy({ contract, request = {} }: any = {}) {
     action: request.action ?? "policy-eval",
     overall_verdict: overallVerdict,
     machine_readable: true,
-    preview_required: reasons.some((reason) => reason.code === "POLICY-PREVIEW-REQUIRED"),
+    preview_required: reasons.some((reason: any) => reason.code === "POLICY-PREVIEW-REQUIRED"),
     approval_required: reasons.some(
-      (reason) =>
+      (reason: any) =>
         reason.code === "POLICY-APPROVAL-REQUIRED" ||
         reason.code === "POLICY-DESTRUCTIVE-SECRET-BLOCK",
     ),
