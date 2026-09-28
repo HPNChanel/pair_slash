@@ -9,6 +9,6 @@
     "@pairslash/spec-core": "file:../spec-core",
     "@pairslash/contract-engine": "file:../contract-engine",
     "@pairslash/policy-engine": "file:../policy-engine",
-    "yaml": "^2.8.1"
+    "yaml": "^2.9.1"
   }
 }

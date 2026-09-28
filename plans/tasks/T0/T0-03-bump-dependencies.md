@@ -2,13 +2,13 @@
 id: T0-03
 track: T0
 title: Bump dependencies and realign packageManager
-status: todo
+status: done
 depends_on: [T0-01]
 est_size: S
-claimed_by:
-claimed_at:
-completed_at:
-evidence:
+claimed_by: devin
+claimed_at: 2026-09-28
+completed_at: 2026-09-28
+evidence: "valibot 1.5.0 (pub 2026-09-09), yaml 2.9.1 (pub 2026-09-11), @types/node pinned exact 24.13.6 (pub 2026-09-19) instead of ^24.19.0 which resolves to a 3-day-old release; packageManager realigned to npm@11.14.1; all gates green, audit clean"
 ---
 
 ## Objective

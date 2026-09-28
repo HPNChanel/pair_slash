@@ -8,6 +8,6 @@
   "dependencies": {
     "@pairslash/spec-core": "file:../../core/spec-core",
     "@pairslash/trace": "file:../trace",
-    "yaml": "^2.8.1"
+    "yaml": "^2.9.1"
   }
 }
