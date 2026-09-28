@@ -11,27 +11,29 @@ import {
   writeTextFile,
 } from "@pairslash/spec-core";
 
-function parseJsonLines(path) {
+import type { TraceEvent, TraceIndex } from "./types.ts";
+
+function parseJsonLines(path: string): TraceEvent[] {
   if (!exists(path)) {
     return [];
   }
   return readFileSync(path, "utf8")
     .split(/\r?\n/)
     .filter(Boolean)
-    .map((line) => JSON.parse(line));
+    .map((line) => JSON.parse(line) as TraceEvent);
 }
 
-function indexPathFor(traceRoot, sessionId) {
+function indexPathFor(traceRoot: string, sessionId: string) {
   return join(traceRoot, "indexes", `${sessionId}.json`);
 }
 
-function eventPathFor(traceRoot, sessionId, timestamp) {
+function eventPathFor(traceRoot: string, sessionId: string, timestamp: string) {
   const [year, month, day] = timestamp.slice(0, 10).split("-");
   return join(traceRoot, "events", year, month, day, `${sessionId}.jsonl`);
 }
 
-function buildSessionIndex({ traceRoot, sessionId, events }) {
-  const failures = events.filter((event) => ["blocked", "denied", "failed"].includes(event.outcome));
+function buildSessionIndex({ traceRoot, sessionId, events }: { traceRoot: string; sessionId: string; events: TraceEvent[] }) {
+  const failures = events.filter((event) => ["blocked", "denied", "failed"].includes(event.outcome ?? ""));
   const first = events[0] ?? null;
   const last = events.at(-1) ?? null;
   return {
@@ -46,17 +48,17 @@ function buildSessionIndex({ traceRoot, sessionId, events }) {
     decisive_failure_domain: failures[0]?.failure_domain ?? "none",
     decisive_reason: failures[0]?.summary ?? failures[0]?.error_code ?? null,
     event_file: toPosix(resolve(eventPathFor(traceRoot, sessionId, first?.timestamp ?? new Date().toISOString()))),
-    related_artifacts: [...new Set(events.flatMap((event) => event.artifact_paths ?? []))].sort((left: any, right: any) =>
+    related_artifacts: [...new Set(events.flatMap((event) => event.artifact_paths ?? []))].sort((left: string, right: string) =>
       left.localeCompare(right),
     ),
   };
 }
 
-export function resolveTraceRoot(repoRoot) {
+export function resolveTraceRoot(repoRoot: string) {
   return join(repoRoot, ".pairslash", "observability");
 }
 
-export function resolveTracePaths(repoRoot) {
+export function resolveTracePaths(repoRoot: string) {
   const traceRoot = resolveTraceRoot(repoRoot);
   return {
     traceRoot,
@@ -68,7 +70,7 @@ export function resolveTracePaths(repoRoot) {
   };
 }
 
-export function resolveTelemetryMode(repoRoot) {
+export function resolveTelemetryMode(repoRoot: string) {
   const { configRoot } = resolveTracePaths(repoRoot);
   const configPath = join(configRoot, "telemetry.json");
   if (!exists(configPath)) {
@@ -82,7 +84,7 @@ export function resolveTelemetryMode(repoRoot) {
   }
 }
 
-export function appendTraceEvent({ repoRoot, event }) {
+export function appendTraceEvent({ repoRoot, event }: { repoRoot: string; event: TraceEvent }) {
   const validationErrors = validateTraceEvent(event);
   if (validationErrors.length > 0) {
     throw new Error(`invalid trace event :: ${validationErrors.join("; ")}`);
@@ -106,27 +108,27 @@ export function appendTraceEvent({ repoRoot, event }) {
   };
 }
 
-export function loadTraceEvents({ repoRoot, sessionId }) {
+export function loadTraceEvents({ repoRoot, sessionId }: { repoRoot: string; sessionId: string }) {
   const traceRoot = resolveTraceRoot(repoRoot);
   const indexesRoot = join(traceRoot, "indexes");
   const indexPath = join(indexesRoot, `${sessionId}.json`);
   if (!exists(indexPath)) {
     return [];
   }
-  const index = JSON.parse(readFileSync(indexPath, "utf8"));
+  const index = JSON.parse(readFileSync(indexPath, "utf8")) as TraceIndex;
   return parseJsonLines(index.event_file);
 }
 
-export function loadTraceIndex({ repoRoot, sessionId }) {
+export function loadTraceIndex({ repoRoot, sessionId }: { repoRoot: string; sessionId: string }) {
   const traceRoot = resolveTraceRoot(repoRoot);
   const indexPath = indexPathFor(traceRoot, sessionId);
   if (!exists(indexPath)) {
     return null;
   }
-  return JSON.parse(readFileSync(indexPath, "utf8"));
+  return JSON.parse(readFileSync(indexPath, "utf8")) as TraceIndex;
 }
 
-export function listTraceIndexes(repoRoot) {
+export function listTraceIndexes(repoRoot: string) {
   const traceRoot = resolveTraceRoot(repoRoot);
   const indexesRoot = join(traceRoot, "indexes");
   if (!exists(indexesRoot)) {
@@ -135,6 +137,6 @@ export function listTraceIndexes(repoRoot) {
   return readdirSync(indexesRoot, { withFileTypes: true })
     .filter((entry) => entry.isFile() && entry.name.endsWith(".json"))
     .map((entry) => join(indexesRoot, entry.name))
-    .sort((left: any, right: any) => left.localeCompare(right))
-    .map((path) => JSON.parse(readFileSync(path, "utf8")));
+    .sort((left: string, right: string) => left.localeCompare(right))
+    .map((path) => JSON.parse(readFileSync(path, "utf8")) as TraceIndex);
 }

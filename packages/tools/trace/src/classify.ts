@@ -27,7 +27,7 @@ const MEMORY_PATTERNS = [/\bmemory write\b/i, /\bmemory-write\b/i, /\baudit-log\
 const FILESYSTEM_PATTERNS = [/\bpermission denied\b/i, /\bENOENT\b/i, /\bfilesystem\b/i, /\bpath\b/i, /\bfile\b/i];
 const CONFIG_PATTERNS = [/\bconfig\b/i, /\bshell profile\b/i, /\binstall root\b/i, /\bconfig home\b/i];
 
-function matchesAny(value, patterns) {
+function matchesAny(value: string, patterns: readonly RegExp[]) {
   return patterns.some((pattern) => pattern.test(value));
 }
 

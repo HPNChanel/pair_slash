@@ -7,3 +7,4 @@ export * from "./redact.ts";
 export * from "./retention.ts";
 export * from "./store.ts";
 export * from "./telemetry.ts";
+export * from "./types.ts";

@@ -4,7 +4,7 @@ function compactTimestamp(value = new Date()) {
   return value.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
 }
 
-export function createOpaqueId(prefix, now = new Date()) {
+export function createOpaqueId(prefix: string, now: Date = new Date()) {
   return `${prefix}-${compactTimestamp(now)}-${randomUUID().slice(0, 8)}`;
 }
 

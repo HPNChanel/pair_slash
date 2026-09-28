@@ -10,39 +10,52 @@ import {
 
 import { listTraceIndexes, resolveTracePaths } from "./store.ts";
 
-const DEFAULT_RETENTION_POLICY = Object.freeze({
+type RetentionPolicy = {
+  max_days: number;
+  max_sessions: number;
+  preserve_exports: boolean;
+  preserve_bundles: boolean;
+};
+
+const DEFAULT_RETENTION_POLICY: RetentionPolicy = Object.freeze({
   max_days: 14,
   max_sessions: 100,
   preserve_exports: true,
   preserve_bundles: true,
 });
 
-function isObject(value) {
+function isObject(value: unknown) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
-function normalizePolicy(raw) {
+function normalizePolicy(raw: unknown): RetentionPolicy {
   if (!isObject(raw)) {
     return { ...DEFAULT_RETENTION_POLICY };
   }
+  const candidate = raw as Record<string, unknown>;
+  const maxDays = candidate.max_days;
+  const maxSessions = candidate.max_sessions;
   return {
-    max_days: Number.isInteger(raw.max_days) && raw.max_days > 0 ? raw.max_days : DEFAULT_RETENTION_POLICY.max_days,
+    max_days:
+      typeof maxDays === "number" && Number.isInteger(maxDays) && maxDays > 0
+        ? maxDays
+        : DEFAULT_RETENTION_POLICY.max_days,
     max_sessions:
-      Number.isInteger(raw.max_sessions) && raw.max_sessions >= 0
-        ? raw.max_sessions
+      typeof maxSessions === "number" && Number.isInteger(maxSessions) && maxSessions >= 0
+        ? maxSessions
         : DEFAULT_RETENTION_POLICY.max_sessions,
     preserve_exports:
-      typeof raw.preserve_exports === "boolean"
-        ? raw.preserve_exports
+      typeof candidate.preserve_exports === "boolean"
+        ? candidate.preserve_exports
         : DEFAULT_RETENTION_POLICY.preserve_exports,
     preserve_bundles:
-      typeof raw.preserve_bundles === "boolean"
-        ? raw.preserve_bundles
+      typeof candidate.preserve_bundles === "boolean"
+        ? candidate.preserve_bundles
         : DEFAULT_RETENTION_POLICY.preserve_bundles,
   };
 }
 
-function parseJsonFile(path) {
+function parseJsonFile(path: string) {
   if (!exists(path)) {
     return null;
   }
@@ -53,13 +66,13 @@ function parseJsonFile(path) {
   }
 }
 
-function isPathWithinRoot(path, root) {
+function isPathWithinRoot(path: string, root: string) {
   const resolvedRoot = resolve(root);
   const resolvedPath = resolve(path);
   return resolvedPath === resolvedRoot || resolvedPath.startsWith(`${resolvedRoot}${sep}`);
 }
 
-function safeDeleteFile(path, root) {
+function safeDeleteFile(path: string | null | undefined, root: string) {
   if (!path || !isPathWithinRoot(path, root) || !exists(path)) {
     return false;
   }
@@ -67,25 +80,25 @@ function safeDeleteFile(path, root) {
   return true;
 }
 
-function retentionStatePath(repoRoot) {
+function retentionStatePath(repoRoot: string) {
   const { stateRoot } = resolveTracePaths(repoRoot);
   return join(stateRoot, "retention.json");
 }
 
-function retentionConfigPath(repoRoot) {
+function retentionConfigPath(repoRoot: string) {
   const { configRoot } = resolveTracePaths(repoRoot);
   return join(configRoot, "retention.json");
 }
 
-export function resolveRetentionPolicy(repoRoot) {
+export function resolveRetentionPolicy(repoRoot: string) {
   return normalizePolicy(parseJsonFile(retentionConfigPath(repoRoot)));
 }
 
-export function loadRetentionState(repoRoot) {
+export function loadRetentionState(repoRoot: string) {
   return parseJsonFile(retentionStatePath(repoRoot));
 }
 
-function writeRetentionState(repoRoot, summary) {
+function writeRetentionState(repoRoot: string, summary: unknown) {
   const statePath = retentionStatePath(repoRoot);
   ensureDir(dirname(statePath));
   writeTextFile(statePath, stableJson(summary));

@@ -9,18 +9,21 @@ import {
 } from "@pairslash/spec-core";
 
 import { loadTraceEvents, listTraceIndexes, resolveTelemetryMode, resolveTracePaths } from "./store.ts";
+import type { TraceEvent, TraceIndex } from "./types.ts";
 
 const SUCCESS_OUTCOMES = new Set(["ok", "pass", "allow", "finished", "exported"]);
 const TTFS_OUTCOMES = new Set(["ok", "pass", "allow", "exported", "finished"]);
 
-function toSelector(runtime, target) {
+type SessionRecord = { index: TraceIndex; events: TraceEvent[] };
+
+function toSelector(runtime: string | null, target: string | null) {
   return {
     runtime: runtime ?? null,
     target: target ?? null,
   };
 }
 
-function median(values) {
+function median(values: number[]) {
   if (values.length === 0) {
     return null;
   }
@@ -31,19 +34,19 @@ function median(values) {
     : Number(sorted[middle].toFixed(3));
 }
 
-function deriveWorkflowKey(index, events) {
+function deriveWorkflowKey(index: TraceIndex, events: TraceEvent[]) {
   const explicitPack = events.find((event) => typeof event.pack_id === "string" && event.pack_id.trim() !== "");
   return explicitPack?.pack_id ?? index.command_name ?? "unknown";
 }
 
-function deriveTtfsSeconds(index, events) {
+function deriveTtfsSeconds(index: TraceIndex, events: TraceEvent[]) {
   const startedAt = Date.parse(index.started_at ?? "");
   if (!Number.isFinite(startedAt)) {
     return null;
   }
   const successEvent = events.find(
     (event) =>
-      TTFS_OUTCOMES.has(event.outcome) &&
+      TTFS_OUTCOMES.has(event.outcome ?? "") &&
       event.event_type !== "session.started" &&
       event.event_type !== "workflow.started" &&
       event.event_type !== "command.started",
@@ -58,8 +61,8 @@ function deriveTtfsSeconds(index, events) {
   return Number(((successAt - startedAt) / 1000).toFixed(3));
 }
 
-function buildWorkflowEntry({ workflowKey, runtime, target, sessions }) {
-  const successfulSessions = sessions.filter((session) => SUCCESS_OUTCOMES.has(session.index.last_outcome)).length;
+function buildWorkflowEntry({ workflowKey, runtime, target, sessions }: { workflowKey: string; runtime: string | null; target: string | null; sessions: SessionRecord[] }) {
+  const successfulSessions = sessions.filter((session) => SUCCESS_OUTCOMES.has(session.index.last_outcome ?? "")).length;
   const failedSessions = sessions.length - successfulSessions;
   const weeklyReuseDays = new Set(
     sessions
@@ -72,7 +75,7 @@ function buildWorkflowEntry({ workflowKey, runtime, target, sessions }) {
   );
   const ttfsSamples = sessions
     .map((session) => deriveTtfsSeconds(session.index, session.events))
-    .filter((value) => typeof value === "number");
+    .filter((value): value is number => typeof value === "number");
   return {
     workflow_key: workflowKey,
     runtime,
@@ -92,11 +95,11 @@ export function buildTelemetrySummary({ repoRoot, runtime = null, target = null 
     .filter((entry) => (selector.runtime ? entry.runtime === selector.runtime : true))
     .filter((entry) => (selector.target ? entry.target === selector.target : true))
     .sort((left, right) => (left.started_at ?? "").localeCompare(right.started_at ?? ""));
-  const sessions = indexes.map((index) => ({
+  const sessions: SessionRecord[] = indexes.map((index) => ({
     index,
     events: loadTraceEvents({ repoRoot, sessionId: index.session_id }),
   }));
-  const grouped = new Map();
+  const grouped = new Map<string, { workflowKey: string; runtime: string | null; target: string | null; sessions: SessionRecord[] }>();
   for (const session of sessions) {
     const workflowKey = deriveWorkflowKey(session.index, session.events);
     const groupingKey = `${workflowKey}\u0000${session.index.runtime}\u0000${session.index.target}`;
@@ -123,7 +126,7 @@ export function buildTelemetrySummary({ repoRoot, runtime = null, target = null 
         `${right.workflow_key}\u0000${right.runtime}\u0000${right.target}`,
       ),
     );
-  const successfulSessions = sessions.filter((session) => SUCCESS_OUTCOMES.has(session.index.last_outcome)).length;
+  const successfulSessions = sessions.filter((session) => SUCCESS_OUTCOMES.has(session.index.last_outcome ?? "")).length;
   const ttfsSamples = sessions
     .map((session) => deriveTtfsSeconds(session.index, session.events))
     .filter((value) => typeof value === "number");

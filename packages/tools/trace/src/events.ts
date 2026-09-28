@@ -10,6 +10,28 @@ import { appendTraceEvent } from "./store.ts";
 
 const NON_FAILURE_OUTCOMES = new Set(["started", "ok", "pass", "allow", "finished", "exported"]);
 
+type TraceContext = ReturnType<typeof createTraceContext>;
+type TraceError = { code?: string; message?: string } | null;
+
+type EmitTraceOptions = {
+  eventType: string;
+  outcome: string;
+  severity?: string;
+  failureDomain?: string | null;
+  sourcePackage?: string;
+  sourceModule?: string;
+  payload?: Record<string, unknown>;
+  summary?: string | null;
+  redactionTags?: string[];
+  telemetryEligible?: boolean;
+  artifactPaths?: string[];
+  error?: TraceError;
+  runtime?: string | null;
+  target?: string | null;
+  packId?: string | null;
+  contractId?: string | null;
+};
+
 export function createTraceContext({
   repoRoot,
   runtime = null,
@@ -32,7 +54,7 @@ export function createTraceContext({
   };
 }
 
-export function emitTraceEvent(context, {
+export function emitTraceEvent(context: TraceContext, {
   eventType,
   outcome,
   severity = inferSeverity(outcome),
@@ -49,7 +71,7 @@ export function emitTraceEvent(context, {
   target = context.target,
   packId = null,
   contractId = null,
-}) {
+}: EmitTraceOptions) {
   const resolvedFailureDomain =
     failureDomain ??
     (NON_FAILURE_OUTCOMES.has(outcome)
@@ -80,7 +102,7 @@ export function emitTraceEvent(context, {
     source_module: sourceModule,
     outcome,
     payload,
-    redaction_tags: [...new Set(redactionTags)].sort((left: any, right: any) => left.localeCompare(right)),
+    redaction_tags: [...new Set(redactionTags)].sort((left: string, right: string) => left.localeCompare(right)),
     telemetry_eligible: telemetryEligible,
     pack_id: packId,
     contract_id: contractId,
@@ -126,6 +148,6 @@ export function emitFailureEvent(context: any, error: any, details: any = {}) {
   });
 }
 
-export function formatTraceLine(value) {
+export function formatTraceLine(value: unknown) {
   return stableJson(value);
 }
