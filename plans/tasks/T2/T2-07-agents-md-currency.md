@@ -13,6 +13,7 @@ evidence:
   decision: defer — managed-block merge (Option B) is the only ownership-safe emission design and needs region-level machinery the installer lacks; managed-file and nested-file variants rejected
   agents_md_audit: all referenced npm scripts still exist; npm pin drift 11.7.0→11.14.1 synced; convention verified (freeform Markdown, ancestor jurisdiction, v1.1 proposal unratified)
   gates: lint=0, test=0
+  commit: c6e015b
 ---
 
 ## Objective
