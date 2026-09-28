@@ -2,13 +2,13 @@
 id: T0-01
 track: T0
 title: Triage uncommitted trace WIP — restore green typecheck
-status: todo
+status: done
 depends_on: []
 est_size: S
-claimed_by:
-claimed_at:
-completed_at:
-evidence:
+claimed_by: devin
+claimed_at: 2026-09-28
+completed_at: 2026-09-28
+evidence: "commits 9dd6b64 (trace typing), 2651b6c (test-helper isolation fix, X3); typecheck 7->0, strict 3224->3216, lint+test+test:release green"
 ---
 
 ## Objective
