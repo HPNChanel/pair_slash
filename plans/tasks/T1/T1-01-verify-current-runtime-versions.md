@@ -2,13 +2,13 @@
 id: T1-01
 track: T1
 title: Verify current runtime versions and surfaces (evidence capture)
-status: todo
+status: done
 depends_on: []
 est_size: M
-claimed_by:
-claimed_at:
-completed_at:
-evidence:
+claimed_by: devin-session
+claimed_at: 2026-09-28
+completed_at: 2026-09-28
+evidence: docs-private/compatibility/runtime-reverification-2026-09.md
 ---
 
 ## Objective
@@ -46,11 +46,11 @@ Establish verified ground truth for both runtimes as of execution date — exact
 
 ## Acceptance gates
 
-- [ ] Verified version strings captured with source attribution for both runtimes
-- [ ] "2.50.x" origin investigated and documented (resolved or honestly marked undetermined)
-- [ ] Research/evidence note written to the correct path (maintainer-local vs lane-evidence class respected)
-- [ ] No truth-file edits in this task
-- [ ] `npm run lint`, `npm run test` still green
+- [x] Verified version strings captured with source attribution for both runtimes — Codex `0.153.4` live + `0.158.0` registry; Copilot `1.0.88` registry-observed (`copilot` binary absent on host)
+- [x] "2.50.x" origin investigated and documented — resolved: commit `d8bcc70` faked `gh version 2.50.0` (gh CLI version conflated with Copilot CLI version)
+- [x] Research/evidence note written to the correct path — `docs-private/compatibility/runtime-reverification-2026-09.md` (maintainer-local; no live copilot capture)
+- [x] No truth-file edits in this task
+- [x] `npm run lint`, `npm run test` still green
 
 ## Evidence to record
 
