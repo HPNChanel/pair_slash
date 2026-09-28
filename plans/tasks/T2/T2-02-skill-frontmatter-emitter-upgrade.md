@@ -18,7 +18,7 @@ evidence:
   validator_pass: 12/12 core packs emitted SKILL.md pass Agent Skills validator
   gates: "lint OK; typecheck OK; test OK (all suites); sync:compat-lab --check OK"
   golden_diff: "sha256/digest-only changes in compiler-*.json and fixture-snapshot.* goldens; body unchanged"
-  commit: pending
+  commit: 6430c58
 ---
 
 ## Objective
