@@ -1,6 +1,6 @@
 # Track T1 — Runtime surface realignment
 
-**Status:** Approved | **Priority:** P1 | **Depends on:** T0
+**Status:** Done | **Priority:** P1 | **Depends on:** T0
 **Goal:** Bring every runtime-facing truth file, doc, and check up to the Sep-2026 reality: Codex CLI ~0.157, GitHub Copilot CLI ~1.0.88, and the actual current surfaces (plugins dashboard, hooks, daemon, model catalog).
 
 ## Context

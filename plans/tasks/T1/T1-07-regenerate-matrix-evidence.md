@@ -2,13 +2,19 @@
 id: T1-07
 track: T1
 title: Regenerate compatibility-matrix + sync derived artifacts + record drift evidence
-status: todo
+status: done
 depends_on: [T1-02, T1-03, T1-04, T1-05, T1-06]
 est_size: S
-claimed_by:
-claimed_at:
-completed_at:
+claimed_by: devin-session
+claimed_at: 2026-09-28
+completed_at: 2026-09-28
 evidence:
+  - npm run sync:compat-lab + --check green; regenerated compatibility-matrix.md, packs.yaml, goldens
+  - sweep: `git grep "0\.116|0\.118|2\.50"` — remaining hits are historical evidence only (documented in drift audit)
+  - deleted 5 orphaned compat-lab goldens repo-*.json (no reader; embedded stale 0.116/2.50 doctor reports)
+  - .pairslash/project-memory/90-memory-index.yaml last_updated/updated_by bumped for the T1-02 stack-profile touch
+  - drift audit written: docs-private/compatibility/drift-audit-2026-09.md
+  - gates green: lint, typecheck, npm run test, test:release, test:compat
 ---
 
 ## Objective
