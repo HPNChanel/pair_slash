@@ -2,13 +2,13 @@
 id: T1-04
 track: T1
 title: Update supported_runtime_ranges across pack manifests
-status: todo
+status: done
 depends_on: [T1-02]
 est_size: M
-claimed_by:
-claimed_at:
-completed_at:
-evidence:
+claimed_by: devin-session
+claimed_at: 2026-09-28
+completed_at: 2026-09-28
+evidence: 11 core manifests + normalize defaults updated; derived goldens regenerated; advanced manifests use design-only markers (no ranges field exists)
 ---
 
 ## Objective
@@ -47,11 +47,11 @@ Update `supported_runtime_ranges` in all `packs/core/*/pack.manifest.yaml` so de
 
 ## Acceptance gates
 
-- [ ] All manifests parse under `runtime-range` validation
-- [ ] `npm run lint` green (range validation rules pass)
-- [ ] `npm run sync:compat-lab -- --check` green
-- [ ] `npm run test`, `npm run test:release` green
-- [ ] Derived registry regenerated in same commit
+- [x] All manifests parse under `runtime-range` validation
+- [x] `npm run lint` green (range validation rules pass)
+- [x] `npm run sync:compat-lab -- --check` green
+- [x] `npm run test`, `npm run test:release` green
+- [x] Derived registry regenerated in same commit
 
 ## Evidence to record
 

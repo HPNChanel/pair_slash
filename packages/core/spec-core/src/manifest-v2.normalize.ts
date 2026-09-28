@@ -138,8 +138,8 @@ function deriveSupportedRuntimes(record) {
 function deriveSupportedRuntimeRanges(record) {
   const legacyRanges = isObject(record.supported_runtime_ranges) ? record.supported_runtime_ranges : {};
   return {
-    codex_cli: pickFirstString(legacyRanges.codex_cli) ?? ">=0.116.0",
-    copilot_cli: pickFirstString(legacyRanges.copilot_cli) ?? ">=0.0.0",
+    codex_cli: pickFirstString(legacyRanges.codex_cli) ?? ">=0.153.4",
+    copilot_cli: pickFirstString(legacyRanges.copilot_cli) ?? ">=1.0.0",
   };
 }
 

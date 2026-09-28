@@ -348,8 +348,8 @@ pack:
   canonical_entrypoint: /skills
 release_channel: stable
 supported_runtime_ranges:
-  codex_cli: ">=0.116.0"
-  copilot_cli: ">=0.0.0"
+  codex_cli: ">=0.153.4"
+  copilot_cli: ">=1.0.0"
 install_targets: [repo, user]
 capabilities: [plan_generation, repo_read, memory_read]
 risk_level: low

@@ -69,7 +69,7 @@ test("install creates managed repo-target runtime footprint", serial, () => {
 
 test("install accepts Codex version output with executable prefix", serial, () => {
   const fixture = createTempRepo();
-  const runtime = installFakeRuntime({ codexVersion: "codex-cli 0.116.0" });
+  const runtime = installFakeRuntime({ codexVersion: "codex-cli 0.153.4" });
   try {
     const envelope = planInstall({
       repoRoot: fixture.tempRoot,

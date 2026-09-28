@@ -789,7 +789,7 @@ test("manifest resolver returns runtime and target install contract", () => {
     target: "repo",
   });
   assert.equal(resolved.runtime_binding.direct_invocation, "$pairslash-plan");
-  assert.equal(resolved.runtime_range, ">=0.116.0");
+  assert.equal(resolved.runtime_range, ">=0.153.4");
   assert.ok(resolved.assets.some((asset) => asset.generated_path === "agents/openai.yaml"));
   assert.ok(resolved.assets.some((asset) => asset.source_path === "SKILL.md"));
 });

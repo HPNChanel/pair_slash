@@ -231,8 +231,8 @@ export function buildManifestTemplate({
     release_channel: releaseChannel,
     supported_runtimes: SUPPORTED_RUNTIMES.slice(),
     supported_runtime_ranges: {
-      codex_cli: ">=0.116.0",
-      copilot_cli: ">=0.0.0",
+      codex_cli: ">=0.153.4",
+      copilot_cli: ">=1.0.0",
     },
     runtime_bindings: Object.fromEntries(
       SUPPORTED_RUNTIMES.map((runtime) => [
