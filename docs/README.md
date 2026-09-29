@@ -27,4 +27,5 @@ Reference docs:
 - [Live runtime evidence](evidence/live-runtime/README.md)
 - [Examples](examples/README.md)
 - [Phase 17 read authority charter](architecture/phase-17-read-authority-charter.md)
+- [Supply-chain gates](security/supply-chain-gates.md)
 - [Architecture](architecture/repo-structure.md)

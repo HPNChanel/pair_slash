@@ -2,13 +2,24 @@
 id: T10-04
 track: T10
 title: Release-lane SBOM artifact + audit hardening
-status: todo
+status: done
 depends_on: []
 est_size: S
-claimed_by:
-claimed_at:
-completed_at:
-evidence:
+claimed_by: devin
+claimed_at: 2026-09-29
+completed_at: 2026-09-29
+evidence: >-
+  SBOM verified real: npm sbom --sbom-format cyclonedx --sbom-type
+  application produces CycloneDX 1.5 with 21 components / 22 dependency
+  edges from lockfile truth (zero new deps — built-in tooling). The
+  protected release-trust-candidate lane already emitted the SBOM
+  companion; this task added the same unsigned companion step to
+  repo-checks release-gates (after verify, before upload — inside the
+  artifact dir but outside the signed checksum set). npm audit gate
+  confirmed enforced: --audit-level=high --omit=dev on quick-checks, both
+  Node majors. Coverage boundaries documented in
+  docs/security/supply-chain-gates.md (prod-only audit scope, unsigned
+  SBOM, no provenance attestation), linked from docs/README.md.
 ---
 
 ## Objective
