@@ -434,13 +434,13 @@ runtime_lanes:
     deterministic_lab_baseline: 0.153.4
     evidence_data_ref: docs/evidence/live-runtime/codex-cli-repo-windows.yaml
     evidence_source: docs/evidence/live-runtime/codex-cli-repo-windows.md
-    evidence_summary: Real Windows doctor and preview smoke were recorded on 2026-04-05, but install apply and canonical /skills evidence remain unrecorded. Runtime version re-captured live on 2026-09-28 (codex-cli 0.153.4 on the Windows host); version fields realigned accordingly.
+    evidence_summary: Real Windows doctor and preview smoke were recorded on 2026-04-05 and re-run on 2026-09-29; install apply smoke recorded live on 2026-09-29 (scratch-repo mirror apply wrote 9 managed files plus journal and install state). Runtime version re-captured live on 2026-09-28 (codex-cli 0.153.4 on the Windows host). Canonical /skills picker evidence remains unrecorded.
     fake_evidence_refs:
       - packages/tools/compat-lab/src/acceptance.ts
     freshness_state: fresh
     host_profile_count: 1
     lane_id: codex-cli-repo-windows
-    last_verified_at: 2026-04-05T12:28:24.545Z
+    last_verified_at: 2026-09-29T12:46:57.000Z
     live_evidence_refs:
       - docs/evidence/live-runtime/codex-cli-repo-windows.md
     live_tested_range: none recorded
@@ -455,12 +455,12 @@ runtime_lanes:
     shim_evidence_refs:
       - packages/tools/compat-lab/src/runtime-fixtures.ts
     support_level: prep
-    support_semantics: Real Windows doctor and preview smoke are recorded, but install apply and canonical /skills verification remain unrecorded. Keep this lane prep-only.
+    support_semantics: Real Windows doctor, preview, and install-apply smoke are recorded, but canonical /skills verification remains unrecorded. Keep this lane prep-only.
     surface_verdicts:
       canonical_picker: unrecorded
       direct_invocation: not_recorded
       gh_availability: not_applicable
-      install_apply: unrecorded
+      install_apply: pass
       preview_install: pass
       runtime_available: pass
     target: repo

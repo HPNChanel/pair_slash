@@ -2,13 +2,25 @@
 id: T6-04
 track: T6
 title: Update verdict docs + claim sync (only if evidence moved)
-status: todo
+status: done
 depends_on: [T6-01, T6-02, T6-03]
 est_size: S
-claimed_by:
-claimed_at:
-completed_at:
-evidence:
+claimed_by: devin
+claimed_at: 2026-09-29
+completed_at: 2026-09-29
+evidence: >-
+  No claim strengthened — T6-01/02/03 all ended blocked, so every gate stays
+  NO-GO/prep. Synced surfaces: verdict.md dated gap note (benchmark
+  validate run, bin-wrapper fix, still zero official runs);
+  scoped-release-verdict.md dated gap note (REQUIRE_SIGNED wiring verified,
+  secrets custody pending); README support table row for Codex repo Windows
+  updated to mirror the matrix (live doctor/preview/install smoke recorded,
+  canonical /skills pending — support stays prep);
+  runtime-verification.md §G dated progress note (install-apply smoke now
+  recorded on codex-cli-repo-windows, picker still unrecorded). Charter
+  stage statement and project-memory stage_statement unchanged — still true
+  (Phase 3.5). compatibility-matrix.md regenerated via sync:compat-lab;
+  --check green.
 ---
 
 ## Objective

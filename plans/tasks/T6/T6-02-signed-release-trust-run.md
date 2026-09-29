@@ -2,14 +2,32 @@
 id: T6-02
 track: T6
 title: R2 — protected signed release-trust-candidate run
-status: todo
+status: blocked
 depends_on: []
 est_size: M
-claimed_by:
-claimed_at:
+claimed_by: devin
+claimed_at: 2026-09-29
 completed_at:
-evidence:
-blocked_reason:
+evidence: >-
+  Signing enforcement re-verified on this branch: REQUIRE_SIGNED=1 is
+  enforced fail-closed in scripts/run-release-ship-readiness.mjs and the
+  protected workflow .github/workflows/release-trust-candidate.yml; public
+  key pairslash-release-2026-04 (Ed25519) is checked in at
+  trust/first-party-keys.json. npm run test:release green (structural,
+  unsigned). Dated gap note recorded in
+  docs/releases/scoped-release-verdict.md (2026-09-29).
+blocked_reason: >-
+  The Ed25519 private key is not provisioned as GitHub Actions secrets and
+  no protected release-trust-candidate run has executed — signing custody is
+  a maintainer action. Run-sheet: (1) generate/confirm the first-party
+  keypair offline, public key already committed
+  (pairslash-release-2026-04); (2) store PAIRSLASH_RELEASE_TRUST_PRIVATE_KEY
+  and PAIRSLASH_RELEASE_TRUST_KEY_ID in the repo's protected environment
+  secrets; (3) dispatch release-trust-candidate.yml on the release ref;
+  (4) download the uploaded signed bundle artifact and run
+  npm run release:trust:verify against it locally; (5) record checksums and
+  run id in docs-private/releases/release-candidate-evidence-0.4.0.md;
+  (6) then flip scoped-release-verdict.md per its own update rule.
 ---
 
 ## Objective

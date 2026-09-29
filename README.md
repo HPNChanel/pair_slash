@@ -218,7 +218,7 @@ PairSlash uses strict, evidence-based support labels. No label is used without m
 | --- | --- | --- | --- | --- |
 | Codex CLI | `repo` | macOS | `degraded` | Real runtime evidence exists, but canonical `/skills` capture is partial |
 | GitHub Copilot CLI | `user` | Linux | `prep` | Deterministic coverage exists, live verification not yet recorded |
-| Codex CLI | `repo` | Windows | `prep` | Compat-lab coverage exists, live install evidence pending |
+| Codex CLI | `repo` | Windows | `prep` | Live doctor/preview/install smoke recorded, canonical `/skills` evidence pending |
 | GitHub Copilot CLI | `user` | Windows | `prep` | Compat-lab coverage exists, live install evidence pending |
 
 **Known issues:**

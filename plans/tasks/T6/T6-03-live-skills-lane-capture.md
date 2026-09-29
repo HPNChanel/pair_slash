@@ -2,14 +2,39 @@
 id: T6-03
 track: T6
 title: R3 — live /skills evidence capture on ≥1 lane
-status: todo
+status: blocked
 depends_on: []
 est_size: M
-claimed_by:
-claimed_at:
+claimed_by: devin
+claimed_at: 2026-09-29
 completed_at:
-evidence:
-blocked_reason:
+evidence: >-
+  Scripted steps completed live on the codex-cli-repo-windows lane
+  (codex-cli 0.153.4): doctor (support_verdict=degraded,
+  install_blocked=false), preview install (can_apply=true,
+  needs-explicit-approval), and install --apply on a scratch-repo mirror
+  (9 managed files + journal + repo-codex_cli.json state). Records written
+  to docs/evidence/live-runtime/codex-cli-repo-windows.{md,yaml};
+  runtime-surface-matrix.yaml updated (install_apply: pass, last_verified_at
+  2026-09-29T12:46:57.000Z, support stays prep); compatibility-matrix.md
+  regenerated; npm run sync:compat-lab -- --check green. README support
+  table mirrored to the matrix wording. Lane deliberately NOT promoted —
+  canonical_picker remains unrecorded per runbook policy.
+blocked_reason: >-
+  Manual-required steps (canonical_skills_listing,
+  workflow_selection_from_skills, workflow_prompt_and_response_capture,
+  memory_write_preview_observation) need a human in an interactive Codex
+  session on the lane — scripted substitution is forbidden by the evidence
+  policy. Run-sheet for the codex-cli-repo-windows lane: (1) open an
+  interactive codex session in a repo where pairslash packs are installed;
+  (2) run /skills, capture the picker listing pairslash skills (note the
+  surface variant: picker vs dashboard); (3) select pairslash-plan from the
+  picker and capture the prompt + response; (4) run
+  pairslash-memory-write-global far enough to observe the write-preview
+  step; (5) write the captures into the lane .yaml/.md records with artifact
+  paths and timestamps; (6) only then may the matrix move canonical_picker
+  to pass and the lane toward preview. macOS lane (the recommended target)
+  could not be used — this session runs on Windows.
 ---
 
 ## Objective

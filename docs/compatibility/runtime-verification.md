@@ -316,6 +316,10 @@ Write artifacts back into:
   canonical `/skills`, and workflow execution on the exact lane.
 - Windows `doctor` and `preview install` are useful smoke only. They are not
   enough for promotion.
+- 2026-09-29: the Codex repo Windows lane now has live install-apply smoke
+  recorded (scratch-repo apply, `codex-cli-repo-windows` lane record). The
+  lane stays `prep` — canonical `/skills` and workflow execution remain
+  unrecorded.
 - Copilot cannot promote without checked-in `gh` availability proof,
   canonical picker proof, and exact runtime-path proof.
 - If only Codex evidence exists, write support truth as Codex-only lane support.

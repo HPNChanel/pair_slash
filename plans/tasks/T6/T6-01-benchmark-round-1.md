@@ -2,14 +2,30 @@
 id: T6-01
 track: T6
 title: R1 — record official Phase-19 benchmark round 1
-status: todo
+status: blocked
 depends_on: []
 est_size: M
-claimed_by:
-claimed_at:
+claimed_by: devin
+claimed_at: 2026-09-29
 completed_at:
-evidence:
-blocked_reason:
+evidence: >-
+  npm run benchmark:validate passes on this branch (apparatus self-check,
+  zero official run records). Fixed real packaging bug found while
+  validating: pairslash-benchmark bin wrapper imported stale ../index.js
+  (pre-M2 name) — now ../index.ts with a spawn-level regression test in
+  packages/tools/benchmark/tests/benchmark.test.js. Dated gap note recorded
+  in docs/validation/phase-3-5/verdict.md (2026-09-29). Gates green.
+blocked_reason: >-
+  Round 1 requires a maintainer to execute the paired A/B workflow runs
+  (pairslash-plan, pairslash-memory-write-global) on a real Codex repo lane
+  and capture raw logs maintainer-local. No captured run records exist under
+  the current Phase-19 method; fabricating them is forbidden. Run-sheet:
+  (1) on a real repo with Codex CLI, run the documented benchmark:round1
+  method — paired runs with and without PairSlash skills for the two
+  must-win workflows; (2) keep raw logs maintainer-local;
+  (3) npm run benchmark:score and persist the scoring artifact;
+  (4) update benchmark-truth.yaml at policy-permitted granularity;
+  (5) flip verdict.md only if the rubric criteria are met.
 ---
 
 ## Objective

@@ -1,7 +1,7 @@
 # PairSlash Scoped Release Verdict
 
 Gate status: NO-GO
-Last updated: 2026-04-17
+Last updated: 2026-09-29
 Truth class: scoped-release
 Claim scope: phase20-release-trust-activation
 Release-covered runtimes: codex_cli, copilot_cli
@@ -56,6 +56,22 @@ evidence log for this release line.
   configuration.
 - Legal/package publicness beyond current repository metadata.
 - Live runtime support promotion beyond the checked-in lane records.
+
+## Dated gap notes
+
+- **2026-09-29 (T6-02):** the signing enforcement wiring was re-verified on
+  this branch — `PAIRSLASH_RELEASE_TRUST_REQUIRE_SIGNED=1` is enforced in
+  `scripts/run-release-ship-readiness.mjs` and the protected workflow
+  `.github/workflows/release-trust-candidate.yml` fails closed without
+  signing material. The public key for `pairslash-release-2026-04` is checked
+  in at `trust/first-party-keys.json`. The gate still cannot flip: no
+  protected `release-trust-candidate` run has executed, because the Ed25519
+  private key is not provisioned as GitHub Actions secrets
+  (`PAIRSLASH_RELEASE_TRUST_PRIVATE_KEY` /
+  `PAIRSLASH_RELEASE_TRUST_KEY_ID`). Human steps remaining: store the private
+  key in the repo's protected environment secrets, dispatch the workflow on
+  the release ref, download the signed bundle artifact, and record the run in
+  the maintainer candidate evidence log.
 
 ## Required companion sources
 

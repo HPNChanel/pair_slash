@@ -14,7 +14,7 @@ best_live_evidence_class: live_smoke
 freshness_state: fresh
 stale_after_days: 7
 expire_after_days: 14
-last_verified_at: "2026-04-05T12:28:24.545Z"
+last_verified_at: "2026-09-29T12:46:57.000Z"
 host_profile_count: 1
 pack_scope:
   - pairslash-plan
@@ -25,13 +25,13 @@ capability_scope:
   - doctor
   - preview_install
   - install_apply
-caveat_summary: Real Windows doctor and preview smoke are recorded, but install apply and canonical /skills verification remain unrecorded.
+caveat_summary: Real Windows doctor, preview, and install-apply smoke are recorded, but canonical /skills picker verification remains unrecorded.
 surface_verdicts:
   canonical_picker: unrecorded
   direct_invocation: not_recorded
   runtime_available: pass
   preview_install: pass
-  install_apply: unrecorded
+  install_apply: pass
   gh_availability: not_applicable
 deterministic_evidence_refs:
   - docs/runtime-mapping/pilot-acceptance.md
@@ -100,6 +100,94 @@ live_records:
     shell_family: cmd
     verdict: pass
     summary: preview install succeeded as a non-mutating Windows smoke run and preserved unmanaged overrides instead of silently taking ownership.
+    artifact_paths:
+      - docs/evidence/live-runtime/codex-cli-repo-windows.md
+    command_capture_refs:
+      - docs/evidence/live-runtime/codex-cli-repo-windows.md
+  - evidence_id: codex-windows-doctor-20260929
+    evidence_class: live_smoke
+    captured_at: "2026-09-29T12:44:00.000Z"
+    freshness_state: fresh
+    stale_at: "2026-10-06T12:44:00.000Z"
+    expire_at: "2026-10-13T12:44:00.000Z"
+    owner_id: runtime-truth
+    runtime_id: codex_cli
+    target: repo
+    os_lane: Windows
+    host_profile_id: codex-cli.repo.windows.cmd
+    pack_scope:
+      - pairslash-plan
+    workflow_scope:
+      - pairslash-plan
+    capability_scope:
+      - doctor
+      - runtime_available
+    entrypoint_path_used: /skills
+    command: npm run pairslash -- doctor --runtime codex --target repo --format json
+    runtime_version: 0.153.4
+    shell_family: git-bash
+    verdict: pass
+    summary: pairslash doctor re-run on the Windows repo lane against codex-cli 0.153.4 detected the real host (runtime_available pass) and returned support_verdict=degraded with install_blocked=false.
+    artifact_paths:
+      - docs/evidence/live-runtime/codex-cli-repo-windows.md
+    command_capture_refs:
+      - docs/evidence/live-runtime/codex-cli-repo-windows.md
+  - evidence_id: codex-windows-preview-20260929
+    evidence_class: live_smoke
+    captured_at: "2026-09-29T12:44:30.000Z"
+    freshness_state: fresh
+    stale_at: "2026-10-06T12:44:30.000Z"
+    expire_at: "2026-10-13T12:44:30.000Z"
+    owner_id: runtime-truth
+    runtime_id: codex_cli
+    target: repo
+    os_lane: Windows
+    host_profile_id: codex-cli.repo.windows.cmd
+    pack_scope:
+      - pairslash-plan
+    workflow_scope:
+      - pairslash-plan
+    capability_scope:
+      - preview_install
+      - install_plan
+    entrypoint_path_used: /skills
+    command: npm run pairslash -- preview install pairslash-plan --runtime codex --target repo --format json
+    runtime_version: 0.153.4
+    shell_family: git-bash
+    verdict: pass
+    summary: preview install on codex-cli 0.153.4 produced can_apply=true with status needs-explicit-approval — non-mutating plan generation confirmed on the live Windows host.
+    artifact_paths:
+      - docs/evidence/live-runtime/codex-cli-repo-windows.md
+    command_capture_refs:
+      - docs/evidence/live-runtime/codex-cli-repo-windows.md
+  - evidence_id: codex-windows-install-apply-20260929
+    evidence_class: live_smoke
+    captured_at: "2026-09-29T12:46:04.774Z"
+    freshness_state: fresh
+    stale_at: "2026-10-06T12:46:04.774Z"
+    expire_at: "2026-10-13T12:46:04.774Z"
+    owner_id: runtime-truth
+    runtime_id: codex_cli
+    target: repo
+    os_lane: Windows
+    host_profile_id: codex-cli.repo.windows.cmd
+    pack_scope:
+      - pairslash-plan
+    workflow_scope:
+      - pairslash-plan
+    capability_scope:
+      - install_apply
+    entrypoint_path_used: /skills
+    command: node packages/tools/cli/src/bin/pairslash.ts install pairslash-plan --runtime codex --target repo --apply --yes --format json (run from a scratch mirror of this repo at a temp directory so the apply did not touch the maintainer working tree)
+    runtime_version: 0.153.4
+    shell_family: git-bash
+    verdict: pass
+    summary: >-
+      install --apply --yes against codex-cli 0.153.4 wrote 9 managed files
+      (.agents/skills/pairslash-plan/ tree), created the transaction journal,
+      and wrote install state to
+      .pairslash/install-state/repo-codex_cli.json on the real Windows host.
+      This is live_smoke only: the canonical /skills picker remains unrecorded.
     artifact_paths:
       - docs/evidence/live-runtime/codex-cli-repo-windows.md
     command_capture_refs:
