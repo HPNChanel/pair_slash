@@ -1,9 +1,11 @@
 # Advanced Packages
 
-This directory is reserved for Phase 11 advanced optional lanes.
+This directory holds Phase 11 advanced optional lanes: implemented slices
+that remain experimental and opt-in.
 
 Public release label for everything here: `experimental`.
-Runtime support expectation: `design-only` until live evidence exists.
+Runtime support expectation: `unverified` until live evidence exists —
+implemented does not mean stable or shipped.
 Canonical maintainer-local docs for this slice live outside the public docs
 surface, not in this directory.
 
@@ -11,25 +13,25 @@ Rules:
 
 - not part of the current root npm workspace list
 - not part of the current core install path
-- not imported by core packages in the design-only slice
+- not imported by core packages
 - not a place to bypass PairSlash memory or policy boundaries
 
-Current scaffold:
+Current packages (all implemented, all experimental):
 
-- `ci-engine`
-- `delegation-engine`
-- `retrieval-engine`
-- `retrieval-index`
-- `retrieval-skill`
-
-Current prototype package:
-
-- `ci-engine` includes an explicit opt-in CI slice with report-first outputs,
-  policy gating, provenance metadata, and proposal-only patch artifacts.
-- `delegation-engine` includes a scaffold-only slice with explicit delegation
-  policy, authority-subset checks, and non-authoritative result envelopes.
-- `retrieval-engine` includes an explicit-invocation read-only slice with
-  policy gating and non-authoritative labeling.
+- `ci-engine` — explicit opt-in CI slice with report-first outputs, policy
+  gating, provenance metadata, and proposal-only patch artifacts under
+  `.pairslash/staging/ci-proposals/`; no apply path exists
+- `delegation-engine` — bounded delegation slice with explicit policy,
+  authority-subset checks against `trust/pack-authority.yaml`, and
+  non-authoritative result envelopes that route durable writes back through
+  `pairslash-memory-write-global`
+- `retrieval-engine` — explicit-invocation read-only slice with policy
+  gating and non-authoritative `retrieved` labeling
+- `retrieval-index` — deterministic on-disk index over `.pairslash/` read
+  surfaces under `.pairslash/observability/indexes/retrieval/`; never writes
+  to memory surfaces
+- `retrieval-skill` — descriptor for the retrieval pack's explicit install
+  lane
 
 This directory must not become a public onboarding surface or an alternate
 front door beside `/skills`.

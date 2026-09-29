@@ -1,6 +1,6 @@
 # Track T8 — Advanced slices: retrieval → ci → delegation
 
-**Status:** Approved | **Priority:** P3 | **Depends on:** T5 (spec-core strict-clean)
+**Status:** Done (6/6 tasks, 2026-09-29) | **Priority:** P3 | **Depends on:** T5 (spec-core strict-clean)
 **Goal:** Promote `packages/advanced/{retrieval-engine,retrieval-index,retrieval-skill,ci-engine,delegation-engine}` from `.js` scaffolds to implemented, opt-in, policy-gated slices — without letting them into the core install path or default catalog.
 
 ## Context

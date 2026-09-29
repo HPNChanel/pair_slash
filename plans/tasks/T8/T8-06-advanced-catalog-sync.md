@@ -2,13 +2,13 @@
 id: T8-06
 track: T8
 title: Advanced README/catalog sync + experimental labeling
-status: todo
+status: done
 depends_on: [T8-01, T8-02, T8-03, T8-04, T8-05]
 est_size: S
-claimed_by:
-claimed_at:
-completed_at:
-evidence:
+claimed_by: devin
+claimed_at: 2026-09-29
+completed_at: 2026-09-29
+evidence: all three advanced manifests + generated packs.yaml at status=experimental; READMEs synced to implemented-experimental truth (explicit install lane, non-authoritative invariants, unverified runtime support); installer exclusion tests 50/50 incl. advanced negative-selection; sync --check/lint/typecheck/npm test/test:release green
 ---
 
 ## Objective
@@ -43,9 +43,9 @@ Sync `packages/advanced/README.md`, `packs/advanced/README.md`, and `registry/pa
 
 ## Acceptance gates
 
-- [ ] Docs/manifests reflect implemented-experimental truth
-- [ ] Exclusion negative tests green
-- [ ] Gates green; T8 marked done
+- [x] Docs/manifests reflect implemented-experimental truth
+- [x] Exclusion negative tests green
+- [x] Gates green; T8 marked done
 
 ## Evidence to record
 
