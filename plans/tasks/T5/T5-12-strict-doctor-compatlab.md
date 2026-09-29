@@ -2,13 +2,18 @@
 id: T5-12
 track: T5
 title: Strict batch — doctor + compat-lab
-status: todo
+status: done
 depends_on: [T5-03, T5-11]
 est_size: L
 claimed_by:
 claimed_at:
-completed_at:
+completed_at: 2026-09-session
 evidence:
+  baseline: "doctor 16 strict errors; compat-lab 187 strict errors (203 total)"
+  final: "0 strict errors in both packages (npm run typecheck:strict)"
+  check_coverage: "CHECKS registry 28 entries before=after (57 run* refs identical at HEAD vs worktree; runtime CHECKS.length=28); doctor output ordering unchanged"
+  tests: "doctor 44/44; compat-lab 21/21 (acceptance 5, compat-lab 10, docs-surface 3, evals 1, matrix 2); npm run test:compat green; npm run typecheck/lint/test/test:release all green"
+  constraints: "no as any/ts-ignore/ts-expect-error in diff; fixture semantics, verdict logic, tests untouched; shim lanes unchanged"
 ---
 
 ## Objective

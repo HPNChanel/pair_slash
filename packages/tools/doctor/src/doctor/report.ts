@@ -41,10 +41,10 @@ import {
   workflowMaturityRank,
 } from "./helpers.ts";
 
-export function buildRuntimeCompatibility(context, checks) {
-  const versionCheck = checks.find((check) => check.id === "runtime.version_range");
+export function buildRuntimeCompatibility(context: any, checks: any) {
+  const versionCheck = checks.find((check: any) => check.id === "runtime.version_range");
   const incompatiblePackIds =
-    versionCheck?.evidence?.mismatches?.map((entry) => entry.pack_id).sort((left: any, right: any) => left.localeCompare(right)) ?? [];
+    versionCheck?.evidence?.mismatches?.map((entry: any) => entry.pack_id).sort((left: any, right: any) => left.localeCompare(right)) ?? [];
   const selectedPackCount = context.selectedManifests.length;
   const compatiblePackCount = Math.max(0, selectedPackCount - incompatiblePackIds.length);
   return {
@@ -60,12 +60,12 @@ export function buildRuntimeCompatibility(context, checks) {
   };
 }
 
-export function buildInstalledPacks(state) {
+export function buildInstalledPacks(state: any) {
   if (!state) {
     return [];
   }
   return state.packs
-    .map((pack) => ({
+    .map((pack: any) => ({
       ...(() => {
         const receipt = normalizePackTrustReceipt(pack);
         return {
@@ -80,15 +80,15 @@ export function buildInstalledPacks(state) {
       id: pack.id,
       version: pack.version,
       install_dir: pack.install_dir,
-      local_overrides: pack.files.filter((file) => file.local_override).length,
+      local_overrides: pack.files.filter((file: any) => file.local_override).length,
     }))
-    .sort((left, right) => left.id.localeCompare(right.id));
+    .sort((left: any, right: any) => left.id.localeCompare(right.id));
 }
 
-export function buildIssues(checks) {
+export function buildIssues(checks: any) {
   return checks
-    .filter((check) => ISSUE_STATUSES.has(check.status))
-    .map((check) => ({
+    .filter((check: any) => ISSUE_STATUSES.has(check.status))
+    .map((check: any) => ({
       code: buildIssueCode(check.id),
       verdict: check.status,
       severity: check.status === "fail" || check.status === "unsupported" ? "fail" : "warn",
@@ -106,14 +106,14 @@ export function buildIssues(checks) {
     }));
 }
 
-export function buildRemediationActions(checks, issues) {
+export function buildRemediationActions(checks: any, issues: any[]) {
   return dedupeRemediationActions([
-    ...checks.flatMap((check) => check.remediation_actions ?? []),
-    ...issues.flatMap((issue) => issue.remediation_actions ?? []),
+    ...checks.flatMap((check: any) => check.remediation_actions ?? []),
+    ...issues.flatMap((issue: any) => issue.remediation_actions ?? []),
   ]);
 }
 
-export function remediationDecisionForReasonCodes(reasonCodes) {
+export function remediationDecisionForReasonCodes(reasonCodes: any) {
   if (
     reasonCodes.includes(REASON_CODE_UNMANAGED_CONFLICT) ||
     reasonCodes.includes(REASON_CODE_OWNERSHIP_METADATA_CONFLICT)
@@ -124,7 +124,7 @@ export function remediationDecisionForReasonCodes(reasonCodes) {
     return REMEDIATION_DECISION_RECONCILE;
   }
   if (
-    reasonCodes.some((reasonCode) => [
+    reasonCodes.some((reasonCode: any) => [
       REASON_CODE_RECONCILE_OVERRIDE,
       REASON_CODE_MANAGED_OVERRIDE,
       REASON_CODE_MANAGED_ORPHAN_OVERRIDE,
@@ -136,15 +136,15 @@ export function remediationDecisionForReasonCodes(reasonCodes) {
   return REMEDIATION_DECISION_REPAIR;
 }
 
-export function buildDoctorRemediation({ remediationActions, activeReasonCodes, installBlocked, issues }) {
-  const normalizedActions = dedupeRemediationActions(remediationActions).map((action) => {
+export function buildDoctorRemediation({ remediationActions, activeReasonCodes, installBlocked, issues }: { remediationActions?: any; activeReasonCodes?: any; installBlocked?: any; issues?: any[] }) {
+  const normalizedActions = dedupeRemediationActions(remediationActions).map((action: any) => {
     const actionReasonCodes = collectLifecycleReasonCodes({
       reasonCodes: action.reason_codes ?? [],
     });
     const effectiveReasonCodes = collectLifecycleReasonCodes({
       reasonCodes:
-        actionReasonCodes.filter((reasonCode) => activeReasonCodes.includes(reasonCode)).length > 0
-          ? actionReasonCodes.filter((reasonCode) => activeReasonCodes.includes(reasonCode))
+        actionReasonCodes.filter((reasonCode: any) => activeReasonCodes.includes(reasonCode)).length > 0
+          ? actionReasonCodes.filter((reasonCode: any) => activeReasonCodes.includes(reasonCode))
           : actionReasonCodes,
     });
     return {
@@ -161,7 +161,7 @@ export function buildDoctorRemediation({ remediationActions, activeReasonCodes, 
       decision: remediationDecisionForReasonCodes(effectiveReasonCodes),
     };
   });
-  const commands = [];
+  const commands: any[] = [];
   const seenCommands = new Set();
   for (const action of normalizedActions) {
     if (typeof action.command !== "string" || action.command.trim() === "") {
@@ -186,7 +186,7 @@ export function buildDoctorRemediation({ remediationActions, activeReasonCodes, 
   }
   const status = installBlocked
     ? REMEDIATION_STATUS_BLOCKED
-    : commands.length > 0 || normalizedActions.length > 0 || issues.length > 0
+    : commands.length > 0 || normalizedActions.length > 0 || (issues ?? []).length > 0
       ? REMEDIATION_STATUS_ADVISORY
       : REMEDIATION_STATUS_NONE;
   return {
@@ -196,14 +196,14 @@ export function buildDoctorRemediation({ remediationActions, activeReasonCodes, 
   };
 }
 
-export function buildNextActions(issues, remediationActions = []) {
+export function buildNextActions(issues: any[], remediationActions: any = []) {
   const commandActions = remediationActions
-    .filter((action) => typeof action.command === "string" && action.command.trim() !== "")
-    .map((action) => action.command);
+    .filter((action: any) => typeof action.command === "string" && action.command.trim() !== "")
+    .map((action: any) => action.command);
   if (commandActions.length > 0) {
     return [...new Set(commandActions)];
   }
-  const deduped = [];
+  const deduped: any[] = [];
   const seen = new Set();
   for (const issue of issues) {
     if (!issue.suggested_fix || seen.has(issue.suggested_fix)) {
@@ -217,23 +217,23 @@ export function buildNextActions(issues, remediationActions = []) {
     : ["No action required. Environment is ready for PairSlash compatibility diagnostics."];
 }
 
-export function aggregateVerdict(checks) {
-  if (checks.some((check) => check.status === "unsupported")) {
+export function aggregateVerdict(checks: any) {
+  if (checks.some((check: any) => check.status === "unsupported")) {
     return "unsupported";
   }
-  if (checks.some((check) => check.status === "fail")) {
+  if (checks.some((check: any) => check.status === "fail")) {
     return "fail";
   }
-  if (checks.some((check) => check.status === "degraded")) {
+  if (checks.some((check: any) => check.status === "degraded")) {
     return "degraded";
   }
-  if (checks.some((check) => check.status === "warn")) {
+  if (checks.some((check: any) => check.status === "warn")) {
     return "warn";
   }
   return "pass";
 }
 
-export function buildEnvironmentSummary(context) {
+export function buildEnvironmentSummary(context: any) {
   return {
     os: context.os,
     shell: context.shell,
@@ -249,9 +249,9 @@ export function buildEnvironmentSummary(context) {
   };
 }
 
-export function buildScopeProbes(context) {
+export function buildScopeProbes(context: any) {
   return Object.fromEntries(
-    SUPPORTED_TARGETS.map((target) => [
+    SUPPORTED_TARGETS.map((target: any) => [
       target,
       {
         ...context.scopeProbes[target],
@@ -260,12 +260,12 @@ export function buildScopeProbes(context) {
   );
 }
 
-export function buildObservabilityHealth(repoRoot, runtime, target) {
+export function buildObservabilityHealth(repoRoot: string, runtime: string, target: any) {
   const traceRoot = resolveTraceRoot(repoRoot);
   const indexes = listTraceIndexes(repoRoot)
-    .filter((entry) => (runtime ? entry.runtime === runtime : true))
-    .filter((entry) => (target ? entry.target === target : true));
-  const missingEventFiles = indexes.filter((entry) => !exists(entry.event_file)).length;
+    .filter((entry: any) => (runtime ? entry.runtime === runtime : true))
+    .filter((entry: any) => (target ? entry.target === target : true));
+  const missingEventFiles = indexes.filter((entry: any) => !exists(entry.event_file)).length;
   const retentionState = loadRetentionState(repoRoot);
   const retentionPolicy = resolveRetentionPolicy(repoRoot);
   const writableProbePath = exists(traceRoot) ? traceRoot : dirname(traceRoot);
@@ -279,11 +279,11 @@ export function buildObservabilityHealth(repoRoot, runtime, target) {
   };
 }
 
-export function buildRecentTraceSummary(repoRoot, runtime, target) {
+export function buildRecentTraceSummary(repoRoot: string, runtime: string, target: any) {
   const indexes = listTraceIndexes(repoRoot)
-    .filter((entry) => (runtime ? entry.runtime === runtime : true))
-    .filter((entry) => (target ? entry.target === target : true))
-    .sort((left, right) => (right.started_at ?? "").localeCompare(left.started_at ?? ""))
+    .filter((entry: any) => (runtime ? entry.runtime === runtime : true))
+    .filter((entry: any) => (target ? entry.target === target : true))
+    .sort((left: any, right: any) => (right.started_at ?? "").localeCompare(left.started_at ?? ""))
     .slice(0, 5);
   return {
     telemetry_mode: resolveTelemetryMode(repoRoot),
@@ -295,11 +295,11 @@ export function buildRecentTraceSummary(repoRoot, runtime, target) {
   };
 }
 
-export function buildCatalogRecordMap(catalogRecords) {
-  return new Map((catalogRecords ?? []).map((record) => [record.id, record]));
+export function buildCatalogRecordMap(catalogRecords: any) {
+  return new Map((catalogRecords ?? []).map((record: any) => [record.id, record]));
 }
 
-export function compareRecommendationPriority(left, right) {
+export function compareRecommendationPriority(left: any, right: any) {
   const leftEffectiveRank = workflowMaturityRank(left.effective_workflow_maturity);
   const rightEffectiveRank = workflowMaturityRank(right.effective_workflow_maturity);
   if (leftEffectiveRank !== rightEffectiveRank) {
@@ -319,11 +319,11 @@ export function compareRecommendationPriority(left, right) {
   return left.id.localeCompare(right.id);
 }
 
-export function sortPackIdsForRecommendation(context, packIds) {
+export function sortPackIdsForRecommendation(context: any, packIds: string[]) {
   const catalogByPackId = buildCatalogRecordMap(context.catalogRecords);
   return [...new Set(packIds)]
-    .filter((packId) => typeof packId === "string" && packId.trim() !== "")
-    .map((packId) => {
+    .filter((packId: string) => typeof packId === "string" && packId.trim() !== "")
+    .map((packId: string) => {
       const record: any = catalogByPackId.get(packId);
       return {
         id: packId,
@@ -334,13 +334,13 @@ export function sortPackIdsForRecommendation(context, packIds) {
       };
     })
     .sort(compareRecommendationPriority)
-    .map((entry) => entry.id);
+    .map((entry: any) => entry.id);
 }
 
-export function preferredPackId(context) {
+export function preferredPackId(context: any) {
   const selectedPackIds = sortPackIdsForRecommendation(
     context,
-    context.selectedManifests.map((record) => record.packId),
+    context.selectedManifests.map((record: any) => record.packId),
   );
   if (selectedPackIds.length > 0) {
     return selectedPackIds[0];
@@ -348,7 +348,7 @@ export function preferredPackId(context) {
 
   const installedPackIds = sortPackIdsForRecommendation(
     context,
-    (context.state?.packs ?? []).map((pack) => pack.id),
+    (context.state?.packs ?? []).map((pack: any) => pack.id),
   );
   if (installedPackIds.length > 0) {
     return installedPackIds[0];
@@ -361,22 +361,22 @@ export function preferredPackId(context) {
 
   const availablePackIds = sortPackIdsForRecommendation(
     context,
-    (context.catalogRecords ?? []).map((record) => record.id),
+    (context.catalogRecords ?? []).map((record: any) => record.id),
   );
   return availablePackIds[0] ?? null;
 }
 
-export function runtimeFlag(runtime) {
+export function runtimeFlag(runtime: string) {
   return runtime === "codex_cli" ? "codex" : "copilot";
 }
 
-export function buildWorkflowMaturitySummary(context) {
+export function buildWorkflowMaturitySummary(context: any) {
   const catalogByPackId = buildCatalogRecordMap(context.catalogRecords);
   const selectedPackIds = sortPackIdsForRecommendation(
     context,
-    context.selectedManifests.map((record) => record.packId),
+    context.selectedManifests.map((record: any) => record.packId),
   );
-  const selectedPacks = selectedPackIds.map((packId) => {
+  const selectedPacks = selectedPackIds.map((packId: string) => {
     const catalogRecord: any = catalogByPackId.get(packId);
     const workflowMaturity = catalogRecord?.workflow_maturity ?? "canary";
     const effectiveWorkflowMaturity = catalogRecord?.effective_workflow_maturity ?? "canary";
@@ -405,16 +405,16 @@ export function buildWorkflowMaturitySummary(context) {
   });
 
   const contradictoryClaims = selectedPacks.filter(
-    (pack) => pack.demoted || pack.workflow_transition_legal === false,
+    (pack: any) => pack.demoted || pack.workflow_transition_legal === false,
   );
   const blockedPacks = selectedPacks.filter(
-    (pack) => pack.workflow_maturity_blocked || pack.workflow_maturity_blockers.length > 0,
+    (pack: any) => pack.workflow_maturity_blocked || pack.workflow_maturity_blockers.length > 0,
   );
   const highestEffective = selectedPacks.length === 0
     ? null
     : selectedPacks
-      .map((pack) => pack.effective_workflow_maturity)
-      .sort((left, right) => workflowMaturityRank(right) - workflowMaturityRank(left))[0];
+      .map((pack: any) => pack.effective_workflow_maturity)
+      .sort((left: any, right: any) => workflowMaturityRank(right) - workflowMaturityRank(left))[0];
   return {
     selected_pack_count: selectedPacks.length,
     recommended_pack_id: selectedPacks[0]?.pack_id ?? preferredPackId(context),
@@ -426,9 +426,9 @@ export function buildWorkflowMaturitySummary(context) {
   };
 }
 
-export function buildFirstWorkflowGuidance(context, { installBlocked, workflowMaturity }) {
+export function buildFirstWorkflowGuidance(context: any, { installBlocked, workflowMaturity }: { installBlocked?: any; workflowMaturity?: any }) {
   const recommendedPackId = workflowMaturity?.recommended_pack_id ?? preferredPackId(context);
-  const effectiveLabel = workflowMaturity?.selected_packs?.find((entry) => entry.pack_id === recommendedPackId)
+  const effectiveLabel = workflowMaturity?.selected_packs?.find((entry: any) => entry.pack_id === recommendedPackId)
     ?.effective_workflow_maturity;
   const doctorCommand = `node packages/tools/cli/src/bin/pairslash.js doctor --runtime ${runtimeFlag(context.runtime)} --target ${context.target}`;
 

@@ -5,7 +5,7 @@ import {
   buildWorkflowMaturitySummary,
 } from "../report.ts";
 
-export function runWorkflowMaturityAlignment(context) {
+export function runWorkflowMaturityAlignment(context: any) {
   const summary = buildWorkflowMaturitySummary(context);
   if (summary.selected_pack_count === 0) {
     return createCheckResult({

@@ -56,8 +56,8 @@ export const DEFAULT_COMPAT_EVALS = [
   },
 ];
 
-function mutateManifest(tempRoot, packId, mutate) {
-  const record = loadPackManifestRecords(tempRoot).find((entry) => entry.packId === packId && !entry.error);
+function mutateManifest(tempRoot: any, packId: string, mutate: any) {
+  const record = loadPackManifestRecords(tempRoot).find((entry: any) => entry.packId === packId && !entry.error);
   if (!record) {
     throw new Error(`could not locate manifest for ${packId}`);
   }
@@ -65,7 +65,7 @@ function mutateManifest(tempRoot, packId, mutate) {
   writeTextFile(record.manifestPath, stableYaml(updated));
 }
 
-function buildEvalResult(definition, payload, durationMs) {
+function buildEvalResult(definition: any, payload: any, durationMs: any) {
   return {
     id: definition.id,
     category: definition.category,
@@ -77,7 +77,7 @@ function buildEvalResult(definition, payload, durationMs) {
   };
 }
 
-function runEval(definition, execute) {
+function runEval(definition: any, execute: any) {
   const startedAt = Date.now();
   try {
     const payload = execute();
@@ -87,9 +87,9 @@ function runEval(definition, execute) {
       definition,
       {
         success: false,
-        summary: error.message,
+        summary: error instanceof Error ? error.message : String(error),
         details: {
-          error_message: error.message,
+          error_message: error instanceof Error ? error.message : String(error),
         },
       },
       Date.now() - startedAt,
@@ -97,7 +97,7 @@ function runEval(definition, execute) {
   }
 }
 
-function withFixture({ repoRoot, fixtureId, runtimeHarness, target = "repo" }, run) {
+function withFixture({ repoRoot, fixtureId, runtimeHarness, target = "repo" }: { repoRoot?: string; fixtureId?: any; runtimeHarness?: any; target?: any }, run: any) {
   const materialized = materializeCompatFixture({
     repoRoot,
     fixtureId,
@@ -115,16 +115,16 @@ function withFixture({ repoRoot, fixtureId, runtimeHarness, target = "repo" }, r
   }
 }
 
-function runWorkflowSelectionEval({ repoRoot, runtimeHarness }) {
-  const definition = DEFAULT_COMPAT_EVALS.find((entry) => entry.id === "workflow-selection.node-service.codex");
+function runWorkflowSelectionEval({ repoRoot, runtimeHarness }: { repoRoot?: string; runtimeHarness?: any }) {
+  const definition = DEFAULT_COMPAT_EVALS.find((entry: any) => entry.id === "workflow-selection.node-service.codex");
   return runEval(definition, () =>
     withFixture(
       {
         repoRoot,
-        fixtureId: definition.fixture_id,
+        fixtureId: definition!.fixture_id,
         runtimeHarness,
       },
-      ({ tempRoot, fixture }) => {
+      ({ tempRoot, fixture }: any) => {
         const report = runDoctor({
           repoRoot: tempRoot,
           runtime: "codex_cli",
@@ -135,7 +135,7 @@ function runWorkflowSelectionEval({ repoRoot, runtimeHarness }) {
         });
         const success =
           report.first_workflow_guidance.recommended_pack_id === fixture.primary_pack_id &&
-          report.first_workflow_guidance.commands.some((command) =>
+          report.first_workflow_guidance.commands.some((command: string) =>
             command.includes(`preview install ${fixture.primary_pack_id}`)
           );
         return {
@@ -153,16 +153,16 @@ function runWorkflowSelectionEval({ repoRoot, runtimeHarness }) {
   );
 }
 
-function runPolicyGateEval({ repoRoot, runtimeHarness }) {
-  const definition = DEFAULT_COMPAT_EVALS.find((entry) => entry.id === "policy-gates.write-authority.hidden-write");
+function runPolicyGateEval({ repoRoot, runtimeHarness }: { repoRoot?: string; runtimeHarness?: any }) {
+  const definition = DEFAULT_COMPAT_EVALS.find((entry: any) => entry.id === "policy-gates.write-authority.hidden-write");
   return runEval(definition, () =>
     withFixture(
       {
         repoRoot,
-        fixtureId: definition.fixture_id,
+        fixtureId: definition!.fixture_id,
         runtimeHarness,
       },
-      ({ tempRoot }) => {
+      ({ tempRoot }: any) => {
         const preview = previewMemoryWrite({
           repoRoot: tempRoot,
           request: FIXED_MEMORY_REQUEST,
@@ -172,7 +172,7 @@ function runPolicyGateEval({ repoRoot, runtimeHarness }) {
             hidden_write_attempted: true,
           },
         });
-        const reasonCodes = (preview.policy_verdict.reasons ?? []).map((reason) => reason.code);
+        const reasonCodes = (preview.policy_verdict.reasons ?? []).map((reason: any) => reason.code);
         const success =
           preview.policy_verdict.overall_verdict === "deny" &&
           reasonCodes.includes("POLICY-HIDDEN-WRITE-BLOCKED") &&
@@ -193,18 +193,18 @@ function runPolicyGateEval({ repoRoot, runtimeHarness }) {
   );
 }
 
-function runCompatibilityErrorEval({ repoRoot, runtimeHarness }) {
+function runCompatibilityErrorEval({ repoRoot, runtimeHarness }: { repoRoot?: string; runtimeHarness?: any }) {
   const definition = DEFAULT_COMPAT_EVALS.find(
-    (entry) => entry.id === "compatibility-errors.conflict-existing-runtime.copilot",
+    (entry: any) => entry.id === "compatibility-errors.conflict-existing-runtime.copilot",
   );
   return runEval(definition, () =>
     withFixture(
       {
         repoRoot,
-        fixtureId: definition.fixture_id,
+        fixtureId: definition!.fixture_id,
         runtimeHarness,
       },
-      ({ tempRoot, fixture }) => {
+      ({ tempRoot, fixture }: any) => {
         const preview = planInstall({
           repoRoot: tempRoot,
           runtime: "copilot_cli",
@@ -212,7 +212,7 @@ function runCompatibilityErrorEval({ repoRoot, runtimeHarness }) {
           packs: fixture.source_packs,
         });
         const blockedOperationCount = preview.plan.operations.filter(
-          (operation) => operation.kind === "blocked_conflict",
+          (operation: any) => operation.kind === "blocked_conflict",
         ).length;
         const success = !preview.plan.can_apply && blockedOperationCount > 0;
         return {
@@ -231,16 +231,16 @@ function runCompatibilityErrorEval({ repoRoot, runtimeHarness }) {
   );
 }
 
-function runPreviewBehaviorEval({ repoRoot, runtimeHarness }) {
-  const definition = DEFAULT_COMPAT_EVALS.find((entry) => entry.id === "preview-behavior.docs-heavy.codex");
+function runPreviewBehaviorEval({ repoRoot, runtimeHarness }: { repoRoot?: string; runtimeHarness?: any }) {
+  const definition = DEFAULT_COMPAT_EVALS.find((entry: any) => entry.id === "preview-behavior.docs-heavy.codex");
   return runEval(definition, () =>
     withFixture(
       {
         repoRoot,
-        fixtureId: definition.fixture_id,
+        fixtureId: definition!.fixture_id,
         runtimeHarness,
       },
-      ({ tempRoot, fixture }) => {
+      ({ tempRoot, fixture }: any) => {
         const preview = planInstall({
           repoRoot: tempRoot,
           runtime: "codex_cli",
@@ -267,16 +267,16 @@ function runPreviewBehaviorEval({ repoRoot, runtimeHarness }) {
   );
 }
 
-function runDegradedLaneEval({ repoRoot, runtimeHarness }) {
-  const definition = DEFAULT_COMPAT_EVALS.find((entry) => entry.id === "degraded-lane.windows-prep.codex");
+function runDegradedLaneEval({ repoRoot, runtimeHarness }: { repoRoot?: string; runtimeHarness?: any }) {
+  const definition = DEFAULT_COMPAT_EVALS.find((entry: any) => entry.id === "degraded-lane.windows-prep.codex");
   return runEval(definition, () =>
     withFixture(
       {
         repoRoot,
-        fixtureId: definition.fixture_id,
+        fixtureId: definition!.fixture_id,
         runtimeHarness,
       },
-      ({ tempRoot }) => {
+      ({ tempRoot }: any) => {
         const report = runDoctor({
           repoRoot: tempRoot,
           runtime: "codex_cli",
@@ -303,17 +303,17 @@ function runDegradedLaneEval({ repoRoot, runtimeHarness }) {
   );
 }
 
-function runNoSilentFallbackEval({ repoRoot, runtimeHarness }) {
-  const definition = DEFAULT_COMPAT_EVALS.find((entry) => entry.id === "no-silent-fallback.unsafe-repo.codex");
+function runNoSilentFallbackEval({ repoRoot, runtimeHarness }: { repoRoot?: string; runtimeHarness?: any }) {
+  const definition = DEFAULT_COMPAT_EVALS.find((entry: any) => entry.id === "no-silent-fallback.unsafe-repo.codex");
   return runEval(definition, () =>
     withFixture(
       {
         repoRoot,
-        fixtureId: definition.fixture_id,
+        fixtureId: definition!.fixture_id,
         runtimeHarness,
       },
-      ({ tempRoot, fixture }) => {
-        mutateManifest(tempRoot, fixture.primary_pack_id, (manifest) => {
+      ({ tempRoot, fixture }: any) => {
+        mutateManifest(tempRoot, fixture.primary_pack_id, (manifest: any) => {
           manifest.runtime_bindings.copilot_cli.compatibility.direct_invocation = "blocked";
           manifest.runtime_targets.copilot_cli.compatibility.direct_invocation = "blocked";
           return manifest;
@@ -357,12 +357,12 @@ export function runCompatBehaviorEvals({ repoRoot }: any = {}) {
     ];
     return {
       kind: "compat-behavior-eval-suite",
-      status: results.every((result) => result.status === "pass") ? "pass" : "fail",
+      status: results.every((result: any) => result.status === "pass") ? "pass" : "fail",
       results,
       summary: {
         total: results.length,
-        passed: results.filter((result) => result.status === "pass").length,
-        failed: results.filter((result) => result.status !== "pass").length,
+        passed: results.filter((result: any) => result.status === "pass").length,
+        failed: results.filter((result: any) => result.status !== "pass").length,
       },
     };
   } finally {
@@ -370,7 +370,7 @@ export function runCompatBehaviorEvals({ repoRoot }: any = {}) {
   }
 }
 
-export function formatCompatBehaviorEvalsText(report) {
+export function formatCompatBehaviorEvalsText(report: any) {
   const lines = [
     "Compat behavior eval suite",
     `Status: ${report.status.toUpperCase()}`,

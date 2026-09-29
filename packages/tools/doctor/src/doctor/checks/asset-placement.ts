@@ -5,7 +5,7 @@ import {
   createCheckResult,
 } from "../helpers.ts";
 
-export function runAssetPlacement(context) {
+export function runAssetPlacement(context: any) {
   if (!context.state || context.state.packs.length === 0) {
     return createCheckResult({
       id: "install_state.asset_placement",
@@ -57,7 +57,7 @@ export function runAssetPlacement(context) {
           pack_id: pack.id,
           relative_path: file.relative_path,
           install_surface: file.install_surface,
-          reason: error.message,
+          reason: error instanceof Error ? error.message : String(error),
         });
       }
     }

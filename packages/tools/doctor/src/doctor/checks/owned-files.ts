@@ -13,7 +13,7 @@ import {
   safeStat,
 } from "../helpers.ts";
 
-export function runInstallStateLoad(context) {
+export function runInstallStateLoad(context: any) {
   if (context.stateError) {
     return createCheckResult({
       id: "install_state.load",
@@ -124,7 +124,7 @@ export function runInstallStateLoad(context) {
   });
 }
 
-export function runOwnedFilesIntegrity(context) {
+export function runOwnedFilesIntegrity(context: any) {
   if (!context.state || context.state.packs.length === 0) {
     return createCheckResult({
       id: "install_state.owned_files_integrity",
@@ -154,7 +154,7 @@ export function runOwnedFilesIntegrity(context) {
         continue;
       }
       const stat = safeStat(file.absolute_path);
-      if (!stat.ok || !stat.stat.isFile()) {
+      if (!stat.ok || !stat.stat?.isFile()) {
         failures.push({
           pack_id: pack.id,
           relative_path: file.relative_path,

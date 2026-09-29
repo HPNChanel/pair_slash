@@ -77,19 +77,19 @@ export const REMEDIATION_DECISION_RECONCILE = "reconcile";
 
 export const REMEDIATION_DECISION_ABORT = "abort";
 
-export function workflowMaturityRank(level) {
+export function workflowMaturityRank(level: any) {
   if (typeof level !== "string") {
     return WORKFLOW_MATURITY_STRENGTH_ORDER.canary;
   }
-  return WORKFLOW_MATURITY_STRENGTH_ORDER[level] ?? WORKFLOW_MATURITY_STRENGTH_ORDER.canary;
+  return WORKFLOW_MATURITY_STRENGTH_ORDER[level as keyof typeof WORKFLOW_MATURITY_STRENGTH_ORDER] ?? WORKFLOW_MATURITY_STRENGTH_ORDER.canary;
 }
 
-export function getAdapter(runtime) {
+export function getAdapter(runtime: string) {
   const normalized = normalizeRuntime(runtime);
   return normalized === "codex_cli" ? codexAdapter : copilotAdapter;
 }
 
-export function inferSeverity(status) {
+export function inferSeverity(status: any) {
   if (status === "fail" || status === "unsupported") {
     return "fail";
   }
@@ -99,11 +99,11 @@ export function inferSeverity(status) {
   return "info";
 }
 
-export function buildIssueCode(checkId) {
+export function buildIssueCode(checkId: any) {
   return `DOC-${checkId.replace(/\./g, "-").toUpperCase()}`;
 }
 
-export function buildStateReviewAction({ runtime, target, statePath, preferred = false }) {
+export function buildStateReviewAction({ runtime, target, statePath, preferred = false }: { runtime?: string; target?: any; statePath?: string; preferred?: any }) {
   return buildReviewRemediationAction({
     actionId: `review-state:${runtime}:${target}`,
     summary: "Review and repair or remove the stale PairSlash install-state file before retrying.",
@@ -127,7 +127,7 @@ export function createCheckResult({
   blockingForInstall = false,
   reasonCodes = [],
   remediationActions = [],
-}) {
+}: { id?: string; group?: any; status?: any; runtime?: string; target?: any; inputs?: any; summary?: any; remediation?: any; evidence?: any; blockingForInstall?: any; reasonCodes?: any; remediationActions?: any }) {
   return {
     id,
     group,
@@ -147,7 +147,7 @@ export function createCheckResult({
   };
 }
 
-export function findExistingParentPath(path) {
+export function findExistingParentPath(path: string) {
   let current = resolve(path);
   while (!exists(current)) {
     const parent = dirname(current);
@@ -159,7 +159,7 @@ export function findExistingParentPath(path) {
   return current;
 }
 
-export function parseSimpleCommand(command) {
+export function parseSimpleCommand(command: string) {
   if (typeof command !== "string" || command.trim() === "") {
     return null;
   }
@@ -176,7 +176,7 @@ export function parseSimpleCommand(command) {
   };
 }
 
-export function isCurrentNodeVersionCheck(parsed) {
+export function isCurrentNodeVersionCheck(parsed: any) {
   if (!parsed) {
     return false;
   }
@@ -187,7 +187,7 @@ export function isCurrentNodeVersionCheck(parsed) {
   return parsed.args.length === 1 && ["--version", "-v"].includes(parsed.args[0]);
 }
 
-export function runCheckCommand(command) {
+export function runCheckCommand(command: string) {
   const parsed = parseSimpleCommand(command);
   if (isCurrentNodeVersionCheck(parsed)) {
     return {
@@ -208,12 +208,12 @@ export function runCheckCommand(command) {
   });
 }
 
-export function detectShellName(shellOverride = null) {
+export function detectShellName(shellOverride: any = null) {
   const raw = shellOverride ?? process.env.SHELL ?? process.env.ComSpec ?? process.env.TERM_PROGRAM ?? "unknown";
   return raw.toLowerCase();
 }
 
-export function detectShellProfileCandidates(shell, homeRootOverride = null) {
+export function detectShellProfileCandidates(shell: any, homeRootOverride: any = null) {
   const homeRoot = homeRootOverride ?? process.env.USERPROFILE ?? process.env.HOME ?? null;
   if (!homeRoot) {
     return [];
@@ -236,15 +236,15 @@ export function detectShellProfileCandidates(shell, homeRootOverride = null) {
   return [];
 }
 
-export function safeStat(path) {
+export function safeStat(path: string) {
   try {
     return { ok: true, stat: statSync(path) };
   } catch (error) {
-    return { ok: false, error: error.message };
+    return { ok: false, error: error instanceof Error ? error.message : String(error) };
   }
 }
 
-export function isWritablePath(path) {
+export function isWritablePath(path: string) {
   try {
     accessSync(path, fsConstants.W_OK);
     return true;
@@ -253,7 +253,7 @@ export function isWritablePath(path) {
   }
 }
 
-export function safeDigest(path) {
+export function safeDigest(path: string) {
   try {
     return {
       ok: true,
@@ -262,30 +262,30 @@ export function safeDigest(path) {
   } catch (error) {
     return {
       ok: false,
-      error: error.message,
+      error: error instanceof Error ? error.message : String(error),
     };
   }
 }
 
-export function hasRepoMarkers(repoRoot) {
-  return [".git", "packs", "package.json"].some((entry) => exists(join(repoRoot, entry)));
+export function hasRepoMarkers(repoRoot: string) {
+  return [".git", "packs", "package.json"].some((entry: any) => exists(join(repoRoot, entry)));
 }
 
-export function listInstallRootEntries(installRoot) {
+export function listInstallRootEntries(installRoot: string) {
   if (!exists(installRoot)) {
     return [];
   }
   return readdirSync(installRoot, { withFileTypes: true })
     .slice()
-    .sort((left, right) => left.name.localeCompare(right.name))
-    .map((entry) => ({
+    .sort((left: any, right: any) => left.name.localeCompare(right.name))
+    .map((entry: any) => ({
       name: entry.name,
       absolutePath: join(installRoot, entry.name),
       isDirectory: entry.isDirectory(),
     }));
 }
 
-export function summarizeScopeProbeIssue(code, summary, suggestedFix, blockingForInstall) {
+export function summarizeScopeProbeIssue(code: string, summary: any, suggestedFix: any, blockingForInstall: any) {
   return {
     code,
     summary,
@@ -294,12 +294,12 @@ export function summarizeScopeProbeIssue(code, summary, suggestedFix, blockingFo
   };
 }
 
-export function pickScopeVerdict(current, candidate) {
+export function pickScopeVerdict(current: any, candidate: any) {
   const order = ["pass", "warn", "degraded", "fail", "unsupported"];
   return order.indexOf(candidate) > order.indexOf(current) ? candidate : current;
 }
 
-export function buildScopeProbe({ repoRoot, runtime, target, adapter, selectedTarget, skillRoot = "runtime-default", emit = "skill" }) {
+export function buildScopeProbe({ repoRoot, runtime, target, adapter, selectedTarget, skillRoot = "runtime-default", emit = "skill" }: { repoRoot: string; runtime?: string; target?: any; adapter?: any; selectedTarget?: any; skillRoot?: any; emit?: string }) {
   const pluginLane = emit === "plugin";
   const configHome = adapter.resolveConfigHome({ repoRoot, target, skillRoot });
   // Plugin emit mode has repo-scope file placement only; user scope is owned
@@ -312,7 +312,7 @@ export function buildScopeProbe({ repoRoot, runtime, target, adapter, selectedTa
   const statePath = resolveStatePath({ repoRoot, runtime, target, skillRoot, emit });
   const selected = target === selectedTarget;
   let verdict = "pass";
-  const issues = [];
+  const issues: any[] = [];
 
   if (pluginLane && target !== "repo") {
     verdict = pickScopeVerdict(verdict, selected ? "unsupported" : "warn");
@@ -327,7 +327,7 @@ export function buildScopeProbe({ repoRoot, runtime, target, adapter, selectedTa
   }
 
   const configHomeStat = safeStat(configHome);
-  if (exists(configHome) && (!configHomeStat.ok || !configHomeStat.stat.isDirectory())) {
+  if (exists(configHome) && (!configHomeStat.ok || !configHomeStat.stat?.isDirectory())) {
     const issueVerdict = selected ? "fail" : "warn";
     verdict = pickScopeVerdict(verdict, issueVerdict);
     issues.push(
@@ -341,7 +341,7 @@ export function buildScopeProbe({ repoRoot, runtime, target, adapter, selectedTa
   }
 
   const installRootStat = installRoot ? safeStat(installRoot) : null;
-  if (installRoot && exists(installRoot) && (!installRootStat.ok || !installRootStat.stat.isDirectory())) {
+  if (installRoot && exists(installRoot) && (!installRootStat || !installRootStat.ok || !installRootStat.stat?.isDirectory())) {
     const issueVerdict = selected ? "fail" : "warn";
     verdict = pickScopeVerdict(verdict, issueVerdict);
     issues.push(
@@ -358,10 +358,10 @@ export function buildScopeProbe({ repoRoot, runtime, target, adapter, selectedTa
     findExistingParentPath(configHome),
     installRoot ? findExistingParentPath(installRoot) : null,
     findExistingParentPath(dirname(statePath)),
-  ].filter(Boolean))];
+  ].filter((entry: unknown): entry is string => Boolean(entry)))];
   const writeFailures = writableTargets
-    .map((path) => ({ path, result: adapter.checkWritablePath(path) }))
-    .filter((entry) => !entry.result.writable);
+    .map((path: string) => ({ path, result: adapter.checkWritablePath(path) }))
+    .filter((entry: any) => !entry.result.writable);
 
   if (writeFailures.length > 0) {
     const issueVerdict = selected ? "fail" : "warn";
@@ -386,13 +386,13 @@ export function buildScopeProbe({ repoRoot, runtime, target, adapter, selectedTa
     install_root_exists: exists(installRoot),
     writable: writeFailures.length === 0,
     verdict,
-    blocking_for_install: issues.some((issue) => issue.blocking_for_install),
-    issue_codes: issues.map((issue) => issue.code),
+    blocking_for_install: issues.some((issue: any) => issue.blocking_for_install),
+    issue_codes: issues.map((issue: any) => issue.code),
     issues,
   };
 }
 
-export function resolveDoctorRuntime(requestedRuntime, repoRoot, target, runtimeSelectionOverride = null, skillRoot = "runtime-default", emit = "skill") {
+export function resolveDoctorRuntime(requestedRuntime: any, repoRoot: string, target: any, runtimeSelectionOverride: any = null, skillRoot: any = "runtime-default", emit: string = "skill") {
   if (runtimeSelectionOverride) {
     return normalizeRuntime(runtimeSelectionOverride);
   }
@@ -401,7 +401,7 @@ export function resolveDoctorRuntime(requestedRuntime, repoRoot, target, runtime
     return normalized;
   }
 
-  const stateCandidates = SUPPORTED_RUNTIMES.filter((runtime) =>
+  const stateCandidates = SUPPORTED_RUNTIMES.filter((runtime: string) =>
     exists(resolveStatePath({ repoRoot, runtime, target, skillRoot, emit })),
   );
   if (stateCandidates.length === 1) {
@@ -437,7 +437,7 @@ export function buildBaseContext({
   osOverride = null,
   shellOverride = null,
   cwdOverride = null,
-}) {
+}: { repoRoot: string; runtime?: string; target?: any; packs?: any; skillRoot?: any; emit?: string; adapterOverride?: any; runtimeSelectionOverride?: any; osOverride?: any; shellOverride?: any; cwdOverride?: any }) {
   const normalizedTarget = normalizeTarget(target);
   const normalizedEmit = normalizeEmitMode(emit);
   const normalizedSkillRoot =
@@ -453,7 +453,7 @@ export function buildBaseContext({
   const adapter = adapterOverride ?? getAdapter(normalizedRuntime);
   const catalogRecords = loadPackCatalogRecords(repoRoot, { includeAdvanced: false });
   const runtimePresence = Object.fromEntries(
-    SUPPORTED_RUNTIMES.map((supportedRuntime) => {
+    SUPPORTED_RUNTIMES.map((supportedRuntime: any) => {
       if (supportedRuntime === normalizedRuntime) {
         return [supportedRuntime, adapter.detectRuntime()];
       }
@@ -491,7 +491,7 @@ export function buildBaseContext({
       emit: normalizedEmit,
     }).state;
   } catch (error) {
-    stateError = error.message;
+    stateError = error instanceof Error ? error.message : String(error);
   }
 
   const detection = runtimePresence[normalizedRuntime];
@@ -537,7 +537,7 @@ export function buildBaseContext({
     invalidSelectedManifests: manifestSelection.invalid,
     missingRequestedPacks: manifestSelection.missing,
     scopeProbes: Object.fromEntries(
-      SUPPORTED_TARGETS.map((supportedTarget) => [
+      SUPPORTED_TARGETS.map((supportedTarget: any) => [
         supportedTarget,
         buildScopeProbe({
           repoRoot,

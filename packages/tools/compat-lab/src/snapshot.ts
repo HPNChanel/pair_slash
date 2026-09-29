@@ -15,21 +15,21 @@ import {
 import { installCompatRuntimeShims } from "./runtime-fixtures.ts";
 import { listCompatFixtures } from "./fixtures.ts";
 
-function manifestPathsFor(tempRoot, packIds) {
+function manifestPathsFor(tempRoot: any, packIds: string[] | undefined) {
   return discoverPackManifestPaths(tempRoot)
-    .map((manifestPath) => ({ manifestPath, manifest: loadPackManifest(manifestPath) }))
-    .filter(({ manifest }) => packIds.includes(manifest.pack.id))
-    .sort((left, right) => left.manifest.pack.id.localeCompare(right.manifest.pack.id))
-    .map(({ manifestPath }) => manifestPath);
+    .map((manifestPath: string) => ({ manifestPath, manifest: loadPackManifest(manifestPath) }))
+    .filter(({ manifest }: any) => (packIds ?? []).includes(manifest.pack.id))
+    .sort((left: any, right: any) => left.manifest.pack.id.localeCompare(right.manifest.pack.id))
+    .map(({ manifestPath }: any) => manifestPath);
 }
 
-function compileForRuntime(runtime, tempRoot, manifestPath) {
+function compileForRuntime(runtime: string | undefined, tempRoot: any, manifestPath: string) {
   return runtime === "codex_cli"
     ? compileCodexPack({ repoRoot: tempRoot, manifestPath })
     : compileCopilotPack({ repoRoot: tempRoot, manifestPath });
 }
 
-function laneOverrides(runtime, target) {
+function laneOverrides(runtime: string | undefined, target: any) {
   if (runtime === "codex_cli" && target === "repo") {
     return {
       os_override: "darwin",
@@ -62,7 +62,7 @@ function buildRuntimeSnapshot({
   packIds,
   runtime,
   target = "repo",
-}) {
+}: { workspaceRoot?: any; tempRoot?: any; homeRoot?: any; runtimeBinRoot?: any; packIds?: string[]; runtime?: string; target?: any }) {
   const overrides = laneOverrides(runtime, target);
   const markers = buildPathMarkers({
     workspaceRoot,
@@ -71,8 +71,8 @@ function buildRuntimeSnapshot({
     runtimeBinRoot,
   });
   const compiled = manifestPathsFor(tempRoot, packIds)
-    .map((manifestPath) => compileForRuntime(runtime, tempRoot, manifestPath))
-    .map((pack) => normalizeCompiledPack(pack, markers));
+    .map((manifestPath: string) => compileForRuntime(runtime, tempRoot, manifestPath))
+    .map((pack: any) => normalizeCompiledPack(pack, markers));
 
   const preview = planInstall({
     repoRoot: tempRoot,
@@ -89,7 +89,7 @@ function buildRuntimeSnapshot({
     _shell_override: overrides.shell_override,
   });
 
-  const snapshot = {
+  const snapshot: any = {
     compile: compiled,
     install_preview: normalizePreviewPlan(preview.plan, markers),
     doctor_before: normalizeDoctorReport(doctorBefore, markers),
@@ -101,7 +101,7 @@ function buildRuntimeSnapshot({
     snapshot.apply_result = {
       status: "blocked",
       summary: { ...preview.plan.summary },
-      errors: preview.plan.errors.map((error) => error),
+      errors: preview.plan.errors.map((error: any) => error),
     };
     return snapshot;
   }
@@ -124,7 +124,7 @@ function buildRuntimeSnapshot({
   return snapshot;
 }
 
-export function buildCompatFixtureSnapshot({ repoRoot: workspaceRoot, fixtureId }) {
+export function buildCompatFixtureSnapshot({ repoRoot: workspaceRoot, fixtureId }: any) {
   const materialized = materializeCompatFixture({
     repoRoot: workspaceRoot,
     fixtureId,
@@ -171,10 +171,10 @@ export function buildCompatFixtureSnapshot({ repoRoot: workspaceRoot, fixtureId 
   }
 }
 
-export function buildCompatSnapshot({ repoRoot: workspaceRoot }) {
+export function buildCompatSnapshot({ repoRoot: workspaceRoot }: any) {
   return {
     kind: "compat-lab-snapshot-suite",
-    fixtures: listCompatFixtures().map((fixture) =>
+    fixtures: listCompatFixtures().map((fixture: any) =>
       buildCompatFixtureSnapshot({
         repoRoot: workspaceRoot,
         fixtureId: fixture.id,

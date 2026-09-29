@@ -2,13 +2,13 @@ import {
   createCheckResult,
 } from "../helpers.ts";
 
-export function runManifestValidation(context) {
+export function runManifestValidation(context: any) {
   const invalid =
     context.requestedPacks.length > 0
       ? context.invalidSelectedManifests
-      : context.manifestRecords.filter((record) => record.error);
-  const normalizationWarnings = context.selectedManifests.flatMap((record) =>
-    (record.normalizationWarnings ?? []).map((warning) => ({
+      : context.manifestRecords.filter((record: any) => record.error);
+  const normalizationWarnings = context.selectedManifests.flatMap((record: any) =>
+    (record.normalizationWarnings ?? []).map((warning: any) => ({
       manifest_path: record.manifestPath,
       warning,
     })),
@@ -26,7 +26,7 @@ export function runManifestValidation(context) {
       summary: `${invalid.length} manifest(s) failed validation`,
       remediation: "Fix manifest schema errors before running install or update.",
       evidence: {
-        invalid: invalid.map((record) => ({
+        invalid: invalid.map((record: any) => ({
           manifest_path: record.manifestPath,
           error: record.error,
         })),
@@ -101,7 +101,7 @@ export function runManifestValidation(context) {
   });
 }
 
-export function runManifestRuntimeTargets(context) {
+export function runManifestRuntimeTargets(context: any) {
   if (context.selectedManifests.length === 0) {
     return createCheckResult({
       id: "manifest.runtime_target_presence",
@@ -157,7 +157,7 @@ export function runManifestRuntimeTargets(context) {
   });
 }
 
-export function runManifestNamingConflicts(context) {
+export function runManifestNamingConflicts(context: any) {
   if (context.selectedManifests.length === 0) {
     return createCheckResult({
       id: "manifest.naming_conflicts",

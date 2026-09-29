@@ -28,7 +28,7 @@ export const COMPAT_RUNTIME_FIXTURE_REFS = Object.freeze({
   live_evidence_refs: [],
 });
 
-function writeExecutable(path, contents) {
+function writeExecutable(path: string, contents: any) {
   writeFileSync(path, contents, { mode: 0o755 });
   try {
     chmodSync(path, 0o755);
@@ -37,7 +37,7 @@ function writeExecutable(path, contents) {
   }
 }
 
-function writeCodexShim(binDir, version) {
+function writeCodexShim(binDir: any, version: string) {
   writeFileSync(
     join(binDir, "codex.cmd"),
     [
@@ -69,7 +69,7 @@ function writeCodexShim(binDir, version) {
   );
 }
 
-function writeCopilotShim(binDir, copilotVersion, ghVersion, { standaloneBinary = true } = {}) {
+function writeCopilotShim(binDir: any, copilotVersion: any, ghVersion: any, { standaloneBinary = true }: { standaloneBinary?: any } = {}) {
   writeFileSync(
     join(binDir, "gh.cmd"),
     [
@@ -179,7 +179,7 @@ export function installCompatRuntimeShims({
 
   return {
     binDir,
-    setHome(homePath) {
+    setHome(homePath: any) {
       mkdirSync(homePath, { recursive: true });
       process.env.HOME = homePath;
       process.env.USERPROFILE = homePath;

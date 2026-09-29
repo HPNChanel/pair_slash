@@ -1,8 +1,8 @@
-function toPosix(value) {
-  return value.split("\\").join("/");
+function toPosix(value: unknown) {
+  return String(value).split("\\").join("/");
 }
 
-function normalizeString(value, markers) {
+function normalizeString(value: unknown, markers: any) {
   if (typeof value !== "string") {
     return value;
   }
@@ -17,10 +17,10 @@ function normalizeString(value, markers) {
   return normalized;
 }
 
-function sortByKey(items, selector) {
+function sortByKey(items: any[], selector: any) {
   return items
     .slice()
-    .sort((left, right) => selector(left).localeCompare(selector(right)));
+    .sort((left: any, right: any) => selector(left).localeCompare(selector(right)));
 }
 
 export function buildPathMarkers({
@@ -41,7 +41,7 @@ export function buildPathMarkers({
   ].filter(([value]) => Boolean(value));
 }
 
-export function normalizeCompiledPack(compiledPack, markers) {
+export function normalizeCompiledPack(compiledPack: any, markers: any) {
   return {
     runtime: compiledPack.runtime,
     bundle_kind: compiledPack.bundle_kind,
@@ -52,7 +52,7 @@ export function normalizeCompiledPack(compiledPack, markers) {
     digest: compiledPack.digest,
     normalized_ir_digest: compiledPack.normalized_ir_digest,
     output_dir: normalizeString(compiledPack.output_dir, markers),
-    files: sortByKey(compiledPack.files, (file) => file.relative_path).map((file) => ({
+    files: sortByKey(compiledPack.files, (file: any) => file.relative_path).map((file: any) => ({
       asset_id: file.asset_id,
       generator: file.generator,
       required: file.required,
@@ -70,7 +70,7 @@ export function normalizeCompiledPack(compiledPack, markers) {
   };
 }
 
-export function normalizePreviewPlan(plan, markers) {
+export function normalizePreviewPlan(plan: any, markers: any) {
   return {
     action: plan.action,
     runtime: plan.runtime,
@@ -81,9 +81,9 @@ export function normalizePreviewPlan(plan, markers) {
     state_path: normalizeString(plan.state_path, markers),
     selected_packs: plan.selected_packs.slice(),
     summary: { ...plan.summary },
-    warnings: plan.warnings.map((warning) => normalizeString(warning, markers)),
-    errors: plan.errors.map((error) => normalizeString(error, markers)),
-    operations: plan.operations.map((operation) => ({
+    warnings: plan.warnings.map((warning: any) => normalizeString(warning, markers)),
+    errors: plan.errors.map((error: any) => normalizeString(error, markers)),
+    operations: plan.operations.map((operation: any) => ({
       kind: operation.kind,
       pack_id: operation.pack_id,
       relative_path: operation.relative_path ?? null,
@@ -98,20 +98,20 @@ export function normalizePreviewPlan(plan, markers) {
   };
 }
 
-export function normalizeInstallState(state, markers) {
+export function normalizeInstallState(state: any, markers: any) {
   return {
     runtime: state.runtime,
     target: state.target,
     config_home: normalizeString(state.config_home, markers),
     install_root: normalizeString(state.install_root, markers),
-    packs: sortByKey(state.packs, (pack) => pack.id).map((pack) => ({
+    packs: sortByKey(state.packs, (pack: any) => pack.id).map((pack: any) => ({
       id: pack.id,
       version: pack.version,
       previous_version: pack.previous_version,
       install_dir: normalizeString(pack.install_dir, markers),
       manifest_digest: pack.manifest_digest,
       compiler_version: pack.compiler_version,
-      files: sortByKey(pack.files, (file) => file.relative_path).map((file) => ({
+      files: sortByKey(pack.files, (file: any) => file.relative_path).map((file: any) => ({
         asset_id: file.asset_id ?? null,
         generator: file.generator ?? null,
         required: "required" in file ? file.required : null,
@@ -133,7 +133,7 @@ export function normalizeInstallState(state, markers) {
   };
 }
 
-function normalizeCheck(check, markers) {
+function normalizeCheck(check: any, markers: any) {
   return {
     id: check.id,
     group: check.group,
@@ -142,13 +142,13 @@ function normalizeCheck(check, markers) {
     summary: normalizeString(check.summary, markers),
     remediation: normalizeString(check.remediation, markers),
     blocking_for_install: check.blocking_for_install,
-    evidence: JSON.parse(JSON.stringify(check.evidence), (_key, value) =>
+    evidence: JSON.parse(JSON.stringify(check.evidence), (_key: any, value: unknown) =>
       typeof value === "string" ? normalizeString(value, markers) : value
     ),
   };
 }
 
-export function normalizeDoctorReport(report, markers) {
+export function normalizeDoctorReport(report: any, markers: any) {
   const runtimeMarkers = [
     ...markers,
     [report.environment_summary.os, "<host-os>"],
@@ -162,7 +162,7 @@ export function normalizeDoctorReport(report, markers) {
     environment_summary: {
       os: normalizeString(report.environment_summary.os, runtimeMarkers),
       shell: normalizeString(report.environment_summary.shell, runtimeMarkers),
-      shell_profile_candidates: report.environment_summary.shell_profile_candidates.map((candidate) =>
+      shell_profile_candidates: report.environment_summary.shell_profile_candidates.map((candidate: any) =>
         normalizeString(candidate, runtimeMarkers),
       ),
       cwd: normalizeString(report.environment_summary.cwd, runtimeMarkers),
@@ -194,14 +194,14 @@ export function normalizeDoctorReport(report, markers) {
       summary: normalizeString(report.support_lane.summary, runtimeMarkers),
     },
     runtime_compatibility: { ...report.runtime_compatibility },
-    checks: report.checks.map((check) => normalizeCheck(check, runtimeMarkers)),
-    issues: report.issues.map((issue) => ({
+    checks: report.checks.map((check: any) => normalizeCheck(check, runtimeMarkers)),
+    issues: report.issues.map((issue: any) => ({
       code: issue.code,
       verdict: issue.verdict,
       severity: issue.severity,
       check_id: issue.check_id,
       summary: normalizeString(issue.summary, runtimeMarkers),
-      evidence: JSON.parse(JSON.stringify(issue.evidence), (_key, value) =>
+      evidence: JSON.parse(JSON.stringify(issue.evidence), (_key: any, value: unknown) =>
         typeof value === "string" ? normalizeString(value, runtimeMarkers) : value
       ),
       suggested_fix: normalizeString(issue.suggested_fix, runtimeMarkers),
@@ -209,8 +209,8 @@ export function normalizeDoctorReport(report, markers) {
       message: normalizeString(issue.message, runtimeMarkers),
       remediation: normalizeString(issue.remediation, runtimeMarkers),
     })),
-    next_actions: report.next_actions.map((action) => normalizeString(action, runtimeMarkers)),
-    installed_packs: report.installed_packs.map((pack) => ({
+    next_actions: report.next_actions.map((action: any) => normalizeString(action, runtimeMarkers)),
+    installed_packs: report.installed_packs.map((pack: any) => ({
       id: pack.id,
       version: pack.version,
       install_dir: normalizeString(pack.install_dir, runtimeMarkers),
@@ -220,7 +220,7 @@ export function normalizeDoctorReport(report, markers) {
       ready: report.first_workflow_guidance.ready,
       recommended_pack_id: report.first_workflow_guidance.recommended_pack_id,
       rationale: normalizeString(report.first_workflow_guidance.rationale, runtimeMarkers),
-      commands: report.first_workflow_guidance.commands.map((command) =>
+      commands: report.first_workflow_guidance.commands.map((command: string) =>
         normalizeString(command, runtimeMarkers),
       ),
     },

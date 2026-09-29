@@ -64,34 +64,34 @@ export const DEFAULT_COMPAT_GOLDENS = [
   },
 ];
 
-function manifestPathsFor(tempRoot, packIds) {
+function manifestPathsFor(tempRoot: any, packIds: string[] | undefined) {
   return discoverPackManifestPaths(tempRoot)
-    .map((manifestPath) => ({ manifestPath, manifest: loadPackManifest(manifestPath) }))
-    .filter(({ manifest }) => packIds.includes(manifest.pack.id))
-    .sort((left, right) => left.manifest.pack.id.localeCompare(right.manifest.pack.id))
-    .map(({ manifestPath }) => manifestPath);
+    .map((manifestPath: string) => ({ manifestPath, manifest: loadPackManifest(manifestPath) }))
+    .filter(({ manifest }: any) => (packIds ?? []).includes(manifest.pack.id))
+    .sort((left: any, right: any) => left.manifest.pack.id.localeCompare(right.manifest.pack.id))
+    .map(({ manifestPath }: any) => manifestPath);
 }
 
-function compileForRuntime({ runtime, repoRoot, manifestPath, emitMode = undefined }) {
+function compileForRuntime({ runtime, repoRoot, manifestPath, emitMode = undefined }: { runtime?: string; repoRoot: string; manifestPath: string; emitMode?: any }) {
   return runtime === "codex_cli"
     ? compileCodexPack({ repoRoot, manifestPath, emitMode })
     : compileCopilotPack({ repoRoot, manifestPath, emitMode });
 }
 
-function summarizeImportantFiles(compiledPacks, markers) {
-  return compiledPacks.map((compiledPack) => {
+function summarizeImportantFiles(compiledPacks: any, markers: any) {
+  return compiledPacks.map((compiledPack: any) => {
     const normalized = normalizeCompiledPack(compiledPack, markers);
     return {
       pack_id: normalized.pack_id,
       runtime: normalized.runtime,
       bundle_kind: normalized.bundle_kind,
       direct_invocation: normalized.direct_invocation,
-      files: normalized.files.filter((file) => HIGH_SIGNAL_SURFACES.has(file.install_surface)),
+      files: normalized.files.filter((file: any) => HIGH_SIGNAL_SURFACES.has(file.install_surface)),
     };
   });
 }
 
-function summarizePreviewPlan(plan, markers) {
+function summarizePreviewPlan(plan: any, markers: any) {
   const normalized = normalizePreviewPlan(plan, markers);
   return {
     action: normalized.action,
@@ -116,14 +116,14 @@ function summarizePreviewPlan(plan, markers) {
     policy_summary: plan.policy_summary ? { ...plan.policy_summary } : null,
     commitability: plan.commitability ? { ...plan.commitability } : null,
     preview_boundary: plan.preview_boundary ? { ...plan.preview_boundary } : null,
-    operations: normalized.operations.filter((operation) =>
+    operations: normalized.operations.filter((operation: any) =>
       ["create", "replace", "remove", "blocked_conflict", "preserve_override"].includes(operation.kind)
     ),
   };
 }
 
-function mutateManifest(tempRoot, packId, mutate) {
-  const record = loadPackManifestRecords(tempRoot).find((entry) => entry.packId === packId && !entry.error);
+function mutateManifest(tempRoot: any, packId: string, mutate: any) {
+  const record = loadPackManifestRecords(tempRoot).find((entry: any) => entry.packId === packId && !entry.error);
   if (!record) {
     throw new Error(`could not locate manifest for ${packId}`);
   }
@@ -132,11 +132,11 @@ function mutateManifest(tempRoot, packId, mutate) {
 }
 
 export function listCompatGoldens() {
-  return DEFAULT_COMPAT_GOLDENS.map((golden) => ({ ...golden }));
+  return DEFAULT_COMPAT_GOLDENS.map((golden: any) => ({ ...golden }));
 }
 
-export function buildCompatGolden({ repoRoot, goldenId }) {
-  const golden = DEFAULT_COMPAT_GOLDENS.find((entry) => entry.id === goldenId);
+export function buildCompatGolden({ repoRoot, goldenId }: { repoRoot?: string; goldenId?: any }) {
+  const golden = DEFAULT_COMPAT_GOLDENS.find((entry: any) => entry.id === goldenId);
   if (!golden) {
     throw new Error(`unknown compat golden: ${goldenId}`);
   }
@@ -164,7 +164,7 @@ export function buildCompatGolden({ repoRoot, goldenId }) {
   throw new Error(`unsupported compat golden kind: ${golden.kind}`);
 }
 
-export function buildCompilerGolden({ repoRoot, fixtureId, runtime, emitMode }) {
+export function buildCompilerGolden({ repoRoot, fixtureId, runtime, emitMode }: { repoRoot?: string; fixtureId?: any; runtime?: string; emitMode?: any }) {
   const materialized = materializeCompatFixture({
     repoRoot,
     fixtureId,
@@ -175,7 +175,7 @@ export function buildCompilerGolden({ repoRoot, fixtureId, runtime, emitMode }) 
       repoRoot: materialized.tempRoot,
       homeRoot: materialized.homeRoot,
     });
-    const compiled = manifestPathsFor(materialized.tempRoot, materialized.fixture.source_packs).map((manifestPath) =>
+    const compiled = manifestPathsFor(materialized.tempRoot, materialized.fixture.source_packs).map((manifestPath: string) =>
       compileForRuntime({
         runtime,
         repoRoot: materialized.tempRoot,
@@ -189,14 +189,14 @@ export function buildCompilerGolden({ repoRoot, fixtureId, runtime, emitMode }) 
       repo_archetype: materialized.fixture.repo_archetype,
       primary_pack_id: materialized.fixture.primary_pack_id,
       runtime,
-      compiled: compiled.map((pack) => normalizeCompiledPack(pack, markers)),
+      compiled: compiled.map((pack: any) => normalizeCompiledPack(pack, markers)),
     };
   } finally {
     materialized.cleanup();
   }
 }
 
-export function buildGeneratedAssetGolden({ repoRoot, fixtureId }) {
+export function buildGeneratedAssetGolden({ repoRoot, fixtureId }: { repoRoot?: string; fixtureId?: any }) {
   const materialized = materializeCompatFixture({
     repoRoot,
     fixtureId,
@@ -208,14 +208,14 @@ export function buildGeneratedAssetGolden({ repoRoot, fixtureId }) {
       homeRoot: materialized.homeRoot,
     });
     const compiled = {
-      codex_cli: manifestPathsFor(materialized.tempRoot, materialized.fixture.source_packs).map((manifestPath) =>
+      codex_cli: manifestPathsFor(materialized.tempRoot, materialized.fixture.source_packs).map((manifestPath: string) =>
         compileForRuntime({
           runtime: "codex_cli",
           repoRoot: materialized.tempRoot,
           manifestPath,
         })
       ),
-      copilot_cli: manifestPathsFor(materialized.tempRoot, materialized.fixture.source_packs).map((manifestPath) =>
+      copilot_cli: manifestPathsFor(materialized.tempRoot, materialized.fixture.source_packs).map((manifestPath: string) =>
         compileForRuntime({
           runtime: "copilot_cli",
           repoRoot: materialized.tempRoot,
@@ -237,14 +237,14 @@ export function buildGeneratedAssetGolden({ repoRoot, fixtureId }) {
   }
 }
 
-export function buildPreviewNoSilentFallbackGolden({ repoRoot, fixtureId, runtime = "codex_cli" }) {
+export function buildPreviewNoSilentFallbackGolden({ repoRoot, fixtureId, runtime = "codex_cli" }: { repoRoot?: string; fixtureId?: any; runtime?: string }) {
   const materialized = materializeCompatFixture({
     repoRoot,
     fixtureId,
   });
   const runtimeHarness = installCompatRuntimeShims();
   try {
-    mutateManifest(materialized.tempRoot, materialized.fixture.primary_pack_id, (manifest) => {
+    mutateManifest(materialized.tempRoot, materialized.fixture.primary_pack_id, (manifest: any) => {
       manifest.runtime_bindings.copilot_cli.compatibility.direct_invocation = "blocked";
       manifest.runtime_targets.copilot_cli.compatibility.direct_invocation = "blocked";
       return manifest;
@@ -279,7 +279,7 @@ export function buildPreviewNoSilentFallbackGolden({ repoRoot, fixtureId, runtim
       install_preview: summarizePreviewPlan(preview.plan, markers),
       memory_preview: {
         overall_verdict: memoryPreview.policy_verdict.overall_verdict,
-        reason_codes: (memoryPreview.policy_verdict.reasons ?? []).map((reason) => reason.code),
+        reason_codes: (memoryPreview.policy_verdict.reasons ?? []).map((reason: any) => reason.code),
         ready_for_apply: memoryPreview.ready_for_apply,
         requires_confirmation: memoryPreview.requires_confirmation,
       },

@@ -20,13 +20,13 @@ import { getCompatFixture } from "./fixtures.ts";
 const compatLabRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 const fixtureRepoRoot = join(compatLabRoot, "fixtures", "repos");
 
-function writeOverlayFiles(tempRoot, overlayFiles = {}) {
+function writeOverlayFiles(tempRoot: any, overlayFiles: any = {}) {
   for (const [relativePath, content] of Object.entries(overlayFiles)) {
     writeTextFile(join(tempRoot, relativePath), content as string);
   }
 }
 
-function copyRepoTemplate({ fixture, tempRoot }) {
+function copyRepoTemplate({ fixture, tempRoot }: { fixture?: any; tempRoot?: any }) {
   if (!fixture.repo_template) {
     return;
   }
@@ -39,7 +39,7 @@ function copyRepoTemplate({ fixture, tempRoot }) {
   });
 }
 
-function copySourcePacks({ workspaceRoot, tempRoot, sourcePacks }) {
+function copySourcePacks({ workspaceRoot, tempRoot, sourcePacks }: { workspaceRoot?: any; tempRoot?: any; sourcePacks?: any }) {
   mkdirSync(join(tempRoot, "packs", "core"), { recursive: true });
   for (const packId of sourcePacks) {
     cpSync(join(workspaceRoot, "packs", "core", packId), join(tempRoot, "packs", "core", packId), {
@@ -48,7 +48,7 @@ function copySourcePacks({ workspaceRoot, tempRoot, sourcePacks }) {
   }
 }
 
-function copyAuthoritativeSupportCatalog({ workspaceRoot, tempRoot }) {
+function copyAuthoritativeSupportCatalog({ workspaceRoot, tempRoot }: { workspaceRoot?: any; tempRoot?: any }) {
   const compatibilityRoot = join(workspaceRoot, "docs", "compatibility");
   if (!exists(compatibilityRoot)) {
     throw new Error("compat-lab requires docs/compatibility as authoritative support input");
@@ -93,7 +93,7 @@ function copyAuthoritativeSupportCatalog({ workspaceRoot, tempRoot }) {
   });
 }
 
-function mutateManifestFiles({ fixture, tempRoot }) {
+function mutateManifestFiles({ fixture, tempRoot }: { fixture?: any; tempRoot?: any }) {
   if (typeof fixture.mutate_manifest !== "function") {
     return;
   }
@@ -105,13 +105,13 @@ function mutateManifestFiles({ fixture, tempRoot }) {
   }
 }
 
-function buildOrphanState({ tempRoot, packId }) {
+function buildOrphanState({ tempRoot, packId }: { tempRoot?: any; packId: string }) {
   const manifestPath = join(tempRoot, "packs", "core", packId, "pack.manifest.yaml");
   const compiled = compileCodexPack({
     repoRoot: tempRoot,
     manifestPath,
   });
-  const trackedFile = compiled.files.find((file) => file.relative_path === "pairslash.install.json")
+  const trackedFile = compiled.files.find((file: any) => file.relative_path === "pairslash.install.json")
     ?? compiled.files[0];
   const installDir = codexAdapter.resolvePackInstallDir({ repoRoot: tempRoot, target: "repo" }, packId);
   const absolutePath = join(installDir, trackedFile.relative_path);
@@ -161,7 +161,7 @@ function buildOrphanState({ tempRoot, packId }) {
   writeTextFile(statePath, stableJson(state));
 }
 
-function setupConflictFixture(tempRoot) {
+function setupConflictFixture(tempRoot: any) {
   const unmanagedCopilotPath = join(
     tempRoot,
     ".github",
@@ -183,7 +183,7 @@ function setupConflictFixture(tempRoot) {
   });
 }
 
-function runFixtureSetup({ fixture, tempRoot }) {
+function runFixtureSetup({ fixture, tempRoot }: { fixture?: any; tempRoot?: any }) {
   if (!fixture.setup_modes) {
     return;
   }
@@ -192,7 +192,7 @@ function runFixtureSetup({ fixture, tempRoot }) {
   }
 }
 
-function writeFixtureMetadata({ fixture, tempRoot }) {
+function writeFixtureMetadata({ fixture, tempRoot }: { fixture?: any; tempRoot?: any }) {
   const metadata = {
     id: fixture.id,
     repo_archetype: fixture.repo_archetype,
@@ -203,12 +203,12 @@ function writeFixtureMetadata({ fixture, tempRoot }) {
     supported_workflows: fixture.supported_workflows.slice(),
     expected_capabilities: fixture.expected_capabilities.slice(),
     modeled_risks: fixture.modeled_risks.slice(),
-    supported_lanes: fixture.supported_lanes.map((lane) => ({ ...lane })),
+    supported_lanes: fixture.supported_lanes.map((lane: any) => ({ ...lane })),
   };
   writeTextFile(join(tempRoot, ".pairslash-compat-lab", "fixture.json"), stableJson(metadata));
 }
 
-export function materializeCompatFixture({ repoRoot: workspaceRoot, fixtureId }) {
+export function materializeCompatFixture({ repoRoot: workspaceRoot, fixtureId }: any) {
   const fixture = getCompatFixture(fixtureId);
   const tempRoot = mkdtempSync(join(tmpdir(), `pairslash-compat-${fixtureId}-`));
   const homeRoot = join(tempRoot, ".compat-home");

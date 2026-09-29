@@ -10,60 +10,60 @@ import { DEFAULT_COMPAT_EVALS } from "./evals.ts";
 import { listCompatFixtures } from "./fixtures.ts";
 import { DEFAULT_SMOKE_LANES } from "./smoke.ts";
 
-function formatTable(headers, rows) {
+function formatTable(headers: any, rows: any) {
   const headerLine = `| ${headers.join(" | ")} |`;
   const separatorLine = `| ${headers.map(() => "---").join(" | ")} |`;
-  const rowLines = rows.map((row) => `| ${row.join(" | ")} |`);
+  const rowLines = rows.map((row: any) => `| ${row.join(" | ")} |`);
   return [headerLine, separatorLine, ...rowLines].join("\n");
 }
 
-function uniqueRefs(refs) {
+function uniqueRefs(refs: unknown[]) {
   if (!Array.isArray(refs)) {
     return [];
   }
-  return [...new Set(refs.filter((ref) => typeof ref === "string" && ref.trim() !== ""))];
+  return [...new Set(refs.filter((ref: any) => typeof ref === "string" && ref.trim() !== ""))];
 }
 
-function formatRefList(refs) {
+function formatRefList(refs: unknown[]) {
   const normalizedRefs = uniqueRefs(refs);
   if (normalizedRefs.length === 0) {
     return "none recorded";
   }
-  return normalizedRefs.map((ref) => `\`${ref}\``).join("<br>");
+  return normalizedRefs.map((ref: any) => `\`${ref}\``).join("<br>");
 }
 
-function fakeEvidenceRefsForLane(lane) {
+function fakeEvidenceRefsForLane(lane: any) {
   if (Array.isArray(lane.fake_evidence_refs)) {
     return lane.fake_evidence_refs;
   }
   if (!Array.isArray(lane.shim_evidence_refs)) {
     return [];
   }
-  return lane.shim_evidence_refs.filter((ref) => typeof ref === "string" && ref.includes("acceptance.js"));
+  return lane.shim_evidence_refs.filter((ref: any) => typeof ref === "string" && ref.includes("acceptance.js"));
 }
 
-function shimEvidenceRefsForLane(lane) {
+function shimEvidenceRefsForLane(lane: any) {
   if (Array.isArray(lane.fake_evidence_refs)) {
     return Array.isArray(lane.shim_evidence_refs) ? lane.shim_evidence_refs : [];
   }
   if (!Array.isArray(lane.shim_evidence_refs)) {
     return [];
   }
-  return lane.shim_evidence_refs.filter((ref) => typeof ref === "string" && !ref.includes("acceptance.js"));
+  return lane.shim_evidence_refs.filter((ref: any) => typeof ref === "string" && !ref.includes("acceptance.js"));
 }
 
-function formatStringList(values) {
+function formatStringList(values: unknown[]) {
   if (!Array.isArray(values) || values.length === 0) {
     return "none recorded";
   }
-  return values.map((value) => `\`${value}\``).join(", ");
+  return values.map((value: unknown) => `\`${value}\``).join(", ");
 }
 
-function workflowMaturityRank(level) {
+function workflowMaturityRank(level: any) {
   if (typeof level !== "string") {
     return WORKFLOW_MATURITY_STRENGTH_ORDER.canary;
   }
-  return WORKFLOW_MATURITY_STRENGTH_ORDER[level] ?? WORKFLOW_MATURITY_STRENGTH_ORDER.canary;
+  return WORKFLOW_MATURITY_STRENGTH_ORDER[level as keyof typeof WORKFLOW_MATURITY_STRENGTH_ORDER] ?? WORKFLOW_MATURITY_STRENGTH_ORDER.canary;
 }
 
 export function buildCompatibilityMatrixArtifact({
@@ -73,7 +73,7 @@ export function buildCompatibilityMatrixArtifact({
   const fixtures = listCompatFixtures();
   const supportSnapshot = loadPublicSupportSnapshot(repoRoot, { version });
   const workflowMaturity = loadPackCatalogRecords(repoRoot, { includeAdvanced: false })
-    .map((record) => ({
+    .map((record: any) => ({
       pack_id: record.id,
       workflow_maturity: record.workflow_maturity,
       effective_workflow_maturity: record.effective_workflow_maturity,
@@ -85,7 +85,7 @@ export function buildCompatibilityMatrixArtifact({
         workflowMaturityRank(record.workflow_maturity) >
         workflowMaturityRank(record.effective_workflow_maturity),
     }))
-    .sort((left, right) => {
+    .sort((left: any, right: any) => {
       if (
         workflowMaturityRank(left.effective_workflow_maturity) !==
         workflowMaturityRank(right.effective_workflow_maturity)
@@ -100,18 +100,18 @@ export function buildCompatibilityMatrixArtifact({
   return {
     version: supportSnapshot.version ?? version,
     generated_from: {
-      fixtures: fixtures.map((fixture) => fixture.id),
-      smoke_lanes: DEFAULT_SMOKE_LANES.map((lane) => lane.id),
-      acceptance_lanes: DEFAULT_ACCEPTANCE_LANES.map((lane) => lane.id),
-      evals: DEFAULT_COMPAT_EVALS.map((entry) => entry.id),
+      fixtures: fixtures.map((fixture: any) => fixture.id),
+      smoke_lanes: DEFAULT_SMOKE_LANES.map((lane: any) => lane.id),
+      acceptance_lanes: DEFAULT_ACCEPTANCE_LANES.map((lane: any) => lane.id),
+      evals: DEFAULT_COMPAT_EVALS.map((entry: any) => entry.id),
     },
     evidence_policy: { ...supportSnapshot.evidence_policy },
     support_policy: { ...supportSnapshot.support_policy },
-    runtime_lanes: supportSnapshot.runtime_lanes.map((lane) => ({ ...lane })),
-    known_issues: supportSnapshot.known_issues.map((issue) => ({ ...issue })),
-    release_gates: supportSnapshot.release_gates.map((gate) => ({ ...gate })),
+    runtime_lanes: supportSnapshot.runtime_lanes.map((lane: any) => ({ ...lane })),
+    known_issues: supportSnapshot.known_issues.map((issue: any) => ({ ...issue })),
+    release_gates: supportSnapshot.release_gates.map((gate: any) => ({ ...gate })),
     workflow_maturity: workflowMaturity,
-    fixture_catalog: fixtures.map((fixture) => ({
+    fixture_catalog: fixtures.map((fixture: any) => ({
       id: fixture.id,
       repo_archetype: fixture.repo_archetype,
       primary_pack_id: fixture.primary_pack_id,
@@ -141,7 +141,7 @@ export function renderCompatibilityMatrixMarkdown({
       "Deterministic baseline",
       "Release gate",
     ],
-    artifact.runtime_lanes.map((lane) => [
+    artifact.runtime_lanes.map((lane: any) => [
       lane.runtime,
       lane.target,
       lane.os_lane,
@@ -158,7 +158,7 @@ export function renderCompatibilityMatrixMarkdown({
   );
   const issueTable = formatTable(
     ["Issue", "Surface", "Status", "Affected lanes", "Details"],
-    artifact.known_issues.map((issue) => [
+    artifact.known_issues.map((issue: any) => [
       issue.id,
       issue.surface,
       issue.status,
@@ -168,7 +168,7 @@ export function renderCompatibilityMatrixMarkdown({
   );
   const gateTable = formatTable(
     ["Gate", "Trigger", "Checks", "Required", "Notes"],
-    artifact.release_gates.map((gate) => [
+    artifact.release_gates.map((gate: any) => [
       gate.id,
       gate.trigger,
       gate.checks.join(", "),
@@ -178,7 +178,7 @@ export function renderCompatibilityMatrixMarkdown({
   );
   const fixtureTable = formatTable(
     ["Fixture", "Archetype", "Primary workflow", "Modeled risks"],
-    artifact.fixture_catalog.map((fixture) => [
+    artifact.fixture_catalog.map((fixture: any) => [
       fixture.id,
       fixture.repo_archetype,
       fixture.primary_pack_id,
@@ -194,7 +194,7 @@ export function renderCompatibilityMatrixMarkdown({
       "Live evidence",
       "Evidence records / guard rails",
     ],
-    artifact.runtime_lanes.map((lane) => [
+    artifact.runtime_lanes.map((lane: any) => [
       `${lane.runtime} / ${lane.target} / ${lane.os_lane}`,
       formatRefList(lane.deterministic_evidence_refs),
       formatRefList(fakeEvidenceRefsForLane(lane)),
@@ -205,7 +205,7 @@ export function renderCompatibilityMatrixMarkdown({
   );
   const workflowMaturityTable = formatTable(
     ["Workflow", "Assigned", "Effective", "Default selection candidate", "Blocked", "Blockers"],
-    artifact.workflow_maturity.map((workflow) => [
+    artifact.workflow_maturity.map((workflow: any) => [
       workflow.pack_id,
       workflow.workflow_maturity,
       workflow.effective_workflow_maturity,

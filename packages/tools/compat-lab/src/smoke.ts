@@ -58,16 +58,16 @@ export const DEFAULT_SMOKE_LANES = [
   },
 ];
 
-function manifestPathsFor(tempRoot, packIds) {
+function manifestPathsFor(tempRoot: any, packIds: string[] | undefined) {
   return discoverPackManifestPaths(tempRoot)
-    .map((manifestPath) => ({ manifestPath, manifest: loadPackManifest(manifestPath) }))
-    .filter(({ manifest }) => packIds.includes(manifest.pack.id))
-    .sort((left, right) => left.manifest.pack.id.localeCompare(right.manifest.pack.id))
-    .map(({ manifestPath }) => manifestPath);
+    .map((manifestPath: string) => ({ manifestPath, manifest: loadPackManifest(manifestPath) }))
+    .filter(({ manifest }: any) => (packIds ?? []).includes(manifest.pack.id))
+    .sort((left: any, right: any) => left.manifest.pack.id.localeCompare(right.manifest.pack.id))
+    .map(({ manifestPath }: any) => manifestPath);
 }
 
-function compileLane({ runtime, tempRoot, packIds }) {
-  const compiled = manifestPathsFor(tempRoot, packIds).map((manifestPath) =>
+function compileLane({ runtime, tempRoot, packIds }: { runtime?: string; tempRoot?: any; packIds?: string[] }) {
+  const compiled = manifestPathsFor(tempRoot, packIds).map((manifestPath: string) =>
     runtime === "codex_cli"
       ? compileCodexPack({ repoRoot: tempRoot, manifestPath })
       : compileCopilotPack({ repoRoot: tempRoot, manifestPath }),
@@ -78,7 +78,7 @@ function compileLane({ runtime, tempRoot, packIds }) {
   };
 }
 
-function installLane({ tempRoot, runtime, target, packIds }) {
+function installLane({ tempRoot, runtime, target, packIds }: { tempRoot?: any; runtime?: string; target?: any; packIds?: string[] }) {
   const preview = planInstall({
     repoRoot: tempRoot,
     runtime,
@@ -88,17 +88,17 @@ function installLane({ tempRoot, runtime, target, packIds }) {
   const out: any = {
     can_apply: preview.plan.can_apply,
     summary: { ...preview.plan.summary },
-    blocked_operations: preview.plan.operations.filter((operation) => operation.kind === "blocked_conflict").length,
+    blocked_operations: preview.plan.operations.filter((operation: any) => operation.kind === "blocked_conflict").length,
     policy_summary: preview.plan.policy_summary ? { ...preview.plan.policy_summary } : null,
   };
   if (preview.plan.can_apply) {
     const result = applyInstall(preview);
-    out.applied_packs = result.state.packs.map((pack) => pack.id);
+    out.applied_packs = result.state.packs.map((pack: any) => pack.id);
   }
   return out;
 }
 
-function doctorLane({ tempRoot, lane, packIds }) {
+function doctorLane({ tempRoot, lane, packIds }: { tempRoot?: any; lane?: any; packIds?: string[] }) {
   const report = runDoctor({
     repoRoot: tempRoot,
     runtime: lane.runtime,
@@ -116,7 +116,7 @@ function doctorLane({ tempRoot, lane, packIds }) {
 
 export function runCompatSmoke({ repoRoot, lanes = DEFAULT_SMOKE_LANES }: any = {}) {
   const runtimeHarness = installCompatRuntimeShims();
-  const results = [];
+  const results: any[] = [];
 
   try {
     for (const lane of lanes) {

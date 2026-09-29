@@ -42,7 +42,7 @@ export function runDoctor({
   _os_override = null,
   _shell_override = null,
   _cwd_override = null,
-}) {
+}: { repoRoot: string; runtime?: string; target?: any; packs?: any; skillRoot?: any; emit?: string; _adapter_override?: any; _runtime_selection_override?: any; _os_override?: any; _shell_override?: any; _cwd_override?: any }) {
   const context = buildBaseContext({
     repoRoot,
     runtime,
@@ -56,11 +56,11 @@ export function runDoctor({
     shellOverride: _shell_override,
     cwdOverride: _cwd_override,
   });
-  const checks = CHECKS.map((check) => check(context));
+  const checks = CHECKS.map((check: any) => check(context));
   const issues = buildIssues(checks);
   const remediationActions = buildRemediationActions(checks, issues);
   const installBlocked = checks.some(
-    (check) => check.blocking_for_install && ISSUE_STATUSES.has(check.status),
+    (check: any) => check.blocking_for_install && ISSUE_STATUSES.has(check.status),
   );
   const reasonCodes = collectLifecycleReasonCodes({
     checks,

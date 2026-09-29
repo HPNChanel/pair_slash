@@ -24,7 +24,7 @@ import {
   safeStat,
 } from "../helpers.ts";
 
-export function runInstallRootCheck(context) {
+export function runInstallRootCheck(context: any) {
   if (context.installRoot === null || context.installRoot === undefined) {
     return createCheckResult({
       id: "filesystem.install_root",
@@ -60,7 +60,7 @@ export function runInstallRootCheck(context) {
     });
   }
   const stat = safeStat(context.installRoot);
-  if (!stat.ok || !stat.stat.isDirectory()) {
+  if (!stat.ok || !stat.stat?.isDirectory()) {
     return createCheckResult({
       id: "filesystem.install_root",
       group: "filesystem",
@@ -92,7 +92,7 @@ export function runInstallRootCheck(context) {
   });
 }
 
-export function runWritePermissionCheck(context) {
+export function runWritePermissionCheck(context: any) {
   const targets = [
     context.installRoot,
     dirname(context.statePath),
@@ -139,7 +139,7 @@ export function runWritePermissionCheck(context) {
   });
 }
 
-export function runSharedSkillRootSupport(context) {
+export function runSharedSkillRootSupport(context: any) {
   const base = {
     id: "install_state.shared_skill_root",
     group: "install_state",
@@ -156,7 +156,7 @@ export function runSharedSkillRootSupport(context) {
       evidence: { skill_root: skillRoot },
     });
   }
-  const minVersion = SHARED_AGENTS_SKILL_ROOT_MIN_VERSIONS[context.runtime];
+  const minVersion = SHARED_AGENTS_SKILL_ROOT_MIN_VERSIONS[context.runtime as keyof typeof SHARED_AGENTS_SKILL_ROOT_MIN_VERSIONS];
   const detection = context.detection;
   const detectedVersion = detection?.version ?? null;
   const floorSatisfied =
@@ -191,7 +191,7 @@ export function runSharedSkillRootSupport(context) {
   });
 }
 
-export function runUnmanagedInstallRoot(context) {
+export function runUnmanagedInstallRoot(context: any) {
   if (context.installRoot === null || context.installRoot === undefined) {
     return createCheckResult({
       id: "conflict.unmanaged_install_root",
@@ -205,24 +205,24 @@ export function runUnmanagedInstallRoot(context) {
     });
   }
   const entries = listInstallRootEntries(context.installRoot);
-  const trackedNames = new Set((context.state?.packs ?? []).map((pack) => relativeFrom(context.installRoot, pack.install_dir)));
+  const trackedNames = new Set((context.state?.packs ?? []).map((pack: any) => relativeFrom(context.installRoot, pack.install_dir)));
   const installIntentPacks = context.installIntentPacks.length > 0
     ? context.installIntentPacks
-    : context.selectedManifests.map((record) => record.packId);
+    : context.selectedManifests.map((record: any) => record.packId);
   const selectedNames = new Set(installIntentPacks);
   const unmanaged = entries.filter((entry) => !trackedNames.has(entry.name));
   const reconciledFiles = (context.state?.packs ?? [])
-    .flatMap((pack) =>
+    .flatMap((pack: any) =>
       pack.files
-        .filter((file) => file.management_mode === "reconciled_unmanaged")
-        .map((file) => ({
+        .filter((file: any) => file.management_mode === "reconciled_unmanaged")
+        .map((file: any) => ({
           pack_id: pack.id,
           relative_path: file.relative_path,
           absolute_path: file.absolute_path,
           reason_code: file.reconciled_reason_code ?? REASON_CODE_UNINSTALL_PRESERVE_UNMANAGED,
         })),
     )
-    .sort((left, right) =>
+    .sort((left: any, right: any) =>
       `${left.pack_id}\u0000${left.relative_path}`.localeCompare(
         `${right.pack_id}\u0000${right.relative_path}`,
       ),
@@ -241,9 +241,9 @@ export function runUnmanagedInstallRoot(context) {
         evidence: {
           reconciled_files: reconciledFiles,
         },
-        reasonCodes: reconciledFiles.map((file) => file.reason_code),
+        reasonCodes: reconciledFiles.map((file: any) => file.reason_code),
         remediationActions: dedupeRemediationActions(
-          reconciledFiles.map((file) =>
+          reconciledFiles.map((file: any) =>
             buildReviewRemediationAction({
               actionId: `review-unmanaged:${file.pack_id}:${file.relative_path}`,
               summary: "Review the unmanaged file that PairSlash preserves.",
@@ -278,7 +278,7 @@ export function runUnmanagedInstallRoot(context) {
         target: context.target,
         packs: selectedPackIds,
       });
-      const unmanagedOperations = preview.plan.operations.filter((operation) =>
+      const unmanagedOperations = preview.plan.operations.filter((operation: any) =>
         selectedNames.has(operation.pack_id) &&
         [
           REASON_CODE_RECONCILE_IDENTICAL,
@@ -287,7 +287,7 @@ export function runUnmanagedInstallRoot(context) {
           REASON_CODE_OWNERSHIP_METADATA_CONFLICT,
         ].includes(operation.reason_code),
       );
-      const blocked = unmanagedOperations.filter((operation) => operation.kind === "blocked_conflict");
+      const blocked = unmanagedOperations.filter((operation: any) => operation.kind === "blocked_conflict");
       if (blocked.length > 0) {
         return createCheckResult({
           id: "conflict.unmanaged_install_root",
@@ -301,7 +301,7 @@ export function runUnmanagedInstallRoot(context) {
             "Run `pairslash preview install` and rename, remove, or reconcile the blocking unmanaged paths before install.",
           evidence: {
             collisions: collisions.map((entry) => entry.absolutePath),
-            blocked_conflicts: blocked.map((operation) => ({
+            blocked_conflicts: blocked.map((operation: any) => ({
               pack_id: operation.pack_id,
               relative_path: operation.relative_path,
               reason: operation.reason,
@@ -310,14 +310,14 @@ export function runUnmanagedInstallRoot(context) {
             ignored_non_intent_paths: offIntentEntries.map((entry) => entry.absolutePath),
           },
           blockingForInstall: true,
-          reasonCodes: blocked.map((operation) => operation.reason_code ?? REASON_CODE_UNMANAGED_CONFLICT),
+          reasonCodes: blocked.map((operation: any) => operation.reason_code ?? REASON_CODE_UNMANAGED_CONFLICT),
           remediationActions: dedupeRemediationActions(
-            blocked.flatMap((operation) => operation.remediation_actions ?? []),
+            blocked.flatMap((operation: any) => operation.remediation_actions ?? []),
           ),
         });
       }
 
-      const reconciled = unmanagedOperations.filter((operation) => operation.kind === "reconcile_unmanaged");
+      const reconciled = unmanagedOperations.filter((operation: any) => operation.kind === "reconcile_unmanaged");
       if (reconciled.length > 0) {
         return createCheckResult({
           id: "conflict.unmanaged_install_root",
@@ -331,7 +331,7 @@ export function runUnmanagedInstallRoot(context) {
             "Keep `pairslash preview install` as the source of truth before apply and review any preserved overrides carefully.",
           evidence: {
             collisions: collisions.map((entry) => entry.absolutePath),
-            preview_operations: reconciled.map((operation) => ({
+            preview_operations: reconciled.map((operation: any) => ({
               kind: operation.kind,
               pack_id: operation.pack_id,
               relative_path: operation.relative_path,
@@ -341,9 +341,9 @@ export function runUnmanagedInstallRoot(context) {
             })),
             ignored_non_intent_paths: offIntentEntries.map((entry) => entry.absolutePath),
           },
-          reasonCodes: reconciled.map((operation) => operation.reason_code),
+          reasonCodes: reconciled.map((operation: any) => operation.reason_code),
           remediationActions: dedupeRemediationActions(
-            reconciled.flatMap((operation) => operation.remediation_actions ?? []),
+            reconciled.flatMap((operation: any) => operation.remediation_actions ?? []),
           ),
         });
       }
@@ -359,7 +359,7 @@ export function runUnmanagedInstallRoot(context) {
         remediation: "Run `pairslash preview install` directly to confirm whether unmanaged paths are blocking or preserved.",
         evidence: {
           collisions: collisions.map((entry) => entry.absolutePath),
-          preview_error: error.message,
+          preview_error: error instanceof Error ? error.message : String(error),
           ignored_non_intent_paths: offIntentEntries.map((entry) => entry.absolutePath),
         },
       });

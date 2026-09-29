@@ -13,7 +13,7 @@ export function resolveSupportLane({
   os,
   runtimeVersion = null,
   runtimeAvailable = false,
-}) {
+}: { repoRoot?: string; runtime?: string; target?: any; os?: any; runtimeVersion?: any; runtimeAvailable?: any }) {
   const supportSnapshot = loadPublicSupportSnapshot(repoRoot);
   const publicLane = findPublicCompatibilityLane({
     repoRoot,

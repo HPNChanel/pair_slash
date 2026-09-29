@@ -3,7 +3,7 @@ import {
   safeStat,
 } from "../helpers.ts";
 
-export function runSupportLane(context) {
+export function runSupportLane(context: any) {
   const lane = context.supportLane;
   const status =
     lane.lane_status === "supported"
@@ -43,7 +43,7 @@ export function runSupportLane(context) {
   });
 }
 
-export function runPlatformSupport(context) {
+export function runPlatformSupport(context: any) {
   const knownShells = ["powershell", "pwsh", "cmd", "bash", "zsh", "sh"];
   if (!["win32", "linux", "darwin"].includes(context.os)) {
     return createCheckResult({
@@ -91,7 +91,7 @@ export function runPlatformSupport(context) {
     });
 }
 
-export function runShellProfileCandidates(context) {
+export function runShellProfileCandidates(context: any) {
   if (context.shell.includes("cmd")) {
     return createCheckResult({
       id: "platform.shell_profile_candidates",
@@ -111,7 +111,7 @@ export function runShellProfileCandidates(context) {
   const profileIssues = [];
   for (const candidate of context.shellProfileCandidates) {
     const stat = safeStat(candidate);
-    if (stat.ok && stat.stat.isDirectory()) {
+    if (stat.ok && stat.stat?.isDirectory()) {
       profileIssues.push({
         path: candidate,
         reason: "profile path resolves to a directory",

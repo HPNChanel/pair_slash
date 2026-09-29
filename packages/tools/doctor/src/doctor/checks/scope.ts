@@ -8,7 +8,7 @@ import {
   safeStat,
 } from "../helpers.ts";
 
-export function runScopeRepoRoot(context) {
+export function runScopeRepoRoot(context: any) {
   if (context.target === "user") {
     return createCheckResult({
       id: "scope.repo_root",
@@ -74,7 +74,7 @@ export function runScopeRepoRoot(context) {
   });
 }
 
-export function runConfigHomeCheck(context) {
+export function runConfigHomeCheck(context: any) {
   if (!exists(context.configHome)) {
     return createCheckResult({
       id: "filesystem.config_home",
@@ -93,7 +93,7 @@ export function runConfigHomeCheck(context) {
     });
   }
   const stat = safeStat(context.configHome);
-  if (!stat.ok || !stat.stat.isDirectory()) {
+  if (!stat.ok || !stat.stat?.isDirectory()) {
     return createCheckResult({
       id: "filesystem.config_home",
       group: "filesystem",

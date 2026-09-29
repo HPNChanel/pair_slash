@@ -20,7 +20,7 @@ import {
   createCheckResult,
 } from "../helpers.ts";
 
-export function runRuntimeDetect(context) {
+export function runRuntimeDetect(context: any) {
   const detection = context.detection;
   if (detection.available) {
     return createCheckResult({
@@ -62,11 +62,11 @@ export function runRuntimeDetect(context) {
   });
 }
 
-export function surfaceProbeObservations(context) {
+export function surfaceProbeObservations(context: any) {
   const home = homedir();
   const repoRoot = context.repoRoot;
-  const candidatePaths = (paths) =>
-    paths.filter((value) => typeof value === "string" && value.length > 0);
+  const candidatePaths = (paths: any) =>
+    paths.filter((value: any) => typeof value === "string" && value.length > 0);
   const probeDefinitions =
     context.runtime === "codex_cli"
       ? [
@@ -121,7 +121,7 @@ export function surfaceProbeObservations(context) {
         ];
   return probeDefinitions
     .map((definition) => {
-      const detectedPaths = definition.candidates.filter((path) => exists(path)).sort();
+      const detectedPaths = definition.candidates.filter((path: any) => exists(path)).sort();
       return {
         probe: definition.probe,
         description: definition.description,
@@ -132,7 +132,7 @@ export function surfaceProbeObservations(context) {
     .sort((left, right) => left.probe.localeCompare(right.probe));
 }
 
-export function runRuntimeSurfaceProbe(context) {
+export function runRuntimeSurfaceProbe(context: any) {
   const observations = surfaceProbeObservations(context);
   const detectedCount = observations.filter((observation) => observation.detected).length;
   return createCheckResult({
@@ -160,19 +160,19 @@ export const CODEX_DAEMON_ARTIFACT_PATHS = [
   "packages/app-server-daemon",
 ];
 
-export function codexDaemonPathKind(path) {
+export function codexDaemonPathKind(path: any) {
   try {
     const stat = statSync(path);
     return { kind: stat.isDirectory() ? "dir" : "file" };
   } catch (error) {
-    if (error && error.code === "ENOENT") {
+    if (typeof error === "object" && error !== null && "code" in error && error.code === "ENOENT") {
       return { kind: "missing" };
     }
-    return { kind: "error", error: error.message };
+    return { kind: "error", error: error instanceof Error ? error.message : String(error) };
   }
 }
 
-export function readCodexDaemonAutoStart(configPath) {
+export function readCodexDaemonAutoStart(configPath: any) {
   if (codexDaemonPathKind(configPath).kind !== "file") {
     return { value: "unset", readable: true };
   }
@@ -186,7 +186,7 @@ export function readCodexDaemonAutoStart(configPath) {
   }
 }
 
-export function readCodexDaemonRecordedPid(pidPath) {
+export function readCodexDaemonRecordedPid(pidPath: any) {
   try {
     const parsed = JSON.parse(readFileSync(pidPath, "utf8"));
     return typeof parsed?.pid === "number" ? parsed.pid : null;
@@ -195,7 +195,7 @@ export function readCodexDaemonRecordedPid(pidPath) {
   }
 }
 
-export function runCodexDaemonState(context) {
+export function runCodexDaemonState(context: any) {
   if (context.runtime !== "codex_cli") {
     return createCheckResult({
       id: "runtime.daemon_state",
@@ -287,7 +287,7 @@ export function runCodexDaemonState(context) {
   });
 }
 
-export function readTomlSectionFlag(text, section, keys) {
+export function readTomlSectionFlag(text: any, section: any, keys: any) {
   const match = text.match(new RegExp(`\\[${section}\\]([\\s\\S]*?)(?:\\r?\\n\\s*\\[|$)`));
   if (!match) {
     return { value: null, key: null };
@@ -301,7 +301,7 @@ export function readTomlSectionFlag(text, section, keys) {
   return { value: null, key: null };
 }
 
-export function readJsonFlag(path, key) {
+export function readJsonFlag(path: any, key: any) {
   if (codexDaemonPathKind(path).kind !== "file") {
     return { value: null, readable: true };
   }
@@ -313,8 +313,8 @@ export function readJsonFlag(path, key) {
   }
 }
 
-export function codexHooksFeatureFlag(configPaths) {
-  let decision = { value: null, key: null, source_path: null };
+export function codexHooksFeatureFlag(configPaths: any) {
+  let decision: any = { value: null, key: null, source_path: null };
   for (const configPath of configPaths) {
     if (codexDaemonPathKind(configPath).kind !== "file") {
       continue;
@@ -334,8 +334,8 @@ export function codexHooksFeatureFlag(configPaths) {
   return decision;
 }
 
-export function codexHooksRequirements(requirementsPaths) {
-  return requirementsPaths.map((requirementsPath) => {
+export function codexHooksRequirements(requirementsPaths: any) {
+  return requirementsPaths.map((requirementsPath: any) => {
     if (codexDaemonPathKind(requirementsPath).kind !== "file") {
       return { path: requirementsPath, present: false };
     }
@@ -355,7 +355,7 @@ export function codexHooksRequirements(requirementsPaths) {
   });
 }
 
-export function runHooksState(context) {
+export function runHooksState(context: any) {
   const home = homedir();
   const repoRoot = context.repoRoot;
   if (context.runtime === "codex_cli") {
@@ -377,8 +377,8 @@ export function runHooksState(context) {
           ]
         : ["/etc/codex/requirements.toml"];
     const requirements = codexHooksRequirements(requirementsPaths);
-    const managedDisabled = requirements.some((entry) => entry.hooks_disabled === true);
-    const managedOnly = requirements.some((entry) => entry.allow_managed_hooks_only === true);
+    const managedDisabled = requirements.some((entry: any) => entry.hooks_disabled === true);
+    const managedOnly = requirements.some((entry: any) => entry.allow_managed_hooks_only === true);
     const hooksState =
       managedOnly || managedDisabled
         ? "managed-restricted"
@@ -411,7 +411,7 @@ export function runHooksState(context) {
         feature_flag_key: flag.key,
         feature_flag_deprecated_alias: flag.key === "codex_hooks",
         feature_flag_source: flag.source_path,
-        managed_requirements: requirements.filter((entry) => entry.present),
+        managed_requirements: requirements.filter((entry: any) => entry.present),
         interpretation,
       },
     });
@@ -463,7 +463,7 @@ export function runHooksState(context) {
   });
 }
 
-export function runRuntimePresenceMatrix(context) {
+export function runRuntimePresenceMatrix(context: any) {
   const presence = Object.fromEntries(
     SUPPORTED_RUNTIMES.map((runtime) => [
       runtime,
@@ -497,7 +497,7 @@ export function runRuntimePresenceMatrix(context) {
   });
 }
 
-export function runRuntimeVersionRange(context) {
+export function runRuntimeVersionRange(context: any) {
   const inputs = {
     pack_count: context.selectedManifests.length,
   };
@@ -577,7 +577,7 @@ export function runRuntimeVersionRange(context) {
   });
 }
 
-export function runRuntimeTestedRange(context) {
+export function runRuntimeTestedRange(context: any) {
   if (!context.detection.available) {
     return createCheckResult({
       id: "runtime.tested_range",

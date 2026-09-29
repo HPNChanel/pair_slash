@@ -7,7 +7,7 @@ import {
   safeStat,
 } from "../helpers.ts";
 
-export function runRequiredTools(context) {
+export function runRequiredTools(context: any) {
   if (context.selectedManifests.length === 0) {
     return createCheckResult({
       id: "dependencies.required_tools",
@@ -94,7 +94,7 @@ export function runRequiredTools(context) {
   });
 }
 
-export function buildExpectedMcpPath(context, installDir) {
+export function buildExpectedMcpPath(context: any, installDir: any) {
   const relativePath = context.adapter.resolveAssetPath({
     install_surface: "mcp",
     file_name: "servers.yaml",
@@ -102,7 +102,7 @@ export function buildExpectedMcpPath(context, installDir) {
   return join(installDir, relativePath);
 }
 
-export function runRequiredMcpServers(context) {
+export function runRequiredMcpServers(context: any) {
   if (context.selectedManifests.length === 0) {
     return createCheckResult({
       id: "dependencies.required_mcp_servers",
@@ -148,7 +148,7 @@ export function runRequiredMcpServers(context) {
     }
     const mcpPath = buildExpectedMcpPath(context, installedPack.install_dir);
     const stat = safeStat(mcpPath);
-    if (!stat.ok || !stat.stat.isFile()) {
+    if (!stat.ok || !stat.stat?.isFile()) {
       failures.push({
         pack_id: record.packId,
         path: mcpPath,

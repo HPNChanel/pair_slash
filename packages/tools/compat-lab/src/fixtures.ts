@@ -1,6 +1,6 @@
 import { stableJson } from "@pairslash/spec-core";
 
-function appPackage(name, extras = {}) {
+function appPackage(name: string, extras: any = {}) {
   return stableJson({
     name,
     private: true,
@@ -10,7 +10,7 @@ function appPackage(name, extras = {}) {
   });
 }
 
-function ensureCapability(manifest, capability) {
+function ensureCapability(manifest: any, capability: any) {
   if (manifest.capabilities.includes(capability)) {
     return manifest;
   }
@@ -18,8 +18,8 @@ function ensureCapability(manifest, capability) {
   return manifest;
 }
 
-function supportedLanes(...lanes) {
-  return lanes.map((lane) => ({
+function supportedLanes(...lanes: any) {
+  return lanes.map((lane: any) => ({
     runtime: lane.runtime,
     target: lane.target,
     os_lane: lane.os_lane,
@@ -27,7 +27,7 @@ function supportedLanes(...lanes) {
   }));
 }
 
-function cloneFixture(fixture) {
+function cloneFixture(fixture: any) {
   return {
     id: fixture.id,
     repo_archetype: fixture.repo_archetype,
@@ -38,7 +38,7 @@ function cloneFixture(fixture) {
     supported_workflows: fixture.supported_workflows.slice(),
     expected_capabilities: fixture.expected_capabilities.slice(),
     modeled_risks: fixture.modeled_risks.slice(),
-    supported_lanes: fixture.supported_lanes.map((lane) => ({ ...lane })),
+    supported_lanes: fixture.supported_lanes.map((lane: any) => ({ ...lane })),
   };
 }
 
@@ -101,7 +101,7 @@ export const COMPAT_FIXTURES = [
       "package.json": appPackage("compat-backend-mcp"),
       "README.md": "# Compat Fixture: Backend MCP\n",
     },
-    mutate_manifest(packId, manifest) {
+    mutate_manifest(packId: any, manifest: any) {
       if (packId !== "pairslash-backend") {
         return manifest;
       }
@@ -260,11 +260,11 @@ export const COMPAT_FIXTURES = [
 ];
 
 export function listCompatFixtures() {
-  return COMPAT_FIXTURES.map((fixture) => cloneFixture(fixture));
+  return COMPAT_FIXTURES.map((fixture: any) => cloneFixture(fixture));
 }
 
-export function getCompatFixture(fixtureId) {
-  const fixture = COMPAT_FIXTURES.find((entry) => entry.id === fixtureId) ?? null;
+export function getCompatFixture(fixtureId: any) {
+  const fixture = COMPAT_FIXTURES.find((entry: any) => entry.id === fixtureId) ?? null;
   if (!fixture) {
     throw new Error(`unknown compat fixture: ${fixtureId}`);
   }

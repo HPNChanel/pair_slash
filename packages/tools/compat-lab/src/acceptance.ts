@@ -103,15 +103,15 @@ function uniqueSorted(values: any): any[] {
   return [...new Set(values.filter(Boolean))].sort((left: any, right: any) => left.localeCompare(right));
 }
 
-function runtimeFlag(runtime) {
+function runtimeFlag(runtime: string | undefined) {
   return runtime === "codex_cli" ? "codex" : "copilot";
 }
 
-function collectIssueCodes(report) {
-  return uniqueSorted(report.issues.map((issue) => issue.code ?? issue.check_id));
+function collectIssueCodes(report: any) {
+  return uniqueSorted(report.issues.map((issue: any) => issue.code ?? issue.check_id));
 }
 
-function buildLifecycleCommand(action, runtime, target, { apply = false, dryRun = false }: any = {}) {
+function buildLifecycleCommand(action: any, runtime: any, target: any, { apply = false, dryRun = false }: any = {}) {
   const flags = [
     "node packages/tools/cli/src/bin/pairslash.js",
     action,
@@ -130,7 +130,7 @@ function buildLifecycleCommand(action, runtime, target, { apply = false, dryRun 
   return flags.join(" ");
 }
 
-function buildDoctorCommand(runtime, target) {
+function buildDoctorCommand(runtime: string | undefined, target: any) {
   return [
     "node packages/tools/cli/src/bin/pairslash.js",
     "doctor",
@@ -141,7 +141,7 @@ function buildDoctorCommand(runtime, target) {
   ].join(" ");
 }
 
-function buildReadAuthorityCommands(runtime, target) {
+function buildReadAuthorityCommands(runtime: string, target: any) {
   return [
     [
       "node packages/tools/cli/src/bin/pairslash.js",
@@ -187,7 +187,7 @@ function buildFirstWorkflowStep() {
   return "/skills -> select pairslash-plan -> ask for a repo plan";
 }
 
-function laneCommandsFor(lane) {
+function laneCommandsFor(lane: any) {
   if (lane.key === "windows-prep") {
     return [
       buildDoctorCommand("codex_cli", "repo"),
@@ -204,7 +204,7 @@ function laneCommandsFor(lane) {
   ];
 }
 
-function doctorOptions(lane, runtime, target, packs = []) {
+function doctorOptions(lane: any, runtime: string | undefined, target: any, packs: any = []) {
   return {
     runtime,
     target,
@@ -214,7 +214,7 @@ function doctorOptions(lane, runtime, target, packs = []) {
   };
 }
 
-function withFixture({ repoRoot, fixtureId, runtimeHarness, target }, run) {
+function withFixture({ repoRoot, fixtureId, runtimeHarness, target }: { repoRoot?: string; fixtureId?: any; runtimeHarness?: any; target?: any }, run: any) {
   const materialized = materializeCompatFixture({
     repoRoot,
     fixtureId,
@@ -232,12 +232,12 @@ function withFixture({ repoRoot, fixtureId, runtimeHarness, target }, run) {
   }
 }
 
-function findInstalledSkillPath(state, packId = PRIMARY_PACK_ID) {
-  const pack = state.packs.find((entry) => entry.id === packId);
-  return pack?.files.find((file) => file.relative_path === "SKILL.md")?.absolute_path ?? null;
+function findInstalledSkillPath(state: any, packId: string = PRIMARY_PACK_ID) {
+  const pack = state.packs.find((entry: any) => entry.id === packId);
+  return pack?.files.find((file: any) => file.relative_path === "SKILL.md")?.absolute_path ?? null;
 }
 
-function buildScenarioResult(definition, payload, durationMs) {
+function buildScenarioResult(definition: any, payload: any, durationMs: any) {
   return {
     id: definition.id,
     runtime: definition.runtime ?? null,
@@ -259,7 +259,7 @@ function buildScenarioResult(definition, payload, durationMs) {
   };
 }
 
-function runScenario(definition, execute) {
+function runScenario(definition: any, execute: any) {
   const startedAt = Date.now();
   try {
     const payload = execute();
@@ -269,12 +269,12 @@ function runScenario(definition, execute) {
       definition,
       {
         success: false,
-        summary: error.message,
+        summary: error instanceof Error ? error.message : String(error),
         issue_codes: ["acceptance-scenario-failed"],
         repro_key: `${definition.id}:exception`,
         commands: definition.commands ?? [],
         details: {
-          error_message: error.message,
+          error_message: error instanceof Error ? error.message : String(error),
         },
       },
       Date.now() - startedAt,
@@ -282,7 +282,7 @@ function runScenario(definition, execute) {
   }
 }
 
-function runFreshInstallScenario({ repoRoot, lane, runtimeHarness }) {
+function runFreshInstallScenario({ repoRoot, lane, runtimeHarness }: { repoRoot?: string; lane?: any; runtimeHarness?: any }) {
   const definition = {
     id: `fresh-install.${lane.os_lane}.${runtimeFlag(lane.runtime)}.${lane.target}`,
     runtime: lane.runtime,
@@ -299,7 +299,7 @@ function runFreshInstallScenario({ repoRoot, lane, runtimeHarness }) {
         runtimeHarness,
         target: lane.target,
       },
-      ({ tempRoot }) => {
+      ({ tempRoot }: any) => {
         const doctorBefore = runDoctor({
           repoRoot: tempRoot,
           ...doctorOptions(lane, lane.runtime, lane.target),
@@ -318,7 +318,7 @@ function runFreshInstallScenario({ repoRoot, lane, runtimeHarness }) {
           ...doctorOptions(lane, lane.runtime, lane.target),
           repoRoot: tempRoot,
         });
-        const installedPackIds = result.state.packs.map((pack) => pack.id).sort();
+        const installedPackIds = result.state.packs.map((pack: any) => pack.id).sort();
         const success =
           installedPackIds.includes(PRIMARY_PACK_ID) &&
           !doctorAfter.install_blocked &&
@@ -348,7 +348,7 @@ function runFreshInstallScenario({ repoRoot, lane, runtimeHarness }) {
   );
 }
 
-function seedReadAuthorityFixture(tempRoot) {
+function seedReadAuthorityFixture(tempRoot: any) {
   mkdirSync(join(tempRoot, ".pairslash", "task-memory"), { recursive: true });
   mkdirSync(join(tempRoot, ".pairslash", "sessions"), { recursive: true });
   mkdirSync(join(tempRoot, ".pairslash", "staging"), { recursive: true });
@@ -399,7 +399,7 @@ function seedReadAuthorityFixture(tempRoot) {
   );
 }
 
-function runReadAuthorityScenario({ repoRoot, lane, runtimeHarness }) {
+function runReadAuthorityScenario({ repoRoot, lane, runtimeHarness }: { repoRoot?: string; lane?: any; runtimeHarness?: any }) {
   const definition = {
     id: `read-authority.${lane.os_lane}.${runtimeFlag(lane.runtime)}.${lane.target}`,
     runtime: lane.runtime,
@@ -415,7 +415,7 @@ function runReadAuthorityScenario({ repoRoot, lane, runtimeHarness }) {
         runtimeHarness,
         target: lane.target,
       },
-      ({ tempRoot }) => {
+      ({ tempRoot }: any) => {
         seedReadAuthorityFixture(tempRoot);
         const beforeGlobal = readFileSync(join(tempRoot, ".pairslash", "project-memory", "50-constraints.yaml"), "utf8");
         const beforeIndex = readFileSync(join(tempRoot, ".pairslash", "project-memory", "90-memory-index.yaml"), "utf8");
@@ -442,15 +442,15 @@ function runReadAuthorityScenario({ repoRoot, lane, runtimeHarness }) {
 
         const explanationConflict =
           explanation.memory_resolution?.record_resolution?.conflicts?.some(
-            (entry) =>
+            (entry: any) =>
               entry.selected_layer === "global-project-memory" &&
               ["task-memory", "audit-log"].includes(entry.shadowed_layer),
           ) === true;
         const candidateConflict =
-          candidate.candidates?.some((entry) => entry.suspicion?.conflict === true) === true;
+          candidate.candidates?.some((entry: any) => entry.suspicion?.conflict === true) === true;
         const auditConflict =
           audit.findings?.some(
-            (entry) =>
+            (entry: any) =>
               entry.type === "conflict" &&
               entry.selected_layer === "global-project-memory" &&
               ["task-memory", "audit-log"].includes(entry.shadowed_layer),
@@ -495,7 +495,7 @@ function runReadAuthorityScenario({ repoRoot, lane, runtimeHarness }) {
   );
 }
 
-function runUpdatePreserveOverrideScenario({ repoRoot, lane, runtimeHarness }) {
+function runUpdatePreserveOverrideScenario({ repoRoot, lane, runtimeHarness }: { repoRoot?: string; lane?: any; runtimeHarness?: any }) {
   const definition = {
     id: `update-preserve-override.${lane.os_lane}.${runtimeFlag(lane.runtime)}.${lane.target}`,
     runtime: lane.runtime,
@@ -515,7 +515,7 @@ function runUpdatePreserveOverrideScenario({ repoRoot, lane, runtimeHarness }) {
         runtimeHarness,
         target: lane.target,
       },
-      ({ tempRoot }) => {
+      ({ tempRoot }: any) => {
         const install = applyInstall(
           planInstall({
             repoRoot: tempRoot,
@@ -536,7 +536,7 @@ function runUpdatePreserveOverrideScenario({ repoRoot, lane, runtimeHarness }) {
           packs: [PRIMARY_PACK_ID],
         });
         const preserveOperation = preview.plan.operations.find(
-          (operation) =>
+          (operation: any) =>
             operation.kind === "preserve_override" && operation.relative_path === "SKILL.md",
         );
         if (!preview.plan.can_apply || !preserveOperation) {
@@ -548,8 +548,8 @@ function runUpdatePreserveOverrideScenario({ repoRoot, lane, runtimeHarness }) {
           ...doctorOptions(lane, lane.runtime, lane.target),
         });
         const preserved = readFileSync(skillPath, "utf8").includes(LOCAL_OVERRIDE_MARKER.trim());
-        const statePack = result.state.packs.find((pack) => pack.id === PRIMARY_PACK_ID);
-        const trackedSkill = statePack?.files.find((file) => file.relative_path === "SKILL.md") ?? null;
+        const statePack = result.state.packs.find((pack: any) => pack.id === PRIMARY_PACK_ID);
+        const trackedSkill = statePack?.files.find((file: any) => file.relative_path === "SKILL.md") ?? null;
         const success = preserved && trackedSkill?.local_override === true && !postDoctor.install_blocked;
         return {
           success,
@@ -574,7 +574,7 @@ function runUpdatePreserveOverrideScenario({ repoRoot, lane, runtimeHarness }) {
   );
 }
 
-function runUninstallOwnedOnlyScenario({ repoRoot, lane, runtimeHarness }) {
+function runUninstallOwnedOnlyScenario({ repoRoot, lane, runtimeHarness }: { repoRoot?: string; lane?: any; runtimeHarness?: any }) {
   const definition = {
     id: `uninstall-owned-only.${lane.os_lane}.${runtimeFlag(lane.runtime)}.${lane.target}`,
     runtime: lane.runtime,
@@ -594,7 +594,7 @@ function runUninstallOwnedOnlyScenario({ repoRoot, lane, runtimeHarness }) {
         runtimeHarness,
         target: lane.target,
       },
-      ({ tempRoot }) => {
+      ({ tempRoot }: any) => {
         const install = applyInstall(
           planInstall({
             repoRoot: tempRoot,
@@ -603,7 +603,7 @@ function runUninstallOwnedOnlyScenario({ repoRoot, lane, runtimeHarness }) {
             packs: [PRIMARY_PACK_ID],
           }),
         );
-        const statePack = install.state.packs.find((pack) => pack.id === PRIMARY_PACK_ID);
+        const statePack = install.state.packs.find((pack: any) => pack.id === PRIMARY_PACK_ID);
         if (!statePack) {
           throw new Error("uninstall scenario could not find installed pack state");
         }
@@ -618,7 +618,7 @@ function runUninstallOwnedOnlyScenario({ repoRoot, lane, runtimeHarness }) {
           packs: [PRIMARY_PACK_ID],
         });
         const preservedUnknown = preview.plan.operations.find(
-          (operation) =>
+          (operation: any) =>
             operation.kind === "skip_unmanaged" && operation.relative_path === "notes.local.md",
         );
         if (!preview.plan.can_apply || !preservedUnknown) {
@@ -656,7 +656,7 @@ function runUninstallOwnedOnlyScenario({ repoRoot, lane, runtimeHarness }) {
   );
 }
 
-function runBrokenConfigDoctorScenario({ repoRoot, lane, runtimeHarness }) {
+function runBrokenConfigDoctorScenario({ repoRoot, lane, runtimeHarness }: { repoRoot?: string; lane?: any; runtimeHarness?: any }) {
   const definition = {
     id: `doctor-broken-setup.${lane.os_lane}.${runtimeFlag(lane.runtime)}.${lane.target}`,
     runtime: lane.runtime,
@@ -672,7 +672,7 @@ function runBrokenConfigDoctorScenario({ repoRoot, lane, runtimeHarness }) {
         runtimeHarness,
         target: lane.target,
       },
-      ({ tempRoot }) => {
+      ({ tempRoot }: any) => {
         const baseline = runDoctor({
           repoRoot: tempRoot,
           ...doctorOptions(lane, lane.runtime, lane.target),
@@ -687,7 +687,7 @@ function runBrokenConfigDoctorScenario({ repoRoot, lane, runtimeHarness }) {
         });
         const success =
           broken.install_blocked &&
-          broken.issues.some((issue) => issue.check_id === "filesystem.config_home");
+          broken.issues.some((issue: any) => issue.check_id === "filesystem.config_home");
         return {
           success,
           summary: success
@@ -701,7 +701,7 @@ function runBrokenConfigDoctorScenario({ repoRoot, lane, runtimeHarness }) {
           details: {
             baseline_verdict: baseline.support_verdict,
             broken_verdict: broken.support_verdict,
-            blocking_issue_checks: broken.issues.map((issue) => issue.check_id),
+            blocking_issue_checks: broken.issues.map((issue: any) => issue.check_id),
           },
         };
       },
@@ -709,7 +709,7 @@ function runBrokenConfigDoctorScenario({ repoRoot, lane, runtimeHarness }) {
   );
 }
 
-function runReconcileParityScenario({ repoRoot, lane, runtimeHarness }) {
+function runReconcileParityScenario({ repoRoot, lane, runtimeHarness }: { repoRoot?: string; lane?: any; runtimeHarness?: any }) {
   const definition = {
     id: `semantic-parity.reconcile-unmanaged.${lane.os_lane}.${runtimeFlag(lane.runtime)}.${lane.target}`,
     runtime: lane.runtime,
@@ -728,7 +728,7 @@ function runReconcileParityScenario({ repoRoot, lane, runtimeHarness }) {
         runtimeHarness,
         target: lane.target,
       },
-      ({ tempRoot }) => {
+      ({ tempRoot }: any) => {
         const seedPreview = planInstall({
           repoRoot: tempRoot,
           runtime: lane.runtime,
@@ -736,7 +736,7 @@ function runReconcileParityScenario({ repoRoot, lane, runtimeHarness }) {
           packs: [PRIMARY_PACK_ID],
         });
         const compiledFile =
-          seedPreview.compiledPacks[0]?.files.find((file) => file.override_eligible) ??
+          seedPreview.compiledPacks[0]?.files.find((file: any) => file.override_eligible) ??
           seedPreview.compiledPacks[0]?.files[0];
         if (!compiledFile) {
           throw new Error("compat fixture did not produce a compiled file to seed unmanaged reconcile state");
@@ -756,9 +756,9 @@ function runReconcileParityScenario({ repoRoot, lane, runtimeHarness }) {
           ...doctorOptions(lane, lane.runtime, lane.target),
         });
         const operation = preview.plan.operations.find(
-          (entry) => entry.relative_path === compiledFile.relative_path,
+          (entry: any) => entry.relative_path === compiledFile.relative_path,
         );
-        const issue = doctor.issues.find((entry) => entry.check_id === "conflict.unmanaged_install_root");
+        const issue = doctor.issues.find((entry: any) => entry.check_id === "conflict.unmanaged_install_root");
         const success =
           operation?.reason_code === "reconcile-unmanaged-identical" &&
           issue?.reason_codes?.includes("reconcile-unmanaged-identical");
@@ -782,7 +782,7 @@ function runReconcileParityScenario({ repoRoot, lane, runtimeHarness }) {
   );
 }
 
-function runStaleStateParityScenario({ repoRoot, lane, runtimeHarness }) {
+function runStaleStateParityScenario({ repoRoot, lane, runtimeHarness }: { repoRoot?: string; lane?: any; runtimeHarness?: any }) {
   const definition = {
     id: `semantic-parity.stale-state.${lane.os_lane}.${runtimeFlag(lane.runtime)}.${lane.target}`,
     runtime: lane.runtime,
@@ -801,7 +801,7 @@ function runStaleStateParityScenario({ repoRoot, lane, runtimeHarness }) {
         runtimeHarness,
         target: lane.target,
       },
-      ({ tempRoot }) => {
+      ({ tempRoot }: any) => {
         mkdirSync(join(tempRoot, ".pairslash", "install-state"), { recursive: true });
         writeFileSync(
           resolveStatePath({
@@ -835,7 +835,7 @@ function runStaleStateParityScenario({ repoRoot, lane, runtimeHarness }) {
           repoRoot: tempRoot,
           ...doctorOptions(lane, lane.runtime, lane.target),
         });
-        const issue = doctor.issues.find((entry) => entry.check_id === "install_state.load");
+        const issue = doctor.issues.find((entry: any) => entry.check_id === "install_state.load");
         const success =
           preview.plan.reason_codes.includes("install-state-metadata-mismatch") &&
           issue?.reason_codes?.includes("install-state-metadata-mismatch") &&
@@ -860,7 +860,7 @@ function runStaleStateParityScenario({ repoRoot, lane, runtimeHarness }) {
   );
 }
 
-function runInstallRootShapeParityScenario({ repoRoot, lane, runtimeHarness }) {
+function runInstallRootShapeParityScenario({ repoRoot, lane, runtimeHarness }: { repoRoot?: string; lane?: any; runtimeHarness?: any }) {
   const definition = {
     id: `semantic-parity.install-root-shape.${lane.os_lane}.${runtimeFlag(lane.runtime)}.${lane.target}`,
     runtime: lane.runtime,
@@ -879,7 +879,7 @@ function runInstallRootShapeParityScenario({ repoRoot, lane, runtimeHarness }) {
         runtimeHarness,
         target: lane.target,
       },
-      ({ tempRoot }) => {
+      ({ tempRoot }: any) => {
         const seed = planInstall({
           repoRoot: tempRoot,
           runtime: lane.runtime,
@@ -899,7 +899,7 @@ function runInstallRootShapeParityScenario({ repoRoot, lane, runtimeHarness }) {
           repoRoot: tempRoot,
           ...doctorOptions(lane, lane.runtime, lane.target),
         });
-        const issue = doctor.issues.find((entry) => entry.check_id === "conflict.unmanaged_install_root");
+        const issue = doctor.issues.find((entry: any) => entry.check_id === "conflict.unmanaged_install_root");
         const success =
           !preview.plan.can_apply &&
           preview.plan.reason_codes.includes("unmanaged-conflict-blocking") &&
@@ -925,7 +925,7 @@ function runInstallRootShapeParityScenario({ repoRoot, lane, runtimeHarness }) {
   );
 }
 
-function runManagedReinstallRedirectScenario({ repoRoot, lane, runtimeHarness }) {
+function runManagedReinstallRedirectScenario({ repoRoot, lane, runtimeHarness }: { repoRoot?: string; lane?: any; runtimeHarness?: any }) {
   const definition = {
     id: `semantic-parity.managed-reinstall.${lane.os_lane}.${runtimeFlag(lane.runtime)}.${lane.target}`,
     runtime: lane.runtime,
@@ -946,7 +946,7 @@ function runManagedReinstallRedirectScenario({ repoRoot, lane, runtimeHarness })
         runtimeHarness,
         target: lane.target,
       },
-      ({ tempRoot }) => {
+      ({ tempRoot }: any) => {
         applyInstall(
           planInstall({
             repoRoot: tempRoot,
@@ -975,7 +975,7 @@ function runManagedReinstallRedirectScenario({ repoRoot, lane, runtimeHarness })
           _os_override: lane.os_override,
           _shell_override: lane.shell_override,
         });
-        const issue = doctor.issues.find((entry) => entry.check_id === "install_state.install_preview_parity");
+        const issue = doctor.issues.find((entry: any) => entry.check_id === "install_state.install_preview_parity");
         const success =
           reinstallPreview.plan.reason_codes.includes("managed-pack-requires-update") &&
           updatePreview.plan.can_apply &&
@@ -1002,7 +1002,7 @@ function runManagedReinstallRedirectScenario({ repoRoot, lane, runtimeHarness })
   );
 }
 
-function runManagedReinstallRemediationScenario({ repoRoot, lane, runtimeHarness }) {
+function runManagedReinstallRemediationScenario({ repoRoot, lane, runtimeHarness }: { repoRoot?: string; lane?: any; runtimeHarness?: any }) {
   const definition = {
     id: `semantic-parity.managed-reinstall-remediation.${lane.os_lane}.${runtimeFlag(lane.runtime)}.${lane.target}`,
     runtime: lane.runtime,
@@ -1022,7 +1022,7 @@ function runManagedReinstallRemediationScenario({ repoRoot, lane, runtimeHarness
         runtimeHarness,
         target: lane.target,
       },
-      ({ tempRoot }) => {
+      ({ tempRoot }: any) => {
         applyInstall(
           planInstall({
             repoRoot: tempRoot,
@@ -1041,12 +1041,12 @@ function runManagedReinstallRemediationScenario({ repoRoot, lane, runtimeHarness
           repoRoot: tempRoot,
           ...doctorOptions(lane, lane.runtime, lane.target, [PRIMARY_PACK_ID]),
         });
-        const issue = doctor.issues.find((entry) => entry.check_id === "install_state.install_preview_parity");
+        const issue = doctor.issues.find((entry: any) => entry.check_id === "install_state.install_preview_parity");
         const success =
           defaultInstallPreview.plan.reason_codes.includes("managed-pack-requires-update")
           && doctor.install_blocked
           && issue?.reason_codes?.includes("managed-pack-requires-update")
-          && doctor.remediation?.commands?.some((command) =>
+          && doctor.remediation?.commands?.some((command: any) =>
             command.command.includes("update pairslash-plan --runtime")
           );
         return {
@@ -1062,7 +1062,7 @@ function runManagedReinstallRemediationScenario({ repoRoot, lane, runtimeHarness
           details: {
             preview_reason_codes: defaultInstallPreview.plan.reason_codes.slice(),
             doctor_reason_codes: doctor.reason_codes.slice(),
-            remediation_commands: (doctor.remediation?.commands ?? []).map((entry) => entry.command),
+            remediation_commands: (doctor.remediation?.commands ?? []).map((entry: any) => entry.command),
           },
         };
       },
@@ -1070,7 +1070,7 @@ function runManagedReinstallRemediationScenario({ repoRoot, lane, runtimeHarness
   );
 }
 
-function runWindowsPrepPreviewScenario({ repoRoot, lane, runtimeHarness, runtime, target }) {
+function runWindowsPrepPreviewScenario({ repoRoot, lane, runtimeHarness, runtime, target }: { repoRoot?: string; lane?: any; runtimeHarness?: any; runtime?: string; target?: any }) {
   const definition = {
     id: `prep-preview.${runtimeFlag(runtime)}.${target}`,
     runtime,
@@ -1089,7 +1089,7 @@ function runWindowsPrepPreviewScenario({ repoRoot, lane, runtimeHarness, runtime
         runtimeHarness,
         target,
       },
-      ({ tempRoot }) => {
+      ({ tempRoot }: any) => {
         const doctor = runDoctor({
           repoRoot: tempRoot,
           ...doctorOptions(lane, runtime, target),
@@ -1124,7 +1124,7 @@ function runWindowsPrepPreviewScenario({ repoRoot, lane, runtimeHarness, runtime
   );
 }
 
-function runWindowsConflictDoctorScenario({ repoRoot, lane, runtimeHarness }) {
+function runWindowsConflictDoctorScenario({ repoRoot, lane, runtimeHarness }: { repoRoot?: string; lane?: any; runtimeHarness?: any }) {
   const definition = {
     id: "prep-doctor-conflict.copilot.repo",
     runtime: "copilot_cli",
@@ -1140,14 +1140,14 @@ function runWindowsConflictDoctorScenario({ repoRoot, lane, runtimeHarness }) {
         runtimeHarness,
         target: "repo",
       },
-      ({ tempRoot }) => {
+      ({ tempRoot }: any) => {
         const doctor = runDoctor({
           repoRoot: tempRoot,
           ...doctorOptions(lane, "copilot_cli", "repo"),
         });
         const success =
           doctor.install_blocked &&
-          doctor.issues.some((issue) => issue.check_id === "conflict.unmanaged_install_root");
+          doctor.issues.some((issue: any) => issue.check_id === "conflict.unmanaged_install_root");
         return {
           success,
           doctor_success: success,
@@ -1159,7 +1159,7 @@ function runWindowsConflictDoctorScenario({ repoRoot, lane, runtimeHarness }) {
           repro_key: `${definition.id}:${definition.fixture_id}:copilot_cli:repo`,
           commands: definition.commands,
           details: {
-            blocking_issue_checks: doctor.issues.map((issue) => issue.check_id),
+            blocking_issue_checks: doctor.issues.map((issue: any) => issue.check_id),
           },
         };
       },
@@ -1167,7 +1167,7 @@ function runWindowsConflictDoctorScenario({ repoRoot, lane, runtimeHarness }) {
   );
 }
 
-function runLaneScenarios({ repoRoot, lane, runtimeHarness }) {
+function runLaneScenarios({ repoRoot, lane, runtimeHarness }: { repoRoot?: string; lane?: any; runtimeHarness?: any }) {
   if (lane.key === "macos" || lane.key === "linux") {
     return [
       runFreshInstallScenario({ repoRoot, lane, runtimeHarness }),
@@ -1205,10 +1205,10 @@ function runLaneScenarios({ repoRoot, lane, runtimeHarness }) {
   ];
 }
 
-function buildLaneReport(lane, scenarios) {
-  const installScenario = scenarios.find((scenario) => scenario.install_success !== null) ?? null;
-  const doctorScenarios = scenarios.filter((scenario) => scenario.doctor_success !== null);
-  const status = scenarios.every((scenario) => scenario.status === "pass") ? "pass" : "fail";
+function buildLaneReport(lane: any, scenarios: any) {
+  const installScenario = scenarios.find((scenario: any) => scenario.install_success !== null) ?? null;
+  const doctorScenarios = scenarios.filter((scenario: any) => scenario.doctor_success !== null);
+  const status = scenarios.every((scenario: any) => scenario.status === "pass") ? "pass" : "fail";
   const supportClaimBoundary = buildSupportClaimBoundary();
   return {
     kind: "compat-lab-acceptance-report",
@@ -1225,10 +1225,10 @@ function buildLaneReport(lane, scenarios) {
     install_success: installScenario?.install_success ?? null,
     doctor_success:
       doctorScenarios.length > 0
-        ? doctorScenarios.every((scenario) => scenario.doctor_success === true)
+        ? doctorScenarios.every((scenario: any) => scenario.doctor_success === true)
         : null,
     time_to_first_success_ms: installScenario?.time_to_first_success_ms ?? null,
-    issue_codes: uniqueSorted(scenarios.flatMap((scenario) => scenario.issue_codes)),
+    issue_codes: uniqueSorted(scenarios.flatMap((scenario: any) => scenario.issue_codes)),
     repro_key: `compat-lab-acceptance:${lane.key}`,
     commands: laneCommandsFor(lane),
     artifact_paths: {
@@ -1238,12 +1238,12 @@ function buildLaneReport(lane, scenarios) {
   };
 }
 
-function resolveLane(laneInput) {
+function resolveLane(laneInput: any) {
   if (!laneInput || laneInput === "all") {
     return "all";
   }
   const matched = DEFAULT_ACCEPTANCE_LANES.find(
-    (lane) => lane.key === laneInput || lane.id === laneInput,
+    (lane: any) => lane.key === laneInput || lane.id === laneInput,
   );
   if (!matched) {
     throw new Error(`unknown acceptance lane: ${laneInput}`);
@@ -1251,7 +1251,7 @@ function resolveLane(laneInput) {
   return matched;
 }
 
-function runLaneReport({ repoRoot, lane }) {
+function runLaneReport({ repoRoot, lane }: { repoRoot?: string; lane?: any }) {
   const runtimeHarness = installCompatRuntimeShims({
     codexVersion: RUNTIME_VERSIONS.codex_cli,
     copilotVersion: RUNTIME_VERSIONS.copilot_cli,
@@ -1271,7 +1271,7 @@ function runLaneReport({ repoRoot, lane }) {
 export function runCompatAcceptance({ repoRoot, lane = "all" }: any = {}) {
   const resolvedLane = resolveLane(lane);
   if (resolvedLane === "all") {
-    const lanes = DEFAULT_ACCEPTANCE_LANES.map((entry) =>
+    const lanes = DEFAULT_ACCEPTANCE_LANES.map((entry: any) =>
       runLaneReport({
         repoRoot,
         lane: entry,
@@ -1281,15 +1281,15 @@ export function runCompatAcceptance({ repoRoot, lane = "all" }: any = {}) {
     return {
       kind: "compat-lab-acceptance-suite",
       schema_version: SCHEMA_VERSION,
-      status: lanes.every((entry) => entry.status === "pass") ? "pass" : "fail",
+      status: lanes.every((entry: any) => entry.status === "pass") ? "pass" : "fail",
       acceptance_mode: COMPAT_RUNTIME_FIXTURE_MODE,
       evidence_partition: buildAcceptanceEvidencePartition(),
       support_claim_boundary: supportClaimBoundary,
       lanes,
       summary: {
         total_lanes: lanes.length,
-        passed_lanes: lanes.filter((entry) => entry.status === "pass").length,
-        failed_lanes: lanes.filter((entry) => entry.status !== "pass").length,
+        passed_lanes: lanes.filter((entry: any) => entry.status === "pass").length,
+        failed_lanes: lanes.filter((entry: any) => entry.status !== "pass").length,
       },
     };
   }
@@ -1299,14 +1299,14 @@ export function runCompatAcceptance({ repoRoot, lane = "all" }: any = {}) {
   });
 }
 
-function formatScenarioLine(scenario) {
+function formatScenarioLine(scenario: any) {
   return [
     `- ${scenario.id}: ${scenario.status.toUpperCase()} (${scenario.duration_ms}ms)`,
     `  ${scenario.summary}`,
   ].join("\n");
 }
 
-function formatEvidencePartitionSummary(partition) {
+function formatEvidencePartitionSummary(partition: any) {
   const evidencePartition = partition ?? buildAcceptanceEvidencePartition();
   return [
     evidencePartition.deterministic?.evidence_class ?? COMPAT_RUNTIME_FIXTURE_EVIDENCE_CLASSES.deterministic,
@@ -1315,7 +1315,7 @@ function formatEvidencePartitionSummary(partition) {
   ].join(" + ");
 }
 
-export function formatCompatAcceptanceReportText(report) {
+export function formatCompatAcceptanceReportText(report: any) {
   if (report.kind === "compat-lab-acceptance-suite") {
     const supportClaimBoundary = report.support_claim_boundary ?? buildSupportClaimBoundary();
     const lines = [
@@ -1349,9 +1349,9 @@ export function formatCompatAcceptanceReportText(report) {
     `Time to first success (ms): ${report.time_to_first_success_ms ?? "n/a"}`,
     `Issue codes: ${report.issue_codes.length > 0 ? report.issue_codes.join(", ") : "none"}`,
     "Scenarios:",
-    ...report.scenarios.map((scenario) => formatScenarioLine(scenario)),
+    ...report.scenarios.map((scenario: any) => formatScenarioLine(scenario)),
     "Commands:",
-    ...report.commands.map((command) => `- ${command}`),
+    ...report.commands.map((command: string) => `- ${command}`),
   ];
   return `${lines.join("\n")}\n`;
 }
@@ -1360,10 +1360,10 @@ export function runPhase4Acceptance(options: any = {}) {
   return runCompatAcceptance(options);
 }
 
-export function formatCompatAcceptanceText(report) {
+export function formatCompatAcceptanceText(report: any) {
   return formatCompatAcceptanceReportText(report);
 }
 
-export function formatPhase4AcceptanceText(report) {
+export function formatPhase4AcceptanceText(report: any) {
   return formatCompatAcceptanceReportText(report);
 }

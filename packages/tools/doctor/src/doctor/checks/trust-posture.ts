@@ -2,7 +2,7 @@ import {
   createCheckResult,
 } from "../helpers.ts";
 
-export function normalizePackTrustReceipt(pack) {
+export function normalizePackTrustReceipt(pack: any) {
   return (
     pack.trust_receipt ?? {
       source_class: "local-source",
@@ -22,7 +22,7 @@ export function normalizePackTrustReceipt(pack) {
   );
 }
 
-export function describeTrustPosture(receipt) {
+export function describeTrustPosture(receipt: any) {
   if (receipt.verification_status === "legacy") {
     return "legacy install state missing a trust receipt";
   }
@@ -45,7 +45,7 @@ export function describeTrustPosture(receipt) {
   return receipt.summary ?? "review trust posture";
 }
 
-export function runInstalledTrustPosture(context) {
+export function runInstalledTrustPosture(context: any) {
   if (!context.state || context.state.packs.length === 0) {
     return createCheckResult({
       id: "install_state.trust_posture",
