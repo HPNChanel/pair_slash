@@ -2,13 +2,25 @@
 id: T10-05
 track: T10
 title: Contributor/dev docs refresh (CONTRIBUTING, AGENTS.md sync)
-status: todo
+status: done
 depends_on: [T10-02]
 est_size: S
-claimed_by:
-claimed_at:
-completed_at:
-evidence:
+claimed_by: devin
+claimed_at: 2026-09-29
+completed_at: 2026-09-29
+evidence: >-
+  CONTRIBUTING.md: npm pin corrected 11.7.0 → 11.14.1 (was drifted vs
+  packageManager), Node line now states both tested majors (24.x, 26.x)
+  with the >=24.0.0 floor, typecheck added to the base command block, a
+  compat-surface command block added (test:compat, sync:compat-lab --check,
+  test:release), and a "How work is planned" section links plans/README.md
+  and the node-release-cadence policy doc. AGENTS.md: Node/npm line synced
+  to tested-majors wording, command list gained typecheck/test:compat/
+  sync:compat-lab, and the style section now describes strict ESM
+  TypeScript via type-stripping (erasable-syntax-only) with tests staying
+  .js — matching post-T5-14 reality. CLAUDE.md audited: no toolchain or
+  runtime-surface staleness found (constitution is semantic, not
+  versioned); left untouched per constraint.
 ---
 
 ## Objective

@@ -14,12 +14,24 @@ from this checkout.
 
 ## Start
 
-Use Node `>=24.0.0` and `npm@11.7.0`.
+Use Node 24.x or 26.x — both majors run the full gate suite in CI, and
+`engines` floors at `>=24.0.0`. Use `npm@11.14.1` (see `packageManager` in
+`package.json`). Source is ESM TypeScript executed via Node type-stripping —
+there is no build step, and `npm run typecheck` runs in strict mode.
 
 ```bash
 npm install
 npm run lint
 npm run test
+npm run typecheck
+```
+
+Before opening a PR that touches compatibility surfaces, also run:
+
+```bash
+npm run test:compat
+npm run sync:compat-lab -- --check
+npm run test:release
 ```
 
 Use `doctor` before reporting environment problems:
@@ -29,6 +41,18 @@ npm run pairslash -- doctor --runtime auto --target repo
 ```
 
 Issue intake lives under `.github/ISSUE_TEMPLATE/`.
+
+## How work is planned
+
+The `plans/` directory holds the current upgrade program: a master plan,
+eleven track plans (T0–T10), and per-session task files with strict
+constraints, acceptance gates, and evidence requirements. Read
+[`plans/README.md`](plans/README.md) first, then the task file for the work
+you are picking up — task constraints are binding, and task frontmatter
+records status and evidence.
+
+Node version policy (engine floor, tested majors, release cadence) lives in
+[`docs/maintainers/node-release-cadence.md`](docs/maintainers/node-release-cadence.md).
 
 ## Contributor Lanes
 
