@@ -19,6 +19,10 @@ import {
   normalizeTarget,
 } from "@pairslash/spec-core";
 import {
+  existsSync,
+} from "node:fs";
+import {
+  dirname,
   join,
 } from "node:path";
 import {
@@ -36,6 +40,7 @@ import {
   SYSTEM_PACK_ID,
   applyMutationWithRollback,
   buildPackInstallDir,
+  compileAdvancedPack,
   resolveInstallRootForEmit,
   safeCurrentDigest,
 } from "./helpers.ts";
@@ -77,7 +82,9 @@ export function buildInstallOperations({
           relativePath: ".",
           absolutePath: installDir,
           ownership: "pairslash",
-          reason: "pack is already managed by PairSlash; run update instead of install",
+          reason: compiledPack.advanced === true
+            ? "advanced addon pack is already managed by PairSlash; uninstall then reinstall to change it"
+            : "pack is already managed by PairSlash; run update instead of install",
           reasonCode: REASON_CODE_MANAGED_PACK_REQUIRES_UPDATE,
           remediationActions: [
             buildPreviewUpdateAction({
@@ -399,8 +406,40 @@ export function planInstall({ repoRoot, runtime = "auto", target = "repo", packs
     remediationActions,
   });
 
-  const { selection, errors: selectionErrors } = manifestSelection(repoRoot, packs);
+  const { selection, advancedSelection, errors: selectionErrors } = manifestSelection(repoRoot, packs);
   errors.push(...selectionErrors);
+
+  // Advanced addon packs are installable only by explicit pack id. They bypass
+  // the core IR compile pipeline entirely; gating here keeps their
+  // catalog-set exclusion contract honest.
+  for (const record of advancedSelection ?? []) {
+    const manifest = record.manifest;
+    const packId = manifest?.pack?.id ?? "?";
+    if (manifest?.opt_in_required !== true) {
+      errors.push(`advanced-opt-in-missing:${packId}: advanced packs must declare opt_in_required`);
+    }
+    if (
+      manifest?.install?.core_discovery_enabled !== false ||
+      manifest?.install?.core_pack_set_enabled !== false
+    ) {
+      errors.push(`advanced-catalog-escape:${packId}: advanced packs must stay excluded from discovery and pack sets`);
+    }
+    if (normalizedEmit === "plugin") {
+      errors.push(`emit-unsupported:${packId}:plugin: advanced addon packs emit skill descriptors only`);
+    }
+    const skillSource = join(dirname(record.manifestPath), "SKILL.md");
+    if (!existsSync(skillSource)) {
+      errors.push(`advanced-skill-missing:${packId}: SKILL.md not found beside manifest`);
+    }
+    const declaredRuntime = manifest?.runtime_support?.[normalizedRuntime];
+    if (declaredRuntime === undefined || declaredRuntime === null) {
+      errors.push(`runtime-mismatch:${packId}:${normalizedRuntime}`);
+    } else {
+      warnings.push(
+        `advanced-runtime-status:${packId}:${normalizedRuntime}: declared ${declaredRuntime}; no live evidence tier implied`,
+      );
+    }
+  }
 
   for (const { manifest } of selection) {
     if (!manifest.install_targets.includes(normalizedTarget)) {
@@ -436,13 +475,22 @@ export function planInstall({ repoRoot, runtime = "auto", target = "repo", packs
 
   const compiledPacks =
     errors.length === 0
-      ? compileSelection({
-          repoRoot,
-          runtime: normalizedRuntime,
-          selection,
-          errors,
-          emit: normalizedEmit,
-        })
+      ? [
+          ...compileSelection({
+            repoRoot,
+            runtime: normalizedRuntime,
+            selection,
+            errors,
+            emit: normalizedEmit,
+          }),
+          ...(advancedSelection ?? []).map((record: any) =>
+            compileAdvancedPack({
+              repoRoot,
+              record,
+              runtime: normalizedRuntime,
+            }),
+          ),
+        ]
       : [];
   const candidateTrustReceipts =
     errors.length === 0

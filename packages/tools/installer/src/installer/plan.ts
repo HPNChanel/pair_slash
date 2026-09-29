@@ -8,6 +8,7 @@ import {
 import {
   PREVIEW_OPERATION_KINDS,
   PREVIEW_PLAN_SCHEMA_VERSION,
+  loadAdvancedPackManifestRecords,
   loadPackCatalogRecords,
   loadPackManifestRecords,
   selectPackManifestRecords,
@@ -100,8 +101,33 @@ export function manifestSelection(repoRoot: string, requestedPacks: any = []) {
   for (const record of invalid) {
     errors.push(`manifest-invalid:${record.packId}: ${record.error}`);
   }
-  for (const packId of missing) {
-    errors.push(`pack-not-found: ${packId}`);
+
+  // Explicitly named pack ids may resolve to advanced manifests, which are
+  // never part of set-based or default selection. Advanced records stay in a
+  // separate bucket so core compile/policy pipelines never see them.
+  const advancedSelection: any[] = [];
+  if (requestedPacks.length > 0 && missing.length > 0) {
+    const advancedRecords = loadAdvancedPackManifestRecords(repoRoot);
+    for (const packId of missing) {
+      const record = advancedRecords.find((entry: any) => entry.packId === packId);
+      if (!record) {
+        errors.push(`pack-not-found: ${packId}`);
+        continue;
+      }
+      if (!record.isValid) {
+        errors.push(`manifest-invalid:${record.packId}: ${record.error}`);
+        continue;
+      }
+      advancedSelection.push({
+        packId: record.packId,
+        manifestPath: record.manifestPath,
+        manifest: record.manifest,
+      });
+    }
+  } else {
+    for (const packId of missing) {
+      errors.push(`pack-not-found: ${packId}`);
+    }
   }
 
   return {
@@ -109,6 +135,7 @@ export function manifestSelection(repoRoot: string, requestedPacks: any = []) {
       manifestPath: record.manifestPath,
       manifest: record.manifest,
     })),
+    advancedSelection,
     errors,
   };
 }

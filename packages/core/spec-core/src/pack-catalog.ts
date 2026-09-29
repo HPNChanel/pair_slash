@@ -5,6 +5,7 @@ export {
   buildPackCatalogIndex,
   findPublicCompatibilityLane,
   hasRecordedLiveTestedRange,
+  loadAdvancedPackManifestRecords,
   loadAuthoritativeCatalog,
   loadPackCatalogRecords,
   loadPublicSupportSnapshot,

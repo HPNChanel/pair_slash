@@ -2,13 +2,13 @@
 id: T8-03
 track: T8
 title: retrieval-skill — opt-in descriptor + explicit --pack install path
-status: todo
+status: done
 depends_on: [T8-02]
 est_size: S
-claimed_by:
-claimed_at:
-completed_at:
-evidence:
+claimed_by: devin
+claimed_at: 2026-09-29
+completed_at: 2026-09-29
+evidence: "Explicit install lane wired: manifestSelection resolves missing core ids against loadAdvancedPackManifestRecords into a separate advancedSelection bucket (core compile/trust/lint pipelines untouched). install --packs pairslash-retrieval-addon plans + applies SKILL.md (verbatim from pack dir, so /skills picks it up) + deterministic pairslash.addon.yaml descriptor into the pack skill dir; state/uninstall machinery tracks it unchanged. Gating: opt_in_required required, core_discovery/core_pack_set must stay false, --emit plugin denied, runtime_support declared label surfaced as warning (stays honest: no live-evidence tier). In-place update denied with update-unsupported (advanced packs change via uninstall+reinstall). Manifest status: prototype -> experimental; runtime_support: design-only -> unverified; packs.yaml regenerated (excluded-advanced-surface intact). Negative coverage: default selection, --pack-set/--all equivalence, and named core packs never include the addon; unknown ids still pack-not-found. 3 new installer tests (50/50 green); typecheck/lint/test/test:release green."
 ---
 
 ## Objective

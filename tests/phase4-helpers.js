@@ -130,7 +130,7 @@ function writeCopilotShim(binDir, copilotVersion, ghVersion) {
   );
 }
 
-export function createTempRepo({ packs = ["pairslash-plan"] } = {}) {
+export function createTempRepo({ packs = ["pairslash-plan"], advancedPacks = [] } = {}) {
   const tempRoot = mkdtempSync(join(tmpdir(), "pairslash-phase4-"));
   mkdirSync(join(tempRoot, "packs", "core"), { recursive: true });
   mkdirSync(join(tempRoot, ".pairslash"), { recursive: true });
@@ -141,6 +141,13 @@ export function createTempRepo({ packs = ["pairslash-plan"] } = {}) {
     cpSync(join(repoRoot, "packs", "core", packId), join(tempRoot, "packs", "core", packId), {
       recursive: true,
     });
+  }
+  for (const laneId of advancedPacks) {
+    cpSync(
+      join(repoRoot, "packs", "advanced", laneId),
+      join(tempRoot, "packs", "advanced", laneId),
+      { recursive: true },
+    );
   }
   if (existsSync(join(repoRoot, "docs", "compatibility"))) {
     cpSync(join(repoRoot, "docs", "compatibility"), join(tempRoot, "docs", "compatibility"), {

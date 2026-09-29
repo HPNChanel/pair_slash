@@ -429,6 +429,39 @@ export function readAdvancedManifestRecord(repoRoot: string, manifestPath: strin
   }
 }
 
+export function loadAdvancedPackManifestRecords(repoRoot: string) {
+  return discoverAdvancedManifestPaths(repoRoot)
+    .map((manifestPath: string) => {
+      try {
+        const manifest = readYamlFile(manifestPath);
+        const packId =
+          manifest?.pack?.id ??
+          manifest?.pack_name ??
+          basename(resolve(manifestPath, ".."));
+        const isValid =
+          manifest !== null && typeof manifest === "object" && !Array.isArray(manifest);
+        return {
+          manifestPath,
+          packId,
+          manifest: isValid ? manifest : null,
+          error: isValid ? null : "advanced-manifest-not-an-object",
+          isValid,
+        };
+      } catch (error) {
+        return {
+          manifestPath,
+          packId: basename(resolve(manifestPath, "..")),
+          manifest: null,
+          error: error instanceof Error ? error.message : String(error),
+          isValid: false,
+        };
+      }
+    })
+    .sort((left: any, right: any) =>
+      `${left.packId}${left.manifestPath}`.localeCompare(`${right.packId}${right.manifestPath}`),
+    );
+}
+
 export function loadPackCatalogRecords(repoRoot: string, { includeAdvanced = false }: { includeAdvanced?: boolean } = {}): any[] {
   const publicSupport = loadPublicSupportSnapshot(repoRoot);
   const laneRecordIndex = buildLiveRuntimeLaneRecordIndex(repoRoot, publicSupport);

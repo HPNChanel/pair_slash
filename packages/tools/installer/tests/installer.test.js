@@ -1726,3 +1726,132 @@ test("unsupported emit values fail closed in planInstall", serial, () => {
     fixture.cleanup();
   }
 });
+
+test("advanced addon pack installs only via explicit pack id", serial, () => {
+  const fixture = createTempRepo({ advancedPacks: ["retrieval"] });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
+  try {
+    const envelope = planInstall({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      target: "repo",
+      packs: ["pairslash-retrieval-addon"],
+    });
+    assert.equal(envelope.plan.errors.length, 0);
+    assert.deepEqual(envelope.plan.selected_packs, ["pairslash-retrieval-addon"]);
+    const createPaths = envelope.plan.operations
+      .filter((operation) => operation.kind === "create")
+      .map((operation) => operation.relative_path)
+      .sort();
+    assert.deepEqual(createPaths, ["SKILL.md", "pairslash.addon.yaml"]);
+    const result = applyInstall(envelope);
+    assert.equal(result.kind, "install-result");
+    assert.deepEqual(result.selected_packs, ["pairslash-retrieval-addon"]);
+    const installDir = join(
+      fixture.tempRoot,
+      ".agents",
+      "skills",
+      "pairslash-retrieval-addon",
+    );
+    assert.ok(existsSync(join(installDir, "SKILL.md")));
+    const descriptor = readFileSync(join(installDir, "pairslash.addon.yaml"), "utf8");
+    assert.match(descriptor, /kind: pairslash-advanced-addon/);
+    assert.match(descriptor, /retrieval_enabled: false/);
+    assert.match(descriptor, /retrieval\.hidden_write: deny/);
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("advanced addon pack stays excluded from default and set-based selection", serial, () => {
+  const fixture = createTempRepo({ advancedPacks: ["retrieval"] });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
+  try {
+    const defaultEnv = planInstall({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      target: "repo",
+      packs: [],
+    });
+    assert.ok(!defaultEnv.plan.selected_packs.includes("pairslash-retrieval-addon"));
+
+    const coreEnv = planInstall({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      target: "repo",
+      packs: ["pairslash-plan"],
+    });
+    assert.ok(!coreEnv.plan.selected_packs.includes("pairslash-retrieval-addon"));
+
+    const missingEnv = planInstall({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      target: "repo",
+      packs: ["pairslash-does-not-exist"],
+    });
+    assert.ok(
+      missingEnv.plan.errors.some((error) =>
+        error.includes("pack-not-found: pairslash-does-not-exist"),
+      ),
+    );
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});
+
+test("advanced addon pack refuses plugin emit and in-place update", serial, () => {
+  const fixture = createTempRepo({ advancedPacks: ["retrieval"] });
+  const runtime = installFakeRuntime({ codexVersion: "0.153.4" });
+  try {
+    const pluginEnv = planInstall({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      target: "repo",
+      packs: ["pairslash-retrieval-addon"],
+      emit: "plugin",
+    });
+    assert.ok(
+      pluginEnv.plan.errors.some((error) => error.includes("emit-unsupported")),
+    );
+    assert.equal(pluginEnv.plan.can_apply, false);
+
+    const installEnv = planInstall({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      target: "repo",
+      packs: ["pairslash-retrieval-addon"],
+    });
+    applyInstall(installEnv);
+
+    const updateEnv = planUpdate({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      target: "repo",
+      packs: ["pairslash-retrieval-addon"],
+    });
+    assert.ok(
+      updateEnv.plan.errors.some((error) => error.includes("update-unsupported")),
+    );
+
+    const uninstallEnv = planUninstall({
+      repoRoot: fixture.tempRoot,
+      runtime: "codex_cli",
+      target: "repo",
+      packs: ["pairslash-retrieval-addon"],
+    });
+    applyUninstall(uninstallEnv);
+    const installDir = join(
+      fixture.tempRoot,
+      ".agents",
+      "skills",
+      "pairslash-retrieval-addon",
+    );
+    assert.equal(existsSync(join(installDir, "SKILL.md")), false);
+    assert.equal(existsSync(join(installDir, "pairslash.addon.yaml")), false);
+  } finally {
+    runtime.cleanup();
+    fixture.cleanup();
+  }
+});

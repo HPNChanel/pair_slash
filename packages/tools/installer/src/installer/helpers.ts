@@ -14,8 +14,10 @@ import {
 import {
   ensureDir,
   exists,
+  materializeCompiledFile,
   readFileNormalized,
   sha256,
+  stableYaml,
   writeTextFile,
 } from "@pairslash/spec-core";
 import {
@@ -23,12 +25,15 @@ import {
 } from "node:child_process";
 import {
   lstatSync,
+  readFileSync,
   realpathSync,
   rmSync,
 } from "node:fs";
 import {
+  basename,
   dirname,
   join,
+  relative,
   resolve,
 } from "node:path";
 import {
@@ -86,6 +91,86 @@ export function compilePackForRuntime(options: any) {
   return options.runtime === "codex_cli"
     ? compileCodexPack(options)
     : compileCopilotPack(options);
+}
+
+export const ADVANCED_ADDON_DESCRIPTOR_FILENAME = "pairslash.addon.yaml";
+
+export const ADVANCED_ADDON_COMPILER_VERSION = "advanced-addon-descriptor/1";
+
+// Advanced addon packs do not compile through the runtime IR pipeline. They
+// emit exactly two files into the pack install dir: the pack's own SKILL.md
+// (verbatim, so it surfaces in /skills) and a deterministic addon descriptor
+// recording capability flags, the policy contract, and provenance.
+export function compileAdvancedPack({ repoRoot, record, runtime }: { repoRoot: string; record?: any; runtime?: any }) {
+  const manifest = record.manifest;
+  const packId = record.packId ?? manifest?.pack?.id ?? basename(resolve(record.manifestPath, ".."));
+  const packDir = dirname(record.manifestPath);
+  const skillPath = join(packDir, "SKILL.md");
+  const skillContent = readFileSync(skillPath, "utf8");
+  const manifestRef = relative(resolve(repoRoot), resolve(record.manifestPath)).split("\\").join("/");
+  const descriptorContent = stableYaml({
+    kind: "pairslash-advanced-addon",
+    schema_version: "0.1.0",
+    pack: {
+      id: packId,
+      display_name: manifest?.pack?.display_name ?? packId,
+      summary: manifest?.pack?.summary ?? null,
+      workflow_class: manifest?.pack?.workflow_class ?? null,
+      status: manifest?.pack?.status ?? null,
+    },
+    lane: manifest?.lane ?? null,
+    opt_in_required: manifest?.opt_in_required === true,
+    canonical_entrypoint: manifest?.canonical_entrypoint ?? "/skills",
+    manifest_ref: manifestRef,
+    package: manifest?.package ?? null,
+    capability_flags: manifest?.capability_flags ?? {},
+    policy_contract: manifest?.policy_contract ?? null,
+    runtime_support: manifest?.runtime_support ?? {},
+    install: {
+      requested_runtime: runtime,
+      mode: "explicit-pack-id",
+    },
+  });
+  const baseAsset = {
+    generator: "pairslash_advanced_addon",
+    required: true,
+    owner: "pairslash",
+    uninstall_behavior: "remove_if_unmodified",
+    generated: true,
+    override_eligible: false,
+    write_authority_guarded: false,
+    runtime_selector: "shared",
+  };
+  const files = [
+    materializeCompiledFile({
+      logicalAsset: {
+        ...baseAsset,
+        asset_id: `${packId}/SKILL.md`,
+        asset_kind: "skill_markdown",
+        install_surface: "canonical_skill",
+      },
+      relativePath: "SKILL.md",
+      content: skillContent,
+    }),
+    materializeCompiledFile({
+      logicalAsset: {
+        ...baseAsset,
+        asset_id: `${packId}/${ADVANCED_ADDON_DESCRIPTOR_FILENAME}`,
+        asset_kind: "runtime_manifest",
+        install_surface: "metadata",
+      },
+      relativePath: ADVANCED_ADDON_DESCRIPTOR_FILENAME,
+      content: descriptorContent,
+    }),
+  ];
+  return {
+    pack_id: packId,
+    version: manifest?.schema_version ?? "0.1.0",
+    manifest_digest: sha256(readFileSync(record.manifestPath, "utf8")),
+    compiler_version: ADVANCED_ADDON_COMPILER_VERSION,
+    advanced: true,
+    files,
+  };
 }
 
 export function currentDigest(filePath: string) {

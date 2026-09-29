@@ -356,7 +356,7 @@ export function resolveUpdateSelection({
   }
 
   if (!to) {
-    const { selection, errors: selectionErrors } = manifestSelection(repoRoot, selectedPackIds);
+    const { selection, advancedSelection, errors: selectionErrors } = manifestSelection(repoRoot, selectedPackIds);
     errors.push(
       ...selectionErrors.map((error: any) =>
         error.startsWith("pack-not-found:")
@@ -364,6 +364,12 @@ export function resolveUpdateSelection({
           : error,
       ),
     );
+    for (const record of advancedSelection ?? []) {
+      const packId = record.manifest?.pack?.id ?? "?";
+      errors.push(
+        `update-unsupported:${packId}: advanced addon packs are changed by uninstall + install, never in-place update`,
+      );
+    }
     return {
       selectedPackIds,
       selection,

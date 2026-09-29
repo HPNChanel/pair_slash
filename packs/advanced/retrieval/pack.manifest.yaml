@@ -6,7 +6,7 @@ pack:
   summary: Opt-in retrieval lane for supplemental local evidence lookup.
   workflow_class: read-oriented
   phase: 11
-  status: prototype
+  status: experimental
 canonical_entrypoint: /skills
 lane: retrieval
 opt_in_required: true
@@ -36,8 +36,8 @@ policy_contract:
   no_implicit_promote: true
   global_memory_precedence: global-wins-on-conflict
 runtime_support:
-  codex_cli: design-only
-  copilot_cli: design-only
+  codex_cli: unverified
+  copilot_cli: unverified
 docs_refs:
   contract: contract.md
   usage: docs-private/phase-11/retrieval-addon-usage.md
