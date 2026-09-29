@@ -21,13 +21,28 @@ jobs:
         include:
           - os: macos-latest
             lane: macos
-            artifact: compat-lab-acceptance-macos.json
+            node-version: "24"
+            artifact: compat-lab-acceptance-macos-node24.json
+          - os: macos-latest
+            lane: macos
+            node-version: "26"
+            artifact: compat-lab-acceptance-macos-node26.json
           - os: ubuntu-latest
             lane: linux
-            artifact: compat-lab-acceptance-linux.json
+            node-version: "24"
+            artifact: compat-lab-acceptance-linux-node24.json
+          - os: ubuntu-latest
+            lane: linux
+            node-version: "26"
+            artifact: compat-lab-acceptance-linux-node26.json
           - os: windows-latest
             lane: windows-prep
-            artifact: compat-lab-acceptance-windows-prep.json
+            node-version: "24"
+            artifact: compat-lab-acceptance-windows-prep-node24.json
+          - os: windows-latest
+            lane: windows-prep
+            node-version: "26"
+            artifact: compat-lab-acceptance-windows-prep-node26.json
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
@@ -36,7 +51,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "24"
+          node-version: ${{ matrix.node-version }}
           cache: "npm"
 
       - name: Install dependencies

@@ -2,13 +2,25 @@
 id: T10-01
 track: T10
 title: Node 26 CI matrix entry + compatibility verification
-status: todo
+status: done
 depends_on: []
 est_size: M
-claimed_by:
-claimed_at:
-completed_at:
-evidence:
+claimed_by: devin
+claimed_at: 2026-09-29
+completed_at: 2026-09-29
+evidence: >-
+  Real Node 26.10.0 verified locally (nvm-windows install, PATH-pinned run):
+  node packages/tools/cli/src/bin/pairslash.ts runs (arg parsing works,
+  type-stripping clean, no warnings); npm run lint, npm run typecheck
+  (strict), npm test (full suite), npm run test:compat, and npm run
+  test:release all exit 0 on v26.10.0 / npm 11.19.1. Zero incompatibilities
+  observed — no type-stripping warnings, no node: API breaks, no dependency
+  issues. CI: repo-checks quick-checks and release-gates now matrix
+  node-version ["24","26"]; phase4-acceptance and compat-lab-nightly lanes
+  run each OS lane on both majors (artifacts suffixed -node24/-node26);
+  release-trust-candidate matrix ["24","26"] (LTS-bound major included) with
+  per-node artifact names. engines and @types/node untouched per scope —
+  T10-02 owns declaration changes.
 ---
 
 ## Objective
