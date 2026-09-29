@@ -1,5 +1,5 @@
 {
-  "//": "PairSlash root TypeScript configuration. Phase M2: all packages converted to .ts (Node 24 type-stripping at runtime, no build step). Phase M3: strictness is progressively tightened via a dual-config mechanism — packages graduate from this relaxed config into tsconfig.strict.json as type annotations are completed. When all packages have graduated, strict flags move here and tsconfig.strict.json is deleted. JS/TS coexistence is permitted via allowJs; only .ts roots are included so .js files stay unchecked.",
+  "//": "PairSlash root TypeScript configuration. Phase M2: all packages converted to .ts (Node 24 type-stripping at runtime, no build step). Phase M3 complete: all packages run under strict mode — this is now the single strict config (the dual-config strict overlay was retired when the strict error count reached zero). JS/TS coexistence is permitted via allowJs; only .ts roots are included so .js files stay unchecked.",
   "compilerOptions": {
     "target": "es2023",
     "lib": ["es2023"],
@@ -13,9 +13,9 @@
     "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
     "verbatimModuleSyntax": false,
-    "strict": false,
-    "noImplicitAny": false,
-    "strictNullChecks": false,
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
     "noUnusedLocals": true,

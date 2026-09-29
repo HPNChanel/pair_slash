@@ -79,7 +79,7 @@ Every task file carries these by reference. They are restated here so no executo
 
 - G1. `npm run lint` MUST be green after the change.
 - G2. `npm run test` MUST be green.
-- G3. `npm run typecheck` MUST be green (and `npm run typecheck:strict` MUST NOT regress its error count once T5 begins).
+- G3. `npm run typecheck` MUST be green (post-T5 it runs the single strict config — strict errors are hard failures, not tolerated debt).
 - G4. `npm run sync:compat-lab -- --check` MUST be green whenever the change touches `runtime-surface-matrix.yaml`, lane records, manifests, or any generated compatibility surface.
 - G5. `npm run test:release` MUST be green whenever the change touches release-trust, installer, doctor, or pack manifests.
 - G6. Existing tests are the contract: a refactor task MUST NOT edit tests to force a pass (fix code instead); a behavior-change task MUST add/adjust tests first (failing test → fix → green).

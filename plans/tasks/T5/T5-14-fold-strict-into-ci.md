@@ -2,13 +2,17 @@
 id: T5-14
 track: T5
 title: Flip root tsconfig strict, delete tsconfig.strict.json, wire CI + evidence
-status: todo
+status: done
 depends_on: [T5-13]
 est_size: S
 claimed_by:
 claimed_at:
-completed_at:
+completed_at: 2026-09-session
 evidence:
+  strict_total: "npm run typecheck = strict pass, 0 errors (single config after fold)"
+  trajectory: "3,331 baseline (M3 plan) -> 778 spec-core schemas -> 0 after T5-05..T5-13 batches; repo-total 0 at flip"
+  config_diff: "tsconfig.json strict/noImplicitAny/strictNullChecks true; tsconfig.strict.json deleted; run-typecheck.mjs single-pass strict; typecheck:strict script removed; CI gate npm run typecheck already covers strict"
+  gates: "typecheck green (strict); lint 0 errors; npm test green; test:release pass"
 ---
 
 ## Objective

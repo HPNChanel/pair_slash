@@ -1,6 +1,6 @@
 # Track T5 — Finish M3 strict graduation + mega-file decomposition
 
-**Status:** Approved | **Priority:** P1 | **Depends on:** T0
+**Status:** Done | **Priority:** P1 | **Depends on:** T0
 **Goal:** Complete the in-flight M3 work: decompose the four remaining mega-files, clear the ~3,300 strict TypeScript errors in measured batches, and fold `strict` into the root tsconfig with CI enforcement.
 
 ## Context

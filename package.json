@@ -42,8 +42,7 @@
     "test:phase4": "npm run test:compat",
     "test:phase4:acceptance": "npm run test:compat:acceptance",
     "test:phase4:release": "npm run test:compat:release",
-    "typecheck": "node scripts/run-typecheck.mjs",
-    "typecheck:strict": "node scripts/run-typecheck.mjs --strict"
+    "typecheck": "node scripts/run-typecheck.mjs"
   },
   "dependencies": {
     "valibot": "^1.5.0",
