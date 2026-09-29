@@ -2,13 +2,33 @@
 id: T8-01
 track: T8
 title: retrieval-engine → TypeScript + policy gating + non-authoritative envelopes
-status: todo
+status: done
 depends_on: []
 est_size: M
-claimed_by:
-claimed_at:
-completed_at:
-evidence:
+claimed_by: devin
+claimed_at: 2026-09-29
+completed_at: 2026-09-29
+evidence: >-
+  Migrated src/index.js → src/index.ts strict-clean (typed
+  RetrievalCapabilityFlags/RetrievalSource/RetrievalReport/etc.; no as any,
+  no ts-ignore). Export surface preserved: RETRIEVAL_CAPABILITY_DEFAULTS,
+  RETRIEVAL_POLICY_CONTRACT, runRetrievalQuery,
+  resolveRetrievedFactAgainstGlobalMemory — tests/phase11 import updated to
+  .ts. Policy gating layered: capability-flag gate per source (unchanged
+  codes) + write-shape deny via RETRIEVAL_POLICY_CONTRACT decisions
+  (RETRIEVAL-HIDDEN-WRITE / RETRIEVAL-PROMOTE-DENIED /
+  RETRIEVAL-INDEX-REQUIRES-PREVIEW) + when a request carries runtime/target
+  a canonical read-oriented contract envelope is built and evaluated
+  through @pairslash/policy-engine evaluatePolicy (fail-closed: contract
+  errors deny). Envelopes keep label:retrieved / authoritative:false /
+  truth_tier:supplemental. 8 package tests added
+  (write-deny, promote-deny, hidden-write deny, tier labeling, byte-identical
+  read-only proof, external deny, engine verdict layering, global-wins
+  conflict); registered in run-compat-lab-tests.mjs. package.json gained
+  file: deps on policy-engine + spec-core and main → ./src/index.ts;
+  pack.manifest.yaml entrypoint updated. Workspace inclusion still deferred
+  per task (package stays outside root workspaces until slices land). Gates:
+  typecheck(strict) lint test test:release all green.
 ---
 
 ## Objective

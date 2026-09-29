@@ -16,7 +16,7 @@ install:
   workspace_enabled: false
 package:
   name: "@pairslash/retrieval-engine-advanced"
-  entrypoint: packages/advanced/retrieval-engine/src/index.js
+  entrypoint: packages/advanced/retrieval-engine/src/index.ts
 capability_flags:
   retrieval_enabled: false
   retrieval_repo_local: true

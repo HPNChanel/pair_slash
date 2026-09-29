@@ -17,7 +17,7 @@ import {
   RETRIEVAL_POLICY_CONTRACT,
   resolveRetrievedFactAgainstGlobalMemory,
   runRetrievalQuery,
-} from "../../packages/advanced/retrieval-engine/src/index.js";
+} from "../../packages/advanced/retrieval-engine/src/index.ts";
 import { createTempRepo, repoRoot } from "../phase4-helpers.js";
 
 const serial = { concurrency: false };
