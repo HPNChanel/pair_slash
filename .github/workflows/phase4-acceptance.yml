@@ -1,7 +1,25 @@
 name: compat-lab-acceptance
 
+# Deterministic compat-lab lanes only — fake/shim fixtures, no live runtime
+# calls. This is deterministic-class evidence; it does not promote runtime
+# support lanes (that requires human-captured live records per
+# docs/compatibility/runtime-verification.md).
+#
+# Cost decision (T10-03): the 3-OS x 2-Node matrix runs on every PR except
+# plans/-only changes (negative filter below — tests read docs/,
+# docs-private/, trust/, .pairslash/, and pack manifests, so an allowlist
+# would risk silent coverage loss), and unfiltered on main pushes + manual
+# dispatch. The unfiltered repo-checks lane still runs lint/test/typecheck
+# on every PR, so nothing escapes the base gate.
+
 on:
   pull_request:
+    # Run on every PR except ones that only touch planning docs — the
+    # include-everything/exclude-plans shape means new truth surfaces can
+    # never silently skip coverage by missing from an allowlist.
+    paths:
+      - "**"
+      - "!plans/**"
   push:
     branches: [ main, master ]
   workflow_dispatch:

@@ -2,13 +2,25 @@
 id: T10-03
 track: T10
 title: Cross-OS PR acceptance lanes (macOS/Windows deterministic)
-status: todo
+status: done
 depends_on: []
 est_size: M
-claimed_by:
-claimed_at:
-completed_at:
-evidence:
+claimed_by: devin
+claimed_at: 2026-09-29
+completed_at: 2026-09-29
+evidence: >-
+  Current state verified: phase4-acceptance already ran a 3-OS matrix on
+  pull_request before this task (macos/ubuntu/windows lanes), and T10-01
+  extended it to node 24+26 — real-OS PR coverage exists. Windows lane
+  green locally (full npm test + acceptance run on this Windows host).
+  Cost decision recorded in the workflow comment: PR trigger now uses a
+  negative path filter (everything except plans/-only changes) rather than
+  an allowlist, because tests legitimately read docs/, docs-private/,
+  trust/, .pairslash/, and pack manifests — an allowlist would silently
+  drop coverage for future truth surfaces. Push-to-main and
+  workflow_dispatch remain unfiltered. Deterministic-only class documented
+  in the workflow header: these lanes are fake/shim evidence and do not
+  promote runtime support.
 ---
 
 ## Objective
