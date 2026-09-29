@@ -1,0 +1,11 @@
+{
+  "name": "@pairslash/retrieval-index-advanced",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "dependencies": {
+    "@pairslash/spec-core": "file:../../core/spec-core",
+    "yaml": "^2.9.1"
+  }
+}

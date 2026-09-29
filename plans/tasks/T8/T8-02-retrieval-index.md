@@ -2,13 +2,13 @@
 id: T8-02
 track: T8
 title: retrieval-index — deterministic indexer over .pairslash read surfaces
-status: todo
+status: done
 depends_on: [T8-01]
 est_size: M
-claimed_by:
-claimed_at:
-completed_at:
-evidence:
+claimed_by: devin
+claimed_at: 2026-09-29
+completed_at: 2026-09-29
+evidence: "Implemented packages/advanced/retrieval-index in strict TS. Index location decision: .pairslash/observability/indexes/retrieval/ — collision check confirmed observability/indexes/ is the trace session-index dir (sess-*.json, packages/tools/trace/src/store.ts); retrieval/ subdir is namespace-disjoint. Determinism: sorted sources/files + stableJson, no wall-clock timestamps; byte-identical across runs (sha256 assert). Atomic write tmp+rename; writes confined to index dir, repo-root escape throws fail-closed. Staleness: assessIndexStaleness reports missing/stale/fresh with per-file reasons (changed/added/removed). 6 package tests, registered in run-compat-lab-tests.mjs. Gates: typecheck/lint/test/test:release green."
 ---
 
 ## Objective
