@@ -1,6 +1,6 @@
 # Track T10 — Toolchain modernization
 
-**Status:** Approved | **Priority:** P2 | **Depends on:** T0
+**Status:** Done | **Priority:** P2 | **Depends on:** T0
 **Goal:** Align the toolchain with the Oct-2026 reality: Node 26 Active LTS window, Node 24 maintenance, current npm, real cross-OS CI lanes, and refreshed supply-chain gates.
 
 ## Context

@@ -1,6 +1,6 @@
 # Track T6 — Release unblocks (R1–R3 merged)
 
-**Status:** Approved | **Priority:** P1 (verdict movement) | **Depends on:** T0, T1
+**Status:** Blocked (human-in-loop) | **Priority:** P1 (verdict movement) | **Depends on:** T0, T1
 **Goal:** Move the three standing `NO-GO`/stale verdicts: record the first official Phase-19 benchmark round (R1), complete one protected signed `release-trust-candidate` run (R2), and capture canonical `/skills` live evidence on at least one lane (R3). Several steps are **human-in-the-loop** — a blocked state with notes is acceptable and honest.
 
 ## Context
