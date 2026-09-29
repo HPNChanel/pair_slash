@@ -2,13 +2,13 @@
 id: T8-05
 track: T8
 title: delegation-engine — authority-subset checks + non-authoritative envelopes
-status: todo
+status: done
 depends_on: []
 est_size: M
-claimed_by:
-claimed_at:
-completed_at:
-evidence:
+claimed_by: devin
+claimed_at: 2026-09-29
+completed_at: 2026-09-29
+evidence: packages/advanced/delegation-engine tests 10/10 (no authoritative-write exports/fs writes, subset-violation deny, canonical taxonomy deny, authority-source required, memory_write_global undelegatable, pack-authority allowlist gating, non-authoritative envelope + write_authority_route, determinism, blocked-abort); phase11 delegation-lane 10/10; typecheck/lint/npm test/test:release green
 ---
 
 ## Objective
@@ -46,9 +46,9 @@ Implement `packages/advanced/delegation-engine`: structured delegation envelopes
 
 ## Acceptance gates
 
-- [ ] Subset-violation deny tests pass
-- [ ] No authoritative-write path exists (import-level test)
-- [ ] Gates green
+- [x] Subset-violation deny tests pass
+- [x] No authoritative-write path exists (import-level test)
+- [x] Gates green
 
 ## Evidence to record
 

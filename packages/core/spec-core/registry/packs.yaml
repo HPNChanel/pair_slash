@@ -15,7 +15,7 @@ excluded_repo_manifests:
     metadata_file: packs/advanced/delegation/pack.manifest.yaml
     notes:
       - Advanced packs are intentionally outside canonical core discovery/install surfaces.
-    status: scaffold-only
+    status: experimental
     support_scope: excluded-advanced-surface
   - catalog_scope: advanced
     catalog_status: excluded

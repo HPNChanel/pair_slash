@@ -27,6 +27,7 @@ const testFiles = [
   "packages/advanced/retrieval-engine/tests/retrieval-engine.test.js",
   "packages/advanced/retrieval-index/tests/retrieval-index.test.js",
   "packages/advanced/ci-engine/tests/ci-engine.test.js",
+  "packages/advanced/delegation-engine/tests/delegation-engine.test.js",
   "tests/repo-normalization.test.js",
   "tests/release-ship-readiness.test.js",
   "tests/truth-governance.test.js",

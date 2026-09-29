@@ -1,9 +1,15 @@
 import {
   DELEGATION_CAPABILITY_DEFAULTS,
   resolveDelegationCapabilities,
-} from "./capabilities.js";
+} from "./capabilities.ts";
+import type { DelegationCapabilities } from "./capabilities.ts";
+import {
+  evaluateAuthoritySubset,
+  loadDelegationPackAuthority,
+} from "./authority.ts";
+import type { PackAuthoritySnapshot } from "./authority.ts";
 
-const VERDICT_PRECEDENCE = Object.freeze({
+const VERDICT_PRECEDENCE: Record<string, number> = Object.freeze({
   allow: 0,
   ask: 1,
   "require-preview": 2,
@@ -90,19 +96,68 @@ const SUPPORTED_WORKER_CLASSES = Object.freeze([
   DELEGATION_WORKER_CLASSES.WRITE_CANDIDATE,
 ]);
 
-function normalizePath(value) {
+export type DelegationVerdict = "allow" | "ask" | "require-preview" | "deny";
+
+export interface DelegationPolicyReason {
+  code: string;
+  verdict: DelegationVerdict;
+  message: string;
+}
+
+export interface DelegationPolicyVerdict {
+  kind: "delegation-policy-verdict";
+  schema_version: "0.1.0";
+  action: string;
+  overall_verdict: DelegationVerdict;
+  reasons: DelegationPolicyReason[];
+  capability_flags: DelegationCapabilities;
+  workflow_id: string | null;
+  workflow_class: string | null;
+  requested_worker_class: string | null;
+  caller_pack_id: string | null;
+  authority_checked: boolean;
+  max_depth: 1;
+  max_fan_out: 1;
+  no_chain_spawning: boolean;
+  no_unbounded_fan_out: true;
+  no_global_memory_write: boolean;
+  no_new_front_door: boolean;
+}
+
+export interface DelegationPolicyInput {
+  action?: string;
+  capabilities?: Partial<Record<string, unknown>>;
+  explicitInvocation?: boolean;
+  workflowId?: string | null;
+  workflowClass?: string | null;
+  requestedWorkerClass?: string | null;
+  requestedDepth?: number;
+  requestedFanOut?: number;
+  callerPackId?: string | null;
+  callerCapabilities?: unknown;
+  delegatedCapabilities?: unknown;
+  callerAllowedPaths?: unknown;
+  workerAllowedPaths?: unknown;
+  packAuthority?: PackAuthoritySnapshot | null;
+  repoRoot?: string | null;
+}
+
+function normalizePath(value: string): string {
   return value.replace(/\\/g, "/").replace(/\/+$/, "");
 }
 
-function normalizeStringList(values = []) {
+function normalizeStringList(values: unknown): string[] {
+  if (!Array.isArray(values)) {
+    return [];
+  }
   return [...new Set(
     values
-      .filter((value) => typeof value === "string" && value.trim() !== "")
+      .filter((value): value is string => typeof value === "string" && value.trim() !== "")
       .map((value) => value.trim()),
   )].sort((left, right) => left.localeCompare(right));
 }
 
-function workerClassToAction(workerClass) {
+function workerClassToAction(workerClass: string | null): string {
   if (workerClass === DELEGATION_WORKER_CLASSES.READ_ONLY) {
     return DELEGATION_POLICY_ACTIONS.READ_SCOPE;
   }
@@ -118,11 +173,11 @@ function workerClassToAction(workerClass) {
   return DELEGATION_POLICY_ACTIONS.CREATE_TASK;
 }
 
-function pickOverallVerdict(reasons = []) {
+function pickOverallVerdict(reasons: DelegationPolicyReason[]): DelegationVerdict {
   if (reasons.length === 0) {
     return "allow";
   }
-  return reasons.reduce((current, reason) => {
+  return reasons.reduce<DelegationVerdict>((current, reason) => {
     if (VERDICT_PRECEDENCE[reason.verdict] > VERDICT_PRECEDENCE[current]) {
       return reason.verdict;
     }
@@ -130,17 +185,17 @@ function pickOverallVerdict(reasons = []) {
   }, "allow");
 }
 
-function buildReason(code, verdict, message) {
+function buildReason(code: string, verdict: DelegationVerdict, message: string): DelegationPolicyReason {
   return { code, verdict, message };
 }
 
-function isSubpath(pathValue, rootValue) {
+function isSubpath(pathValue: string, rootValue: string): boolean {
   const normalizedPath = normalizePath(pathValue).toLowerCase();
   const normalizedRoot = normalizePath(rootValue).toLowerCase();
   return normalizedPath === normalizedRoot || normalizedPath.startsWith(`${normalizedRoot}/`);
 }
 
-function exceedsCallerPaths(callerAllowedPaths = [], workerAllowedPaths = []) {
+function exceedsCallerPaths(callerAllowedPaths: string[], workerAllowedPaths: string[]): boolean {
   if (workerAllowedPaths.length === 0) {
     return false;
   }
@@ -160,18 +215,19 @@ export function evaluateDelegationPolicy({
   requestedWorkerClass = null,
   requestedDepth = 1,
   requestedFanOut = 1,
+  callerPackId = null,
   callerCapabilities = [],
   delegatedCapabilities = [],
   callerAllowedPaths = [],
   workerAllowedPaths = [],
-} = {}) {
+  packAuthority = null,
+  repoRoot = null,
+}: DelegationPolicyInput = {}): DelegationPolicyVerdict {
   const resolvedCapabilities = resolveDelegationCapabilities(capabilities);
-  const reasons = [];
+  const reasons: DelegationPolicyReason[] = [];
   const resolvedAction = typeof action === "string" && action.trim() !== ""
     ? action
     : workerClassToAction(requestedWorkerClass);
-  const normalizedCallerCapabilities = normalizeStringList(callerCapabilities);
-  const normalizedDelegatedCapabilities = normalizeStringList(delegatedCapabilities);
   const normalizedCallerPaths = normalizeStringList(callerAllowedPaths);
   const normalizedWorkerPaths = normalizeStringList(workerAllowedPaths);
 
@@ -215,7 +271,7 @@ export function evaluateDelegationPolicy({
     );
   }
 
-  if (SAFE_MVP_BLOCKED_WORKFLOWS.includes(workflowId)) {
+  if (SAFE_MVP_BLOCKED_WORKFLOWS.includes(workflowId ?? "")) {
     reasons.push(
       buildReason(
         "DELEGATION-WORKFLOW-BLOCKED",
@@ -273,7 +329,7 @@ export function evaluateDelegationPolicy({
     );
   }
 
-  if (FORBIDDEN_WORKER_CLASSES.includes(requestedWorkerClass)) {
+  if (FORBIDDEN_WORKER_CLASSES.includes(requestedWorkerClass ?? "")) {
     reasons.push(
       buildReason(
         "DELEGATION-FORBIDDEN-WORKER-CLASS",
@@ -285,7 +341,7 @@ export function evaluateDelegationPolicy({
 
   if (
     requestedWorkerClass &&
-    !SUPPORTED_WORKER_CLASSES.includes(requestedWorkerClass) &&
+    !(SUPPORTED_WORKER_CLASSES as readonly string[]).includes(requestedWorkerClass) &&
     !FORBIDDEN_WORKER_CLASSES.includes(requestedWorkerClass)
   ) {
     reasons.push(
@@ -297,17 +353,32 @@ export function evaluateDelegationPolicy({
     );
   }
 
-  if (
-    normalizedDelegatedCapabilities.some((capability) => !normalizedCallerCapabilities.includes(capability))
-  ) {
-    reasons.push(
-      buildReason(
-        "DELEGATION-CAPABILITY-ESCALATION-DENIED",
-        "deny",
-        "delegated capability grant exceeds caller authority",
-      ),
-    );
+  let authoritySnapshot = packAuthority;
+  let authorityChecked = packAuthority !== null;
+  if (authoritySnapshot === null && typeof repoRoot === "string" && repoRoot.trim() !== "") {
+    try {
+      authoritySnapshot = loadDelegationPackAuthority(repoRoot);
+      authorityChecked = true;
+    } catch (error) {
+      reasons.push(
+        buildReason(
+          "DELEGATION-AUTHORITY-LOAD-FAILED",
+          "deny",
+          `pack-authority snapshot could not be loaded: ${error instanceof Error ? error.message : String(error)}`,
+        ),
+      );
+    }
   }
+  const authorityReasons = evaluateAuthoritySubset({
+    callerPackId,
+    callerCapabilities,
+    delegatedCapabilities,
+    packAuthority: authoritySnapshot,
+  });
+  if (authorityReasons.length > 0) {
+    authorityChecked = true;
+  }
+  reasons.push(...authorityReasons);
 
   if (exceedsCallerPaths(normalizedCallerPaths, normalizedWorkerPaths)) {
     reasons.push(
@@ -420,7 +491,7 @@ export function evaluateDelegationPolicy({
     );
   }
 
-  const baseVerdict = DELEGATION_POLICY_CONTRACT.decisions[resolvedAction] ?? "deny";
+  const baseVerdict = (DELEGATION_POLICY_CONTRACT.decisions as Record<string, DelegationVerdict>)[resolvedAction] ?? "deny";
   reasons.push(
     buildReason(
       "DELEGATION-POLICY-BASELINE",
@@ -439,6 +510,8 @@ export function evaluateDelegationPolicy({
     workflow_id: workflowId,
     workflow_class: workflowClass,
     requested_worker_class: requestedWorkerClass,
+    caller_pack_id: callerPackId,
+    authority_checked: authorityChecked,
     max_depth: 1,
     max_fan_out: 1,
     no_chain_spawning: resolvedCapabilities.delegation_no_chain_spawning,

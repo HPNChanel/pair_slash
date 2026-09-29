@@ -7,9 +7,13 @@ export const DELEGATION_CAPABILITY_FLAGS = Object.freeze([
   "delegation_no_chain_spawning",
   "delegation_no_global_memory_write",
   "delegation_no_new_front_door",
-]);
+] as const);
 
-export const DELEGATION_CAPABILITY_DEFAULTS = Object.freeze({
+export type DelegationCapabilityFlag = (typeof DELEGATION_CAPABILITY_FLAGS)[number];
+
+export type DelegationCapabilities = Record<DelegationCapabilityFlag, boolean>;
+
+export const DELEGATION_CAPABILITY_DEFAULTS: DelegationCapabilities = Object.freeze({
   delegation_lane_enabled: false,
   delegation_read_only_workers: true,
   delegation_analysis_workers: true,
@@ -20,7 +24,9 @@ export const DELEGATION_CAPABILITY_DEFAULTS = Object.freeze({
   delegation_no_new_front_door: true,
 });
 
-export function resolveDelegationCapabilities(input = {}) {
+export function resolveDelegationCapabilities(
+  input: Partial<Record<DelegationCapabilityFlag, unknown>> = {},
+): DelegationCapabilities {
   const resolved = { ...DELEGATION_CAPABILITY_DEFAULTS };
   for (const capability of DELEGATION_CAPABILITY_FLAGS) {
     if (capability in input) {

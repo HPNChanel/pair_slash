@@ -6,7 +6,7 @@ pack:
   summary: Explicit bounded delegation scaffold with no hidden chain spawning.
   workflow_class: read-oriented
   phase: 11
-  status: scaffold-only
+  status: experimental
 canonical_entrypoint: /skills
 lane: delegation
 opt_in_required: true
@@ -16,7 +16,7 @@ install:
   workspace_enabled: false
 package:
   name: "@pairslash/delegation-engine-advanced"
-  entrypoint: packages/advanced/delegation-engine/src/index.js
+  entrypoint: packages/advanced/delegation-engine/src/index.ts
 capability_flags:
   delegation_lane_enabled: false
   delegation_read_only_workers: true
@@ -45,8 +45,8 @@ policy_contract:
   no_new_front_door: true
   max_fan_out: 1
 runtime_support:
-  codex_cli: design-only
-  copilot_cli: design-only
+  codex_cli: unverified
+  copilot_cli: unverified
 docs_refs:
   contract: contract.md
   usage: docs-private/phase-11/delegation-addon-usage.md

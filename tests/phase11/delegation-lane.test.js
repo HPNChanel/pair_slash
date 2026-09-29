@@ -17,7 +17,7 @@ import {
   DELEGATION_WORKER_CLASSES,
   evaluateDelegationPolicy,
   runDelegationScaffold,
-} from "../../packages/advanced/delegation-engine/src/index.js";
+} from "../../packages/advanced/delegation-engine/src/index.ts";
 import { createTempRepo, repoRoot } from "../phase4-helpers.js";
 
 const serial = { concurrency: false };
