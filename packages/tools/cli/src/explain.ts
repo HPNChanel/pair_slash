@@ -23,12 +23,12 @@ import {
   resolveSelectedPackRecord,
 } from "./internals.ts";
 
-export function buildMemoryReadArtifacts(resolution) {
-  const collectLayerPaths = (...layerIds) =>
+export function buildMemoryReadArtifacts(resolution: any) {
+  const collectLayerPaths = (...layerIds: any[]) =>
     (resolution.layers ?? [])
-      .filter((layer) => layerIds.includes(layer.layer))
-      .flatMap((layer) => layer.resolved_paths ?? [])
-      .sort((left, right) => left.localeCompare(right));
+      .filter((layer: any) => layerIds.includes(layer.layer))
+      .flatMap((layer: any) => layer.resolved_paths ?? [])
+      .sort((left: any, right: any) => left.localeCompare(right));
   return {
     global_project_memory: collectLayerPaths("global-project-memory"),
     task_memory: collectLayerPaths("task-memory"),
@@ -39,7 +39,7 @@ export function buildMemoryReadArtifacts(resolution) {
   };
 }
 
-export function buildContextExplanationArtifact({ repoRoot, options }) {
+export function buildContextExplanationArtifact({ repoRoot, options }: { repoRoot: string; options?: any }) {
   const { record } = resolveSelectedPackRecord(repoRoot, options.packs);
   const packId = record?.packId ?? null;
   const report = runDoctor({
@@ -90,7 +90,7 @@ export function buildContextExplanationArtifact({ repoRoot, options }) {
   return artifact;
 }
 
-export function buildPolicyExplanationArtifact({ repoRoot, options }) {
+export function buildPolicyExplanationArtifact({ repoRoot, options }: { repoRoot: string; options?: any }) {
   const { record } = resolveSelectedPackRecord(repoRoot, options.packs);
   if (!record) {
     throw new Error("policy-explain-requires-pack: no valid pack manifest found");
@@ -172,7 +172,7 @@ export function buildPolicyExplanationArtifact({ repoRoot, options }) {
   };
 }
 
-export function tryBuildPolicyExplanationArtifact({ repoRoot, options }) {
+export function tryBuildPolicyExplanationArtifact({ repoRoot, options }: { repoRoot: string; options?: any }) {
   try {
     return buildPolicyExplanationArtifact({ repoRoot, options });
   } catch {
@@ -180,7 +180,7 @@ export function tryBuildPolicyExplanationArtifact({ repoRoot, options }) {
   }
 }
 
-export function emitRuntimeHostProbed(traceContext, probe) {
+export function emitRuntimeHostProbed(traceContext: any, probe: any) {
   emitTraceEvent(traceContext, {
     eventType: "runtime.host_probed",
     outcome: probe.available ? "pass" : "failed",

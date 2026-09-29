@@ -42,7 +42,7 @@ function buildBlockingError({
   contractFields = [],
   runtimeFactors = [],
   details = null,
-}) {
+}: { code?: string; message?: string; contractFields?: any; runtimeFactors?: any; details?: any }) {
   return {
     code,
     message,
@@ -52,15 +52,15 @@ function buildBlockingError({
   };
 }
 
-function getPackId({ manifest, contract }) {
+function getPackId({ manifest, contract }: { manifest?: any; contract?: any }) {
   return contract?.source?.pack_id ?? manifest?.pack_name ?? null;
 }
 
-function getCanonicalEntry({ manifest, contract }) {
+function getCanonicalEntry({ manifest, contract }: { manifest?: any; contract?: any }) {
   return contract?.canonical_entrypoint ?? manifest?.canonical_entrypoint ?? canonicalEntrypoint;
 }
 
-function getDirectInvocation({ manifest, contract }) {
+function getDirectInvocation({ manifest, contract }: { manifest?: any; contract?: any }) {
   return (
     contract?.direct_invocation ??
     manifest?.runtime_bindings?.[runtime]?.direct_invocation ??
@@ -68,7 +68,7 @@ function getDirectInvocation({ manifest, contract }) {
   );
 }
 
-function getBindingCompatibility(manifest, surface) {
+function getBindingCompatibility(manifest: any, surface: string) {
   const compatibility = manifest?.runtime_bindings?.[runtime]?.compatibility ?? {};
   if (surface === "canonical_skill") {
     return compatibility.canonical_picker ?? "supported";
@@ -79,17 +79,17 @@ function getBindingCompatibility(manifest, surface) {
   return "blocked";
 }
 
-function getHookAsset(manifest) {
+function getHookAsset(manifest: any) {
   return (
     manifest?.runtime_assets?.entries?.find(
-      (entry) =>
+      (entry: any) =>
         (entry.runtime === runtime || entry.runtime === "shared") &&
         entry.install_surface === "hook",
     ) ?? null
   );
 }
 
-function buildHookAssist(manifest = null) {
+function buildHookAssist(manifest: any = null) {
   const hookAsset = getHookAsset(manifest);
   if (!hookAsset) {
     return {
@@ -114,7 +114,7 @@ function buildHookAssist(manifest = null) {
 }
 
 function listSupportedTriggerSurfacesInternal({ manifest = null, contract = null }: any = {}) {
-  const supported = [];
+  const supported: any[] = [];
   if (getCanonicalEntry({ manifest, contract }) === canonicalEntrypoint) {
     const status = getBindingCompatibility(manifest, "canonical_skill");
     if (status !== "blocked") {
@@ -164,16 +164,16 @@ function normalizeRequest(request: any = {}) {
   };
 }
 
-function resolveSelectedLaunchPath(requestedSurface, { manifest, contract }) {
+function resolveSelectedLaunchPath(requestedSurface: any, { manifest, contract }: { manifest?: any; contract?: any }) {
   if (requestedSurface === "direct_invocation") {
     return getDirectInvocation({ manifest, contract });
   }
   return getCanonicalEntry({ manifest, contract });
 }
 
-function buildExplanation(result) {
+function buildExplanation(result: any) {
   if (result.status === "blocked" && result.blocking_errors.length > 0) {
-    return result.blocking_errors.map((entry) => `${entry.code}: ${entry.message}`).join("; ");
+    return result.blocking_errors.map((entry: any) => `${entry.code}: ${entry.message}`).join("; ");
   }
   if (typeof result.policy_verdict?.explanation === "string" && result.policy_verdict.explanation.trim() !== "") {
     return result.policy_verdict.explanation;
@@ -190,7 +190,7 @@ function buildResult({
   blockingErrors = [],
   selectedLaunchPath = null,
   notes = [],
-}) {
+}: { manifest?: any; contract?: any; request?: any; policyVerdict?: any; status?: any; blockingErrors?: any; selectedLaunchPath?: any; notes?: any }) {
   const normalizedRequest = normalizeRequest(request);
   const result: any = {
     kind: "runtime-enforcement-result",
@@ -216,7 +216,7 @@ function buildResult({
   return result;
 }
 
-function buildPolicyBlockingError(policyVerdict, normalizedRequest) {
+function buildPolicyBlockingError(policyVerdict: any, normalizedRequest: any) {
   const primaryReason = policyVerdict?.reasons?.[0] ?? {};
   if (normalizedRequest.execution_mode === "preview") {
     return null;
@@ -273,13 +273,13 @@ function buildPolicyBlockingError(policyVerdict, normalizedRequest) {
   return null;
 }
 
-export function renderDirectInvocation(packId) {
+export function renderDirectInvocation(packId: string) {
   return `/${packId}`;
 }
 
 const SKILL_ROOTS = ["runtime-default", "shared-agents"];
 
-export function resolveConfigHome({ repoRoot, target, skillRoot = "runtime-default" }) {
+export function resolveConfigHome({ repoRoot, target, skillRoot = "runtime-default" }: { repoRoot: string; target?: any; skillRoot?: any }) {
   if (!SKILL_ROOTS.includes(skillRoot)) {
     throw new Error(`unsupported skill_root: ${skillRoot}`);
   }
@@ -291,11 +291,11 @@ export function resolveConfigHome({ repoRoot, target, skillRoot = "runtime-defau
   return target === "repo" ? join(repoRoot, ".github") : join(homedir(), ".copilot");
 }
 
-export function resolveInstallRoot(options) {
+export function resolveInstallRoot(options: any) {
   return join(resolveConfigHome(options), "skills");
 }
 
-export function resolvePackInstallDir(options, packId) {
+export function resolvePackInstallDir(options: any, packId: string) {
   return join(resolveInstallRoot(options), packId);
 }
 
@@ -303,20 +303,20 @@ export function resolvePackInstallDir(options, packId) {
 // .github/plugins/<id> — a local plugin directory the user enables via
 // `copilot plugin install <path>` / `--plugin-dir`. PairSlash never writes
 // ~/.copilot/installed-plugins (runtime-managed) or settings.json.
-export function resolvePluginRoot({ repoRoot, target }) {
+export function resolvePluginRoot({ repoRoot, target }: { repoRoot: string; target?: any }) {
   if (target !== "repo") {
     throw new Error(`unsupported plugin install target: ${target}`);
   }
   return join(repoRoot, ".github", "plugins");
 }
 
-export function resolvePluginInstallDir(options, packId) {
+export function resolvePluginInstallDir(options: any, packId: string) {
   return join(resolvePluginRoot(options), packId);
 }
 
 const SPEC_CONVENTIONAL_DIRS = ["scripts", "references", "assets"];
 
-function specConventionalSupportPath(sourcePath) {
+function specConventionalSupportPath(sourcePath: string) {
   const normalized = String(sourcePath ?? "").split("\\").join("/");
   if (!normalized) {
     return normalized;
@@ -328,7 +328,7 @@ function specConventionalSupportPath(sourcePath) {
   return `references/${normalized}`;
 }
 
-export function resolveAssetPath(asset) {
+export function resolveAssetPath(asset: any) {
   switch (asset.install_surface) {
     case "canonical_skill":
       return asset.source_relpath ?? asset.file_name;
@@ -347,11 +347,11 @@ export function resolveAssetPath(asset) {
   }
 }
 
-function toPosix(value) {
-  return value.split("\\").join("/");
+function toPosix(value: unknown) {
+  return String(value).split("\\").join("/");
 }
 
-export function validateAssetRelativePath(asset, relativePath) {
+export function validateAssetRelativePath(asset: any, relativePath: string) {
   const normalizedPath = toPosix(relativePath);
   const expectedPath = resolveAssetPath({
     install_surface: asset.install_surface,
@@ -366,7 +366,7 @@ export function validateAssetRelativePath(asset, relativePath) {
   return normalizedPath;
 }
 
-export function resolveRuntimeAssetPath(asset) {
+export function resolveRuntimeAssetPath(asset: any) {
   const candidate =
     asset.generated_relpath ??
     asset.generated_path ??
@@ -383,7 +383,7 @@ export function resolveRuntimeAssetPath(asset) {
   return validateAssetRelativePath(asset, resolved);
 }
 
-export function supportsInstallSurface(surface) {
+export function supportsInstallSurface(surface: string) {
   return supportedInstallSurfaces.includes(surface);
 }
 
@@ -391,11 +391,11 @@ export function listSupportedTriggerSurfaces(options: any = {}) {
   return listSupportedTriggerSurfacesInternal(options);
 }
 
-export function supportsTriggerSurface(surface, options: any = {}) {
+export function supportsTriggerSurface(surface: any, options: any = {}) {
   return listSupportedTriggerSurfacesInternal(options).includes(surface);
 }
 
-export function describeEnforcementBoundary(manifest = null) {
+export function describeEnforcementBoundary(manifest: any = null) {
   return [
     "slash-entrypoint:/skills",
     `direct-invocation-prefix:${renderDirectInvocation(manifest?.pack_name ?? "pack-id").slice(0, 1)}`,
@@ -579,6 +579,7 @@ export async function enforceWorkflow({
             sourceType: "workflow",
           });
   } catch (error) {
+    const adapterError = error as { code?: string; message?: string };
     return buildResult({
       manifest,
       contract: null,
@@ -588,14 +589,14 @@ export async function enforceWorkflow({
       blockingErrors: [
         buildBlockingError({
           code: RUNTIME_COPILOT_ADAPTER_ERROR_CODES.CONTRACT_BUILD_FAILED,
-          message: `unable to build Copilot runtime contract :: ${error.code ? `${error.code}: ` : ""}${error.message}`,
+          message: `unable to build Copilot runtime contract :: ${adapterError.code ? `${adapterError.code}: ` : ""}${adapterError.message}`,
           runtimeFactors: [
             `runtime:${requestedRuntime}`,
             `target:${target}`,
             `requested_surface:${normalizedRequest.requested_surface}`,
           ],
           details: {
-            source_error_code: error.code ?? null,
+            source_error_code: adapterError.code ?? null,
           },
         }),
       ],
@@ -624,7 +625,7 @@ export async function enforceWorkflow({
   });
 }
 
-function spawnBinary(name, args) {
+function spawnBinary(name: string, args: any) {
   const options: any = { encoding: "utf8" };
   const direct = spawnSync(name, args, options);
   if (
@@ -636,11 +637,11 @@ function spawnBinary(name, args) {
   return spawnSync(process.env.ComSpec || "cmd.exe", ["/d", "/s", "/c", name, ...args], options);
 }
 
-function spawnRuntime(args) {
+function spawnRuntime(args: any) {
   return spawnBinary(executable, args);
 }
 
-function extractSemver(rawValue) {
+function extractSemver(rawValue: any) {
   const match = typeof rawValue === "string" ? rawValue.match(/(\d+\.\d+\.\d+)/) : null;
   return match?.[1] ?? null;
 }
@@ -697,11 +698,11 @@ export function detectRuntime() {
   };
 }
 
-export function checkWritablePath(path) {
+export function checkWritablePath(path: string) {
   try {
     accessSync(path, constants.W_OK);
     return { writable: true };
   } catch (error) {
-    return { writable: false, error: error.message };
+    return { writable: false, error: error instanceof Error ? error.message : String(error) };
   }
 }

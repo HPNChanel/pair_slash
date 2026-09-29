@@ -38,7 +38,7 @@ import {
   formatPreviewPlanText,
 } from "./formatters.ts";
 
-export function buildMemoryRequest(repoRoot, options) {
+export function buildMemoryRequest(repoRoot: string, options: any) {
   const requestFromFile = options.requestPath ? loadRequestFile(resolve(repoRoot, options.requestPath)) : {};
   return {
     ...requestFromFile,
@@ -57,7 +57,7 @@ export function buildMemoryRequest(repoRoot, options) {
   };
 }
 
-export function buildMemoryCandidateInput(options) {
+export function buildMemoryCandidateInput(options: any) {
   return {
     taskScope: options.taskScope,
     evidenceSources: options.evidenceSources,
@@ -66,7 +66,7 @@ export function buildMemoryCandidateInput(options) {
   };
 }
 
-export function buildMemoryAuditInput(options) {
+export function buildMemoryAuditInput(options: any) {
   return {
     auditScope: options.auditScope,
     mode: options.mode,
@@ -74,7 +74,7 @@ export function buildMemoryAuditInput(options) {
   };
 }
 
-export async function confirmApply({ action, stdin, stdout, options }) {
+export async function confirmApply({ action, stdin, stdout, options }: { action?: any; stdin?: any; stdout?: any; options?: any }) {
   if (options.yes) {
     return;
   }
@@ -95,7 +95,7 @@ export async function confirmApply({ action, stdin, stdout, options }) {
   }
 }
 
-export async function confirmMemoryWrite({ stdin, stdout, options }) {
+export async function confirmMemoryWrite({ stdin, stdout, options }: { stdin?: any; stdout?: any; options?: any }) {
   if (options.yes) {
     return true;
   }
@@ -114,7 +114,7 @@ export async function confirmMemoryWrite({ stdin, stdout, options }) {
   }
 }
 
-export function handlePreview(action, repoRoot, options, stdout) {
+export function handlePreview(action: any, repoRoot: string, options: any, stdout: any) {
   if (action === "memory-write-global") {
     throw new Error("memory-write-global preview requires interactive handler");
   }
@@ -137,7 +137,7 @@ export function handlePreview(action, repoRoot, options, stdout) {
   };
 }
 
-export async function handleApply(action, repoRoot, options, stdout, stdin) {
+export async function handleApply(action: any, repoRoot: string, options: any, stdout: any, stdin: any) {
   assertRuntime(options.runtime);
   assertLifecycleAction(action);
   if (options.apply && options.dryRun) {
@@ -186,7 +186,7 @@ export async function handleApply(action, repoRoot, options, stdout, stdin) {
     text:
       action === "install" || action === "update" || action === "uninstall"
         ? formatInstallResult
-        : (value) => `${stableJson(value)}`,
+        : (value: unknown) => `${stableJson(value)}`,
   });
   return {
     exitCode: 0,
@@ -197,7 +197,7 @@ export async function handleApply(action, repoRoot, options, stdout, stdin) {
   };
 }
 
-export async function handleMemoryWrite(repoRoot, options, stdout, stdin, { forcePreview = false } = {}) {
+export async function handleMemoryWrite(repoRoot: string, options: any, stdout: any, stdin: any, { forcePreview = false }: { forcePreview?: any } = {}) {
   const request = buildMemoryRequest(repoRoot, options);
   const runtime = resolveExecutionRuntime(repoRoot, options.runtime, options.target, options.skillRoot);
   const target = options.target;
@@ -227,7 +227,7 @@ export async function handleMemoryWrite(repoRoot, options, stdout, stdin, { forc
         target,
         blocked: true,
         no_silent_fallback: true,
-        errors: [error.message],
+        errors: [error instanceof Error ? error.message : String(error)],
         notes: ["invalid request source data blocks preview; no silent fallback"],
         request,
       };
@@ -314,7 +314,7 @@ export async function handleMemoryWrite(repoRoot, options, stdout, stdin, { forc
   };
 }
 
-export function handleMemoryCandidate(repoRoot, options, stdout) {
+export function handleMemoryCandidate(repoRoot: string, options: any, stdout: any) {
   if (options.apply || options.preview || options.dryRun) {
     throw new Error("unsupported-flag: memory candidate is read-only and does not support --apply/--preview/--dry-run");
   }
@@ -340,7 +340,7 @@ export function handleMemoryCandidate(repoRoot, options, stdout) {
   };
 }
 
-export function handleMemoryAudit(repoRoot, options, stdout) {
+export function handleMemoryAudit(repoRoot: string, options: any, stdout: any) {
   if (options.apply || options.preview || options.dryRun) {
     throw new Error("unsupported-flag: memory audit is read-only and does not support --apply/--preview/--dry-run");
   }

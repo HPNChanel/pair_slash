@@ -1,4 +1,4 @@
-function describeTrustTuple(value) {
+function describeTrustTuple(value: any) {
   if (!value) {
     return "no trust metadata";
   }
@@ -24,7 +24,7 @@ function describeTrustTuple(value) {
   return "review trust posture";
 }
 
-export function formatPreviewPlanText(plan) {
+export function formatPreviewPlanText(plan: any) {
   const lines = [
     `Action: ${plan.action}`,
     `Runtime: ${plan.runtime}`,
@@ -222,12 +222,12 @@ export function formatPreviewPlanText(plan) {
   return `${lines.join("\n")}\n`;
 }
 
-export function formatDoctorText(report) {
-  const blockingIssues = report.issues.filter((issue) => issue.blocking_for_install);
-  const advisoryIssues = report.issues.filter((issue) => !issue.blocking_for_install);
+export function formatDoctorText(report: any) {
+  const blockingIssues = report.issues.filter((issue: any) => issue.blocking_for_install);
+  const advisoryIssues = report.issues.filter((issue: any) => !issue.blocking_for_install);
   const selectedScope = report.scope_probes[report.target];
   const alternateScope = report.scope_probes[report.target === "repo" ? "user" : "repo"];
-  const presenceCheck = report.checks.find((check) => check.id === "runtime.presence_matrix");
+  const presenceCheck = report.checks.find((check: any) => check.id === "runtime.presence_matrix");
   const immediateNextAction = report.next_actions[0] ?? report.first_workflow_guidance.commands[0] ?? "No action required.";
   const lines = [
     `Runtime: ${report.runtime}`,
@@ -428,7 +428,7 @@ export function formatDoctorText(report) {
   return `${lines.join("\n")}\n`;
 }
 
-export function formatLintText(report) {
+export function formatLintText(report: any) {
   const lines = [
     `PairSlash lint: ${report.ok ? "pass" : "fail"}`,
     `Phase: ${report.phase}`,
@@ -485,7 +485,7 @@ export function formatLintText(report) {
   return `${lines.join("\n")}\n`;
 }
 
-export function formatInstallResult(result) {
+export function formatInstallResult(result: any) {
   const lines = [
     `Action: ${result.action}`,
     `Runtime: ${result.runtime}`,
@@ -504,7 +504,7 @@ export function formatInstallResult(result) {
   return `${lines.join("\n")}\n`;
 }
 
-export function formatMemoryWritePreviewText(preview) {
+export function formatMemoryWritePreviewText(preview: any) {
   const scopeDetail = preview.request.record.scope_detail ? ` (${preview.request.record.scope_detail})` : "";
   const canProceedToApply = preview.ready_for_apply && preview.policy_verdict.overall_verdict !== "deny";
   const lines = [
@@ -575,7 +575,7 @@ export function formatMemoryWritePreviewText(preview) {
   return `${lines.join("\n")}\n`;
 }
 
-export function formatMemoryWriteResultText(result) {
+export function formatMemoryWriteResultText(result: any) {
   const lines = [
     "Action: memory.write-global",
     `Status: ${result.status}`,
@@ -622,7 +622,7 @@ export function formatMemoryWriteResultText(result) {
   return `${lines.join("\n")}\n`;
 }
 
-export function formatMemoryWritePreviewBlockedText(blocked) {
+export function formatMemoryWritePreviewBlockedText(blocked: any) {
   const lines = [
     "Action: memory.write-global",
     `Runtime: ${blocked.runtime}`,
@@ -647,7 +647,7 @@ export function formatMemoryWritePreviewBlockedText(blocked) {
   return `${lines.join("\n")}\n`;
 }
 
-export function formatMemoryCandidateReportText(report) {
+export function formatMemoryCandidateReportText(report: any) {
   const lines = [
     "Action: memory.candidate",
     `Runtime: ${report.runtime}`,
@@ -690,7 +690,7 @@ export function formatMemoryCandidateReportText(report) {
   return `${lines.join("\n")}\n`;
 }
 
-export function formatMemoryAuditReportText(report) {
+export function formatMemoryAuditReportText(report: any) {
   const lines = [
     "Action: memory.audit",
     `Runtime: ${report.runtime}`,
@@ -758,7 +758,7 @@ export function formatMemoryAuditReportText(report) {
   return `${lines.join("\n")}\n`;
 }
 
-export function formatContextExplanationText(explanation) {
+export function formatContextExplanationText(explanation: any) {
   const lines = [
     `Runtime: ${explanation.runtime}`,
     `Target: ${explanation.target}`,
@@ -882,7 +882,7 @@ export function formatContextExplanationText(explanation) {
   return `${lines.join("\n")}\n`;
 }
 
-export function formatPolicyExplanationText(explanation) {
+export function formatPolicyExplanationText(explanation: any) {
   const lines = [
     `Runtime: ${explanation.runtime}`,
     `Target: ${explanation.target}`,
@@ -928,7 +928,7 @@ export function formatPolicyExplanationText(explanation) {
   return `${lines.join("\n")}\n`;
 }
 
-export function formatDebugReportText(report) {
+export function formatDebugReportText(report: any) {
   const lines = [
     `Session: ${report.session_id}`,
     `Runtime: ${report.runtime ?? "unknown"}`,
@@ -962,7 +962,7 @@ export function formatDebugReportText(report) {
   return `${lines.join("\n")}\n`;
 }
 
-export function formatTraceExportText(traceExport) {
+export function formatTraceExportText(traceExport: any) {
   const lines = [
     `Output dir: ${traceExport.output_dir}`,
     `Sessions: ${traceExport.session_count}`,
@@ -985,7 +985,7 @@ export function formatTraceExportText(traceExport) {
   return `${lines.join("\n")}\n`;
 }
 
-export function formatSupportBundleText(bundle) {
+export function formatSupportBundleText(bundle: any) {
   const lines = [
     `Bundle ID: ${bundle.bundle_id}`,
     `Output dir: ${bundle.output_dir}`,
@@ -1015,7 +1015,7 @@ export function formatSupportBundleText(bundle) {
   return `${lines.join("\n")}\n`;
 }
 
-export function formatTelemetrySummaryText(summary) {
+export function formatTelemetrySummaryText(summary: any) {
   const lines = [
     `Telemetry mode: ${summary.mode}`,
     `Local only: ${summary.privacy.local_only ? "yes" : "no"}`,

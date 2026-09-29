@@ -82,15 +82,15 @@ const WORKSPACE_BOUNDARY_ROOTS = [
   { root: ["packages", "runtimes", "copilot"], boundary: "runtime-copilot" },
   { root: ["packages", "tools"], boundary: "tools" },
 ];
-function normalizeWorkflowMaturity(level) {
+function normalizeWorkflowMaturity(level: any) {
   return WORKFLOW_MATURITY_LEVELS.includes(level) ? level : "canary";
 }
 
-function workflowMaturityRank(level) {
-  return WORKFLOW_MATURITY_STRENGTH_ORDER[normalizeWorkflowMaturity(level)] ?? 0;
+function workflowMaturityRank(level: any) {
+  return WORKFLOW_MATURITY_STRENGTH_ORDER[normalizeWorkflowMaturity(level) as keyof typeof WORKFLOW_MATURITY_STRENGTH_ORDER] ?? 0;
 }
 
-function normalizeRuntimeScope(requestedRuntime) {
+function normalizeRuntimeScope(requestedRuntime: any) {
   if (!requestedRuntime || requestedRuntime === "all" || requestedRuntime === "auto") {
     return { runtimeScope: "all", runtimes: SUPPORTED_RUNTIMES.slice() };
   }
@@ -110,7 +110,7 @@ function createCheck({
   path = null,
   message,
   remediation = null,
-}) {
+}: { code?: string; result?: any; packId?: string | null; runtime?: string; target?: any; path?: string | null; message?: string; remediation?: any }) {
   return {
     code,
     result,
@@ -123,22 +123,22 @@ function createCheck({
   };
 }
 
-function toPosixPath(value) {
+function toPosixPath(value: string) {
   return value.replace(/\\/g, "/");
 }
 
-function collectWorkspacePackages(repoRoot) {
+function collectWorkspacePackages(repoRoot: string) {
   return WORKSPACE_BOUNDARY_ROOTS.flatMap(({ root, boundary }) => {
     const rootDir = resolve(repoRoot, ...root);
     if (!existsSync(rootDir)) {
       return [];
     }
     return readdirSync(rootDir, { withFileTypes: true })
-      .filter((entry) => entry.isDirectory())
-      .map((entry) => resolve(rootDir, entry.name))
-      .filter((packageDir) => existsSync(join(packageDir, "package.json")))
+      .filter((entry: any) => entry.isDirectory())
+      .map((entry: any) => resolve(rootDir, entry.name))
+      .filter((packageDir: any) => existsSync(join(packageDir, "package.json")))
       .sort((left: any, right: any) => left.localeCompare(right))
-      .map((packageDir) => {
+      .map((packageDir: any) => {
         const packageJsonPath = join(packageDir, "package.json");
         return {
           boundary,
@@ -150,7 +150,7 @@ function collectWorkspacePackages(repoRoot) {
   });
 }
 
-function isBoundaryDependencyAllowed(sourceBoundary, targetBoundary) {
+function isBoundaryDependencyAllowed(sourceBoundary: any, targetBoundary: any) {
   if (sourceBoundary === "core") {
     return targetBoundary === "core";
   }
@@ -163,12 +163,12 @@ function isBoundaryDependencyAllowed(sourceBoundary, targetBoundary) {
   return true;
 }
 
-function collectSourceFiles(dir) {
+function collectSourceFiles(dir: string) {
   if (!existsSync(dir)) {
     return [];
   }
-  const files = [];
-  for (const entry of readdirSync(dir, { withFileTypes: true }).sort((left, right) => left.name.localeCompare(right.name))) {
+  const files: any[] = [];
+  for (const entry of readdirSync(dir, { withFileTypes: true }).sort((left: any, right: any) => left.name.localeCompare(right.name))) {
     const absolutePath = join(dir, entry.name);
     if (entry.isDirectory()) {
       files.push(...collectSourceFiles(absolutePath));
@@ -181,8 +181,8 @@ function collectSourceFiles(dir) {
   return files;
 }
 
-function collectImportSpecifiers(sourceText) {
-  const specifiers = new Set();
+function collectImportSpecifiers(sourceText: any) {
+  const specifiers = new Set<string>();
   for (const pattern of [
     /\b(?:import|export)\s+(?:[^"'`]+?\s+from\s+)?["']([^"']+)["']/g,
     /\bimport\(\s*["']([^"']+)["']\s*\)/g,
@@ -194,16 +194,16 @@ function collectImportSpecifiers(sourceText) {
   return [...specifiers].sort((left: any, right: any) => left.localeCompare(right));
 }
 
-function applyWorkspaceBoundaryRules({ repoRoot, target, checks }) {
+function applyWorkspaceBoundaryRules({ repoRoot, target, checks }: { repoRoot: string; target?: any; checks?: any }) {
   const workspacePackages = collectWorkspacePackages(repoRoot);
-  const packageByName = new Map(workspacePackages.map((entry) => [entry.packageJson.name, entry]));
+  const packageByName = new Map(workspacePackages.map((entry: any) => [entry.packageJson.name, entry]));
 
   for (const workspacePackage of workspacePackages) {
     const localDependencies = Object.keys({
       ...workspacePackage.packageJson.dependencies,
       ...workspacePackage.packageJson.peerDependencies,
       ...workspacePackage.packageJson.optionalDependencies,
-    }).filter((name) => packageByName.has(name));
+    }).filter((name: string) => packageByName.has(name));
 
     for (const dependencyName of localDependencies) {
       const dependencyPackage = packageByName.get(dependencyName);
@@ -252,12 +252,12 @@ function applyWorkspaceBoundaryRules({ repoRoot, target, checks }) {
   }
 }
 
-function unique(values) {
+function unique(values: unknown[]) {
   return [...new Set(values)];
 }
 
-function sortChecks(checks) {
-  return checks.slice().sort((left, right) =>
+function sortChecks(checks: any) {
+  return checks.slice().sort((left: any, right: any) =>
     [
       left.pack_id ?? "",
       left.runtime,
@@ -280,11 +280,11 @@ function sortChecks(checks) {
   );
 }
 
-function parseManifestEntries(repoRoot) {
+function parseManifestEntries(repoRoot: string) {
   return loadPackManifestRecords(repoRoot);
 }
 
-function selectManifestEntries(entries, requestedPacks, checks, target) {
+function selectManifestEntries(entries: any[], requestedPacks: any, checks: any, target: any) {
   const { selected, missing } = selectPackManifestRecords(entries, requestedPacks, {
     includeInvalid: true,
   });
@@ -303,7 +303,7 @@ function selectManifestEntries(entries, requestedPacks, checks, target) {
   return selected;
 }
 
-function applyManifestValidation(entry, checks, target) {
+function applyManifestValidation(entry: any, checks: any, target: any) {
   if (entry.parseError) {
     checks.push(
       createCheck({
@@ -365,8 +365,8 @@ function applyManifestValidation(entry, checks, target) {
   return true;
 }
 
-function applyRuntimeRangeRule(entry, checks, target) {
-  const invalid = [];
+function applyRuntimeRangeRule(entry: any, checks: any, target: any) {
+  const invalid: any[] = [];
   for (const runtime of SUPPORTED_RUNTIMES) {
     const range = entry.manifest.supported_runtime_ranges?.[runtime];
     if (!validateRuntimeRange(range)) {
@@ -399,7 +399,7 @@ function applyRuntimeRangeRule(entry, checks, target) {
   );
 }
 
-function applySkillSpecRule(entry, checks, target) {
+function applySkillSpecRule(entry: any, checks: any, target: any) {
   const skillPath = join(dirname(entry.manifestPath), "SKILL.md");
   if (!existsSync(skillPath)) {
     checks.push(
@@ -462,9 +462,9 @@ function applySkillSpecRule(entry, checks, target) {
   }
 }
 
-function applyTriggerRule(entry, checks, target) {
+function applyTriggerRule(entry: any, checks: any, target: any) {
   const packId = entry.packId;
-  const issues = [];
+  const issues: any[] = [];
   if (entry.manifest.canonical_entrypoint !== "/skills") {
     issues.push("canonical entrypoint must be /skills");
   }
@@ -505,7 +505,7 @@ function applyTriggerRule(entry, checks, target) {
 // implicit_invocation declares activation intent only — the runtime makes the
 // actual routing call. These rules guard the declaration: write-authority can
 // never opt in, and opt-in packs face stricter description hygiene.
-function applyImplicitInvocationRule(entry, checks, target) {
+function applyImplicitInvocationRule(entry: any, checks: any, target: any) {
   const packId = entry.packId;
   const mode = entry.manifest.implicit_invocation ?? "explicit-only";
   const workflowClass = entry.manifest.pack?.workflow_class ?? entry.manifest.workflow_class;
@@ -605,7 +605,7 @@ function applyImplicitInvocationRule(entry, checks, target) {
 // Copilot .agent.md emission (T4-03): persona shims defer to the canonical
 // SKILL.md contract. Hard rule: write-authority packs can never emit agents
 // (charter §13.3 — write logic stays skill-disciplined).
-function applyAgentEmissionRule(entry, checks, target) {
+function applyAgentEmissionRule(entry: any, checks: any, target: any) {
   const packId = entry.packId;
   const emit = entry.manifest.runtime_bindings?.copilot_cli?.agent?.emit === true;
   const workflowClass = entry.manifest.pack?.workflow_class ?? entry.manifest.workflow_class;
@@ -704,13 +704,13 @@ function applyAgentEmissionRule(entry, checks, target) {
   }
 }
 
-function applyNamingRule(entry, checks, target) {
+function applyNamingRule(entry: any, checks: any, target: any) {
   const packId = entry.packId;
   const codexDir = entry.manifest.runtime_targets?.codex_cli?.skill_directory_name;
   const copilotDir = entry.manifest.runtime_targets?.copilot_cli?.skill_directory_name;
   const workflowClass = entry.manifest.pack?.workflow_class;
   const authority = entry.manifest.memory_permissions?.authority_mode;
-  const problems = [];
+  const problems: any[] = [];
 
   if (codexDir !== packId || copilotDir !== packId) {
     problems.push("runtime skill_directory_name must match pack.id");
@@ -746,10 +746,10 @@ function applyNamingRule(entry, checks, target) {
   );
 }
 
-function applyToolsRule(entry, checks, target) {
+function applyToolsRule(entry: any, checks: any, target: any) {
   const requiredTools = entry.manifest.required_tools ?? [];
   const capabilities = entry.manifest.capabilities ?? [];
-  if (["shell_exec", "test_exec"].some((flag) => capabilities.includes(flag)) && requiredTools.length === 0) {
+  if (["shell_exec", "test_exec"].some((flag: any) => capabilities.includes(flag)) && requiredTools.length === 0) {
     checks.push(
       createCheck({
         code: "LINT-TOOLS-002",
@@ -775,9 +775,9 @@ function applyToolsRule(entry, checks, target) {
   }
 }
 
-function applyRuntimeSupportRule(entry, checks, target) {
+function applyRuntimeSupportRule(entry: any, checks: any, target: any) {
   const runtimes = entry.manifest.supported_runtimes ?? [];
-  const missing = SUPPORTED_RUNTIMES.filter((runtime) => !runtimes.includes(runtime));
+  const missing = SUPPORTED_RUNTIMES.filter((runtime: string) => !runtimes.includes(runtime));
   if (missing.length > 0) {
     checks.push(
       createCheck({
@@ -792,8 +792,8 @@ function applyRuntimeSupportRule(entry, checks, target) {
     );
     return;
   }
-  const degraded = [];
-  const missingEvidence = [];
+  const degraded: any[] = [];
+  const missingEvidence: any[] = [];
   for (const runtime of SUPPORTED_RUNTIMES) {
     const compatibility = entry.manifest.runtime_bindings?.[runtime]?.compatibility ?? {};
     const supportEvidenceRef = entry.manifest.support?.runtime_support?.[runtime]?.evidence_ref;
@@ -859,7 +859,7 @@ function applyRuntimeSupportRule(entry, checks, target) {
   }
 }
 
-function applyMcpRule(entry, checks, target) {
+function applyMcpRule(entry: any, checks: any, target: any) {
   const capabilities = entry.manifest.capabilities ?? [];
   const servers = entry.manifest.required_mcp_servers ?? [];
   const hasClientCapability = capabilities.includes("mcp_client");
@@ -893,9 +893,9 @@ function applyMcpRule(entry, checks, target) {
   }
   const unknown = unique(
     servers
-      .map((server) => server?.id)
-      .filter((id) => typeof id === "string")
-      .filter((id) => !KNOWN_MCP_SERVER_IDS.has(id)),
+      .map((server: any) => server?.id)
+      .filter((id: string) => typeof id === "string")
+      .filter((id: string) => !KNOWN_MCP_SERVER_IDS.has(id)),
   );
   if (unknown.length > 0) {
     checks.push(
@@ -923,15 +923,15 @@ function applyMcpRule(entry, checks, target) {
   );
 }
 
-function applyMcpEraRule(entry, checks, target) {
+function applyMcpEraRule(entry: any, checks: any, target: any) {
   const servers = entry.manifest?.required_mcp_servers ?? [];
   if (servers.length === 0) {
     return;
   }
   const invalidEras = unique(
     servers
-      .filter((server) => server?.spec_era !== undefined && !MCP_SPEC_ERAS.includes(server.spec_era))
-      .map((server) => `${server?.id}:${server?.spec_era}`),
+      .filter((server: any) => server?.spec_era !== undefined && !MCP_SPEC_ERAS.includes(server.spec_era))
+      .map((server: any) => `${server?.id}:${server?.spec_era}`),
   );
   if (invalidEras.length > 0) {
     checks.push(
@@ -947,7 +947,7 @@ function applyMcpEraRule(entry, checks, target) {
     );
   }
   const legacyServers = unique(
-    servers.filter((server) => server?.spec_era === "legacy").map((server) => server?.id),
+    servers.filter((server: any) => server?.spec_era === "legacy").map((server: any) => server?.id),
   );
   if (legacyServers.length > 0) {
     checks.push(
@@ -965,8 +965,8 @@ function applyMcpEraRule(entry, checks, target) {
   }
   const defaultedEras = unique(
     (entry.normalizationWarnings ?? [])
-      .filter((warning) => typeof warning === "string" && warning.includes("spec_era"))
-      .map((warning) => warning),
+      .filter((warning: any) => typeof warning === "string" && warning.includes("spec_era"))
+      .map((warning: any) => warning),
   );
   if (defaultedEras.length > 0) {
     checks.push(
@@ -984,12 +984,12 @@ function applyMcpEraRule(entry, checks, target) {
   }
 }
 
-function applyReferenceRule(repoRoot, entry, checks, target) {
+function applyReferenceRule(repoRoot: string, entry: any, checks: any, target: any) {
   const sourceRoot = entry.manifest.runtime_assets?.source_root ?? `packs/core/${entry.packId}`;
   const sourceRootPath = resolve(repoRoot, sourceRoot);
-  const sourceEntries = (entry.manifest.runtime_assets?.entries ?? []).filter((asset) => asset.source_path);
-  const sourcePathSet = new Set(sourceEntries.map((asset) => asset.source_path));
-  const missing = [];
+  const sourceEntries = (entry.manifest.runtime_assets?.entries ?? []).filter((asset: any) => asset.source_path);
+  const sourcePathSet = new Set(sourceEntries.map((asset: any) => asset.source_path));
+  const missing: any[] = [];
 
   if (!existsSync(sourceRootPath)) {
     missing.push(sourceRoot);
@@ -1004,7 +1004,7 @@ function applyReferenceRule(repoRoot, entry, checks, target) {
 
   const docsRefs = entry.manifest.docs_refs ?? {};
   const docsKeys = ["contract", "example_invocation", "example_output", "validation_checklist"];
-  const notDeclaredAsSource = [];
+  const notDeclaredAsSource: any[] = [];
   for (const key of docsKeys) {
     const relativePath = docsRefs[key];
     if (typeof relativePath !== "string" || relativePath.trim() === "") {
@@ -1062,7 +1062,7 @@ function applyReferenceRule(repoRoot, entry, checks, target) {
   );
 }
 
-function applyTrustDescriptorRule(catalogEntry, entry, checks, target) {
+function applyTrustDescriptorRule(catalogEntry: any, entry: any, checks: any, target: any) {
   if (!catalogEntry) {
     checks.push(
       createCheck({
@@ -1106,8 +1106,8 @@ function applyTrustDescriptorRule(catalogEntry, entry, checks, target) {
     return;
   }
 
-  const issues = [];
-  const warnings = [];
+  const issues: any[] = [];
+  const warnings: string[] = [];
   if (
     entry.manifest.memory_permissions?.global_project_memory === "write" &&
     catalogEntry.trust_tier !== "core-maintained"
@@ -1164,7 +1164,7 @@ function applyTrustDescriptorRule(catalogEntry, entry, checks, target) {
   }
   if (
     catalogEntry.workflow_maturity === "deprecated" &&
-    (catalogEntry.workflow_maturity_blockers ?? []).some((blocker) =>
+    (catalogEntry.workflow_maturity_blockers ?? []).some((blocker: any) =>
       blocker.includes("workflow-maturity-deprecated-migration-guidance-missing"))
   ) {
     issues.push("deprecated workflow is missing migration or replacement guidance");
@@ -1231,11 +1231,11 @@ function applyTrustDescriptorRule(catalogEntry, entry, checks, target) {
   );
 }
 
-function applyMemoryRule(entry, checks, target) {
+function applyMemoryRule(entry: any, checks: any, target: any) {
   const permissions = entry.manifest.memory_permissions ?? {};
   const capabilities = entry.manifest.capabilities ?? [];
   const workflowClass = entry.manifest.workflow_class ?? entry.manifest.pack?.workflow_class;
-  const problems = [];
+  const problems: any[] = [];
   if (permissions.explicit_write_only !== true) {
     problems.push("explicit_write_only must be true");
   }
@@ -1285,7 +1285,7 @@ function applyMemoryRule(entry, checks, target) {
   );
 }
 
-function applyInstallTargetRule(entry, checks, target) {
+function applyInstallTargetRule(entry: any, checks: any, target: any) {
   if (!entry.manifest.install_targets?.includes(target)) {
     checks.push(
       createCheck({
@@ -1312,9 +1312,9 @@ function applyInstallTargetRule(entry, checks, target) {
   );
 }
 
-function applyOwnershipManifestRule(entry, checks, target) {
+function applyOwnershipManifestRule(entry: any, checks: any, target: any) {
   const ownership = entry.manifest.ownership ?? {};
-  const issues = [];
+  const issues: any[] = [];
   if (ownership.ownership_file !== OWNERSHIP_FILE) {
     issues.push(`ownership_file must be ${OWNERSHIP_FILE}`);
   }
@@ -1350,7 +1350,7 @@ function applyOwnershipManifestRule(entry, checks, target) {
   );
 }
 
-function applyCrossPackMetadataRules(validEntries, checks, target, runtimes) {
+function applyCrossPackMetadataRules(validEntries: any, checks: any, target: any, runtimes: any) {
   const packIdOwners = new Map();
   const packDirOwners = new Map();
   for (const entry of validEntries) {
@@ -1412,7 +1412,7 @@ function applyCrossPackMetadataRules(validEntries, checks, target, runtimes) {
   }
 }
 
-function isSortedByRelativePath(files) {
+function isSortedByRelativePath(files: any) {
   for (let index = 1; index < files.length; index += 1) {
     if (files[index - 1].relative_path.localeCompare(files[index].relative_path) > 0) {
       return false;
@@ -1427,8 +1427,8 @@ function applyCompileRules({
   runtimes,
   validEntries,
   checks,
-}) {
-  const compiledArtifacts = [];
+}: { repoRoot: string; target?: any; runtimes?: any; validEntries?: any; checks?: any }) {
+  const compiledArtifacts: any[] = [];
   for (const entry of validEntries) {
     for (const runtime of runtimes) {
       if (!entry.manifest.runtime_targets?.[runtime]) {
@@ -1447,10 +1447,10 @@ function applyCompileRules({
         continue;
       }
 
-      const compileFn = RUNTIME_COMPILE[runtime];
+      const compileFn = RUNTIME_COMPILE[runtime as keyof typeof RUNTIME_COMPILE];
       try {
-        const first = compileFn({ repoRoot, manifestPath: entry.manifestPath });
-        const second = compileFn({ repoRoot, manifestPath: entry.manifestPath });
+        const first = compileFn({ repoRoot, manifestPath: entry.manifestPath as string });
+        const second = compileFn({ repoRoot, manifestPath: entry.manifestPath as string });
         if (first.digest !== second.digest) {
           checks.push(
             createCheck({
@@ -1505,7 +1505,7 @@ function applyCompileRules({
           );
         }
 
-        const ownershipFile = first.files.find((file) => file.relative_path === OWNERSHIP_FILE);
+        const ownershipFile = first.files.find((file: any) => file.relative_path === OWNERSHIP_FILE);
         if (!ownershipFile) {
           checks.push(
             createCheck({
@@ -1547,7 +1547,7 @@ function applyCompileRules({
             runtime,
             target,
             path: entry.manifestPath,
-            message: `compile failed: ${error.message}`,
+            message: `compile failed: ${ error instanceof Error ? error.message : String(error) }`,
             remediation: "Fix runtime emitter contract and source assets before install/update.",
           }),
         );
@@ -1557,10 +1557,10 @@ function applyCompileRules({
   return compiledArtifacts;
 }
 
-function applyOutputConflictRule({ repoRoot, target, compiledArtifacts, checks }) {
+function applyOutputConflictRule({ repoRoot, target, compiledArtifacts, checks }: { repoRoot?: string; target?: any; compiledArtifacts?: any; checks?: any }) {
   const owners = new Map();
   for (const artifact of compiledArtifacts) {
-    const adapter = RUNTIME_ADAPTERS[artifact.runtime];
+    const adapter = RUNTIME_ADAPTERS[artifact.runtime as keyof typeof RUNTIME_ADAPTERS];
     const installDir = adapter.resolvePackInstallDir({ repoRoot, target }, artifact.packId);
     for (const file of artifact.compiledPack.files) {
       const absolutePath = resolve(join(installDir, file.relative_path));
@@ -1593,7 +1593,7 @@ function applyContractPolicyRules({
   checks,
   policyVerdicts,
   contractBuilder,
-}) {
+}: { target?: any; runtimes?: any; validEntries?: any; checks?: any; policyVerdicts?: any; contractBuilder?: any }) {
   for (const entry of validEntries) {
     for (const runtime of runtimes) {
       if (!entry.manifest.supported_runtimes?.includes(runtime)) {
@@ -1609,7 +1609,7 @@ function applyContractPolicyRules({
           }),
         );
         const missingSections = REQUIRED_CONTRACT_SECTIONS.filter(
-          (section) => !contract[section] || typeof contract[section] !== "object",
+          (section: any) => !contract[section] || typeof contract[section] !== "object",
         );
         if (missingSections.length > 0) {
           checks.push(
@@ -1641,7 +1641,7 @@ function applyContractPolicyRules({
         const degradedBinding = [
           entry.manifest.runtime_bindings?.[runtime]?.compatibility?.canonical_picker,
           entry.manifest.runtime_bindings?.[runtime]?.compatibility?.direct_invocation,
-        ].some((value) => value === "unverified" || value === "blocked");
+        ].some((value: unknown) => value === "unverified" || value === "blocked");
         if (degradedBinding && (contract.capability_scope?.degraded_behavior_notes?.length ?? 0) === 0) {
           checks.push(
             createCheck({
@@ -1691,7 +1691,7 @@ function applyContractPolicyRules({
           );
         }
 
-        const policyReferenceIssues = [];
+        const policyReferenceIssues: any[] = [];
         if (!Array.isArray(contract.failure_contract?.categories) || contract.failure_contract.categories.length === 0) {
           policyReferenceIssues.push("failure_contract.categories must be non-empty");
         }
@@ -1793,7 +1793,7 @@ function applyContractPolicyRules({
         }
 
         if (entry.packId === "pairslash-memory-write-global") {
-          const strictViolations = [];
+          const strictViolations: any[] = [];
           if (!isWriteAuthority) {
             strictViolations.push("workflow_class must be write-authority");
           }
@@ -1807,7 +1807,7 @@ function applyContractPolicyRules({
             strictViolations.push("output side-effects must require explicit approval");
           }
           const requiredFields = contract.input_contract?.required_fields ?? [];
-          const missingInputFields = REQUIRED_MEMORY_WRITE_FIELDS.filter((field) => !requiredFields.includes(field));
+          const missingInputFields = REQUIRED_MEMORY_WRITE_FIELDS.filter((field: string) => !requiredFields.includes(field));
           if (missingInputFields.length > 0) {
             strictViolations.push(`input contract missing required fields: ${missingInputFields.join(", ")}`);
           }
@@ -1862,16 +1862,17 @@ function applyContractPolicyRules({
           }),
         );
       } catch (error) {
-        const contractErrorCodes = new Set([
+        const contractErrorCodes = new Set<string>([
           CONTRACT_ENGINE_ERROR_CODES.CONTRACT_REQUIRED,
           CONTRACT_ENGINE_ERROR_CODES.CONTRACT_SCHEMA_INVALID,
           CONTRACT_ENGINE_ERROR_CODES.MISSING_CONTRACT_SECTION,
         ]);
+        const contractErrorSource = error as { code?: string; message?: string };
         const contractError =
-          contractErrorCodes.has(error?.code) ||
-          typeof error?.message === "string" &&
-            (error.message.includes("missing required contract section") ||
-              error.message.includes("invalid contract envelope"));
+          (contractErrorSource.code !== undefined && contractErrorCodes.has(contractErrorSource.code)) ||
+          typeof contractErrorSource.message === "string" &&
+            (contractErrorSource.message.includes("missing required contract section") ||
+              contractErrorSource.message.includes("invalid contract envelope"));
         checks.push(
           createCheck({
             code: contractError ? "LINT-CONTRACT-001" : "LINT-POLICY-001",
@@ -1880,7 +1881,7 @@ function applyContractPolicyRules({
             runtime,
             target,
             path: entry.manifestPath,
-            message: `contract/policy evaluation failed: ${error.message}`,
+            message: `contract/policy evaluation failed: ${ error instanceof Error ? error.message : String(error) }`,
             remediation: "Fix contract/policy schema drift before shipping the pack.",
           }),
         );
@@ -1889,7 +1890,7 @@ function applyContractPolicyRules({
   }
 }
 
-function summarize(checks, packCount, runtimeCount) {
+function summarize(checks: any, packCount: any, runtimeCount: any) {
   const summary = {
     pack_count: packCount,
     runtime_count: runtimeCount,
@@ -1910,7 +1911,7 @@ function summarize(checks, packCount, runtimeCount) {
   return summary;
 }
 
-function buildNextActions(summary) {
+function buildNextActions(summary: any) {
   if (summary.error_count > 0) {
     return [
       "Fix all error-level lint findings before install/update.",
@@ -1938,13 +1939,13 @@ export function runLintBridge({
   }
 
   const { runtimeScope, runtimes } = normalizeRuntimeScope(runtime);
-  const checks = [];
-  const policyVerdicts = [];
+  const checks: any[] = [];
+  const policyVerdicts: any[] = [];
   const catalogEntries = loadPackCatalogRecords(repoRoot, { includeAdvanced: false });
-  const catalogByPackId = new Map(catalogEntries.map((entry) => [entry.id, entry]));
+  const catalogByPackId = new Map(catalogEntries.map((entry: any) => [entry.id, entry]));
   const parsedEntries = parseManifestEntries(repoRoot);
   const selectedEntries = selectManifestEntries(parsedEntries, packs, checks, normalizedTarget);
-  const validEntries = [];
+  const validEntries: any[] = [];
 
   if (selectedEntries.length === 0 && checks.length === 0) {
     checks.push(
@@ -2009,10 +2010,10 @@ export function runLintBridge({
   });
 
   const sortedChecks = sortChecks(checks);
-  const issues = sortedChecks.filter((check) => ISSUE_RESULTS.has(check.result));
+  const issues = sortedChecks.filter((check: any) => ISSUE_RESULTS.has(check.result));
   const blockingErrors = issues
-    .filter((issue) => issue.result === "error")
-    .map((issue) => ({
+    .filter((issue: any) => issue.result === "error")
+    .map((issue: any) => ({
       code: issue.code,
       pack_id: issue.pack_id,
       runtime: issue.runtime,

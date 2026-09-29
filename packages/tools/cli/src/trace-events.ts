@@ -10,11 +10,11 @@ import { emitTraceEvent } from "@pairslash/trace";
 const SOURCE_PACKAGE = "@pairslash/cli";
 const SOURCE_MODULE = "bin/pairslash.ts";
 
-export function collectArtifactPaths(value) {
+export function collectArtifactPaths(value: Record<string, any>) {
   if (!value || typeof value !== "object") {
     return [];
   }
-  const paths = [];
+  const paths: any[] = [];
   for (const key of ["plan_path", "target_file", "audit_log_path", "output_dir", "output_path", "debug_report_path", "context_explanation_path", "policy_explanation_path", "doctor_report_path", "issue_template_path", "privacy_note_path", "reproducibility_template_path", "triage_template_path", "readme_path"]) {
     if (typeof value[key] === "string" && value[key].trim() !== "") {
       paths.push(value[key]);
@@ -33,7 +33,7 @@ export function collectArtifactPaths(value) {
   return [...new Set(paths)];
 }
 
-export function emitCommandLifecycleStart(traceContext, command) {
+export function emitCommandLifecycleStart(traceContext: any, command: string) {
   emitTraceEvent(traceContext, {
     eventType: "session.started",
     outcome: "started",
@@ -60,14 +60,14 @@ export function emitCommandLifecycleStart(traceContext, command) {
   });
 }
 
-export function emitCommandLifecycleFinish(traceContext, {
+export function emitCommandLifecycleFinish(traceContext: any, {
   command,
   exitCode,
   runtime = traceContext.runtime,
   target = traceContext.target,
   summary,
   artifact = null,
-}) {
+}: { command?: string; exitCode?: any; runtime?: string; target?: any; summary?: any; artifact?: any }) {
   const outcome = exitCode === 0 ? "ok" : "blocked";
   const artifactPaths = collectArtifactPaths(artifact);
   emitTraceEvent(traceContext, {
@@ -115,7 +115,7 @@ export function emitCommandLifecycleFinish(traceContext, {
   });
 }
 
-export function emitDerivedArtifactEvents(traceContext, result) {
+export function emitDerivedArtifactEvents(traceContext: any, result: any) {
   const artifact = result?.artifact;
   if (!artifact || typeof artifact !== "object") {
     return;

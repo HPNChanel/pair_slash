@@ -93,14 +93,14 @@ function emitCopilotPluginBundle({ ir }: { ir: NormalizedIr }) {
   // would be dormant.
   const emitted = emitCopilotBundle({ ir });
   const agentFiles = emitted
-    .filter((file) => file.asset_id === "copilot-agent-profile")
-    .map((file) => ({
+    .filter((file: any) => file.asset_id === "copilot-agent-profile")
+    .map((file: any) => ({
       ...file,
       relative_path: `${PLUGIN_AGENTS_DIR}/${file.relative_path.split("/").pop()}`,
     }));
   const skillFiles = emitted
-    .filter((file) => file.asset_id !== "copilot-agent-profile")
-    .map((file) => ({
+    .filter((file: any) => file.asset_id !== "copilot-agent-profile")
+    .map((file: any) => ({
       ...file,
       relative_path: `${skillRoot}/${file.relative_path}`,
     }));

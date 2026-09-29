@@ -66,7 +66,7 @@ import {
   handlePreview,
 } from "../handlers.ts";
 
-function printUsage(stdout) {
+function printUsage(stdout: any) {
   stdout.write(
     [
       "Usage:",
@@ -106,7 +106,7 @@ export async function runCli({
   cwd = process.cwd(),
   stdout = process.stdout,
   stdin = process.stdin,
-} = {}) {
+}: { argv?: any; cwd?: any; stdout?: any; stdin?: any } = {}) {
   if (argv.length === 0 || argv.includes("--help")) {
     printUsage(stdout);
     return 0;
@@ -328,7 +328,7 @@ export async function runCli({
         };
         emit(stdout, payload, {
           format: options.format,
-          text: (value) => `${formatDebugReportText(value.debug_report)}\n${formatSupportBundleText(value.support_bundle)}`,
+          text: (value: any) => `${formatDebugReportText(value.debug_report)}\n${formatSupportBundleText(value.support_bundle)}`,
         });
         result = {
           exitCode: 0,
@@ -428,7 +428,7 @@ export async function runCli({
         };
         emit(stdout, payload, {
           format: options.format,
-          text: (value) => `${formatTraceExportText(value.trace_export)}\n${formatSupportBundleText(value.support_bundle)}`,
+          text: (value: any) => `${formatTraceExportText(value.trace_export)}\n${formatSupportBundleText(value.support_bundle)}`,
         });
         result = {
           exitCode: 0,
@@ -495,7 +495,7 @@ export async function runCli({
     emitCommandLifecycleFinish(traceContext, {
       command: observedCommand,
       exitCode: 1,
-      summary: error.message,
+      summary: error instanceof Error ? error.message : String(error),
     });
     throw error;
   }
@@ -505,10 +505,10 @@ const isMainModule = process.argv[1] && resolve(process.argv[1]) === fileURLToPa
 
 if (isMainModule) {
   runCli().then(
-    (exitCode) => {
+    (exitCode: any) => {
       process.exitCode = exitCode;
     },
-    (error) => {
+    (error: any) => {
       process.stderr.write(`${error.message}\n`);
       process.exitCode = 1;
     },

@@ -51,7 +51,7 @@ export const INSTALL_PACK_SET_VALUES = Object.keys(INSTALL_PACK_SETS);
 
 export { codexAdapter, copilotAdapter };
 
-export function emit(stdout, value, formatters) {
+export function emit(stdout: any, value: unknown, formatters: any) {
   if (formatters.format === "json") {
     stdout.write(stableJson(value));
     return;
@@ -59,13 +59,13 @@ export function emit(stdout, value, formatters) {
   stdout.write(formatters.text(value));
 }
 
-export function assertRuntime(runtime) {
+export function assertRuntime(runtime: string) {
   if (!runtime) {
     throw new Error("--runtime is required");
   }
 }
 
-export function assertLifecycleAction(action, { command = "command" } = {}) {
+export function assertLifecycleAction(action: any, { command = "command" }: { command?: string } = {}) {
   if (LIFECYCLE_ACTIONS.includes(action)) {
     return;
   }
@@ -75,7 +75,7 @@ export function assertLifecycleAction(action, { command = "command" } = {}) {
   );
 }
 
-export function resolveInstallPacks(repoRoot, options) {
+export function resolveInstallPacks(repoRoot: string, options: any) {
   if (options.packs.length > 0) {
     return options.packs;
   }
@@ -86,13 +86,13 @@ export function resolveInstallPacks(repoRoot, options) {
   }
   if (options.packSet === "core") {
     return catalogRecords
-      .filter((record) => record.default_discovery !== false)
-      .map((record) => record.id);
+      .filter((record: any) => record.default_discovery !== false)
+      .map((record: any) => record.id);
   }
-  return INSTALL_PACK_SETS[options.packSet] ?? INSTALL_PACK_SETS.bootstrap;
+  return INSTALL_PACK_SETS[options.packSet as keyof typeof INSTALL_PACK_SETS] ?? INSTALL_PACK_SETS.bootstrap;
 }
 
-export function materializePlan(repoRoot, plan, planOut) {
+export function materializePlan(repoRoot: string, plan: any, planOut: any) {
   if (!planOut) {
     return plan;
   }
@@ -102,12 +102,12 @@ export function materializePlan(repoRoot, plan, planOut) {
   return persisted;
 }
 
-export function getRuntimeAdapter(runtime) {
+export function getRuntimeAdapter(runtime: string) {
   const normalized = normalizeRuntime(runtime);
   return normalized === "codex_cli" ? codexAdapter : copilotAdapter;
 }
 
-export function resolveSelectedPackRecord(repoRoot, requestedPacks = []) {
+export function resolveSelectedPackRecord(repoRoot: string, requestedPacks: any = []) {
   const records = loadPackManifestRecords(repoRoot);
   const selection = selectPackManifestRecords(records, requestedPacks, { includeInvalid: true });
   const catalogRecords = loadPackCatalogRecords(repoRoot, { includeAdvanced: false });
@@ -121,9 +121,9 @@ export function resolveSelectedPackRecord(repoRoot, requestedPacks = []) {
   const record =
     selection.valid[0] ??
     (preferredCatalogRecord
-      ? records.find((candidate) => candidate.packId === preferredCatalogRecord.id && candidate.isValid)
+      ? records.find((candidate: any) => candidate.packId === preferredCatalogRecord.id && candidate.isValid)
       : null) ??
-    records.find((candidate) => candidate.isValid) ??
+    records.find((candidate: any) => candidate.isValid) ??
     null;
   return {
     record,
@@ -131,20 +131,20 @@ export function resolveSelectedPackRecord(repoRoot, requestedPacks = []) {
   };
 }
 
-export function deriveToolAvailability(report, packId, manifest) {
-  const check = report.checks.find((entry) => entry.id === "dependencies.required_tools");
+export function deriveToolAvailability(report: any, packId: string, manifest: any) {
+  const check = report.checks.find((entry: any) => entry.id === "dependencies.required_tools");
   const failures = [
     ...(check?.evidence?.failures ?? []),
     ...(check?.evidence?.warnings ?? []),
   ];
-  return (manifest?.required_tools ?? []).map((tool) => ({
+  return (manifest?.required_tools ?? []).map((tool: any) => ({
     id: tool.id,
-    available: !failures.some((failure) => failure.pack_id === packId && failure.tool_id === tool.id),
+    available: !failures.some((failure: any) => failure.pack_id === packId && failure.tool_id === tool.id),
     required_for: tool.required_for ?? [],
   }));
 }
 
-export function selectorFromOptions(options, traceContext = null) {
+export function selectorFromOptions(options: any, traceContext: any = null) {
   return {
     runtime: options.runtime && options.runtime !== "auto" ? normalizeRuntime(options.runtime) : null,
     target: options.target ?? null,
@@ -152,7 +152,7 @@ export function selectorFromOptions(options, traceContext = null) {
   };
 }
 
-export function resolveExecutionRuntime(repoRoot, requestedRuntime, target, skillRoot = "runtime-default") {
+export function resolveExecutionRuntime(repoRoot: string, requestedRuntime: any, target: any, skillRoot: any = "runtime-default") {
   if (requestedRuntime === "all") {
     throw new Error("runtime-selection-failed: --runtime all is not supported for this command");
   }
@@ -160,7 +160,7 @@ export function resolveExecutionRuntime(repoRoot, requestedRuntime, target, skil
     return normalizeRuntime(requestedRuntime);
   }
   const normalizedTarget = normalizeTarget(target);
-  const stateCandidates = SUPPORTED_RUNTIMES.filter((runtime) =>
+  const stateCandidates = SUPPORTED_RUNTIMES.filter((runtime: string) =>
     exists(resolveStatePath({ repoRoot, runtime, target: normalizedTarget, skillRoot })),
   );
   if (stateCandidates.length === 1) {
@@ -185,7 +185,7 @@ export function resolveExecutionRuntime(repoRoot, requestedRuntime, target, skil
   throw new Error("runtime-selection-failed: no runtime resolved; rerun with explicit --runtime");
 }
 
-export function buildLifecycleEnvelope(action, repoRoot, options) {
+export function buildLifecycleEnvelope(action: any, repoRoot: string, options: any) {
   assertLifecycleAction(action, { command: "preview" });
   if (action !== "install" && options.packSetProvided) {
     throw new Error("--pack-set and --all are only available for install");

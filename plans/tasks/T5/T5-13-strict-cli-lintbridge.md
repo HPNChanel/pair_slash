@@ -2,13 +2,17 @@
 id: T5-13
 track: T5
 title: Strict batch — cli + lint-bridge (final package batch)
-status: todo
+status: done
 depends_on: [T5-12]
 est_size: M
 claimed_by:
 claimed_at:
-completed_at:
+completed_at: 2026-09-session
 evidence:
+  baseline: "492 strict errors total: cli 112, lint-bridge 200, runtimes stragglers 184 (codex adapter 85 + compiler 4, copilot adapter 87 + compiler 4) — stragglers folded in as T5-13b per step 5"
+  final: "npm run typecheck:strict repo-total = 0; npm run typecheck green"
+  tests: "cli 55/55; lint-bridge 32/32; codex adapter 9/9; codex compiler 13/13; copilot adapter 10/10; copilot compiler 17/17; npm run test green; npm run lint 0 errors; npm run test:release pass"
+  constraints: "no as any/ts-ignore/ts-expect-error; no output-format or verdict changes; runtime adapter resolvers made repoRoot-required (they crash on undefined anyway)"
 ---
 
 ## Objective

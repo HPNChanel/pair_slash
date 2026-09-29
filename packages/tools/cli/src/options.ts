@@ -13,7 +13,7 @@ export function defaultOptions() {
     target: "repo",
     skillRoot: "runtime-default",
     emit: "skill",
-    packs: [],
+    packs: [] as string[],
     format: "text",
     apply: false,
     preview: false,
@@ -37,17 +37,17 @@ export function defaultOptions() {
     scopeDetail: null,
     confidence: null,
     recordAction: null,
-    tags: [],
-    sourceRefs: [],
+    tags: [] as string[],
+    sourceRefs: [] as string[],
     supersedes: null,
     updatedBy: null,
     taskScope: null,
-    evidenceSources: [],
+    evidenceSources: [] as string[],
     strictness: "strict-gate-fail-fast",
     maxCandidates: 20,
     auditScope: null,
     mode: "report-only",
-    focus: [],
+    focus: [] as string[],
     sessionId: null,
     latest: false,
     out: null,
@@ -58,14 +58,14 @@ export function defaultOptions() {
   };
 }
 
-function splitList(value) {
+function splitList(value: string) {
   return value
     .split(",")
-    .map((item) => item.trim())
+    .map((item: any) => item.trim())
     .filter(Boolean);
 }
 
-export function parseOptions(argv) {
+export function parseOptions(argv: any) {
   const options = defaultOptions();
   for (let index = 0; index < argv.length; index += 1) {
     const token = argv[index];

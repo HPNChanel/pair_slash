@@ -87,7 +87,7 @@ const PLUGIN_WRAPPER_ASSET_BASE = {
 
 function emitCodexPluginBundle({ ir }: { ir: NormalizedIr }) {
   const skillRoot = `${PLUGIN_SKILLS_DIR}/${ir.pack.id}`;
-  const skillFiles = emitCodexBundle({ ir }).map((file) => ({
+  const skillFiles = emitCodexBundle({ ir }).map((file: any) => ({
     ...file,
     relative_path: `${skillRoot}/${file.relative_path}`,
   }));
@@ -181,13 +181,13 @@ export function compileCodexPack(options: CompileOptions & { emitMode?: string }
 // "git-subdir". policy.installation/authentication values: AVAILABLE,
 // INSTALLED_BY_DEFAULT / ON_INSTALL, ON_USE. Emission only — publishing is a
 // T3-05/T7 decision.
-export function buildCodexMarketplaceManifest({ name, displayName, packIds, pluginsBase = "./plugins" }) {
+export function buildCodexMarketplaceManifest({ name, displayName, packIds, pluginsBase = "./plugins" }: { name?: string; displayName?: any; packIds: string[]; pluginsBase?: any }) {
   return {
     name,
     interface: {
       displayName,
     },
-    plugins: [...packIds].sort().map((packId) => ({
+    plugins: [...packIds].sort().map((packId: string) => ({
       name: packId,
       source: {
         source: "local",
