@@ -1,6 +1,12 @@
-import { CI_CAPABILITY_DEFAULTS, resolveCiCapabilities } from "./capabilities.js";
+import {
+  CI_CAPABILITY_DEFAULTS,
+  resolveCiCapabilities,
+  type CiCapabilityFlags,
+} from "./capabilities.ts";
 
-const VERDICT_PRECEDENCE = Object.freeze({
+export type CiPolicyVerdictValue = "allow" | "ask" | "require-preview" | "deny";
+
+const VERDICT_PRECEDENCE: Readonly<Record<CiPolicyVerdictValue, number>> = Object.freeze({
   allow: 0,
   ask: 1,
   "require-preview": 2,
@@ -17,7 +23,9 @@ export const CI_POLICY_ACTIONS = Object.freeze({
   MERGE: "ci.merge",
   WRITE_TASK_MEMORY_CANDIDATE: "ci.write_task_memory_candidate",
   WRITE_GLOBAL_MEMORY: "ci.write_global_memory",
-});
+} as const);
+
+export type CiPolicyAction = (typeof CI_POLICY_ACTIONS)[keyof typeof CI_POLICY_ACTIONS];
 
 export const CI_POLICY_CONTRACT = Object.freeze({
   kind: "ci-policy-contract",
@@ -33,7 +41,7 @@ export const CI_POLICY_CONTRACT = Object.freeze({
     [CI_POLICY_ACTIONS.MERGE]: "deny",
     [CI_POLICY_ACTIONS.WRITE_TASK_MEMORY_CANDIDATE]: "require-preview",
     [CI_POLICY_ACTIONS.WRITE_GLOBAL_MEMORY]: "deny",
-  },
+  } as Record<string, CiPolicyVerdictValue>,
   invariants: {
     explicit_opt_in_required: true,
     explicit_invocation_only: true,
@@ -45,11 +53,30 @@ export const CI_POLICY_CONTRACT = Object.freeze({
   },
 });
 
-function pickOverallVerdict(reasons = []) {
+export interface CiPolicyReason {
+  code: string;
+  verdict: CiPolicyVerdictValue;
+  message: string;
+}
+
+export interface CiPolicyVerdict {
+  kind: "ci-policy-verdict";
+  schema_version: "0.1.0";
+  action: string;
+  overall_verdict: CiPolicyVerdictValue;
+  reasons: CiPolicyReason[];
+  capability_flags: CiCapabilityFlags;
+  explicit_invocation_required: boolean;
+  explicit_repo_policy_required: boolean;
+  no_direct_memory_write: boolean;
+  no_direct_repo_commit: boolean;
+}
+
+function pickOverallVerdict(reasons: CiPolicyReason[] = []): CiPolicyVerdictValue {
   if (reasons.length === 0) {
     return "allow";
   }
-  return reasons.reduce((current, reason) => {
+  return reasons.reduce<CiPolicyVerdictValue>((current, reason) => {
     if (VERDICT_PRECEDENCE[reason.verdict] > VERDICT_PRECEDENCE[current]) {
       return reason.verdict;
     }
@@ -57,7 +84,11 @@ function pickOverallVerdict(reasons = []) {
   }, "allow");
 }
 
-function buildReason(code, verdict, message) {
+function buildReason(
+  code: string,
+  verdict: CiPolicyVerdictValue,
+  message: string,
+): CiPolicyReason {
   return { code, verdict, message };
 }
 
@@ -66,9 +97,14 @@ export function evaluateCiPolicy({
   capabilities = {},
   explicitInvocation = false,
   repoPolicyExplicit = false,
-} = {}) {
+}: {
+  action?: string;
+  capabilities?: Partial<CiCapabilityFlags>;
+  explicitInvocation?: boolean;
+  repoPolicyExplicit?: boolean;
+} = {}): CiPolicyVerdict {
   const resolvedCapabilities = resolveCiCapabilities(capabilities);
-  const reasons = [];
+  const reasons: CiPolicyReason[] = [];
   const resolvedAction = typeof action === "string" ? action : "ci.unknown";
 
   if (!explicitInvocation) {

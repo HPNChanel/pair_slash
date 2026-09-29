@@ -2,14 +2,27 @@ import { randomUUID } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import {
   existsSync,
+  mkdirSync,
   readFileSync,
   readdirSync,
+  renameSync,
   statSync,
+  writeFileSync,
 } from "node:fs";
-import { basename, relative, resolve } from "node:path";
+import { basename, join, relative, resolve } from "node:path";
 
-import { resolveCiCapabilities } from "./capabilities.js";
-import { CI_POLICY_ACTIONS, evaluateCiPolicy } from "./policy-contract.js";
+import { stableYaml } from "@pairslash/spec-core";
+
+import {
+  resolveCiCapabilities,
+  type CiCapabilityFlags,
+} from "./capabilities.ts";
+import {
+  CI_POLICY_ACTIONS,
+  evaluateCiPolicy,
+  type CiPolicyVerdict,
+  type CiPolicyVerdictValue,
+} from "./policy-contract.ts";
 
 const DEFAULT_MAX_SCAN_FILES = 1500;
 const DEFAULT_MAX_FILE_BYTES = 256 * 1024;
@@ -20,12 +33,18 @@ const SKIP_DIRECTORIES = new Set([
   ".agents",
   ".github",
 ]);
-const VERDICT_PRECEDENCE = Object.freeze({
+const VERDICT_PRECEDENCE: Readonly<Record<CiPolicyVerdictValue, number>> = Object.freeze({
   allow: 0,
   ask: 1,
   "require-preview": 2,
   deny: 3,
 });
+
+export const CI_PROPOSALS_STAGING_DIR = join(
+  ".pairslash",
+  "staging",
+  "ci-proposals",
+);
 
 const DEFAULT_CHECKS = Object.freeze([
   {
@@ -42,11 +61,92 @@ const DEFAULT_CHECKS = Object.freeze([
   },
 ]);
 
-function normalizePath(value) {
+interface CiCheckInput {
+  id?: string;
+  type?: string;
+  path?: string;
+  needle?: string;
+  required?: boolean;
+}
+
+export interface CiCheckResult {
+  id: string;
+  type: string;
+  status: "pass" | "fail";
+  required: boolean;
+  observed: unknown;
+  message: string;
+}
+
+interface CiPatchCandidate {
+  id?: string;
+  path?: string;
+  after?: string;
+  description?: string;
+}
+
+export interface CiPatchArtifact {
+  kind: "ci-patch-artifact";
+  schema_version: "0.1.0";
+  artifact_id: string;
+  label: "candidate-artifact";
+  authoritative: false;
+  truth_tier: "supplemental";
+  apply_mode: "manual-only";
+  target_path: string;
+  diff: string;
+  description: string | null;
+  source_file: string;
+}
+
+export interface CiProvenanceInput {
+  ci_run_id?: string;
+  created_at?: string;
+  commit_sha?: string;
+  runtime?: string;
+  runtime_version?: string;
+  execution_context?: string;
+  trigger_type?: string;
+  shim_status?: "none" | "shim";
+  live_evidence?: boolean;
+}
+
+export interface CiProvenance {
+  kind: "ci-provenance";
+  schema_version: "0.1.0";
+  ci_run_id: string;
+  ci_run_id_origin: "explicit" | "generated";
+  created_at: string;
+  commit_sha: string | null;
+  repo_snapshot_ref: string;
+  runtime: string;
+  runtime_version: string | null;
+  execution_context: string;
+  trigger_type: string;
+  source_pack_id: "pairslash-ci-addon";
+  lane_package_version: "0.1.0";
+  policy_verdict: CiPolicyVerdictValue;
+  capability_flags: CiCapabilityFlags;
+  shim_status: "none" | "shim" | "unknown";
+  live_evidence: boolean;
+  evidence_tier: "live-disposable" | "deterministic-simulated";
+}
+
+export interface CiProposalWriteResult {
+  kind: "ci-proposal-write-result";
+  schema_version: "0.1.0";
+  staging_dir: string;
+  run_dir: string | null;
+  written: string[];
+  refused: boolean;
+  errors: string[];
+}
+
+function normalizePath(value: string): string {
   return value.replace(/\\/g, "/");
 }
 
-function isPathInside(rootPath, candidatePath) {
+function isPathInside(rootPath: string, candidatePath: string): boolean {
   const resolvedRoot = resolve(rootPath);
   const resolvedCandidate = resolve(candidatePath);
   const root = process.platform === "win32" ? resolvedRoot.toLowerCase() : resolvedRoot;
@@ -54,7 +154,7 @@ function isPathInside(rootPath, candidatePath) {
   return candidate === root || candidate.startsWith(`${root}${process.platform === "win32" ? "\\" : "/"}`);
 }
 
-function collectFilesRecursive(rootPath, files, maxFiles) {
+function collectFilesRecursive(rootPath: string, files: string[], maxFiles: number): void {
   if (files.length >= maxFiles) {
     return;
   }
@@ -84,7 +184,7 @@ function collectFilesRecursive(rootPath, files, maxFiles) {
   }
 }
 
-function looksLikeText(filePath, maxBytes) {
+function looksLikeText(filePath: string, maxBytes: number): boolean {
   let stats = null;
   try {
     stats = statSync(filePath);
@@ -106,8 +206,12 @@ function createRepoSummary({
   repoRoot,
   maxScanFiles,
   maxFileBytes,
+}: {
+  repoRoot: string;
+  maxScanFiles: number;
+  maxFileBytes: number;
 }) {
-  const files = [];
+  const files: string[] = [];
   collectFilesRecursive(repoRoot, files, maxScanFiles);
 
   let textFileCount = 0;
@@ -128,7 +232,17 @@ function createRepoSummary({
   };
 }
 
-function runPathExistsCheck({ repoRoot, id, path, required }) {
+function runPathExistsCheck({
+  repoRoot,
+  id,
+  path,
+  required,
+}: {
+  repoRoot: string;
+  id: string;
+  path: string;
+  required: boolean;
+}): CiCheckResult {
   const resolvedPath = resolve(repoRoot, path);
   const insideRepo = isPathInside(repoRoot, resolvedPath);
   const exists = insideRepo ? existsSync(resolvedPath) : false;
@@ -151,7 +265,19 @@ function runPathExistsCheck({ repoRoot, id, path, required }) {
   };
 }
 
-function runTextContainsCheck({ repoRoot, id, path, needle, required }) {
+function runTextContainsCheck({
+  repoRoot,
+  id,
+  path,
+  needle,
+  required,
+}: {
+  repoRoot: string;
+  id: string;
+  path: string;
+  needle: string;
+  required: boolean;
+}): CiCheckResult {
   const resolvedPath = resolve(repoRoot, path);
   const insideRepo = isPathInside(repoRoot, resolvedPath);
   let found = false;
@@ -182,11 +308,14 @@ function runTextContainsCheck({ repoRoot, id, path, needle, required }) {
 function runDeclaredChecks({
   repoRoot,
   checks = [],
-}) {
-  const declaredChecks = Array.isArray(checks) && checks.length > 0
+}: {
+  repoRoot: string;
+  checks?: CiCheckInput[];
+}): CiCheckResult[] {
+  const declaredChecks: CiCheckInput[] = Array.isArray(checks) && checks.length > 0
     ? checks
-    : DEFAULT_CHECKS;
-  const results = [];
+    : [...DEFAULT_CHECKS];
+  const results: CiCheckResult[] = [];
   for (const check of declaredChecks) {
     const id = typeof check?.id === "string" && check.id.trim() !== ""
       ? check.id
@@ -220,14 +349,14 @@ function runDeclaredChecks({
   return results;
 }
 
-function splitLines(value) {
+function splitLines(value: string): string[] {
   if (!value) {
     return [];
   }
   return value.replace(/\r\n/g, "\n").split("\n");
 }
 
-function buildUnifiedDiff(pathValue, beforeContent, afterContent) {
+function buildUnifiedDiff(pathValue: string, beforeContent: string, afterContent: string): string {
   const beforeLines = splitLines(beforeContent);
   const afterLines = splitLines(afterContent);
   const relativePath = normalizePath(pathValue);
@@ -243,7 +372,7 @@ function buildUnifiedDiff(pathValue, beforeContent, afterContent) {
   ].join("\n");
 }
 
-function readTextFileOrEmpty(filePath) {
+function readTextFileOrEmpty(filePath: string): string {
   try {
     return readFileSync(filePath, "utf8");
   } catch {
@@ -254,8 +383,11 @@ function readTextFileOrEmpty(filePath) {
 function createPatchArtifacts({
   repoRoot,
   patchCandidates = [],
-}) {
-  const artifacts = [];
+}: {
+  repoRoot: string;
+  patchCandidates?: CiPatchCandidate[];
+}): CiPatchArtifact[] {
+  const artifacts: CiPatchArtifact[] = [];
   for (const candidate of patchCandidates) {
     if (!candidate || typeof candidate !== "object") {
       continue;
@@ -302,11 +434,11 @@ function createPatchArtifacts({
   return artifacts;
 }
 
-function pickOverallVerdict(verdicts = []) {
+function pickOverallVerdict(verdicts: CiPolicyVerdictValue[] = []): CiPolicyVerdictValue {
   if (verdicts.length === 0) {
     return "allow";
   }
-  return verdicts.reduce((current, verdict) => {
+  return verdicts.reduce<CiPolicyVerdictValue>((current, verdict) => {
     if ((VERDICT_PRECEDENCE[verdict] ?? VERDICT_PRECEDENCE.deny) > VERDICT_PRECEDENCE[current]) {
       return verdict;
     }
@@ -314,7 +446,7 @@ function pickOverallVerdict(verdicts = []) {
   }, "allow");
 }
 
-function resolveRepoSnapshotRef(repoRoot) {
+function resolveRepoSnapshotRef(repoRoot: string): string | null {
   const result = spawnSync("git", ["rev-parse", "HEAD"], {
     cwd: repoRoot,
     encoding: "utf8",
@@ -326,7 +458,7 @@ function resolveRepoSnapshotRef(repoRoot) {
       return trimmed;
     }
   }
-  return "working-tree";
+  return null;
 }
 
 function createProvenance({
@@ -334,10 +466,20 @@ function createProvenance({
   policyVerdict,
   capabilityFlags,
   provenance = {},
-}) {
-  const ciRunId = typeof provenance.ci_run_id === "string" && provenance.ci_run_id.trim() !== ""
-    ? provenance.ci_run_id
-    : randomUUID();
+}: {
+  repoRoot: string;
+  policyVerdict: CiPolicyVerdictValue;
+  capabilityFlags: CiCapabilityFlags;
+  provenance?: CiProvenanceInput;
+}): CiProvenance {
+  const explicitRunId =
+    typeof provenance.ci_run_id === "string" && provenance.ci_run_id.trim() !== "";
+  const ciRunId = explicitRunId ? (provenance.ci_run_id as string).trim() : randomUUID();
+  const explicitSha =
+    typeof provenance.commit_sha === "string" && provenance.commit_sha.trim() !== "";
+  const commitSha = explicitSha
+    ? (provenance.commit_sha as string).trim()
+    : resolveRepoSnapshotRef(repoRoot);
   const shimStatus = provenance.shim_status === "none"
     ? "none"
     : provenance.shim_status === "shim"
@@ -350,8 +492,13 @@ function createProvenance({
     kind: "ci-provenance",
     schema_version: "0.1.0",
     ci_run_id: ciRunId,
-    created_at: new Date().toISOString(),
-    repo_snapshot_ref: resolveRepoSnapshotRef(repoRoot),
+    ci_run_id_origin: explicitRunId ? "explicit" : "generated",
+    created_at:
+      typeof provenance.created_at === "string" && provenance.created_at.trim() !== ""
+        ? provenance.created_at
+        : new Date().toISOString(),
+    commit_sha: commitSha,
+    repo_snapshot_ref: commitSha ?? "working-tree",
     runtime: typeof provenance.runtime === "string" ? provenance.runtime : "unknown",
     runtime_version: typeof provenance.runtime_version === "string" ? provenance.runtime_version : null,
     execution_context: typeof provenance.execution_context === "string"
@@ -368,7 +515,151 @@ function createProvenance({
   };
 }
 
-function buildTraceSupportHint({ report, artifacts, provenance }) {
+// Proposal provenance is fail-closed: a proposal artifact is valid only when
+// the caller supplied an explicit run id, a real commit SHA, and the resolved
+// capability declarations. Generated or missing provenance never writes.
+export function validateProposalProvenance(provenance: CiProvenance): string[] {
+  const errors: string[] = [];
+  if (provenance.ci_run_id_origin !== "explicit" || provenance.ci_run_id.trim() === "") {
+    errors.push("ci-provenance-run-id-missing: caller must supply ci_run_id");
+  }
+  if (typeof provenance.commit_sha !== "string" || provenance.commit_sha.trim() === "") {
+    errors.push("ci-provenance-commit-sha-missing: caller must supply commit_sha");
+  }
+  if (!provenance.capability_flags || typeof provenance.capability_flags !== "object") {
+    errors.push("ci-provenance-capabilities-missing: resolved capability flags required");
+  }
+  return errors;
+}
+
+function sanitizeArtifactName(value: string): string | null {
+  const cleaned = value.replace(/[^A-Za-z0-9._-]/g, "-");
+  if (cleaned === "" || cleaned === "." || cleaned === "..") {
+    return null;
+  }
+  return cleaned;
+}
+
+function atomicWrite(filePath: string, contents: string): void {
+  const tmpPath = `${filePath}.tmp`;
+  writeFileSync(tmpPath, contents, "utf8");
+  renameSync(tmpPath, filePath);
+}
+
+// Proposals are files under .pairslash/staging/ci-proposals/<ci_run_id>/ —
+// never auto-applied, never written anywhere else. There is no apply path.
+export function writeCiProposals({
+  repoRoot,
+  runResult,
+}: {
+  repoRoot: string;
+  runResult: {
+    artifacts?: CiPatchArtifact[];
+    provenance?: CiProvenance;
+  };
+}): CiProposalWriteResult {
+  const stagingDir = resolve(repoRoot, CI_PROPOSALS_STAGING_DIR);
+  const result: CiProposalWriteResult = {
+    kind: "ci-proposal-write-result",
+    schema_version: "0.1.0",
+    staging_dir: normalizePath(relative(repoRoot, stagingDir)),
+    run_dir: null,
+    written: [],
+    refused: false,
+    errors: [],
+  };
+
+  const artifacts = Array.isArray(runResult.artifacts) ? runResult.artifacts : [];
+  if (artifacts.length === 0) {
+    return result;
+  }
+  if (!runResult.provenance) {
+    result.refused = true;
+    result.errors.push("ci-proposals-refused: provenance record absent");
+    return result;
+  }
+  const provenanceErrors = validateProposalProvenance(runResult.provenance);
+  if (provenanceErrors.length > 0) {
+    result.refused = true;
+    result.errors.push(...provenanceErrors);
+    return result;
+  }
+
+  const runDirName = sanitizeArtifactName(runResult.provenance.ci_run_id);
+  if (runDirName === null) {
+    result.refused = true;
+    result.errors.push("ci-proposals-refused: ci_run_id is not a safe directory name");
+    return result;
+  }
+  const runDir = resolve(stagingDir, runDirName);
+  if (!isPathInside(stagingDir, runDir)) {
+    result.refused = true;
+    result.errors.push("ci-proposals-refused: run dir escapes staging boundary");
+    return result;
+  }
+
+  const written: string[] = [];
+  const indexEntries: unknown[] = [];
+  for (const artifact of artifacts) {
+    const artifactName = sanitizeArtifactName(artifact.artifact_id);
+    if (artifactName === null) {
+      result.errors.push(`ci-proposal-skipped: artifact id is not a safe file name: ${artifact.artifact_id}`);
+      continue;
+    }
+    const patchPath = join(runDir, `${artifactName}.patch`);
+    if (!isPathInside(runDir, patchPath)) {
+      result.errors.push(`ci-proposal-skipped: artifact path escapes run dir: ${artifact.artifact_id}`);
+      continue;
+    }
+    mkdirSync(runDir, { recursive: true });
+    atomicWrite(patchPath, artifact.diff);
+    written.push(normalizePath(relative(repoRoot, patchPath)));
+    indexEntries.push({
+      artifact_id: artifact.artifact_id,
+      label: artifact.label,
+      authoritative: false,
+      truth_tier: "supplemental",
+      apply_mode: "manual-only",
+      target_path: artifact.target_path,
+      patch_file: `${artifactName}.patch`,
+      description: artifact.description,
+    });
+  }
+
+  if (written.length > 0) {
+    const indexPath = join(runDir, "proposals.yaml");
+    atomicWrite(
+      indexPath,
+      stableYaml({
+        kind: "ci-proposal-index",
+        schema_version: "0.1.0",
+        ci_run_id: runResult.provenance.ci_run_id,
+        commit_sha: runResult.provenance.commit_sha,
+        capability_flags: runResult.provenance.capability_flags,
+        authoritative: false,
+        apply_mode: "manual-only",
+        proposals: indexEntries,
+      }),
+    );
+    written.push(normalizePath(relative(repoRoot, indexPath)));
+  }
+
+  result.run_dir = written.length > 0
+    ? normalizePath(relative(repoRoot, runDir))
+    : null;
+  result.written = written;
+  return result;
+}
+
+function buildTraceSupportHint({
+  report,
+  artifacts,
+  provenance,
+}: {
+  report: { status: string };
+  artifacts: CiPatchArtifact[];
+  provenance: CiProvenance;
+}) {
   return {
     kind: "ci-trace-support-hint",
     schema_version: "0.1.0",
@@ -382,7 +673,7 @@ function buildTraceSupportHint({ report, artifacts, provenance }) {
             ? "failed"
             : "blocked",
       source_package: "@pairslash/ci-engine-advanced",
-      source_module: "src/runner.js",
+      source_module: "src/runner.ts",
       payload: {
         ci_run_id: provenance.ci_run_id,
         policy_verdict: provenance.policy_verdict,
@@ -397,7 +688,7 @@ function buildTraceSupportHint({ report, artifacts, provenance }) {
   };
 }
 
-function toOutcome(verdict) {
+function toOutcome(verdict: CiPolicyVerdictValue): "blocked" | "allow" {
   if (verdict === "deny") {
     return "blocked";
   }
@@ -413,6 +704,9 @@ function toOutcome(verdict) {
 export function createCiPlan({
   checks = [],
   patchCandidates = [],
+}: {
+  checks?: CiCheckInput[];
+  patchCandidates?: CiPatchCandidate[];
 } = {}) {
   return {
     kind: "ci-lane-plan",
@@ -443,6 +737,16 @@ export function runCiLane({
   provenance = {},
   maxScanFiles = DEFAULT_MAX_SCAN_FILES,
   maxFileBytes = DEFAULT_MAX_FILE_BYTES,
+}: {
+  repoRoot?: string;
+  invocation?: string;
+  capabilities?: Partial<CiCapabilityFlags>;
+  repoPolicyExplicit?: boolean;
+  checks?: CiCheckInput[];
+  patchCandidates?: CiPatchCandidate[];
+  provenance?: CiProvenanceInput;
+  maxScanFiles?: number;
+  maxFileBytes?: number;
 } = {}) {
   const resolvedRepoRoot = resolve(repoRoot);
   const explicitInvocation = invocation === "explicit";
@@ -464,7 +768,7 @@ export function runCiLane({
     ...policyInput,
   });
 
-  const activeVerdicts = [readRepoVerdict, runChecksVerdict];
+  const activeVerdicts: CiPolicyVerdict[] = [readRepoVerdict, runChecksVerdict];
 
   const repoSummary = toOutcome(readRepoVerdict.overall_verdict) === "allow"
     ? createRepoSummary({
@@ -480,7 +784,7 @@ export function runCiLane({
       })
     : [];
 
-  let patchArtifacts = [];
+  let patchArtifacts: CiPatchArtifact[] = [];
   if (Array.isArray(patchCandidates) && patchCandidates.length > 0) {
     const generateDiffVerdict = evaluateCiPolicy({
       action: CI_POLICY_ACTIONS.GENERATE_DIFF,
@@ -506,7 +810,7 @@ export function runCiLane({
     }
   }
 
-  const guardrailVerdicts = [
+  const guardrailVerdicts: CiPolicyVerdict[] = [
     evaluateCiPolicy({
       action: CI_POLICY_ACTIONS.COMMIT,
       ...policyInput,

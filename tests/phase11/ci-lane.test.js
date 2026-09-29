@@ -18,7 +18,7 @@ import {
   CI_POLICY_CONTRACT,
   evaluateCiPolicy,
   runCiLane,
-} from "../../packages/advanced/ci-engine/src/index.js";
+} from "../../packages/advanced/ci-engine/src/index.ts";
 import { createTempRepo, repoRoot } from "../phase4-helpers.js";
 
 const serial = { concurrency: false };

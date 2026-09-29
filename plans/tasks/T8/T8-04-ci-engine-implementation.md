@@ -2,13 +2,13 @@
 id: T8-04
 track: T8
 title: ci-engine — report-first outputs + proposal-only patches
-status: todo
+status: done
 depends_on: []
 est_size: M
-claimed_by:
-claimed_at:
-completed_at:
-evidence:
+claimed_by: devin
+claimed_at: 2026-09-29
+completed_at: 2026-09-29
+evidence: packages/advanced/ci-engine tests 7/7 (no apply path, policy denies apply-shaped actions, deterministic report, staging-only proposal writes, provenance fail-closed, traversal guard); phase11 ci-lane tests 7/7; typecheck/lint/npm test/test:release all green
 ---
 
 ## Objective
@@ -45,9 +45,9 @@ Implement `packages/advanced/ci-engine` as a TS slice: CI-run structured reports
 
 ## Acceptance gates
 
-- [ ] Report + proposal artifacts generated; no apply path exists (test asserts)
-- [ ] Provenance fields enforced
-- [ ] Gates green
+- [x] Report + proposal artifacts generated; no apply path exists (test asserts)
+- [x] Provenance fields enforced
+- [x] Gates green
 
 ## Evidence to record
 

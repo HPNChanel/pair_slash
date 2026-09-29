@@ -1,4 +1,13 @@
-export const CI_CAPABILITY_FLAGS = Object.freeze([
+export interface CiCapabilityFlags {
+  ci_lane_enabled: boolean;
+  ci_plan_only: boolean;
+  ci_generate_patch_artifact: boolean;
+  ci_no_direct_memory_write: boolean;
+  ci_no_direct_repo_commit_default: boolean;
+  ci_requires_explicit_repo_policy: boolean;
+}
+
+export const CI_CAPABILITY_FLAGS: readonly string[] = Object.freeze([
   "ci_lane_enabled",
   "ci_plan_only",
   "ci_generate_patch_artifact",
@@ -7,7 +16,7 @@ export const CI_CAPABILITY_FLAGS = Object.freeze([
   "ci_requires_explicit_repo_policy",
 ]);
 
-export const CI_CAPABILITY_DEFAULTS = Object.freeze({
+export const CI_CAPABILITY_DEFAULTS: Readonly<CiCapabilityFlags> = Object.freeze({
   ci_lane_enabled: false,
   ci_plan_only: true,
   ci_generate_patch_artifact: false,
@@ -16,11 +25,15 @@ export const CI_CAPABILITY_DEFAULTS = Object.freeze({
   ci_requires_explicit_repo_policy: true,
 });
 
-export function resolveCiCapabilities(input = {}) {
+export function resolveCiCapabilities(
+  input: Partial<CiCapabilityFlags> = {},
+): CiCapabilityFlags {
   const resolved = { ...CI_CAPABILITY_DEFAULTS };
   for (const capability of CI_CAPABILITY_FLAGS) {
     if (capability in input) {
-      resolved[capability] = Boolean(input[capability]);
+      resolved[capability as keyof CiCapabilityFlags] = Boolean(
+        input[capability as keyof CiCapabilityFlags],
+      );
     }
   }
 
