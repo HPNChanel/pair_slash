@@ -2,13 +2,21 @@
 id: T10-02
 track: T10
 title: engines + @types/node alignment at Node 26 LTS + cadence doc
-status: todo
+status: done
 depends_on: [T10-01]
 est_size: S
-claimed_by:
-claimed_at:
-completed_at:
-evidence:
+claimed_by: devin
+claimed_at: 2026-09-29
+completed_at: 2026-09-29
+evidence: >-
+  @types/node bumped 24.13.6 → 26.6.3; npm run typecheck (strict) clean on
+  both Node 24.11.0 and Node 26.10.0 — no 26-only type leakage surfaced, no
+  latent type errors. npm install clean, 0 vulnerabilities. Engines
+  decision: keep ">=24.0.0" as floor while both majors are CI-tested —
+  recorded in docs/maintainers/node-release-cadence.md along with the new
+  annual-April all-LTS cadence (next transition ~April 2027) and the
+  new-major verification checklist. Doc linked from
+  docs/maintainers/README.md.
 ---
 
 ## Objective

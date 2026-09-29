@@ -19,6 +19,7 @@ It complements `docs/phase-9/maintainer-playbook.md` with operational links used
 - Public claim policy: `docs/releases/public-claim-policy.md`
 - Compatibility wording guardrail: `docs/compatibility/compatibility-matrix.md`
 - Runtime promotion evidence: `docs/compatibility/runtime-verification.md`
+- Node.js cadence and engine-floor policy: `docs/maintainers/node-release-cadence.md`
 
 ## Regression Handling
 
