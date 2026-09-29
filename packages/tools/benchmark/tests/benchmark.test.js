@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 
 import {
@@ -333,4 +334,14 @@ test("capture fails closed when prep lane is used as headline reporting", serial
   } finally {
     fixture.cleanup();
   }
+});
+
+test("pairslash-benchmark bin entrypoint resolves the .ts index and validates", serial, () => {
+  const binPath = join(repoRoot, "packages", "tools", "benchmark", "src", "bin", "pairslash-benchmark.js");
+  const result = spawnSync(process.execPath, [binPath, "validate"], {
+    cwd: repoRoot,
+    encoding: "utf8",
+  });
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /Status: PASS/);
 });

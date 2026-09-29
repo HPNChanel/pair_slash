@@ -18,7 +18,7 @@ import {
   scoreBenchmarkRuns,
   validatePhase19BenchmarkConfig,
   writeEvidenceLogArtifacts,
-} from "../index.js";
+} from "../index.ts";
 
 function printUsage() {
   process.stdout.write(
