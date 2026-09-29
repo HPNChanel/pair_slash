@@ -2,7 +2,7 @@
 id: T5-11
 track: T5
 title: Strict batch — installer
-status: todo
+status: done
 depends_on: [T5-04, T5-09]
 est_size: L
 claimed_by:
@@ -43,11 +43,24 @@ Fix all strict errors in `packages/tools/installer/` post-decomposition (T5-04) 
 
 ## Acceptance gates
 
-- [ ] 0 strict errors; installer tests green unmodified; test:release green
+- [x] 0 strict errors; installer tests green unmodified; test:release green
 
-## Evidence to record
+## Evidence recorded
 
-- Counts; ownership/journal-path fixes flagged.
+- Baseline strict errors (installer): ~548 pre-codemod -> 135 residuals -> 0 final.
+- `npm run typecheck` (relaxed CI gate): PASS. `npm run typecheck:strict`: 0 errors in `packages/tools/installer/src/**`.
+- `node packages/tools/installer/tests/installer.test.js`: 47/47 pass, unmodified.
+- `npm run lint`: PASS. `npm test`: full suite green. `npm run test:release`: PASS.
+- Ownership/journal-path decisions flagged:
+  - `emit` params were codemod-misannotated as `boolean`; corrected to `string` (emit mode is a validated string union normalized via `normalizeEmitMode`).
+  - `safeLstat`/`safeRealpath`/`safeCurrentDigest` annotated with flat `{ ok: boolean; ...?; error?: string }` shapes (discriminated-union narrowing interacts poorly with the relaxed config, so optional fields + `?.` call-site guards were used instead — same runtime semantics).
+  - `errors`/`warnings`/`selectedPacks` params made required in the type annotations where bodies dereference them unconditionally (all callers already pass them).
+  - `repoRoot` made required `string` where unconditionally `resolve()`d (`planInstall`, `planUpdate`, `planUninstall`, `resolveJournalPath`, `resolveStatePath`, `loadInstallState`, `loadStateForDoctor`, `inspectInstallDirBoundary`, `resolveUpdateSelection`, `compileSelection`, `buildUninstallOperations`, `applyLintPreflight`, `buildCandidateTrustReceipts`, `buildInstallOperations`).
+  - `uninstall.ts` `selectedPacks` typed `any[]` (elements are pack objects, not strings — codemod mistyped as `string[]`).
+  - `update.ts` ownership digest path: `digest === null || !digest.ok` guard preserves the exact control flow (null is unreachable post-`exists` check but keeps TS honest); `digest?.error` interpolation unchanged in reachable states.
+  - `pickOverallVerdict` precedence map uses `keyof typeof` casts; `runtimeFlag` accepts `string | undefined`; `packId`/`path`/`relativePath` params typed `| null` where defaults are `null`.
+  - Catch-site error messages use `error instanceof Error ? error.message : String(error)`.
+- No `as any`/`@ts-ignore` introduced; journal format, ownership receipt format, and preview/apply parity unchanged (types only).
 
 ## Rollback
 

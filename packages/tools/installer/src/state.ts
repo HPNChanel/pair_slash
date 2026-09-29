@@ -14,7 +14,7 @@ import {
 
 import { normalizeInstallStateRecord } from "./semantics.ts";
 
-export function resolveStatePath({ repoRoot, runtime, target, skillRoot = "runtime-default", emit = "skill" }) {
+export function resolveStatePath({ repoRoot, runtime, target, skillRoot = "runtime-default", emit = "skill" }: { repoRoot: string; runtime?: string; target?: any; skillRoot?: any; emit?: string }) {
   const normalizedEmit = normalizeEmitMode(emit);
   // Plugin installs keep a separate state lane: <target>-<runtime>-plugin.json.
   // skill_root is meaningless for plugin layout, so its suffix never applies.
@@ -34,7 +34,7 @@ export function buildEmptyState({
   adapter,
   skillRoot = "runtime-default",
   emit = "skill",
-}) {
+}: { repoRoot: string; runtime?: string; target?: any; adapter?: any; skillRoot?: any; emit?: string }) {
   const normalizedEmit = normalizeEmitMode(emit);
   const normalizedSkillRoot = normalizedEmit === "plugin" ? "runtime-default" : normalizeSkillRoot(skillRoot);
   const installRoot =
@@ -65,7 +65,7 @@ export function loadInstallState({
   adapter,
   skillRoot = "runtime-default",
   emit = "skill",
-}) {
+}: { repoRoot: string; runtime?: string; target?: any; adapter?: any; skillRoot?: any; emit?: string }) {
   const statePath = resolveStatePath({ repoRoot, runtime, target, skillRoot, emit });
   if (!exists(statePath)) {
     return {
@@ -81,17 +81,17 @@ export function loadInstallState({
   return { statePath, state: normalizeInstallStateRecord(state) };
 }
 
-export function writeInstallState(statePath, state) {
+export function writeInstallState(statePath: string, state: any) {
   ensureDir(dirname(statePath));
   writeTextFile(statePath, stableJson(state));
 }
 
-export function removeInstallState(statePath) {
+export function removeInstallState(statePath: string) {
   if (exists(statePath)) {
     rmSync(statePath, { force: true });
   }
 }
 
-export function findStatePack(state, packId) {
-  return state.packs.find((pack) => pack.id === packId) ?? null;
+export function findStatePack(state: any, packId: string) {
+  return state.packs.find((pack: any) => pack.id === packId) ?? null;
 }

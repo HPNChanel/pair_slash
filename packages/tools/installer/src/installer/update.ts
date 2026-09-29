@@ -65,7 +65,7 @@ export function buildUpdateBlockedOperation({
   reason,
   reasonCode = REASON_CODE_UPDATE_CONFLICT,
   remediationActions = [],
-}) {
+}: { packId?: string; installDir?: any; relativePath?: string; absolutePath?: any; ownership?: any; reason?: any; reasonCode?: any; remediationActions?: any }) {
   return buildOperation("blocked_conflict", {
     packId,
     relativePath,
@@ -77,7 +77,7 @@ export function buildUpdateBlockedOperation({
   });
 }
 
-export function validateManagedOwnershipFile({ existingStatePack, errors, operations, runtime, target }) {
+export function validateManagedOwnershipFile({ existingStatePack, errors, operations, runtime, target }: { existingStatePack?: any; errors: string[]; operations?: any; runtime?: string; target?: any }) {
   const remediationActions = [
     buildPreviewUpdateAction({
       runtime,
@@ -94,7 +94,7 @@ export function validateManagedOwnershipFile({ existingStatePack, errors, operat
     }),
   ];
   const ownershipStateFile = existingStatePack.files.find(
-    (file) => file.relative_path === OWNERSHIP_FILE,
+    (file: any) => file.relative_path === OWNERSHIP_FILE,
   );
   if (!ownershipStateFile) {
     errors.push(`ownership-mismatch:${existingStatePack.id}:${OWNERSHIP_FILE}: missing from receipt`);
@@ -196,7 +196,7 @@ export function buildUpdateOperations({
   warnings,
   errors,
 }: any) {
-  const operations = [];
+  const operations: any[] = [];
   const installRoot = resolveInstallRootForEmit(adapter, { repoRoot, target, skillRoot, emit });
 
   for (const packId of selectedPackIds) {
@@ -263,7 +263,7 @@ export function buildUpdateOperations({
       continue;
     }
 
-    const compiledPack = compiledPacks.find((entry) => entry.pack_id === packId);
+    const compiledPack = compiledPacks.find((entry: any) => entry.pack_id === packId);
     if (!compiledPack) {
       operations.push(
         buildUpdateBlockedOperation({
@@ -275,7 +275,7 @@ export function buildUpdateOperations({
       continue;
     }
 
-    const compiledPaths = new Set(compiledPack.files.map((file) => file.relative_path));
+    const compiledPaths = new Set(compiledPack.files.map((file: any) => file.relative_path));
     for (const stateFile of existingStatePack.files) {
       if (compiledPaths.has(stateFile.relative_path)) {
         continue;
@@ -334,7 +334,7 @@ export function buildUpdateOperations({
         continue;
       }
 
-      if (!digest.ok) {
+      if (digest === null || !digest.ok) {
         operations.push(
           buildOperation("blocked_conflict", {
             packId,
@@ -344,7 +344,7 @@ export function buildUpdateOperations({
             installSurface: stateFile.install_surface,
             ownership: "pairslash",
             overrideEligible: stateFile.override_eligible,
-            reason: `existing path is not a writable file: ${digest.error}`,
+            reason: `existing path is not a writable file: ${digest?.error}`,
             reasonCode: REASON_CODE_UPDATE_CONFLICT,
             remediationActions: [
               buildPreviewUpdateAction({
@@ -426,7 +426,7 @@ export function buildUpdateOperations({
 
     for (const file of compiledPack.files) {
       const absolutePath = join(existingStatePack.install_dir, file.relative_path);
-      const stateFile = existingStatePack.files.find((entry) => entry.relative_path === file.relative_path);
+      const stateFile = existingStatePack.files.find((entry: any) => entry.relative_path === file.relative_path);
       const ownership = stateFile
         ? stateFile.owned_by_pairslash
           ? "pairslash"
@@ -748,7 +748,7 @@ export function planUpdate({
   to = null,
   skillRoot = "runtime-default",
   emit = "skill",
-}) {
+}: { repoRoot: string; runtime?: string; target?: any; packs?: any; from?: any; to?: any; skillRoot?: any; emit?: string }) {
   const normalizedTarget = normalizeTarget(target);
   const normalizedEmit = normalizeEmitMode(emit);
   const normalizedSkillRoot =
@@ -766,10 +766,10 @@ export function planUpdate({
 
   const normalizedRuntime = normalizeRuntime(runtimeSelection.runtime ?? runtime);
   const adapter = runtimeSelection.adapter ?? getRuntimeAdapter(normalizedRuntime);
-  const warnings = [];
-  const errors = [];
-  const reasonCodes = [];
-  const remediationActions = [];
+  const warnings: string[] = [];
+  const errors: string[] = [];
+  const reasonCodes: any[] = [];
+  const remediationActions: any[] = [];
 
   if (!runtimeSelection.detection?.available) {
     errors.push(
@@ -850,7 +850,7 @@ export function planUpdate({
     errors.length === 0
       ? applyLintPreflight({
           repoRoot,
-          packs: selection.map((entry) => entry.manifest.pack.id),
+          packs: selection.map((entry: any) => entry.manifest.pack.id),
           runtime: normalizedRuntime,
           target: normalizedTarget,
           errors,
@@ -953,7 +953,7 @@ export function planUpdate({
   };
 }
 
-export function applyUpdate(envelope) {
+export function applyUpdate(envelope: any) {
   if (!envelope.plan.can_apply) {
     throw new Error("update plan contains blocked conflicts");
   }

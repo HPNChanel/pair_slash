@@ -20,7 +20,7 @@ import {
   cleanupEmptyDirectories,
 } from "./helpers.ts";
 
-export function resolveJournalPath({ repoRoot, runtime, target, skillRoot, emit = "skill" }) {
+export function resolveJournalPath({ repoRoot, runtime, target, skillRoot, emit = "skill" }: { repoRoot: string; runtime?: string; target?: any; skillRoot?: any; emit?: string }) {
   const stamp = new Date().toISOString().replace(/[-:.]/g, "").replace("T", "T");
   const suffix = Math.random().toString(16).slice(2, 8);
   const rootSuffix =
@@ -37,8 +37,8 @@ export function resolveJournalPath({ repoRoot, runtime, target, skillRoot, emit 
   );
 }
 
-export function buildMutationJournal(envelope, journalPath, action) {
-  const steps = [];
+export function buildMutationJournal(envelope: any, journalPath: any, action: any) {
+  const steps: any[] = [];
   for (const operation of envelope.plan.operations) {
     if (operation.kind === "create") {
       steps.push({
@@ -109,11 +109,11 @@ export function buildMutationJournal(envelope, journalPath, action) {
   return journal;
 }
 
-export function writeJournal(journal) {
+export function writeJournal(journal: any) {
   writeTextFile(journal.journal_path, stableJson(journal));
 }
 
-export function rollbackInstallJournal(journal, envelope) {
+export function rollbackInstallJournal(journal: any, envelope: any) {
   const reversed = journal.steps.slice().reverse();
   for (const step of reversed) {
     if (step.kind === "create") {

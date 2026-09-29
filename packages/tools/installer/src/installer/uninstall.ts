@@ -36,8 +36,8 @@ import {
   buildStateAfterUninstall,
 } from "./state.ts";
 
-export function buildUninstallOperations({ selectedPacks, warnings, installRoot }) {
-  const operations = [];
+export function buildUninstallOperations({ selectedPacks, warnings, installRoot }: { selectedPacks: any[]; warnings: string[]; installRoot: string }) {
+  const operations: any[] = [];
 
   for (const pack of selectedPacks) {
     const boundaryIssue = inspectInstallDirBoundary({
@@ -67,7 +67,7 @@ export function buildUninstallOperations({ selectedPacks, warnings, installRoot 
       );
       continue;
     }
-    const trackedPaths = new Set(pack.files.map((file) => file.absolute_path));
+    const trackedPaths = new Set(pack.files.map((file: any) => file.absolute_path));
     let containerRetained = false;
 
     for (const file of pack.files) {
@@ -169,7 +169,7 @@ export function buildUninstallOperations({ selectedPacks, warnings, installRoot 
 
     if (exists(pack.install_dir)) {
       const installDirStat = safeLstat(pack.install_dir);
-      if (!installDirStat.ok || !installDirStat.stat.isDirectory()) {
+      if (!installDirStat.ok || !installDirStat.stat?.isDirectory()) {
         containerRetained = true;
         warnings.push(`orphan-root-invalid:${pack.id}: install root is not a directory and will be preserved`);
         operations.push(
@@ -183,7 +183,7 @@ export function buildUninstallOperations({ selectedPacks, warnings, installRoot 
           }),
         );
       } else {
-        const unknownFiles = walkFiles(pack.install_dir).filter((absolutePath) => !trackedPaths.has(absolutePath));
+        const unknownFiles = walkFiles(pack.install_dir).filter((absolutePath: any) => !trackedPaths.has(absolutePath));
         for (const absolutePath of unknownFiles) {
           containerRetained = true;
           const relativePath = relativeFrom(pack.install_dir, absolutePath);
@@ -218,17 +218,17 @@ export function buildUninstallOperations({ selectedPacks, warnings, installRoot 
   return operations;
 }
 
-export function planUninstall({ repoRoot, runtime, target = "repo", packs = [], skillRoot = "runtime-default", emit = "skill" }) {
+export function planUninstall({ repoRoot, runtime, target = "repo", packs = [], skillRoot = "runtime-default", emit = "skill" }: { repoRoot: string; runtime?: string; target?: any; packs?: any; skillRoot?: any; emit?: string }) {
   const normalizedTarget = normalizeTarget(target);
   const normalizedEmit = normalizeEmitMode(emit);
   const normalizedSkillRoot =
     normalizedEmit === "plugin" ? "runtime-default" : normalizeSkillRoot(skillRoot);
   const normalizedRuntime = resolveUninstallRuntime(runtime, repoRoot, normalizedTarget, normalizedSkillRoot, normalizedEmit);
   const adapter = getRuntimeAdapter(normalizedRuntime);
-  const warnings = [];
-  const errors = [];
-  const reasonCodes = [];
-  const remediationActions = [];
+  const warnings: string[] = [];
+  const errors: string[] = [];
+  const reasonCodes: any[] = [];
+  const remediationActions: any[] = [];
 
   if (normalizedEmit === "plugin" && normalizedTarget !== "repo") {
     errors.push(
@@ -254,7 +254,7 @@ export function planUninstall({ repoRoot, runtime, target = "repo", packs = [], 
     }
   }
 
-  const selected = packs.length > 0 ? state.packs.filter((pack) => packs.includes(pack.id)) : state.packs;
+  const selected = packs.length > 0 ? state.packs.filter((pack: any) => packs.includes(pack.id)) : state.packs;
   const operations = buildUninstallOperations({
     selectedPacks: selected,
     warnings,
@@ -289,7 +289,7 @@ export function planUninstall({ repoRoot, runtime, target = "repo", packs = [], 
     installRoot,
     statePath,
     operations,
-    selectedPacks: selected.map((pack) => pack.id),
+    selectedPacks: selected.map((pack: any) => pack.id),
     warnings,
     errors,
     reasonCodes,
@@ -310,7 +310,7 @@ export function planUninstall({ repoRoot, runtime, target = "repo", packs = [], 
   };
 }
 
-export function applyUninstall(envelope) {
+export function applyUninstall(envelope: any) {
   if (!envelope.plan.can_apply) {
     throw new Error("uninstall plan contains blocking errors");
   }

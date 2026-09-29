@@ -36,7 +36,7 @@ import {
   manifestSelection,
 } from "./plan.ts";
 
-export function inspectInstallDirBoundary({ installRoot, installDir }) {
+export function inspectInstallDirBoundary({ installRoot, installDir }: { installRoot: string; installDir?: any }) {
   const rootPath = resolve(installRoot);
   const candidatePath = resolve(installDir);
   if (!isPathWithinRoot(rootPath, candidatePath)) {
@@ -56,7 +56,7 @@ export function inspectInstallDirBoundary({ installRoot, installDir }) {
       detail: candidateAnchorStat.error,
     };
   }
-  if (candidateAnchorStat.stat.isSymbolicLink()) {
+  if (candidateAnchorStat.stat?.isSymbolicLink()) {
     return {
       reason: "install path anchor is a symbolic link and cannot be trusted",
       detail: candidateAnchor,
@@ -90,13 +90,13 @@ export function inspectInstallDirBoundary({ installRoot, installDir }) {
       detail: installDirStat.error,
     };
   }
-  if (installDirStat.stat.isSymbolicLink()) {
+  if (installDirStat.stat?.isSymbolicLink()) {
     return {
       reason: "pack install path is a symbolic link and cannot be adopted",
       detail: candidatePath,
     };
   }
-  if (!installDirStat.stat.isDirectory()) {
+  if (!installDirStat.stat?.isDirectory()) {
     return {
       reason: "pack install path exists but is not a directory",
       detail: candidatePath,
@@ -120,7 +120,7 @@ export function inspectInstallDirBoundary({ installRoot, installDir }) {
   return null;
 }
 
-export function runRequiredToolChecks(manifest, errors) {
+export function runRequiredToolChecks(manifest: any, errors: string[]) {
   for (const tool of manifest.required_tools ?? []) {
     if (!tool.required_for?.includes("install")) {
       continue;
@@ -136,7 +136,7 @@ export function runRequiredToolChecks(manifest, errors) {
   }
 }
 
-export function applyLintPreflight({ repoRoot, packs, runtime, target, errors, warnings }) {
+export function applyLintPreflight({ repoRoot, packs, runtime, target, errors, warnings }: { repoRoot: string; packs?: any; runtime?: string; target?: any; errors: string[]; warnings: string[] }) {
   if (packs.length === 0) {
     return null;
   }
@@ -172,7 +172,7 @@ export function resolveInstallEnvironment({
   errors,
   reasonCodes = [],
   remediationActions = [],
-}) {
+}: { repoRoot: string; runtime?: string; target?: any; adapter?: any; skillRoot?: any; emit?: string; errors: string[]; reasonCodes?: any; remediationActions?: any }) {
   let state;
   let statePath;
   try {
@@ -180,7 +180,7 @@ export function resolveInstallEnvironment({
     state = loaded.state;
     statePath = loaded.statePath;
   } catch (error) {
-    errors.push(`state-invalid: ${error.message}`);
+    errors.push(`state-invalid: ${error instanceof Error ? error.message : String(error)}`);
     reasonCodes.push(REASON_CODE_INSTALL_STATE_INVALID);
     statePath = resolveStatePath({ repoRoot, runtime, target, skillRoot, emit });
     state = buildEmptyState({ repoRoot, runtime, target, adapter, skillRoot, emit });
@@ -206,7 +206,7 @@ export function resolveInstallEnvironment({
   });
   if (mismatches.length > 0) {
     errors.push(
-      `state-metadata-mismatch:${mismatches.map((entry) => `${entry.field}:${entry.actual}`).join(",")}`,
+      `state-metadata-mismatch:${mismatches.map((entry: any) => `${entry.field}:${entry.actual}`).join(",")}`,
     );
     reasonCodes.push(REASON_CODE_INSTALL_STATE_METADATA_MISMATCH);
     remediationActions.push(
@@ -249,7 +249,7 @@ export function resolveUpdateEnvironment({
   errors,
   reasonCodes = [],
   remediationActions = [],
-}) {
+}: { repoRoot: string; runtime?: string; target?: any; adapter?: any; skillRoot?: any; emit?: string; errors: string[]; reasonCodes?: any; remediationActions?: any }) {
   const installRoot = resolveInstallRootForEmit(adapter, { repoRoot, target, skillRoot, emit });
   const configHome = adapter.resolveConfigHome({ repoRoot, target, skillRoot });
   const journalDir = resolve(repoRoot, ".pairslash", INSTALL_JOURNAL_DIR);
@@ -260,7 +260,7 @@ export function resolveUpdateEnvironment({
     const loaded = loadInstallState({ repoRoot, runtime, target, adapter, skillRoot, emit });
     state = loaded.state;
   } catch (error) {
-    errors.push(`state-invalid: ${error.message}`);
+    errors.push(`state-invalid: ${error instanceof Error ? error.message : String(error)}`);
     reasonCodes.push(REASON_CODE_INSTALL_STATE_INVALID);
     remediationActions.push(
       buildStateReviewAction({
@@ -281,7 +281,7 @@ export function resolveUpdateEnvironment({
   });
   if (mismatches.length > 0) {
     errors.push(
-      ...mismatches.map((entry) => `${entry.field}-mismatch: expected ${entry.expected} got ${entry.actual}`),
+      ...mismatches.map((entry: any) => `${entry.field}-mismatch: expected ${entry.expected} got ${entry.actual}`),
     );
     reasonCodes.push(REASON_CODE_INSTALL_STATE_METADATA_MISMATCH);
     remediationActions.push(
@@ -315,13 +315,13 @@ export function resolveUpdateEnvironment({
   };
 }
 
-export function resolveUninstallRuntime(requestedRuntime, repoRoot, target, skillRoot, emit = "skill") {
+export function resolveUninstallRuntime(requestedRuntime: any, repoRoot: string, target: any, skillRoot: any, emit: string = "skill") {
   const normalized = normalizeRuntime(requestedRuntime);
   if (normalized && normalized !== "auto") {
     return normalized;
   }
 
-  const candidates = SUPPORTED_RUNTIMES.filter((runtime) =>
+  const candidates = SUPPORTED_RUNTIMES.filter((runtime: string) =>
     exists(resolveStatePath({ repoRoot, runtime, target, skillRoot, emit })),
   );
   if (candidates.length === 1) {
@@ -339,8 +339,8 @@ export function resolveUpdateSelection({
   requestedPacks,
   to,
   errors,
-}) {
-  const selectedPackIds = requestedPacks.length > 0 ? requestedPacks : state.packs.map((pack) => pack.id);
+}: { repoRoot: string; state?: any; requestedPacks?: any; to?: any; errors: string[] }) {
+  const selectedPackIds = requestedPacks.length > 0 ? requestedPacks : state.packs.map((pack: any) => pack.id);
 
   if (selectedPackIds.length === 0) {
     return {
@@ -358,7 +358,7 @@ export function resolveUpdateSelection({
   if (!to) {
     const { selection, errors: selectionErrors } = manifestSelection(repoRoot, selectedPackIds);
     errors.push(
-      ...selectionErrors.map((error) =>
+      ...selectionErrors.map((error: any) =>
         error.startsWith("pack-not-found:")
           ? `manifest-not-found:${error.slice("pack-not-found: ".length)}`
           : error,
@@ -393,7 +393,7 @@ export function resolveUpdateSelection({
   try {
     manifest = loadPackManifest(manifestPath);
   } catch (error) {
-    errors.push(`manifest-invalid:${manifestPath}: ${error.message}`);
+    errors.push(`manifest-invalid:${manifestPath}: ${error instanceof Error ? error.message : String(error)}`);
     return {
       selectedPackIds,
       selection: [],

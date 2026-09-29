@@ -30,10 +30,10 @@ export function buildCandidateTrustReceipts({
   state,
   warnings,
   errors,
-}) {
+}: { repoRoot: string; selection?: any; compiledPacks?: any; state?: any; warnings: string[]; errors: string[] }) {
   const receipts = new Map();
   for (const { manifestPath, manifest } of selection) {
-    const compiledPack = compiledPacks.find((entry) => entry.pack_id === manifest.pack.id);
+    const compiledPack = compiledPacks.find((entry: any) => entry.pack_id === manifest.pack.id);
     if (!compiledPack) {
       continue;
     }
@@ -60,13 +60,13 @@ export function buildCandidateTrustReceipts({
   return receipts;
 }
 
-export function buildStatePack({ compiledPack, installDir, operations, previousStatePack, trustReceipt = null, emit = "skill" }) {
+export function buildStatePack({ compiledPack, installDir, operations, previousStatePack, trustReceipt = null, emit = "skill" }: { compiledPack?: any; installDir?: any; operations?: any; previousStatePack?: any; trustReceipt?: any; emit?: string }) {
   const timestamp = new Date().toISOString();
-  const files = compiledPack.files.map((file) => {
+  const files = compiledPack.files.map((file: any) => {
     const absolutePath = join(installDir, file.relative_path);
     const op = getPlannedOperation(operations, compiledPack.pack_id, file.relative_path);
     const previousFile = previousStatePack?.files?.find(
-      (entry) => entry.relative_path === file.relative_path,
+      (entry: any) => entry.relative_path === file.relative_path,
     );
     const digest = currentDigest(absolutePath);
     const matchedCompiled = digest === file.sha256;
@@ -121,7 +121,7 @@ export function buildStatePack({ compiledPack, installDir, operations, previousS
   };
 }
 
-export function updateStateAfterWrite(envelope, transactionId = null) {
+export function updateStateAfterWrite(envelope: any, transactionId: any = null) {
   const nextState = cloneState(envelope.state);
   for (const compiledPack of envelope.compiledPacks) {
     const installDir = buildPackInstallDir(
@@ -141,18 +141,18 @@ export function updateStateAfterWrite(envelope, transactionId = null) {
       trustReceipt: envelope.candidateTrustReceipts?.get(compiledPack.pack_id) ?? null,
       emit: envelope.emit,
     });
-    nextState.packs = nextState.packs.filter((pack) => pack.id !== compiledPack.pack_id);
+    nextState.packs = nextState.packs.filter((pack: any) => pack.id !== compiledPack.pack_id);
     nextState.packs.push(nextPack);
   }
-  nextState.packs.sort((a, b) => a.id.localeCompare(b.id));
+  nextState.packs.sort((a: any, b: any) => a.id.localeCompare(b.id));
   nextState.updated_at = new Date().toISOString();
   nextState.last_transaction_id = transactionId;
   return nextState;
 }
 
-export function buildStateAfterUninstall({ envelope, transactionId }) {
+export function buildStateAfterUninstall({ envelope, transactionId }: { envelope?: any; transactionId?: any }) {
   const nextState = cloneState(envelope.state);
-  nextState.packs = nextState.packs.filter((pack) => !envelope.plan.selected_packs.includes(pack.id));
+  nextState.packs = nextState.packs.filter((pack: any) => !envelope.plan.selected_packs.includes(pack.id));
   nextState.updated_at = new Date().toISOString();
   nextState.last_transaction_id = transactionId;
   if (nextState.packs.length === 0) {
@@ -176,7 +176,7 @@ export function buildStateAfterUninstall({ envelope, transactionId }) {
   };
 }
 
-export function loadStateForDoctor({ repoRoot, runtime, target, skillRoot, emit = "skill" }) {
+export function loadStateForDoctor({ repoRoot, runtime, target, skillRoot, emit = "skill" }: { repoRoot: string; runtime?: string; target?: any; skillRoot?: any; emit?: string }) {
   const normalizedRuntime = normalizeRuntime(runtime);
   const normalizedTarget = normalizeTarget(target);
   const normalizedSkillRoot = normalizeSkillRoot(skillRoot);

@@ -82,38 +82,38 @@ export function uniqueSorted(values: any): any[] {
   return [...new Set(values.filter(Boolean))].sort((left: any, right: any) => left.localeCompare(right));
 }
 
-export function compilePackForRuntime(options) {
+export function compilePackForRuntime(options: any) {
   return options.runtime === "codex_cli"
     ? compileCodexPack(options)
     : compileCopilotPack(options);
 }
 
-export function currentDigest(filePath) {
+export function currentDigest(filePath: string) {
   const content = readFileNormalized(filePath);
   return sha256(typeof content === "string" ? content : content);
 }
 
-export function safeCurrentDigest(filePath) {
+export function safeCurrentDigest(filePath: string): { ok: boolean; digest?: string; error?: string } {
   try {
     return { ok: true, digest: currentDigest(filePath) };
   } catch (error) {
-    return { ok: false, error: error.message };
+    return { ok: false, error: error instanceof Error ? error.message : String(error) };
   }
 }
 
-export function cloneState(state) {
+export function cloneState(state: any) {
   return JSON.parse(JSON.stringify(state));
 }
 
-export function findManifestEntry(selection, packId) {
-  return selection.find((entry) => entry.manifest.pack.id === packId) ?? null;
+export function findManifestEntry(selection: any, packId: string) {
+  return selection.find((entry: any) => entry.manifest.pack.id === packId) ?? null;
 }
 
-export function isVersionOrDigestMatch(value, statePack) {
+export function isVersionOrDigestMatch(value: unknown, statePack: any) {
   return value === statePack.version || value === statePack.manifest_digest;
 }
 
-export function findExistingParentPath(path) {
+export function findExistingParentPath(path: string) {
   let current = resolve(path);
   while (!exists(current)) {
     const parent = dirname(current);
@@ -125,26 +125,26 @@ export function findExistingParentPath(path) {
   return current;
 }
 
-export function safeLstat(path) {
+export function safeLstat(path: string): { ok: boolean; stat?: import("node:fs").Stats; error?: string } {
   try {
     return { ok: true, stat: lstatSync(path) };
   } catch (error) {
-    return { ok: false, error: error.message };
+    return { ok: false, error: error instanceof Error ? error.message : String(error) };
   }
 }
 
-export function safeRealpath(path) {
+export function safeRealpath(path: string): { ok: boolean; path?: string; error?: string } {
   try {
     const resolvedPath = typeof realpathSync.native === "function"
       ? realpathSync.native(path)
       : realpathSync(path);
     return { ok: true, path: resolvedPath };
   } catch (error) {
-    return { ok: false, error: error.message };
+    return { ok: false, error: error instanceof Error ? error.message : String(error) };
   }
 }
 
-export function parseSimpleCommand(command) {
+export function parseSimpleCommand(command: string) {
   if (typeof command !== "string" || command.trim() === "") {
     return null;
   }
@@ -161,7 +161,7 @@ export function parseSimpleCommand(command) {
   };
 }
 
-export function isCurrentNodeVersionCheck(parsed) {
+export function isCurrentNodeVersionCheck(parsed: any) {
   if (!parsed) {
     return false;
   }
@@ -172,7 +172,7 @@ export function isCurrentNodeVersionCheck(parsed) {
   return parsed.args.length === 1 && ["--version", "-v"].includes(parsed.args[0]);
 }
 
-export function runCheckCommand(command) {
+export function runCheckCommand(command: string) {
   const parsed = parseSimpleCommand(command);
   if (isCurrentNodeVersionCheck(parsed)) {
     return {
@@ -193,16 +193,16 @@ export function runCheckCommand(command) {
   });
 }
 
-export function getPlannedOperation(operations, packId, relativePath) {
+export function getPlannedOperation(operations: any, packId: string, relativePath: string) {
   return (
     operations.find(
-      (operation) =>
+      (operation: any) =>
         operation.pack_id === packId && operation.relative_path === relativePath,
     ) ?? null
   );
 }
 
-export function buildPackInstallDir(adapter, repoRoot, target, packId, skillRoot, emit = "skill") {
+export function buildPackInstallDir(adapter: any, repoRoot: string, target: any, packId: string, skillRoot: any, emit: string = "skill") {
   return emit === "plugin"
     ? adapter.resolvePluginInstallDir({ repoRoot, target }, packId)
     : adapter.resolvePackInstallDir({ repoRoot, target, skillRoot }, packId);
@@ -211,14 +211,14 @@ export function buildPackInstallDir(adapter, repoRoot, target, packId, skillRoot
 // Plugin emit has no user-scope file placement; return null instead of
 // letting adapter resolution throw, so blocked plans still render.
 
-export function resolveInstallRootForEmit(adapter, { repoRoot, target, skillRoot, emit }) {
+export function resolveInstallRootForEmit(adapter: any, { repoRoot, target, skillRoot, emit }: { repoRoot?: string; target?: any; skillRoot?: any; emit?: string }) {
   if (emit !== "plugin") {
     return adapter.resolveInstallRoot({ repoRoot, target, skillRoot });
   }
   return target === "repo" ? adapter.resolvePluginRoot({ repoRoot, target }) : null;
 }
 
-export function applyWriteOperations(envelope) {
+export function applyWriteOperations(envelope: any) {
   for (const compiledPack of envelope.compiledPacks) {
     const installDir = buildPackInstallDir(
       envelope.adapter,
@@ -243,13 +243,13 @@ export function applyWriteOperations(envelope) {
   }
 }
 
-export function hasMutatingOperations(plan) {
-  return plan.operations.some((operation) =>
+export function hasMutatingOperations(plan: any) {
+  return plan.operations.some((operation: any) =>
     ["create", "replace", "remove", "write_state"].includes(operation.kind),
   );
 }
 
-export function applyRemoveOperations(envelope) {
+export function applyRemoveOperations(envelope: any) {
   for (const operation of envelope.plan.operations) {
     if (operation.kind !== "remove") {
       continue;
@@ -259,14 +259,14 @@ export function applyRemoveOperations(envelope) {
   }
 }
 
-export function buildDefaultNextState({ envelope, transactionId }) {
+export function buildDefaultNextState({ envelope, transactionId }: { envelope?: any; transactionId?: any }) {
   return {
     state: updateStateAfterWrite(envelope, transactionId),
     removeStateFile: false,
   };
 }
 
-export function applyMutationWithRollback(envelope, action, finalizeState = buildDefaultNextState) {
+export function applyMutationWithRollback(envelope: any, action: any, finalizeState: any = buildDefaultNextState) {
   if (!hasMutatingOperations(envelope.plan)) {
     return finalizeInstallResult({
       envelope,
@@ -310,22 +310,22 @@ export function applyMutationWithRollback(envelope, action, finalizeState = buil
       rollbackInstallJournal(journal, envelope);
       journal.status = "rolled_back";
       journal.rolled_back_at = new Date().toISOString();
-      journal.error_message = error.message;
+      journal.error_message = error instanceof Error ? error.message : String(error);
       writeJournal(journal);
     } catch (rollbackError) {
       rollbackFailure = rollbackError;
       journal.status = "rollback_failed";
-      journal.error_message = `${error.message} :: rollback ${rollbackError.message}`;
+      journal.error_message = `${error instanceof Error ? error.message : String(error)} :: rollback ${rollbackError instanceof Error ? rollbackError.message : String(rollbackError)}`;
       writeJournal(journal);
     }
     if (rollbackFailure) {
       throw new Error(`${action} failed and rollback was incomplete: ${journal.error_message}`);
     }
-    throw new Error(`${action} failed and rolled back: ${error.message}`);
+    throw new Error(`${action} failed and rolled back: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
-export function cleanupEmptyDirectories(startDir, stopDir) {
+export function cleanupEmptyDirectories(startDir: any, stopDir: any) {
   let current = startDir;
   while (isPathWithinRoot(stopDir, current)) {
     if (!exists(current)) {
@@ -343,7 +343,7 @@ export function cleanupEmptyDirectories(startDir, stopDir) {
   }
 }
 
-export function finalizeInstallResult({ envelope, state, journalPath }) {
+export function finalizeInstallResult({ envelope, state, journalPath }: { envelope?: any; state?: any; journalPath?: any }) {
   return {
     kind: "install-result",
     action: envelope.plan.action,

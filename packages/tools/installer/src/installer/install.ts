@@ -62,8 +62,8 @@ export function buildInstallOperations({
   state,
   compiledPacks,
   warnings,
-}) {
-  const operations = [];
+}: { repoRoot: string; target?: any; adapter?: any; skillRoot?: any; emit?: string; statePath?: string; journalDir?: any; state?: any; compiledPacks?: any; warnings: string[] }) {
+  const operations: any[] = [];
   const mkdirs = new Set<string>();
   const installRoot = resolveInstallRootForEmit(adapter, { repoRoot, target, skillRoot, emit });
 
@@ -340,7 +340,7 @@ export function buildInstallOperations({
   return operations;
 }
 
-export function planInstall({ repoRoot, runtime = "auto", target = "repo", packs = [], skillRoot = "runtime-default", emit = "skill" }) {
+export function planInstall({ repoRoot, runtime = "auto", target = "repo", packs = [], skillRoot = "runtime-default", emit = "skill" }: { repoRoot: string; runtime?: string; target?: any; packs?: any; skillRoot?: any; emit?: string }) {
   const normalizedTarget = normalizeTarget(target);
   const normalizedEmit = normalizeEmitMode(emit);
   const requestedSkillRoot = normalizeSkillRoot(skillRoot);
@@ -358,10 +358,10 @@ export function planInstall({ repoRoot, runtime = "auto", target = "repo", packs
 
   const normalizedRuntime = normalizeRuntime(runtimeSelection.runtime ?? runtime);
   const adapter = runtimeSelection.adapter ?? getRuntimeAdapter(normalizedRuntime);
-  const warnings = [];
-  const errors = [];
-  const reasonCodes = [];
-  const remediationActions = [];
+  const warnings: string[] = [];
+  const errors: string[] = [];
+  const reasonCodes: any[] = [];
+  const remediationActions: any[] = [];
 
   if (!runtimeSelection.detection?.available) {
     errors.push(
@@ -426,7 +426,7 @@ export function planInstall({ repoRoot, runtime = "auto", target = "repo", packs
     errors.length === 0
       ? applyLintPreflight({
           repoRoot,
-          packs: selection.map((entry) => entry.manifest.pack.id),
+          packs: selection.map((entry: any) => entry.manifest.pack.id),
           runtime: normalizedRuntime,
           target: normalizedTarget,
           errors,
@@ -478,14 +478,14 @@ export function planInstall({ repoRoot, runtime = "auto", target = "repo", packs
     installRoot,
     statePath,
     operations,
-    selectedPacks: compiledPacks.map((pack) => pack.pack_id),
+    selectedPacks: compiledPacks.map((pack: any) => pack.pack_id),
     lintReport,
     trustDelta:
       candidateTrustReceipts.size > 0
         ? buildTrustDelta({
             state,
             candidateReceipts: candidateTrustReceipts,
-            selectedPackIds: compiledPacks.map((pack) => pack.pack_id),
+            selectedPackIds: compiledPacks.map((pack: any) => pack.pack_id),
           })
         : null,
     warnings,
@@ -511,7 +511,7 @@ export function planInstall({ repoRoot, runtime = "auto", target = "repo", packs
   };
 }
 
-export function applyInstall(envelope) {
+export function applyInstall(envelope: any) {
   if (!envelope.plan.can_apply) {
     throw new Error("install plan contains blocking errors");
   }

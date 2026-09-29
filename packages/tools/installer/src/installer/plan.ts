@@ -32,7 +32,7 @@ import {
   uniqueSorted,
 } from "./helpers.ts";
 
-export function buildPreviewInstallAction({ runtime, target, packId, preferred = false }) {
+export function buildPreviewInstallAction({ runtime, target, packId, preferred = false }: { runtime?: string; target?: any; packId?: string; preferred?: any }) {
   return buildRunCommandRemediationAction({
     actionId: `preview-install:${runtime}:${target}:${packId}`,
     summary: "Review the install preview before applying changes.",
@@ -53,7 +53,7 @@ export function buildPreviewInstallAction({ runtime, target, packId, preferred =
   });
 }
 
-export function buildPreviewUpdateAction({ runtime, target, packId, preferred = false }) {
+export function buildPreviewUpdateAction({ runtime, target, packId, preferred = false }: { runtime?: string; target?: any; packId?: string; preferred?: any }) {
   return buildRunCommandRemediationAction({
     actionId: `preview-update:${runtime}:${target}:${packId}`,
     summary: "Review the update preview for the already managed pack.",
@@ -76,7 +76,7 @@ export function buildPreviewUpdateAction({ runtime, target, packId, preferred = 
   });
 }
 
-export function buildStateReviewAction({ runtime, target, statePath, preferred = false }) {
+export function buildStateReviewAction({ runtime, target, statePath, preferred = false }: { runtime?: string; target?: any; statePath?: string; preferred?: any }) {
   return buildReviewRemediationAction({
     actionId: `review-state:${runtime}:${target}`,
     summary: "Review and repair or remove the stale PairSlash install-state file before retrying.",
@@ -87,15 +87,15 @@ export function buildStateReviewAction({ runtime, target, statePath, preferred =
   });
 }
 
-export function manifestSelection(repoRoot, requestedPacks = []) {
+export function manifestSelection(repoRoot: string, requestedPacks: any = []) {
   const records = loadPackManifestRecords(repoRoot);
   const catalogRecords = loadPackCatalogRecords(repoRoot, { includeAdvanced: false });
   const inScopePackIds =
     requestedPacks.length > 0
       ? requestedPacks
-      : catalogRecords.map((record) => record.id);
+      : catalogRecords.map((record: any) => record.id);
   const { valid, invalid, missing } = selectPackManifestRecords(records, inScopePackIds);
-  const errors = [];
+  const errors: string[] = [];
 
   for (const record of invalid) {
     errors.push(`manifest-invalid:${record.packId}: ${record.error}`);
@@ -105,7 +105,7 @@ export function manifestSelection(repoRoot, requestedPacks = []) {
   }
 
   return {
-    selection: valid.map((record) => ({
+    selection: valid.map((record: any) => ({
       manifestPath: record.manifestPath,
       manifest: record.manifest,
     })),
@@ -113,18 +113,18 @@ export function manifestSelection(repoRoot, requestedPacks = []) {
   };
 }
 
-export function createSummary(operations) {
-  const base = Object.fromEntries(PREVIEW_OPERATION_KINDS.map((kind) => [kind, 0]));
+export function createSummary(operations: any) {
+  const base = Object.fromEntries(PREVIEW_OPERATION_KINDS.map((kind: string) => [kind, 0]));
   for (const operation of operations) {
     base[operation.kind] += 1;
   }
   return base;
 }
 
-export function sortOperations(operations) {
+export function sortOperations(operations: any) {
   return operations
     .slice()
-    .sort((left, right) =>
+    .sort((left: any, right: any) =>
       [
         left.pack_id ?? "",
         left.absolute_path ?? "",
@@ -143,7 +143,7 @@ export function sortOperations(operations) {
     );
 }
 
-export function toChangeKind(operationKind) {
+export function toChangeKind(operationKind: any) {
   if (operationKind === "create") {
     return "create";
   }
@@ -156,10 +156,10 @@ export function toChangeKind(operationKind) {
   return "none";
 }
 
-export function buildAssetDiff({ operations, runtime }) {
-  const mutating = operations.filter((operation) => MUTATING_OPERATION_KINDS.has(operation.kind));
+export function buildAssetDiff({ operations, runtime }: { operations?: any; runtime?: string }) {
+  const mutating = operations.filter((operation: any) => MUTATING_OPERATION_KINDS.has(operation.kind));
   const runtimeTargetedOutputs = mutating
-    .map((operation) => ({
+    .map((operation: any) => ({
       runtime,
       operation: toChangeKind(operation.kind),
       pack_id: operation.pack_id,
@@ -167,22 +167,22 @@ export function buildAssetDiff({ operations, runtime }) {
       install_surface: operation.install_surface ?? "unknown",
       asset_kind: operation.asset_kind ?? "unknown",
     }))
-    .sort((left, right) =>
+    .sort((left: any, right: any) =>
       `${left.pack_id}\u0000${left.path}\u0000${left.operation}`.localeCompare(
         `${right.pack_id}\u0000${right.path}\u0000${right.operation}`,
       ),
     );
   const configFragmentsAffected = runtimeTargetedOutputs
-    .filter((entry) => CONFIG_MUTATION_SURFACES.has(entry.install_surface))
-    .map((entry) => `${entry.pack_id}/${entry.path}`);
+    .filter((entry: any) => CONFIG_MUTATION_SURFACES.has(entry.install_surface))
+    .map((entry: any) => `${entry.pack_id}/${entry.path}`);
   const riskyMutations = runtimeTargetedOutputs
-    .filter((entry) => RISKY_MUTATION_SURFACES.has(entry.install_surface))
-    .map((entry) => `${entry.operation}:${entry.pack_id}/${entry.path}`);
+    .filter((entry: any) => RISKY_MUTATION_SURFACES.has(entry.install_surface))
+    .map((entry: any) => `${entry.operation}:${entry.pack_id}/${entry.path}`);
 
   return {
-    create_count: mutating.filter((operation) => operation.kind === "create").length,
-    update_count: mutating.filter((operation) => operation.kind === "replace").length,
-    delete_count: mutating.filter((operation) => operation.kind === "remove").length,
+    create_count: mutating.filter((operation: any) => operation.kind === "create").length,
+    update_count: mutating.filter((operation: any) => operation.kind === "replace").length,
+    delete_count: mutating.filter((operation: any) => operation.kind === "remove").length,
     mutating_operation_count: mutating.length,
     runtime_targeted_outputs: runtimeTargetedOutputs,
     config_fragments_affected: uniqueSorted(configFragmentsAffected),
@@ -190,42 +190,42 @@ export function buildAssetDiff({ operations, runtime }) {
   };
 }
 
-export function pickOverallVerdict(verdicts) {
+export function pickOverallVerdict(verdicts: any) {
   if (verdicts.length === 0) {
     return "allow";
   }
-  return verdicts.reduce((current, candidate) =>
-    POLICY_PRECEDENCE[candidate] > POLICY_PRECEDENCE[current] ? candidate : current, "allow");
+  return verdicts.reduce((current: any, candidate: any) =>
+    POLICY_PRECEDENCE[candidate as keyof typeof POLICY_PRECEDENCE] > POLICY_PRECEDENCE[current as keyof typeof POLICY_PRECEDENCE] ? candidate : current, "allow");
 }
 
-export function buildPolicySummary({ lintReport, errors }) {
+export function buildPolicySummary({ lintReport, errors }: { lintReport?: any; errors: string[] }) {
   const packVerdicts = (lintReport?.policy_verdicts ?? [])
-    .map((verdict) => ({
+    .map((verdict: any) => ({
       pack_id: verdict.pack_id ?? null,
       runtime: verdict.runtime,
       verdict: verdict.overall_verdict,
-      reason_codes: uniqueSorted((verdict.reasons ?? []).map((reason) => reason.code)),
+      reason_codes: uniqueSorted((verdict.reasons ?? []).map((reason: any) => reason.code)),
     }))
-    .sort((left, right) =>
+    .sort((left: any, right: any) =>
       `${left.pack_id ?? ""}\u0000${left.runtime}\u0000${left.verdict}`.localeCompare(
         `${right.pack_id ?? ""}\u0000${right.runtime}\u0000${right.verdict}`,
       ),
     );
   const lintReasons = (lintReport?.issues ?? [])
-    .filter((issue) => issue.result === "error")
-    .filter((issue) => issue.code.startsWith("LINT-POLICY") || issue.code.startsWith("LINT-RUNTIME"))
-    .map((issue) => `${issue.code}:${issue.pack_id ?? "global"}:${issue.runtime}`);
+    .filter((issue: any) => issue.result === "error")
+    .filter((issue: any) => issue.code.startsWith("LINT-POLICY") || issue.code.startsWith("LINT-RUNTIME"))
+    .map((issue: any) => `${issue.code}:${issue.pack_id ?? "global"}:${issue.runtime}`);
   const unsupportedRuntimeCapability =
-    errors.some((entry) => entry.startsWith("runtime-unavailable:")) ||
-    errors.some((entry) => entry.startsWith("runtime-mismatch:")) ||
-    errors.some((entry) => entry.startsWith("runtime-version-unsupported:")) ||
-    (lintReport?.issues ?? []).some((issue) => issue.code === "LINT-RUNTIME-004" && issue.result === "error");
+    errors.some((entry: any) => entry.startsWith("runtime-unavailable:")) ||
+    errors.some((entry: any) => entry.startsWith("runtime-mismatch:")) ||
+    errors.some((entry: any) => entry.startsWith("runtime-version-unsupported:")) ||
+    (lintReport?.issues ?? []).some((issue: any) => issue.code === "LINT-RUNTIME-004" && issue.result === "error");
   const reasons = uniqueSorted([
     ...lintReasons,
     ...(unsupportedRuntimeCapability ? ["unsupported-runtime-capability:no-silent-fallback"] : []),
   ]);
 
-  let overallVerdict = pickOverallVerdict(packVerdicts.map((entry) => entry.verdict));
+  let overallVerdict = pickOverallVerdict(packVerdicts.map((entry: any) => entry.verdict));
   if (errors.length > 0) {
     overallVerdict = "deny";
   }
@@ -250,9 +250,9 @@ export function buildCommitability({
   policySummary,
   requiresConfirmation,
   reasonCodes = [],
-}) {
-  const blockedOperations = operations.filter((operation) => operation.kind === "blocked_conflict");
-  const mutatingOperations = operations.filter((operation) => MUTATING_OPERATION_KINDS.has(operation.kind));
+}: { operations?: any; errors: string[]; policySummary?: any; requiresConfirmation?: any; reasonCodes?: any }) {
+  const blockedOperations = operations.filter((operation: any) => operation.kind === "blocked_conflict");
+  const mutatingOperations = operations.filter((operation: any) => MUTATING_OPERATION_KINDS.has(operation.kind));
   const canProceed =
     errors.length === 0 &&
     blockedOperations.length === 0 &&
@@ -263,7 +263,7 @@ export function buildCommitability({
     policySummary.overall_verdict === "require-preview";
   const blockedReasons = uniqueSorted([
     ...errors,
-    ...blockedOperations.map((operation) => operation.reason),
+    ...blockedOperations.map((operation: any) => operation.reason),
     ...policySummary.reasons,
   ]);
   const blockedReasonCodes = collectLifecycleReasonCodes({
@@ -279,7 +279,7 @@ export function buildCommitability({
     can_proceed_operations: canProceed
       ? uniqueSorted(
           mutatingOperations.map(
-            (operation) => `${toChangeKind(operation.kind)}:${operation.pack_id}/${operation.relative_path ?? "."}`,
+            (operation: any) => `${toChangeKind(operation.kind)}:${operation.pack_id}/${operation.relative_path ?? "."}`,
           ),
         )
       : [],
@@ -306,16 +306,16 @@ export function createPlan({
   errors = [],
   reasonCodes = [],
   remediationActions = [],
-}) {
+}: { action?: any; runtime?: string; target?: any; skillRoot?: any; emit?: string; installRoot?: string; statePath?: string; operations?: any; selectedPacks: string[]; lintReport?: any; trustDelta?: any; warnings?: string[]; errors?: string[]; reasonCodes?: any; remediationActions?: any }) {
   const sortedOperations = sortOperations(operations);
-  const sortedWarnings = warnings.slice().sort((a, b) => a.localeCompare(b));
+  const sortedWarnings = warnings.slice().sort((a: any, b: any) => a.localeCompare(b));
   const trustDeltaErrors = (trustDelta?.pack_changes ?? [])
-    .filter((change) => change.blocking)
-    .flatMap((change) => {
+    .filter((change: any) => change.blocking)
+    .flatMap((change: any) => {
       const reasons = change.reasons?.length ? change.reasons : ["blocked-trust-change"];
-      return reasons.map((reason) => `trust-delta-blocked:${change.pack_id}:${reason}`);
+      return reasons.map((reason: any) => `trust-delta-blocked:${change.pack_id}:${reason}`);
     });
-  const sortedErrors = [...errors, ...trustDeltaErrors].sort((a, b) => a.localeCompare(b));
+  const sortedErrors = [...errors, ...trustDeltaErrors].sort((a: any, b: any) => a.localeCompare(b));
   const requiresConfirmation = ["install", "update", "uninstall"].includes(action);
   const assetDiff = buildAssetDiff({ operations: sortedOperations, runtime });
   const policySummary = buildPolicySummary({
@@ -335,7 +335,7 @@ export function createPlan({
   });
   const planRemediationActions = dedupeRemediationActions([
     ...remediationActions,
-    ...sortedOperations.flatMap((operation) => operation.remediation_actions ?? []),
+    ...sortedOperations.flatMap((operation: any) => operation.remediation_actions ?? []),
   ]);
   const plan: any = {
     kind: "preview-plan",
@@ -349,10 +349,10 @@ export function createPlan({
     state_path: statePath,
     can_apply:
       sortedErrors.length === 0 &&
-      sortedOperations.every((operation) => operation.kind !== "blocked_conflict") &&
+      sortedOperations.every((operation: any) => operation.kind !== "blocked_conflict") &&
       policySummary.overall_verdict !== "deny",
     requires_confirmation: requiresConfirmation,
-    selected_packs: selectedPacks.slice().sort((a, b) => a.localeCompare(b)),
+    selected_packs: selectedPacks.slice().sort((a: any, b: any) => a.localeCompare(b)),
     summary: createSummary(sortedOperations),
     warnings: sortedWarnings,
     errors: sortedErrors,
@@ -377,9 +377,7 @@ export function createPlan({
   return plan;
 }
 
-export function buildOperation(
-  kind,
-  {
+export function buildOperation(kind: string, {
     packId,
     relativePath = null,
     absolutePath,
@@ -393,8 +391,7 @@ export function buildOperation(
     managementMode = null,
     reconcileMode = null,
     remediationActions = [],
-  },
-) {
+  }: { packId?: string; relativePath?: string | null; absolutePath?: any; reason?: any; assetKind?: any; installSurface?: any; ownership?: any; overrideEligible?: any; reasonCode?: any; reasonDetail?: any; managementMode?: any; reconcileMode?: any; remediationActions?: any }) {
   return {
     kind,
     pack_id: packId,
@@ -415,8 +412,8 @@ export function buildOperation(
   };
 }
 
-export function compileSelection({ repoRoot, runtime, selection, errors, emit = "skill" }) {
-  const compiled = [];
+export function compileSelection({ repoRoot, runtime, selection, errors, emit = "skill" }: { repoRoot: string; runtime?: string; selection?: any; errors: string[]; emit?: string }) {
+  const compiled: any[] = [];
   for (const { manifestPath, manifest } of selection) {
     try {
       compiled.push(
@@ -428,8 +425,8 @@ export function compileSelection({ repoRoot, runtime, selection, errors, emit = 
         }),
       );
     } catch (error) {
-      errors.push(`compile-failed:${manifest.pack.id}: ${error.message}`);
+      errors.push(`compile-failed:${manifest.pack.id}: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
-  return compiled.sort((left, right) => left.pack_id.localeCompare(right.pack_id));
+  return compiled.sort((left: any, right: any) => left.pack_id.localeCompare(right.pack_id));
 }

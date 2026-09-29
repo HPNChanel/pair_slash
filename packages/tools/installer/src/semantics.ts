@@ -1,27 +1,27 @@
 import process from "node:process";
 import { resolve, sep } from "node:path";
 
-function runtimeFlag(runtime) {
+function runtimeFlag(runtime: string | undefined) {
   return runtime === "codex_cli" ? "codex" : "copilot";
 }
 
-export function normalizeManagementMode(file) {
+export function normalizeManagementMode(file: any) {
   if (file?.management_mode === "pairslash_owned" || file?.management_mode === "reconciled_unmanaged") {
     return file.management_mode;
   }
   return file?.owned_by_pairslash ? "pairslash_owned" : "reconciled_unmanaged";
 }
 
-export function normalizeInstallStateRecord(state) {
+export function normalizeInstallStateRecord(state: any) {
   if (!state || !Array.isArray(state.packs)) {
     return state;
   }
   return {
     ...state,
-    packs: state.packs.map((pack) => ({
+    packs: state.packs.map((pack: any) => ({
       ...pack,
       files: Array.isArray(pack.files)
-        ? pack.files.map((file) => {
+        ? pack.files.map((file: any) => {
             const managementMode = normalizeManagementMode(file);
             const reconciledReasonCode =
               file?.reconciled_reason_code ??
@@ -48,7 +48,7 @@ export function buildLifecycleCommand({
   packId = null,
   dryRun = false,
   apply = false,
-}) {
+}: { action?: any; runtime?: string; target?: any; packId?: string | null; dryRun?: any; apply?: any }) {
   const parts = [
     "node packages/tools/cli/src/bin/pairslash.js",
     action,
@@ -75,7 +75,7 @@ export function buildRunCommandRemediationAction({
   safeWithoutWrite = true,
   requiresPreview = false,
   preferred = false,
-}) {
+}: { actionId?: any; summary?: any; command?: string; appliesToActions?: any; reasonCodes?: any; safeWithoutWrite?: any; requiresPreview?: any; preferred?: any }) {
   return {
     action_id: actionId,
     action_kind: "run_command",
@@ -96,7 +96,7 @@ export function buildReviewRemediationAction({
   appliesToActions = [],
   reasonCodes = [],
   preferred = false,
-}) {
+}: { actionId?: any; summary?: any; path?: string | null; appliesToActions?: any; reasonCodes?: any; preferred?: any }) {
   return {
     action_id: actionId,
     action_kind: "review_manual",
@@ -111,11 +111,11 @@ export function buildReviewRemediationAction({
   };
 }
 
-export function dedupeRemediationActions(actions = []) {
+export function dedupeRemediationActions(actions: any = []) {
   const seen = new Set();
   return actions
     .filter(Boolean)
-    .filter((action) => {
+    .filter((action: any) => {
       const key = JSON.stringify({
         action_id: action.action_id ?? null,
         action_kind: action.action_kind ?? null,
@@ -129,7 +129,7 @@ export function dedupeRemediationActions(actions = []) {
       seen.add(key);
       return true;
     })
-    .sort((left, right) =>
+    .sort((left: any, right: any) =>
       [
         left.preferred ? "0" : "1",
         left.action_kind ?? "",
@@ -155,14 +155,14 @@ export function collectLifecycleReasonCodes({
   operations = [],
   checks = [],
   issues = [],
-}) {
+}: { reasonCodes?: any; operations?: any; checks?: any; issues?: any[] }) {
   return [
     ...new Set(
       [
         ...reasonCodes,
-        ...operations.flatMap((operation) => operation.reason_code ?? []),
-        ...checks.flatMap((check) => check.reason_codes ?? []),
-        ...issues.flatMap((issue) => issue.reason_codes ?? []),
+        ...operations.flatMap((operation: any) => operation.reason_code ?? []),
+        ...checks.flatMap((check: any) => check.reason_codes ?? []),
+        ...issues.flatMap((issue: any) => issue.reason_codes ?? []),
       ].filter(Boolean),
     ),
   ].sort((left: any, right: any) => left.localeCompare(right));
@@ -174,8 +174,8 @@ export function buildInstallStateMetadataMismatches({
   target,
   configHome,
   installRoot,
-}) {
-  const mismatches = [];
+}: { state?: any; runtime?: string; target?: any; configHome?: any; installRoot?: string }) {
+  const mismatches: any[] = [];
   if (state.runtime !== runtime) {
     mismatches.push({
       field: "runtime",
@@ -207,7 +207,7 @@ export function buildInstallStateMetadataMismatches({
   return mismatches;
 }
 
-export function normalizePathForCompare(pathValue) {
+export function normalizePathForCompare(pathValue: any) {
   if (typeof pathValue !== "string" || pathValue.trim() === "") {
     return pathValue;
   }
@@ -215,7 +215,7 @@ export function normalizePathForCompare(pathValue) {
   return process.platform === "win32" ? resolved.toLowerCase() : resolved;
 }
 
-export function isPathWithinRoot(rootPath, candidatePath) {
+export function isPathWithinRoot(rootPath: any, candidatePath: any) {
   const normalizedRoot = normalizePathForCompare(rootPath);
   const normalizedCandidate = normalizePathForCompare(candidatePath);
   if (typeof normalizedRoot !== "string" || typeof normalizedCandidate !== "string") {
@@ -229,7 +229,7 @@ export function isPathWithinRoot(rootPath, candidatePath) {
   );
 }
 
-function arePathValuesEqual(left, right) {
+function arePathValuesEqual(left: any, right: any) {
   if (typeof left !== "string" || typeof right !== "string") {
     return left === right;
   }
