@@ -53,10 +53,24 @@ export function slugify(value: unknown) {
 }
 
 export function normalizeText(value: unknown) {
-  return String(value ?? "")
+  return safeScalarString(value)
     .trim()
     .toLowerCase()
     .replace(/\s+/g, " ");
+}
+
+export function safeScalarString(value: unknown) {
+  if (value === null || value === undefined) {
+    return "";
+  }
+  if (typeof value === "string") {
+    return value;
+  }
+  try {
+    return String(value);
+  } catch {
+    return "";
+  }
 }
 
 export function normalizeStringList(value: unknown) {
@@ -126,20 +140,20 @@ export function authorityErrors(contract: any, policyContext: any = {}) {
 }
 
 export function buildRecordId(record: any) {
-  return `${record.kind}/${record.title}`;
+  return `${safeScalarString(record?.kind)}/${safeScalarString(record?.title)}`;
 }
 
 export function scopesMatch(left: any, right: any) {
   return (
-    left.scope === right.scope &&
-    normalizeText(left.scope_detail ?? "") === normalizeText(right.scope_detail ?? "")
+    left?.scope === right?.scope &&
+    normalizeText(left?.scope_detail ?? "") === normalizeText(right?.scope_detail ?? "")
   );
 }
 
 export function titlesMatch(left: any, right: any) {
-  return normalizeText(left.title) === normalizeText(right.title);
+  return normalizeText(left?.title) === normalizeText(right?.title);
 }
 
 export function statementsMatch(left: any, right: any) {
-  return normalizeText(left.statement) === normalizeText(right.statement);
+  return normalizeText(left?.statement) === normalizeText(right?.statement);
 }

@@ -1,0 +1,42 @@
+{
+  "property": "identical-record-is-duplicate",
+  "seed": 20261001,
+  "path": null,
+  "counterexample": [
+    [
+      {
+        "layer": "candidate-memory",
+        "file": ">khM#VP",
+        "record": {
+          "kind": {
+            "Ybt": "Ow*5;|C"
+          },
+          "statement": "",
+          "scope": null,
+          "scope_detail": null,
+          "supersedes": "-w"
+        }
+      }
+    ],
+    {
+      "kind": "decision",
+      "title": {
+        "? o&": "fkoa~U.",
+        "p<": "e",
+        "qwk/": "Y\"`j=W%",
+        "Fybz#%": "Y!",
+        "FKQ'#S": "%%CylcQ66",
+        ".2V&^ku": "ew",
+        "mU\"G@": "\\@kp{8",
+        "`~Vb": "yC/l5Ryc",
+        "};b-f+L2": "a X\"WqG"
+      },
+      "statement": 2.802596928649634e-44,
+      "scope": "H",
+      "supersedes": "",
+      "confidence": "medium",
+      "action": "append"
+    }
+  ],
+  "captured_at": "2026-10-01T09:46:33.146Z"
+}

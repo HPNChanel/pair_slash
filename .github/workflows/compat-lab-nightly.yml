@@ -151,3 +151,33 @@ jobs:
         with:
           name: mutation-memory-engine
           path: artifacts/mutation-memory-engine.json
+
+  nightly-fuzz:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Nightly-only property/fuzz harness over memory-engine conflict
+      # detection (T9-04). Findings fail this job so they stay visible;
+      # committed corpus seeds replay first as regressions.
+      - name: Run conflict fuzz harness
+        run: node tests/fuzz/run-fuzz.mjs --runs 500 --report-out artifacts/fuzz-memory-conflict.json
+
+      - name: Upload fuzz report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuzz-memory-conflict
+          path: |
+            artifacts/fuzz-memory-conflict.json
+            tests/fuzz/corpus/

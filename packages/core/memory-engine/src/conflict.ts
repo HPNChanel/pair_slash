@@ -4,6 +4,7 @@ import {
   AUTHORITATIVE_LAYERS,
   CANDIDATE_LAYERS,
   buildRecordId,
+  safeScalarString,
   scopesMatch,
   statementsMatch,
   titlesMatch,
@@ -11,18 +12,22 @@ import {
 import { routeTargetFile } from "./records.ts";
 
 export function relativeFromProjectMemory(repoRoot: string, absolutePath: any) {
-  return relative(resolve(repoRoot, ".pairslash", "project-memory"), absolutePath).replace(/\\/g, "/");
+  return relative(resolve(repoRoot, ".pairslash", "project-memory"), safeScalarString(absolutePath)).replace(
+    /\\/g,
+    "/",
+  );
 }
 
 export function summarizeEntry(entry: any, reasons: any = []) {
+  const record = entry.record ?? {};
   return {
     layer: entry.layer,
-    file: entry.file.replace(/\\/g, "/"),
-    kind: entry.record.kind,
-    title: entry.record.title,
-    scope: entry.record.scope,
-    scope_detail: entry.record.scope_detail ?? null,
-    statement: entry.record.statement ?? null,
+    file: safeScalarString(entry.file).replace(/\\/g, "/"),
+    kind: record.kind,
+    title: record.title,
+    scope: record.scope,
+    scope_detail: record.scope_detail ?? null,
+    statement: record.statement ?? null,
     artifact_path: entry.artifact_path ?? null,
     reasons: [...new Set(reasons)].sort((left: any, right: any) => left.localeCompare(right)),
   };
@@ -33,7 +38,7 @@ export function findSupersedeTarget(existingRecords: any, record: any) {
     (entry: any) =>
       entry.layer === "global-project-memory" &&
       (buildRecordId(entry.record) === record.supersedes ||
-        (entry.record.kind === record.kind && titlesMatch(entry.record, record))),
+        (entry.record?.kind === record.kind && titlesMatch(entry.record, record))),
   );
 }
 
@@ -41,7 +46,7 @@ export function detectDuplicates(existingRecords: any, record: any) {
   return existingRecords.filter(
     (entry: any) =>
       AUTHORITATIVE_LAYERS.has(entry.layer) &&
-      entry.record.kind === record.kind &&
+      entry.record?.kind === record.kind &&
       titlesMatch(entry.record, record) &&
       scopesMatch(entry.record, record) &&
       statementsMatch(entry.record, record),
@@ -53,7 +58,7 @@ export function detectConflicts(existingRecords: any, record: any) {
     if (!AUTHORITATIVE_LAYERS.has(entry.layer)) {
       return false;
     }
-    if (entry.record.kind !== record.kind) {
+    if (entry.record?.kind !== record.kind) {
       return false;
     }
     if (!scopesMatch(entry.record, record)) {
@@ -74,8 +79,8 @@ export function detectShadowWarnings(existingRecords: any, record: any) {
     .filter(
       (entry: any) =>
         entry.layer === "global-project-memory" &&
-        entry.record.kind === record.kind &&
-        entry.record.scope === "whole-project",
+        entry.record?.kind === record.kind &&
+        entry.record?.scope === "whole-project",
     )
     .map((entry: any) => `scope-shadow:${buildRecordId(entry.record)}`);
 }
@@ -85,7 +90,7 @@ export function findCandidateConflicts(existingRecords: any, record: any) {
     if (!CANDIDATE_LAYERS.has(entry.layer)) {
       return false;
     }
-    if (entry.record.kind !== record.kind) {
+    if (entry.record?.kind !== record.kind) {
       return false;
     }
     if (!(titlesMatch(entry.record, record) || scopesMatch(entry.record, record))) {
@@ -98,7 +103,7 @@ export function findCandidateConflicts(existingRecords: any, record: any) {
 export function collectRelatedRecords(existingRecords: any, record: any) {
   return existingRecords
     .filter((entry: any) => {
-      if (entry.record.kind !== record.kind) {
+      if (entry.record?.kind !== record.kind) {
         return false;
       }
       return (
@@ -124,11 +129,11 @@ export function collectRelatedRecords(existingRecords: any, record: any) {
       }
       return summarizeEntry(entry, reasons);
     })
-    .sort((left: any, right: any) =>
-      `${left.layer}\u0000${left.kind}\u0000${left.title}\u0000${left.file}`.localeCompare(
-        `${right.layer}\u0000${right.kind}\u0000${right.title}\u0000${right.file}`,
-      ),
-    );
+    .sort((left: any, right: any) => {
+      const sortKey = (entry: any) =>
+        `${safeScalarString(entry.layer)}\u0000${safeScalarString(entry.kind)}\u0000${safeScalarString(entry.title)}\u0000${entry.file}`;
+      return sortKey(left).localeCompare(sortKey(right));
+    });
 }
 
 export function resolveTargetRelativeFile(repoRoot: string, existingRecords: any, record: any) {

@@ -8,6 +8,14 @@ import YAML from "yaml";
 import { validateAuditLogEntry } from "@pairslash/spec-core";
 
 import {
+  collectRelatedRecords,
+  detectConflicts,
+  detectDuplicates,
+  detectShadowWarnings,
+  findCandidateConflicts,
+  findSupersedeTarget,
+} from "../src/conflict.ts";
+import {
   applyMemoryWrite,
   loadStagedMemoryWritePreview,
   previewMemoryWrite,
@@ -384,4 +392,50 @@ test("reject-candidate-if-conflict requires an explicit conflicting task candida
   } finally {
     fixture.cleanup();
   }
+});
+
+test("conflict detectors never throw on malformed or null-prototype input (fuzz regression)", () => {
+  const nullProto = Object.create(null);
+  nullProto.title = Object.create(null);
+  nullProto.kind = Object.create(null);
+  const hostileExisting = [
+    { layer: "global-project-memory", record: null },
+    { layer: "global-project-memory", record: { kind: nullProto, title: nullProto, scope: 1 } },
+    { layer: "task-memory", record: { kind: {}, title: {}, scope_detail: {} } },
+    { layer: "global-project-memory", file: undefined, record: { kind: "decision", title: "x" } },
+  ];
+  const hostileRecord = {
+    kind: nullProto,
+    title: nullProto,
+    statement: nullProto,
+    scope: { nested: nullProto },
+    supersedes: nullProto,
+  };
+  assert.doesNotThrow(() => detectDuplicates(hostileExisting, hostileRecord));
+  assert.doesNotThrow(() => detectConflicts(hostileExisting, hostileRecord));
+  assert.doesNotThrow(() => findCandidateConflicts(hostileExisting, hostileRecord));
+  assert.doesNotThrow(() => findSupersedeTarget(hostileExisting, hostileRecord));
+  assert.doesNotThrow(() => detectShadowWarnings(hostileExisting, hostileRecord));
+  assert.doesNotThrow(() => collectRelatedRecords(hostileExisting, hostileRecord));
+});
+
+test("identical authoritative record is detected as duplicate regardless of hostile siblings", () => {
+  const record = { kind: "decision", title: "T", statement: "S", scope: "whole-project" };
+  const twin = { layer: "global-project-memory", file: "a.yaml", record };
+  const existing = [
+    { layer: "task-memory", record: { kind: {}, title: {} } },
+    twin,
+    { layer: "global-project-memory", record: { kind: "decision", title: "Other" } },
+  ];
+  const dupes = detectDuplicates(existing, record);
+  assert.ok(dupes.includes(twin));
+});
+
+test("supersede target is always an existing global record or undefined", () => {
+  const record = { action: "supersede", kind: "decision", title: "T", supersedes: "decision/T" };
+  const globalEntry = { layer: "global-project-memory", file: "g.yaml", record: { kind: "decision", title: "T" } };
+  const taskEntry = { layer: "task-memory", file: "t.yaml", record: { kind: "decision", title: "T" } };
+  const target = findSupersedeTarget([taskEntry, globalEntry], record);
+  assert.equal(target, globalEntry);
+  assert.equal(findSupersedeTarget([taskEntry], record), undefined);
 });

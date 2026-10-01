@@ -16,6 +16,7 @@ Use Node 24.x or 26.x (both majors are CI-tested; `engines` floors at `>=24.0.0`
 - `npm run test:compat` runs the compat-lab fixture/golden lane suite.
 - `npm run sync:compat-lab -- --check` verifies generated compatibility artifacts are in sync.
 - `npm run test:release` runs release-readiness validation.
+- `npm run test:perf` / `npm run test:mutation` / `npm run test:fuzz` run the nightly-only perf, mutation, and conflict-fuzz lanes (report-only; never in `npm run test`).
 - `npm run lint:phase4` / `npm run test:phase4` / related `phase4` aliases remain temporarily for migration-safe compatibility.
 
 ## Coding Style & Naming Conventions

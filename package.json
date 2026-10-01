@@ -46,7 +46,8 @@
     "clean:cache": "node scripts/clean-build-cache.mjs --apply",
     "clean:cache:dry": "node scripts/clean-build-cache.mjs",
     "test:perf": "node tests/perf/run-perf.mjs",
-    "test:mutation": "node tests/mutation/run-mutation.mjs"
+    "test:mutation": "node tests/mutation/run-mutation.mjs",
+    "test:fuzz": "node tests/fuzz/run-fuzz.mjs"
   },
   "dependencies": {
     "valibot": "^1.5.0",
@@ -54,6 +55,7 @@
   },
   "devDependencies": {
     "@types/node": "^26.6.3",
+    "fast-check": "^4.10.2",
     "typescript": "^7.0.2"
   }
 }

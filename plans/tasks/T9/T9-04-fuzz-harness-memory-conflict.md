@@ -2,13 +2,41 @@
 id: T9-04
 track: T9
 title: Fuzz harness for memory-engine conflict detection (nightly)
-status: todo
+status: done
 depends_on: []
 est_size: M
-claimed_by:
-claimed_at:
-completed_at:
-evidence:
+claimed_by: devin
+claimed_at: 2026-10-01
+completed_at: 2026-10-01
+evidence: |
+  tests/fuzz/run-fuzz.mjs property-tests all six conflict/duplicate
+  detectors in packages/core/memory-engine/src/conflict.ts using
+  fast-check@4.10.2 (MIT, published 2026-09-19 — G9 review satisfied;
+  pinned ^4.10.2 devDep). Invariants: (a) detectors never throw on
+  arbitrary input — hostile scalars, null-prototype objects, wrong
+  types, missing fields; (b) identical authoritative record is always
+  reported as duplicate (record equality is ===-based, so NaN
+  kind/scope is excluded via fc.pre); (c) deterministic results for
+  identical corpus+seed; (d) findSupersedeTarget never returns an
+  orphan/non-global target.
+  First-run findings (seed 20261001): the pilot found a REAL defect —
+  normalizeText, buildRecordId, and summarizeEntry threw TypeError on
+  null-prototype objects and non-string file values, so malformed
+  entries could crash conflict detection instead of failing closed.
+  Fixed in this task (trivial, per X3): new safeScalarString helper in
+  internal.ts, guards in conflict.ts predicates/summarizeEntry/sort,
+  plus regression tests in memory-engine.test.js. Corpus persisted to
+  tests/fuzz/corpus/ (3 seed files) and replays green after the fix.
+  Post-fix run: all 4 properties pass at 200 runs/property (nightly CI
+  uses --runs 500). Wired as nightly-fuzz job in
+  compat-lab-nightly.yml — a finding exits non-zero so it stays
+  visible, and artifacts/fuzz-memory-conflict.json + corpus upload.
+  tests/fuzz/run-fuzz.test.js is deliberately NOT registered in
+  run-compat-lab-tests.mjs: the constraint keeps all fuzz work out of
+  npm test / PR gates; run it manually when touching the harness.
+  Docs: docs/maintainers/fuzz-report.md. Gates: typecheck, lint,
+  npm test (all suites incl. memory-engine 13/13), test:release green;
+  build-cache sweep runs at suite end per repo rule.
 ---
 
 ## Objective
@@ -46,9 +74,9 @@ Add a property-based fuzz harness over memory-engine's conflict/duplicate detect
 
 ## Acceptance gates
 
-- [ ] Harness runs nightly with seed persistence
-- [ ] Property tests green (or real bugs filed as separate tasks)
-- [ ] `npm run test` unaffected
+- [x] Harness runs nightly with seed persistence
+- [x] Property tests green (or real bugs filed as separate tasks)
+- [x] `npm run test` unaffected
 
 ## Evidence to record
 
