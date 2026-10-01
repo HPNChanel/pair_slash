@@ -54,6 +54,12 @@ evidence policy fail-closed; `npm run sync:compat-lab` only regenerates derived
 artifacts from existing records — it never changes claims. When in doubt,
 preview with `sync-truth` first and let it regenerate the derived files.
 
+Large builds and test runs sweep PairSlash-owned caches automatically; to
+clean manually, `npm run clean:cache:dry` previews and `npm run clean:cache`
+removes `.pairslash/tmp`, package `dist`/`.cache`/`coverage` dirs, incremental
+build files, and stale `pairslash-*` temp dirs — never authoritative memory,
+staging journals, or anything outside the repo and OS temp prefix.
+
 Use `doctor` before reporting environment problems:
 
 ```bash

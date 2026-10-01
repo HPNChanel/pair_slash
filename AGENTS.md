@@ -11,6 +11,7 @@ Use Node 24.x or 26.x (both majors are CI-tested; `engines` floors at `>=24.0.0`
 - `npm run lint` runs the repo lint gate, including package boundary checks.
 - `npm run test` runs the JS test suite.
 - `npm run typecheck` runs the strict TypeScript gate (single strict config since T5-14).
+- `npm run clean:cache` removes PairSlash-owned build/test caches (`.pairslash/tmp`, `packages/**/dist`, `*.tsbuildinfo`, stale `pairslash-*` temp dirs); `npm run clean:cache:dry` previews without deleting. The compat/test runner already sweeps these caches automatically at the end of every suite run.
 - `npm run test:acceptance` runs acceptance-oriented checks.
 - `npm run test:compat` runs the compat-lab fixture/golden lane suite.
 - `npm run sync:compat-lab -- --check` verifies generated compatibility artifacts are in sync.

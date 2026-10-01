@@ -1,6 +1,8 @@
 import { spawnSync } from "node:child_process";
 import process from "node:process";
 
+import { cleanBuildCaches } from "./clean-build-cache.mjs";
+
 const testFiles = [
   "packages/core/spec-core/tests/spec-core.test.js",
   "packages/core/spec-core/tests/manifest-v2.conformance.test.js",
@@ -43,6 +45,7 @@ const testFiles = [
   "tests/skill-publish-readiness.test.js",
   "packages/tools/compat-lab/tests/docs-surface.test.js",
   "packages/tools/compat-lab/tests/truth-sync.test.js",
+  "tests/build-cache-clean.test.js",
 ];
 
 let exitCode = 0;
@@ -55,6 +58,25 @@ for (const testFile of testFiles) {
     exitCode = result.status ?? 1;
     break;
   }
+}
+
+// Sweep PairSlash-owned build/test caches so large runs do not fill the disk.
+// Failures are reported but never mask the suite result.
+try {
+  const report = cleanBuildCaches(process.cwd(), { apply: true });
+  if (report.targets.length > 0) {
+    process.stdout.write(
+      `clean-build-cache: removed ${report.removed.length} target(s), ` +
+        `freed ${(report.freed_bytes / (1024 * 1024)).toFixed(1)} MiB\n`,
+    );
+  }
+  for (const error of report.errors) {
+    process.stderr.write(`clean-build-cache warning: ${error}\n`);
+  }
+} catch (error) {
+  process.stderr.write(
+    `clean-build-cache warning: ${error instanceof Error ? error.message : String(error)}\n`,
+  );
 }
 
 process.exitCode = exitCode;
