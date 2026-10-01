@@ -1,6 +1,6 @@
 # Track T9 — Ops automation (O1 carried forward)
 
-**Status:** Approved | **Priority:** P3 | **Depends on:** T5 decomposition complete (T5-01…T5-04)
+**Status:** Done (2026-10-01) | **Priority:** P3 | **Depends on:** T5 decomposition complete (T5-01…T5-04)
 **Goal:** Eliminate the manual 5–7-file truth sync on every evidence promotion, and add perf/mutation/fuzz depth to the nightly lane — all preview-first per charter.
 
 ## Context
