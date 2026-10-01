@@ -85,6 +85,7 @@ test("doctor reports structured environment summary for codex repo lane", () => 
       repoRoot: fixture.tempRoot,
       runtime: "codex_cli",
       target: "repo",
+      _os_override: "win32",
     });
     assert.equal(report.runtime, "codex_cli");
     assert.equal(report.target, "repo");
@@ -935,6 +936,7 @@ test("doctor supports copilot user scope smoke lane", () => {
       repoRoot: fixture.tempRoot,
       runtime: "copilot_cli",
       target: "user",
+      _os_override: "win32",
     });
     assert.equal(report.runtime, "copilot_cli");
     assert.equal(report.target, "user");
