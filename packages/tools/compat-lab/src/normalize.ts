@@ -14,6 +14,7 @@ function normalizeString(value: unknown, markers: any) {
     normalized = normalized.split(actual).join(token);
     normalized = normalized.split(toPosix(actual)).join(token);
   }
+  normalized = normalized.replace(/<[a-z-]+>(?:[\\/][^\s"'`]*)?/g, (span) => toPosix(span));
   return normalized;
 }
 

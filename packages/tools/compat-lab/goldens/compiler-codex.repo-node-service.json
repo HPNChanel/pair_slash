@@ -158,7 +158,7 @@
         }
       ],
       "normalized_ir_digest": "a077d45301bd190ea387c75feceda57cd274e25e8f1c72e0a5fd83c118164c3f",
-      "output_dir": "<repo>\\dist\\compiled\\codex\\pairslash-backend",
+      "output_dir": "<repo>/dist/compiled/codex/pairslash-backend",
       "pack_id": "pairslash-backend",
       "runtime": "codex_cli",
       "version": "0.2.0"
@@ -321,7 +321,7 @@
         }
       ],
       "normalized_ir_digest": "f77ac4d69791f42322f2664c6e05d32a74def6c23db317901b01d62bb7fa4089",
-      "output_dir": "<repo>\\dist\\compiled\\codex\\pairslash-devops",
+      "output_dir": "<repo>/dist/compiled/codex/pairslash-devops",
       "pack_id": "pairslash-devops",
       "runtime": "codex_cli",
       "version": "0.2.0"

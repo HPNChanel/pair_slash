@@ -196,7 +196,7 @@
             }
           ],
           "normalized_ir_digest": "21ba198394562d9e3a7db1e7d73f3cc87a5ca571f18089e3ac18aaf5c95d1b24",
-          "output_dir": "<repo>\\dist\\compiled\\codex\\pairslash-frontend",
+          "output_dir": "<repo>/dist/compiled/codex/pairslash-frontend",
           "pack_id": "pairslash-frontend",
           "runtime": "codex_cli",
           "version": "0.2.0"
@@ -359,7 +359,7 @@
             }
           ],
           "normalized_ir_digest": "729465af41367c7d9742784b6af4eceb1fd00515a20a31e6dfa8075f27afd72f",
-          "output_dir": "<repo>\\dist\\compiled\\codex\\pairslash-plan",
+          "output_dir": "<repo>/dist/compiled/codex/pairslash-plan",
           "pack_id": "pairslash-plan",
           "runtime": "codex_cli",
           "version": "0.2.0"
@@ -448,7 +448,7 @@
               "affects_verdict": false,
               "applicable": true,
               "artifacts": [],
-              "codex_home": "<repo>\\.compat-home\\.codex",
+              "codex_home": "<repo>/.compat-home/.codex",
               "codex_home_error": null,
               "config_readable": true,
               "daemon_auto_start": "unset",
@@ -542,8 +542,8 @@
             "blocking_for_install": false,
             "evidence": {
               "candidates": [
-                "<repo>\\.compat-home\\.<host-shell>rc",
-                "<repo>\\.compat-home\\.zprofile"
+                "<repo>/.compat-home/.<host-shell>rc",
+                "<repo>/.compat-home/.zprofile"
               ]
             },
             "group": "platform",
@@ -788,9 +788,9 @@
           }
         ],
         "environment_summary": {
-          "config_home": "<repo>\\.agents",
+          "config_home": "<repo>/.agents",
           "cwd": "<workspace>",
-          "install_root": "<repo>\\.agents\\skills",
+          "install_root": "<repo>/.agents/skills",
           "os": "<host-os>",
           "repo_root": "<repo>",
           "runtime_available": true,
@@ -798,10 +798,10 @@
           "runtime_version": "0.153.4",
           "shell": "<host-shell>",
           "shell_profile_candidates": [
-            "<repo>\\.compat-home\\.<host-shell>rc",
-            "<repo>\\.compat-home\\.zprofile"
+            "<repo>/.compat-home/.<host-shell>rc",
+            "<repo>/.compat-home/.zprofile"
           ],
-          "state_path": "<repo>\\.pairslash\\install-state\\repo-codex_cli.json"
+          "state_path": "<repo>/.pairslash/install-state/repo-codex_cli.json"
         },
         "first_workflow_guidance": {
           "commands": [
@@ -875,28 +875,28 @@
         "scope_probes": {
           "repo": {
             "blocking_for_install": false,
-            "config_home": "<repo>\\.agents",
+            "config_home": "<repo>/.agents",
             "config_home_exists": false,
-            "install_root": "<repo>\\.agents\\skills",
+            "install_root": "<repo>/.agents/skills",
             "install_root_exists": false,
             "issue_codes": [],
             "issues": [],
             "selected": true,
-            "state_path": "<repo>\\.pairslash\\install-state\\repo-codex_cli.json",
+            "state_path": "<repo>/.pairslash/install-state/repo-codex_cli.json",
             "target": "repo",
             "verdict": "pass",
             "writable": true
           },
           "user": {
             "blocking_for_install": false,
-            "config_home": "<repo>\\.compat-home\\.agents",
+            "config_home": "<repo>/.compat-home/.agents",
             "config_home_exists": false,
-            "install_root": "<repo>\\.compat-home\\.agents\\skills",
+            "install_root": "<repo>/.compat-home/.agents/skills",
             "install_root_exists": false,
             "issue_codes": [],
             "issues": [],
             "selected": false,
-            "state_path": "<repo>\\.pairslash\\install-state\\user-codex_cli.json",
+            "state_path": "<repo>/.pairslash/install-state/user-codex_cli.json",
             "target": "user",
             "verdict": "pass",
             "writable": true
@@ -930,10 +930,10 @@
           "lint-error:LINT-TRUST-001:pairslash-frontend:shared: authoritative support metadata is invalid: trust-authority:capability-not-authorized:pairslash-frontend:repo_write; trust-authority:capability-not-authorized:pairslash-frontend:shell_exec; trust-authority:capability-not-authorized:pairslash-frontend:test_exec; trust-authority:load-failed:pack trust authority file not found (expected trust/pack-authority.yaml)",
           "lint-error:LINT-TRUST-001:pairslash-plan:shared: authoritative support metadata is invalid: trust-authority:core-maintained-not-authorized:pairslash-plan; trust-authority:load-failed:pack trust authority file not found (expected trust/pack-authority.yaml)"
         ],
-        "install_root": "<repo>\\.agents\\skills",
+        "install_root": "<repo>/.agents/skills",
         "operations": [
           {
-            "absolute_path": "<repo>\\.pairslash\\install-journal",
+            "absolute_path": "<repo>/.pairslash/install-journal",
             "asset_kind": null,
             "install_surface": null,
             "kind": "write_journal",
@@ -944,7 +944,7 @@
             "relative_path": null
           },
           {
-            "absolute_path": "<repo>\\.pairslash\\install-state\\repo-codex_cli.json",
+            "absolute_path": "<repo>/.pairslash/install-state/repo-codex_cli.json",
             "asset_kind": null,
             "install_surface": null,
             "kind": "write_state",
@@ -958,7 +958,7 @@
         "requires_confirmation": true,
         "runtime": "codex_cli",
         "selected_packs": [],
-        "state_path": "<repo>\\.pairslash\\install-state\\repo-codex_cli.json",
+        "state_path": "<repo>/.pairslash/install-state/repo-codex_cli.json",
         "summary": {
           "blocked_conflict": 0,
           "create": 0,
@@ -1150,7 +1150,7 @@
             }
           ],
           "normalized_ir_digest": "21ba198394562d9e3a7db1e7d73f3cc87a5ca571f18089e3ac18aaf5c95d1b24",
-          "output_dir": "<repo>\\dist\\compiled\\copilot\\pairslash-frontend",
+          "output_dir": "<repo>/dist/compiled/copilot/pairslash-frontend",
           "pack_id": "pairslash-frontend",
           "runtime": "copilot_cli",
           "version": "0.2.0"
@@ -1298,7 +1298,7 @@
             }
           ],
           "normalized_ir_digest": "729465af41367c7d9742784b6af4eceb1fd00515a20a31e6dfa8075f27afd72f",
-          "output_dir": "<repo>\\dist\\compiled\\copilot\\pairslash-plan",
+          "output_dir": "<repo>/dist/compiled/copilot/pairslash-plan",
           "pack_id": "pairslash-plan",
           "runtime": "copilot_cli",
           "version": "0.2.0"
@@ -1405,12 +1405,12 @@
               "disable_all_hooks": {
                 "repo_settings": [
                   {
-                    "path": "<repo>\\.github\\copilot\\settings.json",
+                    "path": "<repo>/.github/copilot/settings.json",
                     "readable": true,
                     "value": null
                   },
                   {
-                    "path": "<repo>\\.github\\copilot\\settings.local.json",
+                    "path": "<repo>/.github/copilot/settings.local.json",
                     "readable": true,
                     "value": null
                   }
@@ -1483,9 +1483,9 @@
             "blocking_for_install": false,
             "evidence": {
               "candidates": [
-                "<repo>\\.compat-home\\.<host-shell>rc",
-                "<repo>\\.compat-home\\.<host-shell>_profile",
-                "<repo>\\.compat-home\\.profile"
+                "<repo>/.compat-home/.<host-shell>rc",
+                "<repo>/.compat-home/.<host-shell>_profile",
+                "<repo>/.compat-home/.profile"
               ]
             },
             "group": "platform",
@@ -1508,7 +1508,7 @@
           {
             "blocking_for_install": false,
             "evidence": {
-              "parent": "<repo>\\.compat-home"
+              "parent": "<repo>/.compat-home"
             },
             "group": "filesystem",
             "id": "filesystem.config_home",
@@ -1520,7 +1520,7 @@
           {
             "blocking_for_install": false,
             "evidence": {
-              "parent": "<repo>\\.compat-home"
+              "parent": "<repo>/.compat-home"
             },
             "group": "filesystem",
             "id": "filesystem.install_root",
@@ -1728,9 +1728,9 @@
           }
         ],
         "environment_summary": {
-          "config_home": "<repo>\\.compat-home\\.copilot",
+          "config_home": "<repo>/.compat-home/.copilot",
           "cwd": "<workspace>",
-          "install_root": "<repo>\\.compat-home\\.copilot\\skills",
+          "install_root": "<repo>/.compat-home/.copilot/skills",
           "os": "<host-os>",
           "repo_root": "<repo>",
           "runtime_available": true,
@@ -1738,11 +1738,11 @@
           "runtime_version": "1.0.88",
           "shell": "<host-shell>",
           "shell_profile_candidates": [
-            "<repo>\\.compat-home\\.<host-shell>rc",
-            "<repo>\\.compat-home\\.<host-shell>_profile",
-            "<repo>\\.compat-home\\.profile"
+            "<repo>/.compat-home/.<host-shell>rc",
+            "<repo>/.compat-home/.<host-shell>_profile",
+            "<repo>/.compat-home/.profile"
           ],
-          "state_path": "<repo>\\.pairslash\\install-state\\user-copilot_cli.json"
+          "state_path": "<repo>/.pairslash/install-state/user-copilot_cli.json"
         },
         "first_workflow_guidance": {
           "commands": [
@@ -1779,7 +1779,7 @@
             "check_id": "filesystem.config_home",
             "code": "DOC-FILESYSTEM-CONFIG_HOME",
             "evidence": {
-              "parent": "<repo>\\.compat-home"
+              "parent": "<repo>/.compat-home"
             },
             "message": "config home does not exist yet but can be initialized during install",
             "remediation": "Run install to create the runtime config home, or create the directory manually if policy requires it.",
@@ -1793,7 +1793,7 @@
             "check_id": "filesystem.install_root",
             "code": "DOC-FILESYSTEM-INSTALL_ROOT",
             "evidence": {
-              "parent": "<repo>\\.compat-home"
+              "parent": "<repo>/.compat-home"
             },
             "message": "install root does not exist yet",
             "remediation": "Run install to create the runtime install root.",
@@ -1818,28 +1818,28 @@
         "scope_probes": {
           "repo": {
             "blocking_for_install": false,
-            "config_home": "<repo>\\.github",
+            "config_home": "<repo>/.github",
             "config_home_exists": false,
-            "install_root": "<repo>\\.github\\skills",
+            "install_root": "<repo>/.github/skills",
             "install_root_exists": false,
             "issue_codes": [],
             "issues": [],
             "selected": false,
-            "state_path": "<repo>\\.pairslash\\install-state\\repo-copilot_cli.json",
+            "state_path": "<repo>/.pairslash/install-state/repo-copilot_cli.json",
             "target": "repo",
             "verdict": "pass",
             "writable": true
           },
           "user": {
             "blocking_for_install": false,
-            "config_home": "<repo>\\.compat-home\\.copilot",
+            "config_home": "<repo>/.compat-home/.copilot",
             "config_home_exists": false,
-            "install_root": "<repo>\\.compat-home\\.copilot\\skills",
+            "install_root": "<repo>/.compat-home/.copilot/skills",
             "install_root_exists": false,
             "issue_codes": [],
             "issues": [],
             "selected": true,
-            "state_path": "<repo>\\.pairslash\\install-state\\user-copilot_cli.json",
+            "state_path": "<repo>/.pairslash/install-state/user-copilot_cli.json",
             "target": "user",
             "verdict": "pass",
             "writable": true
@@ -1873,10 +1873,10 @@
           "lint-error:LINT-TRUST-001:pairslash-frontend:shared: authoritative support metadata is invalid: trust-authority:capability-not-authorized:pairslash-frontend:repo_write; trust-authority:capability-not-authorized:pairslash-frontend:shell_exec; trust-authority:capability-not-authorized:pairslash-frontend:test_exec; trust-authority:load-failed:pack trust authority file not found (expected trust/pack-authority.yaml)",
           "lint-error:LINT-TRUST-001:pairslash-plan:shared: authoritative support metadata is invalid: trust-authority:core-maintained-not-authorized:pairslash-plan; trust-authority:load-failed:pack trust authority file not found (expected trust/pack-authority.yaml)"
         ],
-        "install_root": "<repo>\\.compat-home\\.copilot\\skills",
+        "install_root": "<repo>/.compat-home/.copilot/skills",
         "operations": [
           {
-            "absolute_path": "<repo>\\.pairslash\\install-journal",
+            "absolute_path": "<repo>/.pairslash/install-journal",
             "asset_kind": null,
             "install_surface": null,
             "kind": "write_journal",
@@ -1887,7 +1887,7 @@
             "relative_path": null
           },
           {
-            "absolute_path": "<repo>\\.pairslash\\install-state\\user-copilot_cli.json",
+            "absolute_path": "<repo>/.pairslash/install-state/user-copilot_cli.json",
             "asset_kind": null,
             "install_surface": null,
             "kind": "write_state",
@@ -1901,7 +1901,7 @@
         "requires_confirmation": true,
         "runtime": "copilot_cli",
         "selected_packs": [],
-        "state_path": "<repo>\\.pairslash\\install-state\\user-copilot_cli.json",
+        "state_path": "<repo>/.pairslash/install-state/user-copilot_cli.json",
         "summary": {
           "blocked_conflict": 0,
           "create": 0,
