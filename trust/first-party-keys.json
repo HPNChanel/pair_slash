@@ -5,10 +5,20 @@
   "keys": [
     {
       "key_id": "pairslash-release-2026-04",
-      "status": "active",
+      "status": "retired",
       "algorithm": "ed25519",
       "created_at": "2026-04-15T00:00:00Z",
+      "retired_at": "2026-10-01T00:00:00Z",
+      "note": "Retired 2026-10-01: private key was never provisioned to CI custody; superseded by pairslash-release-2026-10 for the first signed protected run.",
       "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAq1gS9Wio2i+pTaw/t0AP3Oh3l+5PRDZ7a5OPawRFGfo=\n-----END PUBLIC KEY-----\n"
+    },
+    {
+      "key_id": "pairslash-release-2026-10",
+      "status": "active",
+      "algorithm": "ed25519",
+      "created_at": "2026-10-01T00:00:00Z",
+      "note": "Active first-party release key; private key is held in maintainer custody and the GitHub Actions secret PAIRSLASH_RELEASE_TRUST_PRIVATE_KEY.",
+      "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAOCgP9Efp2ib7f/IozHmMSZYUzrY0JwH7DXmCr6yM9yM=\n-----END PUBLIC KEY-----\n"
     }
   ]
 }
