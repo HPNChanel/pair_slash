@@ -2,13 +2,37 @@
 id: T9-03
 track: T9
 title: Mutation testing pilot — memory-engine scope, report-only
-status: todo
+status: done
 depends_on: []
 est_size: M
-claimed_by:
-claimed_at:
-completed_at:
-evidence:
+claimed_by: devin
+claimed_at: 2026-10-01
+completed_at: 2026-10-01
+evidence: |
+  Stryker evaluation: a direct Stryker sandbox is disproportionately
+  cumbersome for this stack (ESM + Node type-stripping + file: workspace
+  links + package-relative test imports under node:test), so the pilot
+  uses a scoped in-place runner instead — recorded per the task's
+  "minimal viable alternative" clause.
+  tests/mutation/run-mutation.mjs enumerates deterministic mutation sites
+  in packages/core/memory-engine/src/** (boolean flips, comparison swaps,
+  logical-operator swaps), applies one mutant at a time in place, runs
+  packages/core/memory-engine/tests/memory-engine.test.js, restores
+  pristine source after every mutant, and registers an exit hook for
+  best-effort restoration on interruption. Never commits mutants.
+  Full pilot on win32-node24: 266 sites enumerated, 200 mutants run
+  (66 truncated at the default --max-mutants cap), killed 38,
+  survived 162, timeout 0, error 0 — score 0.19. Honest low score is
+  expected pilot output: survivors cluster on report-field literals
+  (committed/read_only markers) and untested branch polarity in
+  apply.ts/candidate.ts/pipeline.ts — inputs for future hardening tasks,
+  not a gate. Report artifact: artifacts/mutation-memory-engine.json
+  (CI-uploaded; gitignored).
+  Wired as nightly-only job nightly-mutation in
+  .github/workflows/compat-lab-nightly.yml (ubuntu-latest, Node 24,
+  artifact upload). tests/mutation/run-mutation.test.js is an
+  enumerate-only smoke inside the compat runner — the full pilot is
+  never in npm run test / PR gates. Docs: docs/maintainers/mutation-report.md.
 ---
 
 ## Objective
@@ -48,9 +72,9 @@ Pilot mutation testing scoped to `packages/core/memory-engine` (highest-value pa
 
 ## Acceptance gates
 
-- [ ] Pilot runs in nightly; report artifact produced
-- [ ] Survivor list documented for follow-up
-- [ ] `npm run test` unaffected
+- [x] Pilot runs in nightly; report artifact produced
+- [x] Survivor list documented for follow-up
+- [x] `npm run test` unaffected
 
 ## Evidence to record
 

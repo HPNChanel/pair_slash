@@ -47,6 +47,7 @@ const testFiles = [
   "packages/tools/compat-lab/tests/truth-sync.test.js",
   "tests/build-cache-clean.test.js",
   "tests/perf/perf-suite.test.js",
+  "tests/mutation/run-mutation.test.js",
 ];
 
 let exitCode = 0;

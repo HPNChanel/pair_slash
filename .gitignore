@@ -89,6 +89,10 @@ logs/
 .pairslash/observability/
 .pairslash/tmp/
 
+# Nightly lane report artifacts (perf/mutation/fuzz) — CI uploads them, they
+# are never source truth.
+artifacts/
+
 # ─── Runtime skill install paths (derived from packs/core/) ──────────────────
 .agents/skills/
 .github/skills/

@@ -20,6 +20,7 @@ It complements `docs/phase-9/maintainer-playbook.md` with operational links used
 - Compatibility wording guardrail: `docs/compatibility/compatibility-matrix.md`
 - Runtime promotion evidence: `docs/compatibility/runtime-verification.md`
 - Node.js cadence and engine-floor policy: `docs/maintainers/node-release-cadence.md`
+- Mutation pilot report interpretation (nightly-only, report-only): `docs/maintainers/mutation-report.md`
 
 ## Regression Handling
 

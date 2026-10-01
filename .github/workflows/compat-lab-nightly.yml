@@ -125,3 +125,29 @@ jobs:
         with:
           name: ${{ matrix.artifact }}
           path: artifacts/${{ matrix.artifact }}
+
+  nightly-mutation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Report-only pilot: survivors inform future test hardening, never a
+      # gate (T9-03). Scoped to packages/core/memory-engine only.
+      - name: Run mutation pilot
+        run: node tests/mutation/run-mutation.mjs --report-out artifacts/mutation-memory-engine.json
+
+      - name: Upload mutation report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutation-memory-engine
+          path: artifacts/mutation-memory-engine.json
