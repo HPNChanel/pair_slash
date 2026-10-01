@@ -90,3 +90,38 @@ jobs:
 
       - name: Run release-readiness gates
         run: npm run test:release
+
+  nightly-perf:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            node-version: "24"
+            artifact: perf-nightly-linux-node24.json
+          - os: windows-latest
+            node-version: "24"
+            artifact: perf-nightly-windows-node24.json
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Informational only: regressions are review signals, not failures (T9-02).
+      - name: Run perf regression suite
+        run: npm run test:perf -- --report-out artifacts/${{ matrix.artifact }}
+
+      - name: Upload perf report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: artifacts/${{ matrix.artifact }}

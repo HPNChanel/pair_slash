@@ -2,13 +2,27 @@
 id: T9-02
 track: T9
 title: Perf regression suite (nightly-only)
-status: todo
+status: done
 depends_on: []
 est_size: M
-claimed_by:
-claimed_at:
-completed_at:
-evidence:
+claimed_by: devin
+claimed_at: 2026-10-01
+completed_at: 2026-10-01
+evidence: |
+  tests/perf/run-perf.mjs measures 5 deterministic operations
+  (catalog snapshot load, codex/copilot compile, install preview,
+  memory-write preview) on a shared createTempRepo fixture —
+  warmup + N runs, median, sample list in the report. Baselines are
+  keyed per environment class (os + node major) in
+  tests/perf/baseline.json with node/platform/runs/warmup provenance;
+  comparisons flag >2x as "regression" and <0.5x as
+  "suspiciously-fast" — review signals only, exit code always 0.
+  Wired into compat-lab-nightly.yml as a separate informational job
+  (linux + windows, node 24) that uploads the JSON report artifact.
+  Not part of `npm run test` default lane beyond a 1-iteration shape
+  smoke test (tests/perf/perf-suite.test.js). Manual runs:
+  `npm run test:perf`, baseline refresh via --update-baseline.
+  Gates: typecheck, lint, npm test, test:release green.
 ---
 
 ## Objective

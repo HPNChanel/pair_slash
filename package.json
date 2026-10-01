@@ -44,7 +44,8 @@
     "test:phase4:release": "npm run test:compat:release",
     "typecheck": "node scripts/run-typecheck.mjs",
     "clean:cache": "node scripts/clean-build-cache.mjs --apply",
-    "clean:cache:dry": "node scripts/clean-build-cache.mjs"
+    "clean:cache:dry": "node scripts/clean-build-cache.mjs",
+    "test:perf": "node tests/perf/run-perf.mjs"
   },
   "dependencies": {
     "valibot": "^1.5.0",

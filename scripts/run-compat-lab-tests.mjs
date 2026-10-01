@@ -46,6 +46,7 @@ const testFiles = [
   "packages/tools/compat-lab/tests/docs-surface.test.js",
   "packages/tools/compat-lab/tests/truth-sync.test.js",
   "tests/build-cache-clean.test.js",
+  "tests/perf/perf-suite.test.js",
 ];
 
 let exitCode = 0;

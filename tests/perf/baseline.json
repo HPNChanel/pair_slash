@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "environments": {
+    "win32-node24": {
+      "node": "24.11.0",
+      "platform": "win32",
+      "recorded_at": "2026-10-01T09:24:00.472Z",
+      "runs": 7,
+      "warmup": 2,
+      "cases": {
+        "catalog-snapshot-load": {
+          "median_ms": 97.575
+        },
+        "compile-codex-pairslash-plan": {
+          "median_ms": 65.468
+        },
+        "compile-copilot-pairslash-plan": {
+          "median_ms": 27.515
+        },
+        "install-preview-codex": {
+          "median_ms": 645.26
+        },
+        "memory-write-preview": {
+          "median_ms": 64.8
+        }
+      }
+    }
+  }
+}
