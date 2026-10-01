@@ -24,6 +24,63 @@ function describeTrustTuple(value: any) {
   return "review trust posture";
 }
 
+export function formatSyncTruthPlanText(plan: any) {
+  const lines = [
+    `Kind: ${plan.kind}`,
+    `Lane: ${plan.lane_id ?? "none"}`,
+    `Runtime: ${plan.runtime_id ?? "none"}`,
+    `Support level: ${plan.from_level ?? "none"} -> ${plan.to_level ?? "unchanged"}`,
+    `Evidence class: ${plan.evidence_class ?? "unchanged"}`,
+    `Record: ${plan.record_id ?? "none"}`,
+    `Actor: ${plan.actor}`,
+    `At: ${plan.at}`,
+    `Status: ${plan.ok ? "ready" : "blocked"}`,
+  ];
+  if (plan.errors.length > 0) {
+    lines.push("", "Errors:");
+    for (const error of plan.errors) {
+      lines.push(`- ${error}`);
+    }
+  }
+  if (plan.diffs.length > 0) {
+    lines.push("", `Touched files: ${plan.diffs.length}`);
+    for (const entry of plan.diffs) {
+      lines.push("", entry.diff);
+    }
+  }
+  if (plan.notes.length > 0) {
+    lines.push("", "Notes:");
+    for (const note of plan.notes) {
+      lines.push(`- ${note}`);
+    }
+  }
+  if (plan.ok) {
+    lines.push("", "Preview only — rerun with --apply --yes to commit.");
+  }
+  return lines.join("\n");
+}
+
+export function formatSyncTruthResultText(result: any) {
+  const lines = [
+    `Kind: ${result.kind}`,
+    `Status: ${result.status}`,
+    `Written files: ${result.written.length}`,
+  ];
+  for (const path of result.written) {
+    lines.push(`- ${path}`);
+  }
+  if (result.journal) {
+    lines.push(`Journal: ${result.journal}`);
+  }
+  if (result.errors.length > 0) {
+    lines.push("Errors:");
+    for (const error of result.errors) {
+      lines.push(`- ${error}`);
+    }
+  }
+  return lines.join("\n");
+}
+
 export function formatPreviewPlanText(plan: any) {
   const lines = [
     `Action: ${plan.action}`,

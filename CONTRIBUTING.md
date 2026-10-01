@@ -34,6 +34,26 @@ npm run sync:compat-lab -- --check
 npm run test:release
 ```
 
+Recording new live runtime evidence goes through `sync-truth`, which computes
+the whole truth update (lane record, matrix yaml, regenerated matrix md,
+affected pack manifests, verification log, audit entry) as one previewed,
+atomic operation:
+
+```bash
+# preview only — prints unified diffs, writes nothing
+npm run pairslash -- sync-truth --lane <lane-id> --record <evidence.yaml> \
+  --bump-evidence live_verification
+
+# apply after review — confirmation prompt or --yes
+npm run pairslash -- sync-truth --lane <lane-id> --record <evidence.yaml> \
+  --bump-evidence live_verification --apply
+```
+
+`sync-truth` promotes evidence and enforces the support-level ladder and
+evidence policy fail-closed; `npm run sync:compat-lab` only regenerates derived
+artifacts from existing records — it never changes claims. When in doubt,
+preview with `sync-truth` first and let it regenerate the derived files.
+
 Use `doctor` before reporting environment problems:
 
 ```bash

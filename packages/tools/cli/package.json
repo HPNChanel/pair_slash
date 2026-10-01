@@ -18,6 +18,7 @@
     "@pairslash/lint-bridge": "file:../lint-bridge",
     "@pairslash/installer": "file:../installer",
     "@pairslash/doctor": "file:../doctor",
+    "@pairslash/compat-lab": "file:../compat-lab",
     "@pairslash/memory-engine": "file:../../core/memory-engine",
     "@pairslash/trace": "file:../trace"
   }

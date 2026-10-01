@@ -2438,3 +2438,167 @@ test("pairslash install rejects unsupported --emit values", serial, async () => 
     fixture.cleanup();
   }
 });
+
+function writeSyncTruthRecord(fixture, overrides = {}) {
+  const record = {
+    evidence_id: "live-codex-repo-windows-20261001-cli",
+    evidence_class: "live_verification",
+    captured_at: "2026-10-01T00:00:00Z",
+    stale_at: "2027-01-01T00:00:00Z",
+    expire_at: "2027-04-01T00:00:00Z",
+    owner_id: "cli-test",
+    runtime_id: "codex_cli",
+    target: "repo",
+    os_lane: "Windows",
+    host_profile_id: "windows-cli-test",
+    pack_scope: ["pairslash-plan"],
+    workflow_scope: ["install"],
+    capability_scope: ["repo_write"],
+    entrypoint_path_used: "/skills",
+    command: "pairslash install --preview",
+    runtime_version: "0.153.4",
+    verdict: "pass",
+    summary: "cli sync-truth test record",
+    freshness_state: "fresh",
+    ...overrides,
+  };
+  const rel = ".pairslash/tmp/sync-truth-record.yaml";
+  const abs = join(fixture.tempRoot, rel);
+  mkdirSync(join(fixture.tempRoot, ".pairslash", "tmp"), { recursive: true });
+  writeFileSync(abs, YAML.stringify(record));
+  return rel;
+}
+
+function syncTruthArgv(fixture, extra = []) {
+  return [
+    "sync-truth",
+    "--lane",
+    "codex-cli-repo-windows",
+    "--record",
+    writeSyncTruthRecord(fixture),
+    "--bump-evidence",
+    "live_verification",
+    "--support-level",
+    "preview",
+    "--surface-verdict",
+    "canonical_picker=pass",
+    "--live-ref",
+    "docs/evidence/live-runtime/codex-cli-repo-windows.yaml",
+    "--at",
+    "2026-10-01T00:00:00Z",
+    "--format",
+    "json",
+    ...extra,
+  ];
+}
+
+test("pairslash sync-truth previews without mutating truth files", serial, async () => {
+  const fixture = createTempRepo({ packs: ["pairslash-plan"] });
+  let output = "";
+  try {
+    const lanePath = join(
+      fixture.tempRoot,
+      "docs/evidence/live-runtime/codex-cli-repo-windows.yaml",
+    );
+    const before = readFileSync(lanePath, "utf8");
+    const exitCode = await runCli({
+      argv: syncTruthArgv(fixture),
+      cwd: fixture.tempRoot,
+      stdout: {
+        write(chunk) {
+          output += chunk;
+        },
+      },
+    });
+    assert.equal(exitCode, 0);
+    const plan = JSON.parse(output);
+    assert.equal(plan.kind, "sync-truth-plan");
+    assert.equal(plan.ok, true);
+    assert.equal(plan.from_level, "prep");
+    assert.equal(plan.to_level, "preview");
+    assert.ok(plan.diffs.length > 0);
+    assert.equal(readFileSync(lanePath, "utf8"), before);
+  } finally {
+    fixture.cleanup();
+  }
+});
+
+test("pairslash sync-truth --apply --yes commits and writes journal", serial, async () => {
+  const fixture = createTempRepo({ packs: ["pairslash-plan"] });
+  let output = "";
+  try {
+    const exitCode = await runCli({
+      argv: syncTruthArgv(fixture, ["--apply", "--yes"]),
+      cwd: fixture.tempRoot,
+      stdout: {
+        write(chunk) {
+          output += chunk;
+        },
+      },
+    });
+    assert.equal(exitCode, 0);
+    const result = JSON.parse(output);
+    assert.equal(result.kind, "sync-truth-result");
+    assert.equal(result.status, "committed");
+    const lane = YAML.parse(
+      readFileSync(
+        join(fixture.tempRoot, "docs/evidence/live-runtime/codex-cli-repo-windows.yaml"),
+        "utf8",
+      ),
+    );
+    assert.equal(lane.current_public_support_level, "preview");
+    assert.ok(
+      lane.live_records.some(
+        (entry) => entry.evidence_id === "live-codex-repo-windows-20261001-cli",
+      ),
+    );
+  } finally {
+    fixture.cleanup();
+  }
+});
+
+test("pairslash sync-truth --apply without --yes refuses in non-interactive mode", serial, async () => {
+  const fixture = createTempRepo({ packs: ["pairslash-plan"] });
+  try {
+    await assert.rejects(
+      runCli({
+        argv: syncTruthArgv(fixture, ["--apply"]),
+        cwd: fixture.tempRoot,
+        stdout: { write() {} },
+      }),
+      /confirmation-required/,
+    );
+  } finally {
+    fixture.cleanup();
+  }
+});
+
+test("pairslash sync-truth fails closed on policy violations", serial, async () => {
+  const fixture = createTempRepo({ packs: ["pairslash-plan"] });
+  let output = "";
+  try {
+    const exitCode = await runCli({
+      argv: [
+        "sync-truth",
+        "--lane",
+        "codex-cli-repo-windows",
+        "--support-level",
+        "stable-tested",
+        "--format",
+        "json",
+      ],
+      cwd: fixture.tempRoot,
+      stdout: {
+        write(chunk) {
+          output += chunk;
+        },
+      },
+    });
+    assert.equal(exitCode, 1);
+    const plan = JSON.parse(output);
+    assert.equal(plan.ok, false);
+    assert.ok(plan.errors.length > 0);
+  } finally {
+    fixture.cleanup();
+  }
+});

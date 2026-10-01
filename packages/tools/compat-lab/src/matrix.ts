@@ -69,10 +69,12 @@ function workflowMaturityRank(level: any) {
 export function buildCompatibilityMatrixArtifact({
   repoRoot = process.cwd(),
   version = "0.4.0",
+  snapshot = null,
+  catalogRecords = null,
 }: any = {}) {
   const fixtures = listCompatFixtures();
-  const supportSnapshot = loadPublicSupportSnapshot(repoRoot, { version });
-  const workflowMaturity = loadPackCatalogRecords(repoRoot, { includeAdvanced: false })
+  const supportSnapshot = snapshot ?? loadPublicSupportSnapshot(repoRoot, { version });
+  const workflowMaturity = (catalogRecords ?? loadPackCatalogRecords(repoRoot, { includeAdvanced: false }))
     .map((record: any) => ({
       pack_id: record.id,
       workflow_maturity: record.workflow_maturity,
@@ -124,8 +126,10 @@ export function buildCompatibilityMatrixArtifact({
 export function renderCompatibilityMatrixMarkdown({
   repoRoot = process.cwd(),
   version = "0.4.0",
+  snapshot = null,
+  catalogRecords = null,
 }: any = {}) {
-  const artifact = buildCompatibilityMatrixArtifact({ repoRoot, version });
+  const artifact = buildCompatibilityMatrixArtifact({ repoRoot, version, snapshot, catalogRecords });
   const laneTable = formatTable(
     [
       "Runtime",
@@ -371,8 +375,10 @@ export function renderCompatibilityMatrixMarkdown({
 export function renderRuntimeSurfaceMatrixYaml({
   repoRoot = process.cwd(),
   version = "0.4.0",
+  snapshot = null,
+  catalogRecords = null,
 }: any = {}) {
-  const artifact = buildCompatibilityMatrixArtifact({ repoRoot, version });
+  const artifact = buildCompatibilityMatrixArtifact({ repoRoot, version, snapshot, catalogRecords });
   const {
     workflow_maturity: _workflowMaturity,
     ...runtimeSurfaceArtifact

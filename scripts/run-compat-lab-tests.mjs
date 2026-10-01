@@ -42,6 +42,7 @@ const testFiles = [
   "packages/tools/compat-lab/tests/matrix.test.js",
   "tests/skill-publish-readiness.test.js",
   "packages/tools/compat-lab/tests/docs-surface.test.js",
+  "packages/tools/compat-lab/tests/truth-sync.test.js",
 ];
 
 let exitCode = 0;

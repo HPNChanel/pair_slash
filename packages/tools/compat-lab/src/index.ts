@@ -8,3 +8,4 @@ export * from "./normalize.ts";
 export * from "./runtime-fixtures.ts";
 export * from "./smoke.ts";
 export * from "./snapshot.ts";
+export * from "./truth-sync.ts";

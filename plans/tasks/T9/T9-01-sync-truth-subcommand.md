@@ -2,13 +2,33 @@
 id: T9-01
 track: T9
 title: pairslash sync-truth subcommand — preview-first multi-file promotion
-status: todo
+status: done
 depends_on: []
 est_size: L
-claimed_by:
-claimed_at:
-completed_at:
-evidence:
+claimed_by: devin
+claimed_at: 2026-10-01
+completed_at: 2026-10-01
+evidence: |
+  Implemented in packages/tools/compat-lab/src/truth-sync.ts (planTruthSync /
+  applyTruthSync) wired through the CLI as `pairslash sync-truth` with preview
+  as the default and `--apply` requiring confirmation (or --yes).
+  - Multi-file op set: lane record (surgical YAML patch preserving hand
+    formatting), runtime-surface-matrix.yaml regen, compatibility-matrix.md
+    regen via matrix.ts snapshot override, pack manifest live_workflow_refs,
+    runtime-verification.md promotion log, audit entry, transaction journal.
+  - Fail-closed: invalid evidence class, evidence downgrade, lane identity
+    mismatch, ladder skips, and promotion-rule violations all produce
+    non-ok plans with reason strings; apply revalidates via
+    loadPublicSupportSnapshot and rolls back every write on failure
+    (including deleting newly created files on rollback).
+  - Tests: packages/tools/compat-lab/tests/truth-sync.test.js (9/9) and
+    packages/tools/cli/tests/cli.test.js sync-truth cases (4) covering
+    preview-only, apply+commit+journal+audit, confirmation refusal,
+    ladder-skip, policy gate, and full rollback.
+  - Gates: npm run typecheck (strict) green, npm run lint green, npm test
+    green, npm run test:release green.
+  - Docs: CONTRIBUTING.md documents the sync-truth vs sync:compat-lab
+    boundary and the build-cache cleanup commands.
 ---
 
 ## Objective

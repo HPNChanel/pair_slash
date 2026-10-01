@@ -55,6 +55,15 @@ export function defaultOptions() {
     supportBundle: false,
     includeDoctor: false,
     surface: null,
+    lane: null as string | null,
+    bumpEvidence: null as string | null,
+    supportLevel: null as string | null,
+    recordPath: null as string | null,
+    liveRefs: [] as string[],
+    surfaceVerdicts: {} as Record<string, string>,
+    caveat: null as string | null,
+    actor: null as string | null,
+    at: null as string | null,
   };
 }
 
@@ -295,6 +304,57 @@ export function parseOptions(argv: any) {
     }
     if (token === "--surface") {
       options.surface = argv[index + 1];
+      index += 1;
+      continue;
+    }
+    if (token === "--lane") {
+      options.lane = argv[index + 1];
+      index += 1;
+      continue;
+    }
+    if (token === "--bump-evidence") {
+      options.bumpEvidence = argv[index + 1];
+      index += 1;
+      continue;
+    }
+    if (token === "--support-level") {
+      options.supportLevel = argv[index + 1];
+      index += 1;
+      continue;
+    }
+    if (token === "--record") {
+      options.recordPath = argv[index + 1];
+      index += 1;
+      continue;
+    }
+    if (token === "--live-ref") {
+      options.liveRefs.push(...splitList(argv[index + 1]));
+      index += 1;
+      continue;
+    }
+    if (token === "--surface-verdict") {
+      for (const pair of splitList(argv[index + 1])) {
+        const separator = pair.indexOf("=");
+        if (separator === -1) {
+          throw new Error(`invalid --surface-verdict value: ${pair}; expected key=value`);
+        }
+        options.surfaceVerdicts[pair.slice(0, separator).trim()] = pair.slice(separator + 1).trim();
+      }
+      index += 1;
+      continue;
+    }
+    if (token === "--caveat") {
+      options.caveat = argv[index + 1];
+      index += 1;
+      continue;
+    }
+    if (token === "--actor") {
+      options.actor = argv[index + 1];
+      index += 1;
+      continue;
+    }
+    if (token === "--at") {
+      options.at = argv[index + 1];
       index += 1;
       continue;
     }

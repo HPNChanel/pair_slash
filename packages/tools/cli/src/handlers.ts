@@ -6,7 +6,11 @@
 import { resolve } from "node:path";
 import { createInterface } from "node:readline/promises";
 
-import { stableJson } from "@pairslash/spec-core";
+import { loadYamlFile, stableJson } from "@pairslash/spec-core";
+import {
+  applyTruthSync,
+  planTruthSync,
+} from "@pairslash/compat-lab";
 import {
   applyMemoryWrite,
   buildMemoryAuditReport,
@@ -36,6 +40,8 @@ import {
   formatMemoryWritePreviewText,
   formatMemoryWriteResultText,
   formatPreviewPlanText,
+  formatSyncTruthPlanText,
+  formatSyncTruthResultText,
 } from "./formatters.ts";
 
 export function buildMemoryRequest(repoRoot: string, options: any) {
@@ -194,6 +200,63 @@ export async function handleApply(action: any, repoRoot: string, options: any, s
     runtime: result.runtime ?? options.runtime,
     target: result.target ?? options.target,
     summary: `${action} applied`,
+  };
+}
+
+export async function handleSyncTruth(repoRoot: string, options: any, stdout: any, stdin: any) {
+  if (options.apply && (options.preview || options.dryRun)) {
+    throw new Error("--apply and --preview/--dry-run cannot be used together");
+  }
+  let record = null;
+  if (options.recordPath) {
+    const absolute = resolve(repoRoot, options.recordPath);
+    if (!absolute.startsWith(repoRoot)) {
+      throw new Error(`sync-truth: record file escapes repo root: ${options.recordPath}`);
+    }
+    record = loadYamlFile(absolute);
+    if (!record || typeof record !== "object" || Array.isArray(record)) {
+      throw new Error(`sync-truth: record file is not a yaml object: ${options.recordPath}`);
+    }
+  }
+  const plan = planTruthSync({
+    repoRoot,
+    input: {
+      laneId: options.lane,
+      bumpEvidence: options.bumpEvidence,
+      supportLevel: options.supportLevel,
+      record,
+      liveRefs: options.liveRefs,
+      surfaceVerdicts: options.surfaceVerdicts,
+      caveatSummary: options.caveat,
+      actor: options.actor,
+      at: options.at,
+    },
+  });
+  if (!plan.ok || !options.apply) {
+    emit(stdout, plan, {
+      format: options.format,
+      text: formatSyncTruthPlanText,
+    });
+    return {
+      exitCode: plan.ok ? 0 : 1,
+      artifact: plan,
+      runtime: options.runtime === "auto" || options.runtime === "all" ? null : options.runtime,
+      target: options.target,
+      summary: `sync-truth preview ${plan.ok ? "ready" : "blocked"}`,
+    };
+  }
+  await confirmApply({ action: "sync-truth", stdin, stdout, options });
+  const result = applyTruthSync({ repoRoot, plan });
+  emit(stdout, result, {
+    format: options.format,
+    text: formatSyncTruthResultText,
+  });
+  return {
+    exitCode: result.ok ? 0 : 1,
+    artifact: result,
+    runtime: options.runtime === "auto" || options.runtime === "all" ? null : options.runtime,
+    target: options.target,
+    summary: `sync-truth ${result.status}`,
   };
 }
 

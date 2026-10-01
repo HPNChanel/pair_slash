@@ -64,6 +64,7 @@ import {
   handleMemoryCandidate,
   handleMemoryWrite,
   handlePreview,
+  handleSyncTruth,
 } from "../handlers.ts";
 
 function printUsage(stdout: any) {
@@ -84,6 +85,7 @@ function printUsage(stdout: any) {
       "  pairslash debug [--latest] [--session <id>] [--runtime <codex|copilot>] [--target repo|user] [--bundle] [--out path] [--format text|json]",
       "  pairslash trace export [--latest] [--session <id>] [--runtime <codex|copilot>] [--target repo|user] [--support-bundle] [--include-doctor] [--out path] [--format text|json]",
       "  pairslash telemetry summary [--runtime <codex|copilot>] [--target repo|user] [--out path] [--format text|json]",
+      "  pairslash sync-truth --lane <lane-id> [--bump-evidence <live_smoke|live_verification|repeated_live_verification>] [--support-level <prep|preview|stable-tested|degraded|blocked>] [--record path] [--live-ref a,b] [--surface-verdict k=v,...] [--caveat text] [--actor id] [--at iso8601] [--apply] [--yes] [--format text|json]",
       "",
       "Defaults:",
       "  install/update/uninstall preview by default; add --apply to mutate.",
@@ -478,6 +480,8 @@ export async function runCli({
           target: options.target,
           summary: options.out ? "telemetry summary exported" : "telemetry summary created",
         };
+    } else if (command === "sync-truth") {
+      result = await handleSyncTruth(repoRoot, options, stdout, stdin);
     } else {
       throw new Error(`unknown command: ${command}`);
     }
